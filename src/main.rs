@@ -31,7 +31,7 @@ fn main() {
 fn startup(mut commands: Commands) {
     let far = 1000.0;
     let mut camera = Camera2dBundle::new_with_far(far);
-    camera.projection.scaling_mode = ScalingMode::FixedHorizontal(30.0);
+    camera.projection.scaling_mode = ScalingMode::FixedHorizontal(40.0);
     commands.spawn_bundle(camera);
     
     commands.insert_resource(ClearColor(Color::rgb(0.04, 0.04, 0.04)));

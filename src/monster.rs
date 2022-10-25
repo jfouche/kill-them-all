@@ -1,13 +1,19 @@
+use std::ops::Mul;
+
 use crate::components::*;
 use bevy::prelude::*;
+use bevy_rapier2d::prelude::*;
 use rand::{thread_rng, Rng};
 
 pub struct MonsterPlugin;
 
 impl Plugin for MonsterPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(init_monster_spawning)
-            .add_system(spawn_monsters);
+        app
+            .add_startup_system(init_monster_spawning)
+            .add_system(spawn_monsters)
+            .add_system(monsters_moves)
+            ;
     }
 }
 
@@ -16,6 +22,8 @@ struct MonsterBundle {
     #[bundle]
     sprite_bundle: SpriteBundle,
     monster: Monster,
+    body: RigidBody,
+    velocity: Velocity
 }
 
 impl MonsterBundle {
@@ -30,7 +38,9 @@ impl MonsterBundle {
                 transform: Transform::from_xyz(x, y, 1.),
                 ..Default::default()
             },
-            monster: Monster,
+            monster: Monster { speed: 6. },
+            body: RigidBody::Dynamic,
+            velocity: Velocity::linear(Vec2::default())
         }
     }
 }
@@ -54,11 +64,22 @@ fn spawn_monsters(mut commands: Commands, time: Res<Time>, mut config: ResMut<Mo
     if config.timer.finished() {
         let mut rng = thread_rng();
         for _ in 0..5 {
-            let x: f32 = rng.gen_range(-5. .. 5.);
-            let y: f32 = rng.gen_range(-3. .. 3.);
+            let x: f32 = rng.gen_range(-15. .. 15.);
+            let y: f32 = rng.gen_range(-10. .. 10.);
             commands
                 .spawn_bundle(MonsterBundle::from_xy(x, y))
                 .insert(Name::new("Enemy"));
         }
+    }
+}
+
+fn monsters_moves(mut q_monsters: Query<(&Transform, &mut Velocity, &Monster), Without<Player>>, q_player: Query<&Transform, With<Player>>) {
+    let player = q_player.single();
+
+    for (transform, mut velocity, monster) in q_monsters.iter_mut() {
+        let direction = player.translation - transform.translation;
+        warn!("monster - dir = {}", direction);
+        let offset = direction.normalize().mul(monster.speed);
+        velocity.linvel = Vec2::new(offset.x, offset.y);
     }
 }
