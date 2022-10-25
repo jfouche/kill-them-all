@@ -4,6 +4,7 @@ use bevy_inspector_egui::WorldInspectorPlugin;
 
 mod components;
 mod player;
+mod monster;
 
 fn main() {
     App::new()
@@ -20,6 +21,7 @@ fn main() {
         .add_plugin(WorldInspectorPlugin::new())
         // Game plugins
         .add_plugin(player::PlayerPlugin)
+        .add_plugin(monster::MonsterPlugin)
         // startup
         .add_startup_system(startup)
         // systems

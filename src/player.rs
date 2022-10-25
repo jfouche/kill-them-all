@@ -33,11 +33,11 @@ impl Default for PlayerBundle {
         PlayerBundle {
             sprite_bundle: SpriteBundle {
                 sprite: Sprite {
-                    color: Color::rgb(0.7, 0.4, 0.5),
+                    color: Color::rgb(0.3, 0.4, 0.8),
                     custom_size: Some(PLAYER_SIZE),
                     ..Default::default()
                 },
-                transform: Transform::from_xyz(0., 0., 0.),
+                transform: Transform::from_xyz(0., 0., 10.),
                 ..Default::default()
             },
             player: Player { speed: 8. },

@@ -4,3 +4,6 @@ use bevy::prelude::*;
 pub struct Player {
     pub speed: f32
 }
+
+#[derive(Component)]
+pub struct Monster;
