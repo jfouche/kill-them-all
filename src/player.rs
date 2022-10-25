@@ -22,9 +22,10 @@ struct PlayerBundle {
     sprite_bundle: SpriteBundle,
     player: Player,
     body: RigidBody,
-    // collider: Collider,
+    collider: Collider,
     velocity: Velocity,
-    // constraints: LockedAxes,
+    constraints: LockedAxes,
+    gravity: GravityScale,
     // events: ActiveEvents
 }
 
@@ -42,8 +43,9 @@ impl Default for PlayerBundle {
             },
             player: Player { speed: 8. },
             body: RigidBody::Dynamic,
-            //     collider: Collider::cuboid(PLAYER_SIZE.x/2., PLAYER_SIZE.y/2.),
-            //     constraints: LockedAxes::ROTATION_LOCKED,
+            collider: Collider::cuboid(PLAYER_SIZE.x/2., PLAYER_SIZE.y/2.),
+            gravity: GravityScale(0.0),
+            constraints: LockedAxes::ROTATION_LOCKED,
             //     events: ActiveEvents::COLLISION_EVENTS,
             velocity: Velocity::default(),
         }
@@ -82,4 +84,11 @@ fn player_movement(
         }
             velocity.linvel = linvel.normalize_or_zero().mul(player.speed);
     }
+}
+
+///
+/// 
+/// 
+fn player_touched_by_monster() {
+
 }

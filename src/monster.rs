@@ -23,16 +23,20 @@ struct MonsterBundle {
     sprite_bundle: SpriteBundle,
     monster: Monster,
     body: RigidBody,
+    collider: Collider,
+    gravity: GravityScale,
+    constraints: LockedAxes,
     velocity: Velocity
 }
 
 impl MonsterBundle {
     fn from_xy(x: f32, y: f32) -> Self {
+        let size = Vec2::new(1., 1.);
         MonsterBundle {
             sprite_bundle: SpriteBundle {
                 sprite: Sprite {
                     color: Color::rgb(0.8, 0.3, 0.3),
-                    custom_size: Some(Vec2::new(1.0, 1.0)),
+                    custom_size: Some(size),
                     ..Default::default()
                 },
                 transform: Transform::from_xyz(x, y, 1.),
@@ -40,6 +44,9 @@ impl MonsterBundle {
             },
             monster: Monster { speed: 6. },
             body: RigidBody::Dynamic,
+            collider: Collider::cuboid(size.x / 2., size.y / 2.),
+            gravity: GravityScale(0.0),
+            constraints: LockedAxes::ROTATION_LOCKED,
             velocity: Velocity::linear(Vec2::default())
         }
     }
@@ -52,11 +59,12 @@ struct MonsterSpawnConfig {
 
 fn init_monster_spawning(mut commands: Commands) {
     commands.insert_resource(MonsterSpawnConfig {
-        // create the repeating timer
         timer: Timer::from_seconds(5., true),
     });
 }
-
+///
+/// Spawn monster at Timer times
+/// 
 fn spawn_monsters(mut commands: Commands, time: Res<Time>, mut config: ResMut<MonsterSpawnConfig>) {
     // tick the timer
     config.timer.tick(time.delta());
@@ -73,12 +81,14 @@ fn spawn_monsters(mut commands: Commands, time: Res<Time>, mut config: ResMut<Mo
     }
 }
 
+///
+/// Monsters moves in direction of the Player
+/// 
 fn monsters_moves(mut q_monsters: Query<(&Transform, &mut Velocity, &Monster), Without<Player>>, q_player: Query<&Transform, With<Player>>) {
     let player = q_player.single();
 
     for (transform, mut velocity, monster) in q_monsters.iter_mut() {
         let direction = player.translation - transform.translation;
-        warn!("monster - dir = {}", direction);
         let offset = direction.normalize().mul(monster.speed);
         velocity.linvel = Vec2::new(offset.x, offset.y);
     }
