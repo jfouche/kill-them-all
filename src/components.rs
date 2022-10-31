@@ -9,3 +9,6 @@ pub struct Player {
 pub struct Monster {
     pub speed: f32,
 }
+
+#[derive(Component)]
+pub struct Bullet;

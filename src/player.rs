@@ -3,14 +3,15 @@ use std::ops::Mul;
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
-use crate::components::Player;
+use crate::{components::Player, bullets::{spawn_bullet_at, BulletOptions}};
 
 pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(spawn_player)
-            .add_system(player_movement);
+            .add_system(player_movement)
+            .add_system(player_touched_by_monster);
     }
 }
 
@@ -43,7 +44,7 @@ impl Default for PlayerBundle {
             },
             player: Player { speed: 8. },
             body: RigidBody::Dynamic,
-            collider: Collider::cuboid(PLAYER_SIZE.x/2., PLAYER_SIZE.y/2.),
+            collider: Collider::cuboid(PLAYER_SIZE.x / 2., PLAYER_SIZE.y / 2.),
             gravity: GravityScale(0.0),
             constraints: LockedAxes::ROTATION_LOCKED,
             //     events: ActiveEvents::COLLISION_EVENTS,
@@ -82,13 +83,25 @@ fn player_movement(
         if keyboard_input.any_pressed([KeyCode::Down, KeyCode::Numpad2]) {
             linvel.y = -1.0;
         }
-            velocity.linvel = linvel.normalize_or_zero().mul(player.speed);
+        velocity.linvel = linvel.normalize_or_zero().mul(player.speed);
     }
 }
 
 ///
-/// 
-/// 
-fn player_touched_by_monster() {
-
+///
+///
+fn player_touched_by_monster(
+    mut commands: Commands,
+    keyboard_input: Res<Input<KeyCode>>,
+    mut players: Query<&Transform, With<Player>>,
+) {
+    for transform in players.iter_mut() {
+        if keyboard_input.any_just_pressed([KeyCode::Space]) {
+            let options = BulletOptions {
+                pos: Vec2::new(transform.translation.x, transform.translation.y),
+                direction: Vec2::new(1.0, 1.0)
+            };
+            spawn_bullet_at(&mut commands, options)
+        }
+    }
 }

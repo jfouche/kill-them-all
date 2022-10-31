@@ -5,6 +5,7 @@ use bevy_rapier2d::prelude::*;
 mod components;
 mod monster;
 mod player;
+mod bullets;
 
 fn main() {
     App::new()
@@ -17,8 +18,8 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         // debug plugins
-        .add_plugin(RapierDebugRenderPlugin::default())
-        .add_plugin(WorldInspectorPlugin::new())
+        // .add_plugin(RapierDebugRenderPlugin::default())
+        // .add_plugin(WorldInspectorPlugin::new())
         // Game plugins
         .add_plugin(player::PlayerPlugin)
         .add_plugin(monster::MonsterPlugin)
