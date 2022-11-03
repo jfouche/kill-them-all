@@ -10,8 +10,18 @@ pub struct BulletOptions{
     pub direction: Vec2
 }
 
+impl BulletOptions {
+    pub fn new(player: Vec3, target: Vec3) -> Self {
+        let dir = target - player;
+        BulletOptions {
+            pos: Vec2::new(player.x, player.y),
+            direction: Vec2::new(dir.x, dir.y)
+        }
+    }
+}
+
 #[derive(Bundle)]
-struct BulletBundle {
+pub struct BulletBundle {
     #[bundle]
     sprite_bundle: SpriteBundle,
     body: RigidBody,
@@ -24,7 +34,7 @@ struct BulletBundle {
 }
 
 impl BulletBundle {
-    fn new(options: BulletOptions) -> Self {
+    pub fn new(options: BulletOptions) -> Self {
         let velocity = options.direction.normalize() * BULLET_SPEED;
         BulletBundle {
             sprite_bundle: SpriteBundle {
