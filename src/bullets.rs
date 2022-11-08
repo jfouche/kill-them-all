@@ -6,22 +6,22 @@ use crate::components::*;
 const BULLET_SPEED: f32 = 20.0;
 
 pub struct BulletOptions {
-    pub pos: Vec2,
-    pub direction: Vec2,
+    pos: Vec3,
+    direction: Vect,
 }
 
 impl BulletOptions {
     pub fn new(player: Vec3, target: Vec3) -> Self {
         let dir = target - player;
         BulletOptions {
-            pos: Vec2::new(player.x, player.y),
-            direction: Vec2::new(dir.x, dir.y),
+            pos: player,
+            direction: Vect::new(dir.x, dir.y),
         }
     }
 }
 
 #[derive(Bundle)]
-pub struct BulletBundle {
+struct BulletBundle {
     #[bundle]
     sprite_bundle: SpriteBundle,
     body: RigidBody,
@@ -34,7 +34,7 @@ pub struct BulletBundle {
 }
 
 impl BulletBundle {
-    pub fn new(options: BulletOptions) -> Self {
+    fn new(options: BulletOptions) -> Self {
         let velocity = options.direction.normalize() * BULLET_SPEED;
         BulletBundle {
             sprite_bundle: SpriteBundle {
@@ -43,7 +43,7 @@ impl BulletBundle {
                     custom_size: Some(Vec2::new(0.2, 0.2)),
                     ..Default::default()
                 },
-                transform: Transform::from_xyz(options.pos.x, options.pos.y, 0.),
+                transform: Transform::from_translation(options.pos),
                 ..Default::default()
             },
             body: RigidBody::Dynamic,
@@ -65,5 +65,7 @@ pub fn spawn_bullet_at(
     // materials: &Res<Materials>,
     options: BulletOptions,
 ) {
-    commands.spawn_bundle(BulletBundle::new(options));
+    commands
+        .spawn_bundle(BulletBundle::new(options))
+        .insert(Name::new("Bullet"));
 }

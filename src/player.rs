@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
 use crate::{
-    bullets::{spawn_bullet_at, BulletOptions, BulletBundle},
+    bullets::{spawn_bullet_at, BulletOptions},
     components::*,
 };
 
@@ -14,8 +14,7 @@ impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(spawn_player)
             .add_system(player_movement)
-            .add_system(player_fires)
-            .add_system(player_touched_by_monster);
+            .add_system(player_fires);
     }
 }
 
@@ -128,27 +127,8 @@ fn player_fires(
                 }
             });
         if let Some(nearest) = nearest_monster {
-            let bullet_options = BulletOptions::new(player, nearest);
-            commands.spawn_bundle(BulletBundle::new(bullet_options));
+            spawn_bullet_at(&mut commands, BulletOptions::new(player, nearest));
         }
     }
 }
 
-///
-///
-///
-fn player_touched_by_monster(
-    mut commands: Commands,
-    keyboard_input: Res<Input<KeyCode>>,
-    mut players: Query<&Transform, With<Player>>,
-) {
-    for transform in players.iter_mut() {
-        if keyboard_input.any_just_pressed([KeyCode::Space]) {
-            let options = BulletOptions {
-                pos: Vec2::new(transform.translation.x, transform.translation.y),
-                direction: Vec2::new(1.0, 1.0),
-            };
-            spawn_bullet_at(&mut commands, options)
-        }
-    }
-}
