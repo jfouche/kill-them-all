@@ -3,6 +3,7 @@ use bevy_inspector_egui::WorldInspectorPlugin;
 use bevy_rapier2d::prelude::*;
 
 mod bullets;
+mod collisions;
 mod components;
 mod monster;
 mod player;
@@ -23,6 +24,7 @@ fn main() {
         // Game plugins
         .add_plugin(player::PlayerPlugin)
         .add_plugin(monster::MonsterPlugin)
+        .add_plugin(collisions::CollisionsPlugin)
         // startup
         .add_startup_system(startup)
         // systems

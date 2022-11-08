@@ -15,7 +15,7 @@ impl BulletOptions {
         let dir = target - player;
         BulletOptions {
             pos: Vec2::new(player.x, player.y),
-            direction: Vec2::new(dir.x, dir.y)
+            direction: Vec2::new(dir.x, dir.y),
         }
     }
 }
@@ -29,7 +29,7 @@ pub struct BulletBundle {
     gravity: GravityScale,
     velocity: Velocity,
     constraints: LockedAxes,
-    // events: ActiveEvents,
+    events: ActiveEvents,
     bullet: Bullet,
 }
 
@@ -50,7 +50,7 @@ impl BulletBundle {
             collider: Collider::cuboid(0.1, 0.1),
             gravity: GravityScale(0.0),
             constraints: LockedAxes::ROTATION_LOCKED,
-            // events: ActiveEvents::CONTACT_FORCE_EVENTS,
+            events: ActiveEvents::COLLISION_EVENTS,
             velocity: Velocity::linear(velocity),
             bullet: Bullet,
         }
