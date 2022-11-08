@@ -5,9 +5,9 @@ use crate::components::*;
 
 const BULLET_SPEED: f32 = 20.0;
 
-pub struct BulletOptions{
+pub struct BulletOptions {
     pub pos: Vec2,
-    pub direction: Vec2
+    pub direction: Vec2,
 }
 
 #[derive(Bundle)]
@@ -55,6 +55,5 @@ pub fn spawn_bullet_at(
     // materials: &Res<Materials>,
     options: BulletOptions,
 ) {
-    commands
-        .spawn_bundle(BulletBundle::new(options));
+    commands.spawn_bundle(BulletBundle::new(options));
 }

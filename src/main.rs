@@ -2,10 +2,10 @@ use bevy::{prelude::*, render::camera::ScalingMode};
 use bevy_inspector_egui::WorldInspectorPlugin;
 use bevy_rapier2d::prelude::*;
 
+mod bullets;
 mod components;
 mod monster;
 mod player;
-mod bullets;
 
 fn main() {
     App::new()
@@ -36,7 +36,7 @@ fn startup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn_bundle(camera);
 
     commands.insert_resource(ClearColor(Color::rgb(0.04, 0.04, 0.04)));
-/*
+    /*
     // Text with one section
     commands.spawn_bundle(
         // Create a TextBundle that has a Text with a single section.

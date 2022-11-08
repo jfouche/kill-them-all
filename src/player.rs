@@ -3,7 +3,10 @@ use std::ops::Mul;
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
-use crate::{components::Player, bullets::{spawn_bullet_at, BulletOptions}};
+use crate::{
+    bullets::{spawn_bullet_at, BulletOptions},
+    components::Player,
+};
 
 pub struct PlayerPlugin;
 
@@ -99,7 +102,7 @@ fn player_touched_by_monster(
         if keyboard_input.any_just_pressed([KeyCode::Space]) {
             let options = BulletOptions {
                 pos: Vec2::new(transform.translation.x, transform.translation.y),
-                direction: Vec2::new(1.0, 1.0)
+                direction: Vec2::new(1.0, 1.0),
             };
             spawn_bullet_at(&mut commands, options)
         }

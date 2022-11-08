@@ -9,11 +9,9 @@ pub struct MonsterPlugin;
 
 impl Plugin for MonsterPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .add_startup_system(init_monster_spawning)
+        app.add_startup_system(init_monster_spawning)
             .add_system(spawn_monsters)
-            .add_system(monsters_moves)
-            ;
+            .add_system(monsters_moves);
     }
 }
 
@@ -26,7 +24,7 @@ struct MonsterBundle {
     collider: Collider,
     gravity: GravityScale,
     constraints: LockedAxes,
-    velocity: Velocity
+    velocity: Velocity,
 }
 
 impl MonsterBundle {
@@ -47,7 +45,7 @@ impl MonsterBundle {
             collider: Collider::cuboid(size.x / 2., size.y / 2.),
             gravity: GravityScale(0.0),
             constraints: LockedAxes::ROTATION_LOCKED,
-            velocity: Velocity::linear(Vec2::default())
+            velocity: Velocity::linear(Vec2::default()),
         }
     }
 }
@@ -64,7 +62,7 @@ fn init_monster_spawning(mut commands: Commands) {
 }
 ///
 /// Spawn monster at Timer times
-/// 
+///
 fn spawn_monsters(mut commands: Commands, time: Res<Time>, mut config: ResMut<MonsterSpawnConfig>) {
     // tick the timer
     config.timer.tick(time.delta());
@@ -72,8 +70,8 @@ fn spawn_monsters(mut commands: Commands, time: Res<Time>, mut config: ResMut<Mo
     if config.timer.finished() {
         let mut rng = thread_rng();
         for _ in 0..5 {
-            let x: f32 = rng.gen_range(-15. .. 15.);
-            let y: f32 = rng.gen_range(-10. .. 10.);
+            let x: f32 = rng.gen_range(-15. ..15.);
+            let y: f32 = rng.gen_range(-10. ..10.);
             commands
                 .spawn_bundle(MonsterBundle::from_xy(x, y))
                 .insert(Name::new("Enemy"));
@@ -83,8 +81,11 @@ fn spawn_monsters(mut commands: Commands, time: Res<Time>, mut config: ResMut<Mo
 
 ///
 /// Monsters moves in direction of the Player
-/// 
-fn monsters_moves(mut q_monsters: Query<(&Transform, &mut Velocity, &Monster), Without<Player>>, q_player: Query<&Transform, With<Player>>) {
+///
+fn monsters_moves(
+    mut q_monsters: Query<(&Transform, &mut Velocity, &Monster), Without<Player>>,
+    q_player: Query<&Transform, With<Player>>,
+) {
     let player = q_player.single();
 
     for (transform, mut velocity, monster) in q_monsters.iter_mut() {
