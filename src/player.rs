@@ -4,8 +4,8 @@ use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
 use crate::{
-    bullets::{spawn_bullet_at, BulletOptions},
-    components::Player,
+    bullets::{spawn_bullet_at, BulletOptions, BulletBundle},
+    components::*,
 };
 
 pub struct PlayerPlugin;
@@ -14,8 +14,14 @@ impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(spawn_player)
             .add_system(player_movement)
+            .add_system(player_fires)
             .add_system(player_touched_by_monster);
     }
+}
+
+struct PlayerFireConfig {
+    /// timer between attacks per seconds
+    timer: Timer,
 }
 
 const PLAYER_SIZE: Vec2 = Vec2::new(1.0, 1.0);
@@ -63,6 +69,10 @@ fn spawn_player(mut commands: Commands, mut _materials: ResMut<Assets<ColorMater
     commands
         .spawn_bundle(PlayerBundle::default())
         .insert(Name::new("Player"));
+
+    commands.insert_resource(PlayerFireConfig {
+        timer: Timer::from_seconds(1., true),
+    });
 }
 
 ///
@@ -87,6 +97,40 @@ fn player_movement(
             linvel.y = -1.0;
         }
         velocity.linvel = linvel.normalize_or_zero().mul(player.speed);
+    }
+}
+
+///
+/// Spawn monster at Timer times
+///
+fn player_fires(
+    mut commands: Commands,
+    time: Res<Time>,
+    mut config: ResMut<PlayerFireConfig>,
+    q_player: Query<&Transform, With<Player>>,
+    q_monsters: Query<&Transform, With<Monster>>,
+) {
+    // tick the timer
+    config.timer.tick(time.delta());
+
+    if config.timer.finished() {
+        let player = q_player.single().translation;
+
+        // Get the nearest monster
+        let nearest_monster = q_monsters
+            .iter()
+            .map(|transform| transform.translation)
+            .reduce(|current, other| {
+                if player.distance(other) < player.distance(current) {
+                    other
+                } else {
+                    current
+                }
+            });
+        if let Some(nearest) = nearest_monster {
+            let bullet_options = BulletOptions::new(player, nearest);
+            commands.spawn_bundle(BulletBundle::new(bullet_options));
+        }
     }
 }
 
