@@ -86,11 +86,11 @@ fn monsters_moves(
     mut q_monsters: Query<(&Transform, &mut Velocity, &Monster), Without<Player>>,
     q_player: Query<&Transform, With<Player>>,
 ) {
-    let player = q_player.single();
-
-    for (transform, mut velocity, monster) in q_monsters.iter_mut() {
-        let direction = player.translation - transform.translation;
-        let offset = direction.normalize().mul(monster.speed);
-        velocity.linvel = Vec2::new(offset.x, offset.y);
+    if let Ok(player) = q_player.get_single() {
+        for (transform, mut velocity, monster) in q_monsters.iter_mut() {
+            let direction = player.translation - transform.translation;
+            let offset = direction.normalize().mul(monster.speed);
+            velocity.linvel = Vec2::new(offset.x, offset.y);
+        }
     }
 }

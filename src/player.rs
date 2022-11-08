@@ -12,15 +12,27 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(spawn_player)
+        app.add_event::<PlayerHitEvent>()
+            .add_startup_system(spawn_player)
             .add_system(player_movement)
-            .add_system(player_fires);
+            .add_system(player_fires)
+            .add_system(on_player_hit);
     }
 }
 
 struct PlayerFireConfig {
     /// timer between attacks per seconds
     timer: Timer,
+}
+
+pub struct PlayerHitEvent {
+    entity: Entity,
+}
+
+impl PlayerHitEvent {
+    pub fn new(entity: Entity) -> Self {
+        PlayerHitEvent { entity }
+    }
 }
 
 const PLAYER_SIZE: Vec2 = Vec2::new(1.0, 1.0);
@@ -35,7 +47,7 @@ struct PlayerBundle {
     velocity: Velocity,
     constraints: LockedAxes,
     gravity: GravityScale,
-    // events: ActiveEvents
+    events: ActiveEvents,
 }
 
 impl Default for PlayerBundle {
@@ -55,7 +67,7 @@ impl Default for PlayerBundle {
             collider: Collider::cuboid(PLAYER_SIZE.x / 2., PLAYER_SIZE.y / 2.),
             gravity: GravityScale(0.0),
             constraints: LockedAxes::ROTATION_LOCKED,
-            //     events: ActiveEvents::COLLISION_EVENTS,
+            events: ActiveEvents::COLLISION_EVENTS,
             velocity: Velocity::default(),
         }
     }
@@ -113,22 +125,36 @@ fn player_fires(
     config.timer.tick(time.delta());
 
     if config.timer.finished() {
-        let player = q_player.single().translation;
-
-        // Get the nearest monster
-        let nearest_monster = q_monsters
-            .iter()
-            .map(|transform| transform.translation)
-            .reduce(|current, other| {
-                if player.distance(other) < player.distance(current) {
-                    other
-                } else {
-                    current
-                }
-            });
-        if let Some(nearest) = nearest_monster {
-            spawn_bullet_at(&mut commands, BulletOptions::new(player, nearest));
+        if let Ok(player) = q_player.get_single() {
+            let player = player.translation;
+            // Get the nearest monster
+            let nearest_monster = q_monsters
+                .iter()
+                .map(|transform| transform.translation)
+                .reduce(|current, other| {
+                    if player.distance(other) < player.distance(current) {
+                        other
+                    } else {
+                        current
+                    }
+                });
+            if let Some(nearest) = nearest_monster {
+                spawn_bullet_at(&mut commands, BulletOptions::new(player, nearest));
+            }
         }
     }
 }
 
+///
+/// player hit
+///
+fn on_player_hit(
+    mut commands: Commands,
+    mut player_hit_events: EventReader<PlayerHitEvent>,
+    // mut send_player_death: EventWriter<PlayerDeathEvent>,
+) {
+    warn!("on_player_hit");
+    for event in player_hit_events.iter() {
+        commands.entity(event.entity).despawn();
+    }
+}
