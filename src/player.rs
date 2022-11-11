@@ -35,6 +35,7 @@ impl PlayerHitEvent {
     }
 }
 
+
 const PLAYER_SIZE: Vec2 = Vec2::new(1.0, 1.0);
 
 #[derive(Bundle)]
@@ -42,6 +43,7 @@ struct PlayerBundle {
     #[bundle]
     sprite_bundle: SpriteBundle,
     player: Player,
+    score: Score,
     body: RigidBody,
     collider: Collider,
     velocity: Velocity,
@@ -63,6 +65,7 @@ impl Default for PlayerBundle {
                 ..Default::default()
             },
             player: Player { speed: 8. },
+            score: Score(0),
             body: RigidBody::Dynamic,
             collider: Collider::cuboid(PLAYER_SIZE.x / 2., PLAYER_SIZE.y / 2.),
             gravity: GravityScale(0.0),
@@ -153,8 +156,8 @@ fn on_player_hit(
     mut player_hit_events: EventReader<PlayerHitEvent>,
     // mut send_player_death: EventWriter<PlayerDeathEvent>,
 ) {
-    warn!("on_player_hit");
     for event in player_hit_events.iter() {
+        warn!("on_player_hit");
         commands.entity(event.entity).despawn();
     }
 }

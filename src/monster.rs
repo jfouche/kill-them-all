@@ -1,6 +1,6 @@
 use std::ops::Mul;
 
-use crate::components::*;
+use crate::{components::*};
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 use rand::{thread_rng, Rng};
@@ -9,9 +9,23 @@ pub struct MonsterPlugin;
 
 impl Plugin for MonsterPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(init_monster_spawning)
+        app
+            .add_event::<MonsterHitEvent>()
+            .add_startup_system(init_monster_spawning)
             .add_system(spawn_monsters)
-            .add_system(monsters_moves);
+            .add_system(monsters_moves)
+            .add_system(on_monster_hit);
+    }
+}
+
+
+pub struct MonsterHitEvent {
+    entity: Entity,
+}
+
+impl MonsterHitEvent {
+    pub fn new(entity: Entity) -> Self {
+        MonsterHitEvent { entity }
     }
 }
 
@@ -91,6 +105,24 @@ fn monsters_moves(
             let direction = player.translation - transform.translation;
             let offset = direction.normalize().mul(monster.speed);
             velocity.linvel = Vec2::new(offset.x, offset.y);
+        }
+    }
+}
+
+///
+/// monster hit
+///
+fn on_monster_hit(
+    mut commands: Commands,
+    mut monster_hit_events: EventReader<MonsterHitEvent>,
+    mut q_score: Query<&mut Score, With<Player>>
+    // mut send_monster_death: EventWriter<PlayerDeathEvent>,
+) {
+    for event in monster_hit_events.iter() {
+        warn!("on_monster_hit");
+        commands.entity(event.entity).despawn();
+        if let Ok(mut score) = q_score.get_single_mut() {
+            score.0 = score.0 + 1;
         }
     }
 }

@@ -12,3 +12,6 @@ pub struct Monster {
 
 #[derive(Component)]
 pub struct Bullet;
+
+#[derive(Component)]
+pub struct Score(pub u16);
