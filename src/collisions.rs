@@ -22,7 +22,8 @@ fn monster_hit_by_bullet(
     q_bullets: Query<Entity, With<Bullet>>,
     mut monster_hit_events: EventWriter<MonsterHitEvent>
 ) {
-    let mut entities_destroyed = HashSet::new();
+    let mut monster_hit = HashSet::new();
+    let mut bullet_hit = HashSet::new();
     collisions
         .iter()
         .filter_map(|e| match e {
@@ -33,14 +34,18 @@ fn monster_hit_by_bullet(
             for monster in q_monsters.iter() {
                 for bullet in q_bullets.iter() {
                     if (e1 == monster && e2 == bullet) || (e1 == bullet && e2 == monster) {
-                        entities_destroyed.insert(e1);
-                        entities_destroyed.insert(e2);
+                        monster_hit.insert(monster);
+                        bullet_hit.insert(bullet);
                     }
                 }
             }
         });
 
-    for entity in entities_destroyed.iter() {
+        for bullet in bullet_hit {
+            commands.entity(bullet).despawn();
+        }
+
+    for entity in monster_hit.iter() {
         monster_hit_events.send(MonsterHitEvent::new(*entity));
     }
 }

@@ -43,7 +43,6 @@ struct PlayerBundle {
     #[bundle]
     sprite_bundle: SpriteBundle,
     player: Player,
-    score: Score,
     body: RigidBody,
     collider: Collider,
     velocity: Velocity,
@@ -65,7 +64,6 @@ impl Default for PlayerBundle {
                 ..Default::default()
             },
             player: Player { speed: 8. },
-            score: Score(0),
             body: RigidBody::Dynamic,
             collider: Collider::cuboid(PLAYER_SIZE.x / 2., PLAYER_SIZE.y / 2.),
             gravity: GravityScale(0.0),

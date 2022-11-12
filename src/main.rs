@@ -1,11 +1,13 @@
 use bevy::{prelude::*, render::camera::ScalingMode};
 use bevy_inspector_egui::WorldInspectorPlugin;
 use bevy_rapier2d::prelude::*;
+use resources::ScoreResource;
 
+mod components;
+mod resources;
 mod top_menu;
 mod bullets;
 mod collisions;
-mod components;
 mod monster;
 mod player;
 
@@ -27,6 +29,8 @@ fn main() {
         .add_plugin(player::PlayerPlugin)
         .add_plugin(monster::MonsterPlugin)
         .add_plugin(collisions::CollisionsPlugin)
+        // resources
+        .init_resource::<ScoreResource>()
         // startup
         .add_startup_system(startup)
         // systems

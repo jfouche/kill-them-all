@@ -1,6 +1,6 @@
 use std::ops::Mul;
 
-use crate::{components::*};
+use crate::{components::*, resources::*};
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 use rand::{thread_rng, Rng};
@@ -115,14 +115,12 @@ fn monsters_moves(
 fn on_monster_hit(
     mut commands: Commands,
     mut monster_hit_events: EventReader<MonsterHitEvent>,
-    mut q_score: Query<&mut Score, With<Player>>
+    mut score: ResMut<ScoreResource>
     // mut send_monster_death: EventWriter<PlayerDeathEvent>,
 ) {
     for event in monster_hit_events.iter() {
         warn!("on_monster_hit");
         commands.entity(event.entity).despawn();
-        if let Ok(mut score) = q_score.get_single_mut() {
-            score.0 = score.0 + 1;
-        }
+        score.0 = score.0 + 1;
     }
 }

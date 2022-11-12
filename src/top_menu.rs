@@ -1,5 +1,8 @@
 use bevy::prelude::*;
-use crate::components::*;
+use crate::{components::*, resources::ScoreResource};
+
+#[derive(Component)]
+struct ScoreText;
 
 pub struct TopMenuPlugin;
 
@@ -40,13 +43,11 @@ fn init_top_menu(mut commands: Commands, asset_server: Res<AssetServer>)
             },
             ..default()
         })
-    ).insert(Score(0));
+    ).insert(ScoreText);
 }
 
-fn update_score(mut q_text: Query<&mut Text, With<Score>>, q_score:Query<&Score, With<Player>> ) {
+fn update_score(score: Res<ScoreResource>, mut q_text: Query<&mut Text, With<ScoreText>>) {
     if let Ok(mut text) = q_text.get_single_mut() {
-        if let Ok(score) = q_score.get_single() {
-            text.sections[1].value = format!("{}", score.0);
-        }
+        text.sections[1].value = format!("{}", score.0);
     }
 }
