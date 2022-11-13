@@ -64,7 +64,7 @@ impl Default for PlayerBundle {
                 ..Default::default()
             },
             player: Player { speed: 8. },
-            life: Life(100),
+            life: Life::new(10),
             body: RigidBody::Dynamic,
             collider: Collider::cuboid(PLAYER_SIZE.x / 2., PLAYER_SIZE.y / 2.),
             gravity: GravityScale(0.0),
@@ -162,8 +162,8 @@ fn on_player_hit(
     if let Ok(mut life) = q_player.get_single_mut() {
         for event in player_hit_events.iter() {
             warn!("on_player_hit");
-            life.0 = life.0 - 1;
-            if life.0 == 0 {
+            life.hit(1);
+            if life.is_dead() {
                 commands.entity(event.entity).despawn();
             }
         }
