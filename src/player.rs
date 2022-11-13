@@ -140,7 +140,7 @@ fn player_fires(
                     }
                 });
             if let Some(nearest) = nearest_monster {
-                spawn_bullet_at(&mut commands, BulletOptions::new(player, nearest));
+                spawn_bullet_at(&mut commands, BulletOptions::new(player, PLAYER_SIZE, nearest));
             }
         }
     }
