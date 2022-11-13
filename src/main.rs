@@ -15,15 +15,15 @@ fn main() {
     App::new()
         .insert_resource(WindowDescriptor {
             title: "Platformer!".to_string(),
-            width: 640.0,
-            height: 400.0,
+            width: 800.0,
+            height: 600.0,
             ..Default::default()
         })
         .add_plugins(DefaultPlugins)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         // debug plugins
-        // .add_plugin(RapierDebugRenderPlugin::default())
-        // .add_plugin(WorldInspectorPlugin::new())
+        .add_plugin(RapierDebugRenderPlugin::default())
+        .add_plugin(WorldInspectorPlugin::new())
         // Game plugins
         .add_plugin(top_menu::TopMenuPlugin)
         .add_plugin(player::PlayerPlugin)

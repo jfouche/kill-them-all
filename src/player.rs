@@ -35,7 +35,6 @@ impl PlayerHitEvent {
     }
 }
 
-
 const PLAYER_SIZE: Vec2 = Vec2::new(1.0, 1.0);
 
 #[derive(Bundle)]
@@ -43,6 +42,7 @@ struct PlayerBundle {
     #[bundle]
     sprite_bundle: SpriteBundle,
     player: Player,
+    life: Life,
     body: RigidBody,
     collider: Collider,
     velocity: Velocity,
@@ -64,6 +64,7 @@ impl Default for PlayerBundle {
                 ..Default::default()
             },
             player: Player { speed: 8. },
+            life: Life(100),
             body: RigidBody::Dynamic,
             collider: Collider::cuboid(PLAYER_SIZE.x / 2., PLAYER_SIZE.y / 2.),
             gravity: GravityScale(0.0),
@@ -140,7 +141,10 @@ fn player_fires(
                     }
                 });
             if let Some(nearest) = nearest_monster {
-                spawn_bullet_at(&mut commands, BulletOptions::new(player, PLAYER_SIZE, nearest));
+                spawn_bullet_at(
+                    &mut commands,
+                    BulletOptions::new(player, PLAYER_SIZE, nearest),
+                );
             }
         }
     }
@@ -152,10 +156,16 @@ fn player_fires(
 fn on_player_hit(
     mut commands: Commands,
     mut player_hit_events: EventReader<PlayerHitEvent>,
+    mut q_player: Query<&mut Life, With<Player>>,
     // mut send_player_death: EventWriter<PlayerDeathEvent>,
 ) {
-    for event in player_hit_events.iter() {
-        warn!("on_player_hit");
-        commands.entity(event.entity).despawn();
+    if let Ok(mut life) = q_player.get_single_mut() {
+        for event in player_hit_events.iter() {
+            warn!("on_player_hit");
+            life.0 = life.0 - 1;
+            if life.0 == 0 {
+                commands.entity(event.entity).despawn();
+            }
+        }
     }
 }

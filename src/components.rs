@@ -12,3 +12,6 @@ pub struct Monster {
 
 #[derive(Component)]
 pub struct Bullet;
+
+#[derive(Component)]
+pub struct Life(pub u16);
