@@ -9,16 +9,16 @@ pub struct MonsterPlugin;
 
 impl Plugin for MonsterPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .add_event::<MonsterHitEvent>()
+        app.add_event::<MonsterHitEvent>()
             .add_startup_system(init_monster_spawning)
+            .add_system(spawning_monsters)
             .add_system(spawn_monsters)
             .add_system(monsters_moves)
             .add_system(on_monster_hit);
     }
 }
 
-
+/// Event to notify a monster was hit
 pub struct MonsterHitEvent {
     entity: Entity,
 }
@@ -64,20 +64,73 @@ impl MonsterBundle {
     }
 }
 
-struct MonsterSpawnConfig {
-    /// How often to spawn a new bomb? (repeating timer)
+#[derive(Bundle)]
+struct SpawningMonsterBundle {
+    #[bundle]
+    sprite_bundle: SpriteBundle,
+    monster: SpawningMonster,
+    config: MonsterSpawnConfig
+}
+
+impl SpawningMonsterBundle {
+    fn from_xy(x: f32, y: f32) -> Self {
+        let size = Vec2::new(1., 1.);
+        SpawningMonsterBundle {
+            sprite_bundle: SpriteBundle {
+                sprite: Sprite {
+                    color: Color::rgba(0.8, 0.3, 0.3, 0.2),
+                    custom_size: Some(size),
+                    ..Default::default()
+                },
+                transform: Transform::from_xyz(x, y, 1.),
+                ..Default::default()
+            },
+            monster: SpawningMonster,
+            config: MonsterSpawnConfig::new(x, y)
+        }
+    }
+}
+
+struct MonsterSpawningConfig {
     timer: Timer,
+}
+impl MonsterSpawningConfig {
+    fn default() -> Self {
+        MonsterSpawningConfig {
+            timer: Timer::from_seconds(5., true),
+        }
+    }
+}
+
+#[derive(Component)]
+struct MonsterSpawnConfig {
+    timer: Timer,
+    x: f32,
+    y: f32,
+}
+
+impl MonsterSpawnConfig {
+    fn new(x: f32, y: f32) -> Self {
+        MonsterSpawnConfig {
+            timer: Timer::from_seconds(1., false),
+            x,
+            y,
+        }
+    }
 }
 
 fn init_monster_spawning(mut commands: Commands) {
-    commands.insert_resource(MonsterSpawnConfig {
-        timer: Timer::from_seconds(5., true),
-    });
+    commands.insert_resource(MonsterSpawningConfig::default());
 }
+
 ///
 /// Spawn monster at Timer times
 ///
-fn spawn_monsters(mut commands: Commands, time: Res<Time>, mut config: ResMut<MonsterSpawnConfig>) {
+fn spawning_monsters(
+    mut commands: Commands,
+    time: Res<Time>,
+    mut config: ResMut<MonsterSpawningConfig>,
+) {
     // tick the timer
     config.timer.tick(time.delta());
 
@@ -87,7 +140,27 @@ fn spawn_monsters(mut commands: Commands, time: Res<Time>, mut config: ResMut<Mo
             let x: f32 = rng.gen_range(-15. ..15.);
             let y: f32 = rng.gen_range(-10. ..10.);
             commands
-                .spawn_bundle(MonsterBundle::from_xy(x, y))
+                .spawn_bundle(SpawningMonsterBundle::from_xy(x, y))
+                .insert(Name::new("Enemy spawning"));
+        }
+    }
+}
+
+///
+/// Spawn monster at Timer times
+///
+fn spawn_monsters(
+    mut commands: Commands,
+    time: Res<Time>,
+    mut query: Query<(Entity, &mut MonsterSpawnConfig)>,
+) {
+    for (entity, mut config) in query.iter_mut() {
+        config.timer.tick(time.delta());
+        if config.timer.finished() {
+            commands.entity(entity).despawn();
+
+            commands
+                .spawn_bundle(MonsterBundle::from_xy(config.x, config.y))
                 .insert(Name::new("Enemy"));
         }
     }
@@ -115,8 +188,7 @@ fn monsters_moves(
 fn on_monster_hit(
     mut commands: Commands,
     mut monster_hit_events: EventReader<MonsterHitEvent>,
-    mut score: ResMut<ScoreResource>
-    // mut send_monster_death: EventWriter<PlayerDeathEvent>,
+    mut score: ResMut<ScoreResource>, // mut send_monster_death: EventWriter<PlayerDeathEvent>,
 ) {
     for event in monster_hit_events.iter() {
         warn!("on_monster_hit");

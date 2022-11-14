@@ -11,6 +11,9 @@ pub struct Monster {
 }
 
 #[derive(Component)]
+pub struct SpawningMonster;
+
+#[derive(Component)]
 pub struct Bullet;
 
 #[derive(Component)]
