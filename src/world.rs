@@ -40,7 +40,7 @@ impl WorldBundle {
 struct Border {
     #[bundle]
     sprite: SpriteBundle,
-    collider: Collider
+    collider: Collider,
 }
 
 impl Border {
@@ -55,7 +55,7 @@ impl Border {
                 transform: Transform::from_xyz(0., WORLD_HEIGH / 2. + BORDER / 2., 0.0),
                 ..Default::default()
             },
-            collider: Collider::cuboid(WORLD_WIDTH / 2., BORDER / 2.)
+            collider: Collider::cuboid(WORLD_WIDTH / 2., BORDER / 2.),
         }
     }
 
@@ -70,7 +70,7 @@ impl Border {
                 transform: Transform::from_xyz(WORLD_WIDTH / 2. + BORDER / 2., 0.0, 0.0),
                 ..Default::default()
             },
-            collider: Collider::cuboid(BORDER / 2., WORLD_HEIGH / 2.)
+            collider: Collider::cuboid(BORDER / 2., WORLD_HEIGH / 2.),
         }
     }
 
@@ -85,7 +85,7 @@ impl Border {
                 transform: Transform::from_xyz(0., -WORLD_HEIGH / 2. - BORDER / 2., 0.0),
                 ..Default::default()
             },
-            collider: Collider::cuboid(WORLD_WIDTH / 2., BORDER / 2.)
+            collider: Collider::cuboid(WORLD_WIDTH / 2., BORDER / 2.),
         }
     }
 
@@ -97,18 +97,22 @@ impl Border {
                     color: TRANSPARENT,
                     ..Default::default()
                 },
-                transform: Transform::from_xyz(- WORLD_WIDTH / 2. - BORDER / 2., 0.0, 0.0),
+                transform: Transform::from_xyz(-WORLD_WIDTH / 2. - BORDER / 2., 0.0, 0.0),
                 ..Default::default()
             },
-            collider: Collider::cuboid(BORDER / 2., WORLD_HEIGH / 2.)
+            collider: Collider::cuboid(BORDER / 2., WORLD_HEIGH / 2.),
         }
     }
 }
 
 fn init_world(mut commands: Commands) {
-    commands.spawn_bundle(WorldBundle::default());
-    commands.spawn_bundle(Border::top());
-    commands.spawn_bundle(Border::right());
-    commands.spawn_bundle(Border::bottom());
-    commands.spawn_bundle(Border::left());
+    commands
+        .spawn_bundle(WorldBundle::default())
+        .insert(Name::new("World"))
+        .add_children(|builder| {
+            builder.spawn_bundle(Border::top());
+            builder.spawn_bundle(Border::right());
+            builder.spawn_bundle(Border::bottom());
+            builder.spawn_bundle(Border::left());
+        });
 }
