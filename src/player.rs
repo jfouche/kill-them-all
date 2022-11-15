@@ -67,8 +67,12 @@ impl PlayerBundle {
     fn new(texture_atlas_handle: Handle<TextureAtlas>) -> Self {
         PlayerBundle {
             sprite: SpriteSheetBundle {
+                sprite: TextureAtlasSprite {
+                    custom_size: Some(PLAYER_SIZE),
+                    ..Default::default()
+                },
                 texture_atlas: texture_atlas_handle,
-                transform: Transform::from_xyz(0., 0., 10.).with_scale(Vec3::splat(1.0 / 16.0)),
+                transform: Transform::from_xyz(0., 0., 10.),
                 ..Default::default()
             },
             player: Player,
