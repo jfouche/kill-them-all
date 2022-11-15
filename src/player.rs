@@ -13,8 +13,9 @@ pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<PlayerHitEvent>()
-            .add_startup_system(spawn_player)
+            .add_startup_system(setup)
             .add_system(player_movement)
+            .add_system(animate_sprite)
             .add_system(player_fires)
             .add_system(on_player_hit);
     }
@@ -35,12 +36,21 @@ impl PlayerHitEvent {
     }
 }
 
+#[derive(Component, Deref, DerefMut)]
+struct AnimationTimer(Timer);
+
+impl AnimationTimer {
+    fn default() -> Self {
+        AnimationTimer(Timer::from_seconds(0.1, true))
+    }
+}
+
 const PLAYER_SIZE: Vec2 = Vec2::new(1.0, 1.0);
 
 #[derive(Bundle)]
 struct PlayerBundle {
     #[bundle]
-    sprite_bundle: SpriteBundle,
+    sprite: SpriteSheetBundle,
     player: Player,
     life: Life,
     body: RigidBody,
@@ -49,18 +59,15 @@ struct PlayerBundle {
     constraints: LockedAxes,
     gravity: GravityScale,
     events: ActiveEvents,
+    animation_timer: AnimationTimer,
 }
 
-impl Default for PlayerBundle {
-    fn default() -> Self {
+impl PlayerBundle {
+    fn new(texture_atlas_handle: Handle<TextureAtlas>) -> Self {
         PlayerBundle {
-            sprite_bundle: SpriteBundle {
-                sprite: Sprite {
-                    color: Color::rgb(0.3, 0.4, 0.8),
-                    custom_size: Some(PLAYER_SIZE),
-                    ..Default::default()
-                },
-                transform: Transform::from_xyz(0., 0., 10.),
+            sprite: SpriteSheetBundle {
+                texture_atlas: texture_atlas_handle,
+                transform: Transform::from_xyz(0., 0., 10.).with_scale(Vec3::splat(1.0 / 16.0)),
                 ..Default::default()
             },
             player: Player { speed: 8. },
@@ -71,16 +78,27 @@ impl Default for PlayerBundle {
             constraints: LockedAxes::ROTATION_LOCKED,
             events: ActiveEvents::COLLISION_EVENTS,
             velocity: Velocity::default(),
+            animation_timer: AnimationTimer::default(),
         }
     }
 }
 
 ///
-///  spawn player system
+///  
 ///
-fn spawn_player(mut commands: Commands, mut _materials: ResMut<Assets<ColorMaterial>>) {
+fn setup(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+) {
+    // load player texture_atlas
+    let texture_handle = asset_server.load("characters/RedNinja/SpriteSheet.png");
+    let texture_atlas = TextureAtlas::from_grid(texture_handle, Vec2::new(16.0, 16.0), 4, 7);
+    let texture_atlas_handle = texture_atlases.add(texture_atlas);
+
+    // spawn player
     commands
-        .spawn_bundle(PlayerBundle::default())
+        .spawn_bundle(PlayerBundle::new(texture_atlas_handle))
         .insert(Name::new("Player"));
 
     commands.insert_resource(PlayerFireConfig {
@@ -166,6 +184,27 @@ fn on_player_hit(
             if life.is_dead() {
                 commands.entity(event.entity).despawn();
             }
+        }
+    }
+}
+
+///
+/// Animate the player sprite
+///
+fn animate_sprite(
+    time: Res<Time>,
+    texture_atlases: Res<Assets<TextureAtlas>>,
+    mut query: Query<(
+        &mut AnimationTimer,
+        &mut TextureAtlasSprite,
+        &Handle<TextureAtlas>,
+    )>,
+) {
+    for (mut timer, mut sprite, texture_atlas_handle) in &mut query {
+        timer.tick(time.delta());
+        if timer.just_finished() {
+            let texture_atlas = texture_atlases.get(texture_atlas_handle).unwrap();
+            sprite.index = (sprite.index + 1) % texture_atlas.textures.len();
         }
     }
 }
