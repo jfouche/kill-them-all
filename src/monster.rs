@@ -95,11 +95,13 @@ impl SpawningMonsterBundle {
 
 struct MonsterSpawningConfig {
     timer: Timer,
+    enemy_count: u16,
 }
 impl MonsterSpawningConfig {
     fn default() -> Self {
         MonsterSpawningConfig {
             timer: Timer::from_seconds(5., true),
+            enemy_count: 5,
         }
     }
 }
@@ -138,13 +140,14 @@ fn spawning_monsters(
 
     if config.timer.finished() {
         let mut rng = thread_rng();
-        for _ in 0..5 {
+        for _ in 0..config.enemy_count {
             let x: f32 = rng.gen_range(-15. ..15.);
             let y: f32 = rng.gen_range(-10. ..10.);
             commands
                 .spawn_bundle(SpawningMonsterBundle::from_xy(x, y))
                 .insert(Name::new("Enemy spawning"));
         }
+        config.enemy_count += 2;
     }
 }
 

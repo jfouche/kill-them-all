@@ -23,8 +23,8 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         // debug plugins
-        .add_plugin(RapierDebugRenderPlugin::default())
-        .add_plugin(WorldInspectorPlugin::new())
+        // .add_plugin(RapierDebugRenderPlugin::default())
+        // .add_plugin(WorldInspectorPlugin::new())
         // Game plugins
         .add_plugin(world::WorldPlugin)
         .add_plugin(top_menu::TopMenuPlugin)
