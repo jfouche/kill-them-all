@@ -3,14 +3,14 @@ use bevy_inspector_egui::WorldInspectorPlugin;
 use bevy_rapier2d::prelude::*;
 use resources::ScoreResource;
 
+mod bullets;
+mod collisions;
 mod components;
+mod monster;
+mod player;
 mod resources;
 mod top_menu;
 mod world;
-mod bullets;
-mod collisions;
-mod monster;
-mod player;
 
 fn main() {
     App::new()

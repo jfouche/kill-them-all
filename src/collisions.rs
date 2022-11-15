@@ -1,7 +1,7 @@
 use bevy::{prelude::*, utils::HashSet};
 use bevy_rapier2d::prelude::*;
 
-use crate::{components::*, player::PlayerHitEvent, monster::MonsterHitEvent};
+use crate::{components::*, monster::MonsterHitEvent, player::PlayerHitEvent};
 
 pub struct CollisionsPlugin;
 
@@ -20,7 +20,7 @@ fn monster_hit_by_bullet(
     mut collisions: EventReader<CollisionEvent>,
     q_monsters: Query<Entity, With<Monster>>,
     q_bullets: Query<Entity, With<Bullet>>,
-    mut monster_hit_events: EventWriter<MonsterHitEvent>
+    mut monster_hit_events: EventWriter<MonsterHitEvent>,
 ) {
     let mut monster_hit = HashSet::new();
     let mut bullet_hit = HashSet::new();
@@ -41,9 +41,9 @@ fn monster_hit_by_bullet(
             }
         });
 
-        for bullet in bullet_hit {
-            commands.entity(bullet).despawn();
-        }
+    for bullet in bullet_hit {
+        commands.entity(bullet).despawn();
+    }
 
     for entity in monster_hit.iter() {
         monster_hit_events.send(MonsterHitEvent::new(*entity));

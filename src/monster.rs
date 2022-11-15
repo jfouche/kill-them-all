@@ -69,7 +69,7 @@ struct SpawningMonsterBundle {
     #[bundle]
     sprite_bundle: SpriteBundle,
     monster: SpawningMonster,
-    config: MonsterSpawnConfig
+    config: MonsterSpawnConfig,
 }
 
 impl SpawningMonsterBundle {
@@ -86,7 +86,7 @@ impl SpawningMonsterBundle {
                 ..Default::default()
             },
             monster: SpawningMonster,
-            config: MonsterSpawnConfig::new(x, y)
+            config: MonsterSpawnConfig::new(x, y),
         }
     }
 }

@@ -27,8 +27,7 @@ impl Life {
     pub fn hit(&mut self, damage: u16) {
         if damage > self.0 {
             self.0 = 0;
-        }
-        else {
+        } else {
             self.0 -= damage;
         }
     }
@@ -41,4 +40,3 @@ impl Life {
         self.0
     }
 }
-

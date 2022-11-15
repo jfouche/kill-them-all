@@ -1,5 +1,5 @@
+use crate::{components::*, resources::ScoreResource};
 use bevy::prelude::*;
-use crate::{resources::ScoreResource, components::*};
 
 #[derive(Component)]
 struct ScoreText;
@@ -17,71 +17,70 @@ impl Plugin for TopMenuPlugin {
     }
 }
 
-fn init_top_menu(mut commands: Commands, asset_server: Res<AssetServer>)
-{
+fn init_top_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
     let font: Handle<Font> = asset_server.load("fonts/FiraSans-Bold.ttf");
-//    commands.insert_resource(UiFont(handle));
+    //    commands.insert_resource(UiFont(handle));
 
     // Score
-    commands.spawn_bundle(
-        TextBundle::from_sections( [
-            TextSection::new(
-                "Score: ",
-                TextStyle {
-                    font: font.clone(),
-                    font_size: 20.0,
-                    color: Color::WHITE,
-                }),
-                TextSection::from_style(
+    commands
+        .spawn_bundle(
+            TextBundle::from_sections([
+                TextSection::new(
+                    "Score: ",
                     TextStyle {
                         font: font.clone(),
                         font_size: 20.0,
                         color: Color::WHITE,
-                    }),
-                    ]
-        ) 
-        .with_text_alignment(TextAlignment::TOP_CENTER)
-        .with_style(Style {
-            position_type: PositionType::Absolute,
-            position: UiRect {
-                top: Val::Px(5.0),
+                    },
+                ),
+                TextSection::from_style(TextStyle {
+                    font: font.clone(),
+                    font_size: 20.0,
+                    color: Color::WHITE,
+                }),
+            ])
+            .with_text_alignment(TextAlignment::TOP_CENTER)
+            .with_style(Style {
+                position_type: PositionType::Absolute,
+                position: UiRect {
+                    top: Val::Px(5.0),
+                    ..default()
+                },
                 ..default()
-            },
-            ..default()
-        })
-    ).insert(ScoreText);
-
+            }),
+        )
+        .insert(ScoreText);
 
     // Life
-    commands.spawn_bundle(
-        TextBundle::from_sections( [
-            TextSection::new(
-                "Life: ",
-                TextStyle {
-                    font: font.clone(),
-                    font_size: 20.0,
-                    color: Color::WHITE,
-                }),
-                TextSection::from_style(
+    commands
+        .spawn_bundle(
+            TextBundle::from_sections([
+                TextSection::new(
+                    "Life: ",
                     TextStyle {
                         font: font.clone(),
                         font_size: 20.0,
                         color: Color::WHITE,
-                    }),
-                    ]
-        ) 
-        .with_text_alignment(TextAlignment::TOP_CENTER)
-        .with_style(Style {
-            position_type: PositionType::Absolute,
-            position: UiRect {
-                top: Val::Px(5.0),
-                left: Val::Px(300.0),
+                    },
+                ),
+                TextSection::from_style(TextStyle {
+                    font: font.clone(),
+                    font_size: 20.0,
+                    color: Color::WHITE,
+                }),
+            ])
+            .with_text_alignment(TextAlignment::TOP_CENTER)
+            .with_style(Style {
+                position_type: PositionType::Absolute,
+                position: UiRect {
+                    top: Val::Px(5.0),
+                    left: Val::Px(300.0),
+                    ..default()
+                },
                 ..default()
-            },
-            ..default()
-        })
-    ).insert(LifeText);
-
+            }),
+        )
+        .insert(LifeText);
 }
 
 fn update_score(score: Res<ScoreResource>, mut q_text: Query<&mut Text, With<ScoreText>>) {

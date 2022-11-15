@@ -10,7 +10,7 @@ const BULLET_SPEED: f32 = 25.0;
 pub struct BulletOptions {
     pos: Vec3,
     direction: Vect,
-    size: Vec2
+    size: Vec2,
 }
 
 impl BulletOptions {
@@ -19,7 +19,7 @@ impl BulletOptions {
         BulletOptions {
             pos: player_pos,
             direction: Vect::new(dir.x, dir.y),
-            size : player_size
+            size: player_size,
         }
     }
 }
