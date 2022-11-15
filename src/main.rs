@@ -6,6 +6,7 @@ use resources::ScoreResource;
 mod components;
 mod resources;
 mod top_menu;
+mod world;
 mod bullets;
 mod collisions;
 mod monster;
@@ -25,6 +26,7 @@ fn main() {
         .add_plugin(RapierDebugRenderPlugin::default())
         .add_plugin(WorldInspectorPlugin::new())
         // Game plugins
+        .add_plugin(world::WorldPlugin)
         .add_plugin(top_menu::TopMenuPlugin)
         .add_plugin(player::PlayerPlugin)
         .add_plugin(monster::MonsterPlugin)
@@ -34,6 +36,7 @@ fn main() {
         // startup
         .add_startup_system(startup)
         // systems
+        // RUN
         .run();
 }
 
