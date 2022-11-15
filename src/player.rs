@@ -52,6 +52,7 @@ struct PlayerBundle {
     #[bundle]
     sprite: SpriteSheetBundle,
     player: Player,
+    speed: Speed,
     life: Life,
     body: RigidBody,
     collider: Collider,
@@ -70,7 +71,8 @@ impl PlayerBundle {
                 transform: Transform::from_xyz(0., 0., 10.).with_scale(Vec3::splat(1.0 / 16.0)),
                 ..Default::default()
             },
-            player: Player { speed: 8. },
+            player: Player,
+            speed: Speed(8.),
             life: Life::new(10),
             body: RigidBody::Dynamic,
             collider: Collider::cuboid(PLAYER_SIZE.x / 2., PLAYER_SIZE.y / 2.),
@@ -111,9 +113,9 @@ fn setup(
 ///
 fn player_movement(
     keyboard_input: Res<Input<KeyCode>>,
-    mut players: Query<(&Player, &mut Velocity)>,
+    mut players: Query<(&Speed, &mut Velocity), With<Player>>,
 ) {
-    for (player, mut velocity) in players.iter_mut() {
+    for (speed, mut velocity) in players.iter_mut() {
         let mut linvel = Vec2::default();
         if keyboard_input.any_pressed([KeyCode::Left, KeyCode::Numpad4]) {
             linvel.x = -1.0;
@@ -127,7 +129,7 @@ fn player_movement(
         if keyboard_input.any_pressed([KeyCode::Down, KeyCode::Numpad2]) {
             linvel.y = -1.0;
         }
-        velocity.linvel = linvel.normalize_or_zero().mul(player.speed);
+        velocity.linvel = linvel.normalize_or_zero().mul(**speed);
     }
 }
 

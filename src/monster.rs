@@ -34,6 +34,7 @@ struct MonsterBundle {
     #[bundle]
     sprite_bundle: SpriteBundle,
     monster: Monster,
+    speed: Speed,
     body: RigidBody,
     collider: Collider,
     gravity: GravityScale,
@@ -54,7 +55,8 @@ impl MonsterBundle {
                 transform: Transform::from_xyz(x, y, 1.),
                 ..Default::default()
             },
-            monster: Monster { speed: 6. },
+            monster: Monster,
+            speed: Speed(6.0),
             body: RigidBody::Dynamic,
             collider: Collider::cuboid(size.x / 2., size.y / 2.),
             gravity: GravityScale(0.0),
@@ -170,14 +172,14 @@ fn spawn_monsters(
 /// Monsters moves in direction of the Player
 ///
 fn monsters_moves(
-    mut q_monsters: Query<(&Transform, &mut Velocity, &Monster), Without<Player>>,
+    mut q_monsters: Query<(&Transform, &mut Velocity, &Speed), (With<Monster>, Without<Player>)>,
     q_player: Query<&Transform, With<Player>>,
 ) {
     if let Ok(player) = q_player.get_single() {
-        for (transform, mut velocity, monster) in q_monsters.iter_mut() {
+        for (transform, mut velocity, speed) in q_monsters.iter_mut() {
             let direction = player.translation - transform.translation;
-            let offset = direction.normalize().mul(monster.speed);
-            velocity.linvel = Vec2::new(offset.x, offset.y);
+            let offset = Vec2::new(direction.x, direction.y);
+            velocity.linvel = offset.normalize_or_zero().mul(**speed);
         }
     }
 }

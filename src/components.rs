@@ -1,14 +1,13 @@
 use bevy::prelude::*;
 
 #[derive(Component)]
-pub struct Player {
-    pub speed: f32,
-}
+pub struct Player;
 
 #[derive(Component)]
-pub struct Monster {
-    pub speed: f32,
-}
+pub struct Monster;
+
+#[derive(Component, Deref)]
+pub struct Speed(pub f32);
 
 #[derive(Component)]
 pub struct SpawningMonster;
