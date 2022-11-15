@@ -15,7 +15,7 @@ impl Plugin for PlayerPlugin {
         app.add_event::<PlayerHitEvent>()
             .add_startup_system(setup)
             .add_system(player_movement)
-            .add_system(animate_sprite)
+            .add_system(animate_sprite.after(player_movement))
             .add_system(player_fires)
             .add_system(on_player_hit);
     }
@@ -193,18 +193,25 @@ fn on_player_hit(
 ///
 fn animate_sprite(
     time: Res<Time>,
-    texture_atlases: Res<Assets<TextureAtlas>>,
-    mut query: Query<(
-        &mut AnimationTimer,
-        &mut TextureAtlasSprite,
-        &Handle<TextureAtlas>,
-    )>,
+    mut query: Query<(&mut AnimationTimer, &mut TextureAtlasSprite)>,
+    q_player: Query<&Velocity, With<Player>>,
 ) {
-    for (mut timer, mut sprite, texture_atlas_handle) in &mut query {
-        timer.tick(time.delta());
-        if timer.just_finished() {
-            let texture_atlas = texture_atlases.get(texture_atlas_handle).unwrap();
-            sprite.index = (sprite.index + 1) % texture_atlas.textures.len();
+    if let Ok(&velocity) = q_player.get_single() {
+        for (mut timer, mut sprite) in &mut query {
+            timer.tick(time.delta());
+            if timer.just_finished() {
+                sprite.index = if velocity == Velocity::zero() {
+                    0
+                } else {
+                    match sprite.index {
+                        4 => 8,
+                        8 => 12,
+                        12 => 16,
+                        16 => 4,
+                        _ => 4,
+                    }
+                }
+            }
         }
     }
 }

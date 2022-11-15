@@ -27,7 +27,7 @@ impl WorldBundle {
             sprite: SpriteBundle {
                 sprite: Sprite {
                     custom_size: Some(Vec2::new(WORLD_WIDTH, WORLD_HEIGH)),
-                    color: Color::rgb(0.9, 0.9, 0.9),
+                    color: Color::rgb(0.6, 0.6, 0.6),
                     ..Default::default()
                 },
                 ..Default::default()
