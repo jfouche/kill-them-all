@@ -107,12 +107,12 @@ impl Border {
 
 fn init_world(mut commands: Commands) {
     commands
-        .spawn_bundle(WorldBundle::default())
+        .spawn(WorldBundle::default())
         .insert(Name::new("World"))
         .add_children(|builder| {
-            builder.spawn_bundle(Border::top());
-            builder.spawn_bundle(Border::right());
-            builder.spawn_bundle(Border::bottom());
-            builder.spawn_bundle(Border::left());
+            builder.spawn(Border::top());
+            builder.spawn(Border::right());
+            builder.spawn(Border::bottom());
+            builder.spawn(Border::left());
         });
 }

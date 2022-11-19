@@ -78,6 +78,6 @@ pub fn spawn_bullet_at(
     options: BulletOptions,
 ) {
     commands
-        .spawn_bundle(BulletBundle::new(options))
+        .spawn(BulletBundle::new(options))
         .insert(Name::new("Bullet"));
 }

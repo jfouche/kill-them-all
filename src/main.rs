@@ -1,7 +1,7 @@
 use bevy::{prelude::*, render::camera::ScalingMode};
 use bevy_inspector_egui::WorldInspectorPlugin;
 use bevy_rapier2d::prelude::*;
-use resources::ScoreResource;
+use resources::*;
 
 mod bullets;
 mod collisions;
@@ -14,13 +14,15 @@ mod world;
 
 fn main() {
     App::new()
-        .insert_resource(WindowDescriptor {
-            title: "Platformer!".to_string(),
-            width: 800.0,
-            height: 600.0,
-            ..Default::default()
-        })
-        .add_plugins(DefaultPlugins)
+        .add_plugins(DefaultPlugins.set(WindowPlugin {
+            window: WindowDescriptor {
+                title: "Platformer!".to_string(),
+                width: 800.0,
+                height: 600.0,
+                ..Default::default()
+            },
+            ..default()
+        }))
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         // debug plugins
         // .add_plugin(RapierDebugRenderPlugin::default())
@@ -33,6 +35,7 @@ fn main() {
         .add_plugin(collisions::CollisionsPlugin)
         // resources
         .init_resource::<ScoreResource>()
+        .add_state(AppState::MainMenu)
         // startup
         .add_startup_system(startup)
         // systems
@@ -44,7 +47,17 @@ fn startup(mut commands: Commands) {
     let far = 1000.0;
     let mut camera = Camera2dBundle::new_with_far(far);
     camera.projection.scaling_mode = ScalingMode::FixedHorizontal(40.0);
-    commands.spawn_bundle(camera);
+    commands.spawn(camera);
 
     commands.insert_resource(ClearColor(Color::rgb(0.04, 0.04, 0.04)));
+}
+
+///
+///
+///
+fn on_escape(mut keys: ResMut<Input<KeyCode>>, mut app_state: ResMut<State<AppState>>) {
+    if keys.just_pressed(KeyCode::Escape) {
+        app_state.set(AppState::MainMenu).unwrap();
+        keys.reset(KeyCode::Escape);
+    }
 }
