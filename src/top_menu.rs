@@ -114,7 +114,7 @@ fn spawn_speed(mut commands: Commands, font: Res<UiFont>) {
                 ..default()
             }),
         )
-        .insert(LifeText);
+        .insert(SpeedText);
 }
 
 fn update_score(score: Res<ScoreResource>, mut q_text: Query<&mut Text, With<ScoreText>>) {
