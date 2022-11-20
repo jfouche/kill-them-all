@@ -21,6 +21,7 @@ impl Plugin for PlayerPlugin {
     }
 }
 
+#[derive(Resource)]
 struct PlayerFireConfig {
     /// timer between attacks per seconds
     timer: Timer,
@@ -41,7 +42,7 @@ struct AnimationTimer(Timer);
 
 impl AnimationTimer {
     fn default() -> Self {
-        AnimationTimer(Timer::from_seconds(0.1, true))
+        AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating))
     }
 }
 
@@ -99,16 +100,17 @@ fn setup(
 ) {
     // load player texture_atlas
     let texture_handle = asset_server.load("characters/RedNinja/SpriteSheet.png");
-    let texture_atlas = TextureAtlas::from_grid(texture_handle, Vec2::new(16.0, 16.0), 4, 7);
+    let texture_atlas =
+        TextureAtlas::from_grid(texture_handle, Vec2::new(16.0, 16.0), 4, 7, None, None);
     let texture_atlas_handle = texture_atlases.add(texture_atlas);
 
     // spawn player
     commands
-        .spawn_bundle(PlayerBundle::new(texture_atlas_handle))
+        .spawn(PlayerBundle::new(texture_atlas_handle))
         .insert(Name::new("Player"));
 
     commands.insert_resource(PlayerFireConfig {
-        timer: Timer::from_seconds(1., true),
+        timer: Timer::from_seconds(1., TimerMode::Repeating),
     });
 }
 

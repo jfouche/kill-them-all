@@ -23,7 +23,7 @@ fn init_top_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
 
     // Score
     commands
-        .spawn_bundle(
+        .spawn(
             TextBundle::from_sections([
                 TextSection::new(
                     "Score: ",
@@ -53,7 +53,7 @@ fn init_top_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
 
     // Life
     commands
-        .spawn_bundle(
+        .spawn(
             TextBundle::from_sections([
                 TextSection::new(
                     "Life: ",
