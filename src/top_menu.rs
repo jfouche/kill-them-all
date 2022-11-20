@@ -124,11 +124,8 @@ fn update_score(score: Res<ScoreResource>, mut q_text: Query<&mut Text, With<Sco
 }
 
 fn update_life(q_player: Query<&Life, With<Player>>, mut q_text: Query<&mut Text, With<LifeText>>) {
-    warn!("update_life - 1");
     if let Ok(mut text) = q_text.get_single_mut() {
-        warn!("update_life - 2");
         if let Ok(life) = q_player.get_single() {
-            warn!("update_life - 3");
             text.sections[1].value = format!("{}", life.value());
         }
     }

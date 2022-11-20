@@ -37,18 +37,19 @@ impl BulletBundle {
     fn new(options: BulletOptions) -> Self {
         let velocity = options.direction.normalize() * BULLET_SPEED;
         let pos = ellipse_pos(&options);
+        let size = 0.3;
         BulletBundle {
             sprite_bundle: SpriteBundle {
                 sprite: Sprite {
-                    color: Color::WHITE,
-                    custom_size: Some(Vec2::new(0.2, 0.2)),
+                    color: Color::YELLOW,
+                    custom_size: Some(Vec2::new(size, size)),
                     ..Default::default()
                 },
                 transform: Transform::from_translation(pos),
                 ..Default::default()
             },
             body: RigidBody::Dynamic,
-            collider: Collider::cuboid(0.1, 0.1),
+            collider: Collider::cuboid(size / 2., size / 2.),
             gravity: GravityScale(0.0),
             constraints: LockedAxes::ROTATION_LOCKED,
             events: ActiveEvents::COLLISION_EVENTS,
