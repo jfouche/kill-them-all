@@ -28,7 +28,6 @@ const PLAYER_SIZE: Vec2 = Vec2::new(1.0, 1.0);
 
 #[derive(Bundle)]
 struct PlayerBundle {
-    #[bundle]
     sprite: SpriteSheetBundle,
     player: Player,
     speed: Speed,

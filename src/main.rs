@@ -10,7 +10,6 @@ mod top_menu;
 mod world;
 
 use bevy::render::camera::ScalingMode;
-//use bevy_inspector_egui::WorldInspectorPlugin;
 use prelude::*;
 
 fn main() {
@@ -27,7 +26,7 @@ fn main() {
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         // debug plugins
         // .add_plugin(RapierDebugRenderPlugin::default())
-        // .add_plugin(WorldInspectorPlugin::new())
+        // .add_plugin(bevy_inspector_egui::WorldInspectorPlugin::new())
         // Game plugins
         .add_plugin(world::WorldPlugin)
         .add_plugin(top_menu::TopMenuPlugin)
