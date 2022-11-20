@@ -3,9 +3,11 @@ use bevy::prelude::*;
 #[derive(Default, Resource)]
 pub struct ScoreResource(pub u16);
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
-pub enum AppState {
-    MainMenu,
-    InGame,
-    Paused,
+#[derive(Resource, Deref)]
+pub struct UiFont(pub Handle<Font>);
+
+#[derive(Resource)]
+pub struct PlayerFireConfig {
+    /// timer between attacks per seconds
+    pub timer: Timer,
 }

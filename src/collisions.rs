@@ -1,7 +1,5 @@
-use bevy::{prelude::*, utils::HashSet};
-use bevy_rapier2d::prelude::*;
-
-use crate::{components::*, monster::MonsterHitEvent, player::PlayerHitEvent};
+use crate::prelude::*;
+use bevy::utils::HashSet;
 
 pub struct CollisionsPlugin;
 

@@ -1,12 +1,6 @@
+use crate::bullets::{spawn_bullet_at, BulletOptions};
+use crate::prelude::*;
 use std::ops::Mul;
-
-use bevy::prelude::*;
-use bevy_rapier2d::prelude::*;
-
-use crate::{
-    bullets::{spawn_bullet_at, BulletOptions},
-    components::*,
-};
 
 pub struct PlayerPlugin;
 
@@ -18,22 +12,6 @@ impl Plugin for PlayerPlugin {
             .add_system(animate_sprite.after(player_movement))
             .add_system(player_fires)
             .add_system(on_player_hit);
-    }
-}
-
-#[derive(Resource)]
-struct PlayerFireConfig {
-    /// timer between attacks per seconds
-    timer: Timer,
-}
-
-pub struct PlayerHitEvent {
-    entity: Entity,
-}
-
-impl PlayerHitEvent {
-    pub fn new(entity: Entity) -> Self {
-        PlayerHitEvent { entity }
     }
 }
 

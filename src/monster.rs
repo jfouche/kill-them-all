@@ -1,9 +1,6 @@
-use std::ops::Mul;
-
-use crate::{components::*, resources::*};
-use bevy::prelude::*;
-use bevy_rapier2d::prelude::*;
+use crate::prelude::*;
 use rand::{thread_rng, Rng};
+use std::ops::Mul;
 
 pub struct MonsterPlugin;
 
@@ -15,17 +12,6 @@ impl Plugin for MonsterPlugin {
             .add_system(spawn_monsters)
             .add_system(monsters_moves)
             .add_system(on_monster_hit);
-    }
-}
-
-/// Event to notify a monster was hit
-pub struct MonsterHitEvent {
-    entity: Entity,
-}
-
-impl MonsterHitEvent {
-    pub fn new(entity: Entity) -> Self {
-        MonsterHitEvent { entity }
     }
 }
 

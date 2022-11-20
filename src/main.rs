@@ -1,24 +1,25 @@
-use bevy::{prelude::*, render::camera::ScalingMode};
-use bevy_inspector_egui::WorldInspectorPlugin;
-use bevy_rapier2d::prelude::*;
-use resources::*;
-
 mod bullets;
 mod collisions;
 mod components;
+mod events;
 mod monster;
 mod player;
+mod prelude;
 mod resources;
 mod top_menu;
 mod world;
+
+use bevy::render::camera::ScalingMode;
+//use bevy_inspector_egui::WorldInspectorPlugin;
+use prelude::*;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             window: WindowDescriptor {
                 title: "Platformer!".to_string(),
-                width: 800.0,
-                height: 600.0,
+                width: 1024.0,
+                height: 730.0,
                 ..Default::default()
             },
             ..default()
@@ -35,29 +36,23 @@ fn main() {
         .add_plugin(collisions::CollisionsPlugin)
         // resources
         .init_resource::<ScoreResource>()
-        .add_state(AppState::MainMenu)
+        .insert_resource(ClearColor(Color::rgb(0.04, 0.04, 0.04)))
         // startup
-        .add_startup_system(startup)
+        .add_startup_system_to_stage(StartupStage::PreStartup, load_font)
+        .add_startup_system(init_camera)
         // systems
         // RUN
         .run();
 }
 
-fn startup(mut commands: Commands) {
+fn init_camera(mut commands: Commands) {
     let far = 1000.0;
     let mut camera = Camera2dBundle::new_with_far(far);
     camera.projection.scaling_mode = ScalingMode::FixedHorizontal(40.0);
     commands.spawn(camera);
-
-    commands.insert_resource(ClearColor(Color::rgb(0.04, 0.04, 0.04)));
 }
 
-///
-///
-///
-fn on_escape(mut keys: ResMut<Input<KeyCode>>, mut app_state: ResMut<State<AppState>>) {
-    if keys.just_pressed(KeyCode::Escape) {
-        app_state.set(AppState::MainMenu).unwrap();
-        keys.reset(KeyCode::Escape);
-    }
+fn load_font(mut commands: Commands, server: Res<AssetServer>) {
+    let handle: Handle<Font> = server.load("fonts/FiraSans-Bold.ttf");
+    commands.insert_resource(UiFont(handle));
 }

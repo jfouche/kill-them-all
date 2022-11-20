@@ -1,5 +1,4 @@
-use crate::{components::*, resources::ScoreResource};
-use bevy::prelude::*;
+use crate::prelude::*;
 
 #[derive(Component)]
 struct ScoreText;
@@ -17,10 +16,7 @@ impl Plugin for TopMenuPlugin {
     }
 }
 
-fn init_top_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let font: Handle<Font> = asset_server.load("fonts/FiraSans-Bold.ttf");
-    //    commands.insert_resource(UiFont(handle));
-
+fn init_top_menu(mut commands: Commands, font: Res<UiFont>) {
     // Score
     commands
         .spawn(

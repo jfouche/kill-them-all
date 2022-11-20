@@ -1,5 +1,4 @@
-use bevy::prelude::*;
-use bevy_rapier2d::prelude::*;
+use crate::prelude::*;
 
 pub struct WorldPlugin;
 
