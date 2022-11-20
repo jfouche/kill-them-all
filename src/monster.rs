@@ -185,6 +185,6 @@ fn on_monster_hit(
     for event in monster_hit_events.iter() {
         warn!("on_monster_hit");
         commands.entity(event.entity).despawn();
-        score.0 = score.0 + 1;
+        score.0 += 1;
     }
 }
