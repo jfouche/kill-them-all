@@ -6,8 +6,7 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<PlayerHitEvent>()
-            .add_startup_system(setup)
+        app.add_startup_system(setup)
             .add_system(player_movement)
             .add_system(animate_sprite.after(player_movement))
             .add_system(player_fires)
@@ -18,7 +17,7 @@ impl Plugin for PlayerPlugin {
 #[derive(Component, Deref, DerefMut)]
 struct AnimationTimer(Timer);
 
-impl AnimationTimer {
+impl Default for AnimationTimer {
     fn default() -> Self {
         AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating))
     }

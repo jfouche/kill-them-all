@@ -6,12 +6,12 @@ pub struct MonsterPlugin;
 
 impl Plugin for MonsterPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<MonsterHitEvent>()
-            .add_startup_system(init_monster_spawning)
+        app.add_startup_system(init_monster_spawning)
             .add_system(spawning_monsters)
             .add_system(spawn_monsters)
             .add_system(monsters_moves)
-            .add_system(on_monster_hit);
+            .add_system(on_monster_hit)
+            .add_system(on_monster_death);
     }
 }
 
@@ -21,6 +21,7 @@ struct MonsterBundle {
     sprite_bundle: SpriteBundle,
     monster: Monster,
     speed: Speed,
+    life: Life,
     body: RigidBody,
     collider: Collider,
     gravity: GravityScale,
@@ -42,7 +43,8 @@ impl MonsterBundle {
                 ..Default::default()
             },
             monster: Monster,
-            speed: Speed(6.0),
+            speed: Speed(5.0),
+            life: Life::new(2),
             body: RigidBody::Dynamic,
             collider: Collider::cuboid(size.x / 2., size.y / 2.),
             gravity: GravityScale(0.0),
@@ -87,7 +89,7 @@ struct MonsterSpawningConfig {
 impl MonsterSpawningConfig {
     fn default() -> Self {
         MonsterSpawningConfig {
-            timer: Timer::from_seconds(5., TimerMode::Repeating),
+            timer: Timer::from_seconds(8., TimerMode::Repeating),
             enemy_count: 5,
         }
     }
@@ -178,12 +180,36 @@ fn monsters_moves(
 /// monster hit
 ///
 fn on_monster_hit(
-    mut commands: Commands,
     mut monster_hit_events: EventReader<MonsterHitEvent>,
-    mut score: ResMut<ScoreResource>, // mut send_monster_death: EventWriter<PlayerDeathEvent>,
+    mut q_monsters: Query<(Entity, &mut Life, &Transform), With<Monster>>,
+    mut monster_death_events: EventWriter<MonsterDeathEvent>,
 ) {
     for event in monster_hit_events.iter() {
         warn!("on_monster_hit");
+        for (entity, mut life, transform) in q_monsters.iter_mut() {
+            if entity == event.entity {
+                life.hit(1);
+                if life.is_dead() {
+                    monster_death_events.send(MonsterDeathEvent {
+                        entity,
+                        pos: transform.translation,
+                    })
+                }
+            }
+        }
+    }
+}
+
+///
+/// monster died
+///
+fn on_monster_death(
+    mut commands: Commands,
+    mut monster_hit_events: EventReader<MonsterDeathEvent>,
+    mut score: ResMut<ScoreResource>,
+) {
+    for event in monster_hit_events.iter() {
+        warn!("on_monster_death");
         commands.entity(event.entity).despawn();
         score.0 += 1;
     }

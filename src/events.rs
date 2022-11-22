@@ -11,6 +11,13 @@ impl MonsterHitEvent {
     }
 }
 
+// Event to notify a monster died
+pub struct MonsterDeathEvent {
+    pub entity: Entity,
+    pub pos: Vec3,
+}
+
+// Event to notify the player was hit
 pub struct PlayerHitEvent {
     pub entity: Entity,
 }

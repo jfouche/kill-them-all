@@ -1,3 +1,4 @@
+mod bonus;
 mod bullets;
 mod collisions;
 mod components;
@@ -36,9 +37,14 @@ fn main() {
         .add_plugin(player::PlayerPlugin)
         .add_plugin(monster::MonsterPlugin)
         .add_plugin(collisions::CollisionsPlugin)
+        .add_plugin(bonus::BonusPlugin)
         // resources
         .init_resource::<ScoreResource>()
         .insert_resource(ClearColor(Color::rgb(0.04, 0.04, 0.04)))
+        // Events
+        .add_event::<PlayerHitEvent>()
+        .add_event::<MonsterHitEvent>()
+        .add_event::<MonsterDeathEvent>()
         // startup
         .add_startup_system_to_stage(StartupStage::PreStartup, load_font)
         .add_startup_system(init_camera)
