@@ -6,8 +6,8 @@ pub struct ProgressBarPlugin;
 
 impl Plugin for ProgressBarPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(create_progress_bars)/* 
-            .add_system(update_progress_bars) */;
+        app.add_system(create_progress_bars)
+            .add_system(update_progress_bars);
     }
 }
 
@@ -16,9 +16,7 @@ pub struct ProgressBarData {
     pub size: Size,
     pub foreground: Color,
     pub background: Color,
-    pub min: f32,
-    pub max: f32,
-    value: Arc<Mutex<f32>>,
+    percent: Arc<Mutex<f32>>,
 }
 
 impl Default for ProgressBarData {
@@ -27,19 +25,38 @@ impl Default for ProgressBarData {
             size: Size::new(Val::Px(100.0), Val::Px(16.0)),
             foreground: Color::WHITE,
             background: Color::BLACK,
-            min: 0.0,
-            max: 100.0,
-            value: Arc::new(Mutex::new(66.0)),
+            percent: Arc::new(Mutex::new(0.0)),
+        }
+    }
+}
+
+impl ProgressBarData {
+    pub fn from_size(size: Size) -> Self {
+        ProgressBarData {
+            size,
+            ..Default::default()
+        }
+    }
+
+    pub fn with_colors(mut self, background: Color, foreground: Color) -> Self {
+        self.background = background;
+        self.foreground = foreground;
+        self
+    }
+
+    pub fn set_percent(&mut self, value: f32) {
+        if let Ok(mut store) = self.percent.lock() {
+            *store = value;
         }
     }
 }
 
 #[derive(Component)]
 struct ProgressBarForeground {
-    pub percent_mutex: Arc<Mutex<f32>>,
+    pub percent: Arc<Mutex<f32>>,
 }
 
-#[derive(Bundle, Default)]
+#[derive(Bundle)]
 pub struct ProgressBarBundle {
     data: ProgressBarData,
     node: NodeBundle,
@@ -66,40 +83,31 @@ impl ProgressBarBundle {
 
 fn create_progress_bars(
     mut commands: Commands,
-    mut query: Query<(Entity, &ProgressBarData), Added<ProgressBarData>>,
+    query: Query<(Entity, &ProgressBarData), Added<ProgressBarData>>,
 ) {
-    for (entity, data) in query.iter_mut() {
-        warn!("create_progress_bars");
-        commands
-            .entity(entity)
-            .insert(Name::new("ProgressBar"))
-            // background
-            .insert(NodeBundle {
-                style: Style {
-                    size: data.size,
-                    border: UiRect::all(Val::Px(4.0)),
-                    ..Default::default()
-                },
-                background_color: data.background.into(),
-                ..Default::default()
-            })
-            .with_children(|background| {
-                // foreground
-                background.spawn(NodeBundle {
+    for (entity, data) in query.iter() {
+        warn!("create_progress_bars({:?})", data);
+        commands.entity(entity).with_children(|parent| {
+            // foreground
+            parent
+                .spawn(NodeBundle {
                     style: Style {
-                        size: Size::new(Val::Percent(66.0), Val::Percent(100.0)),
+                        size: Size::new(Val::Percent(0.0), Val::Percent(100.0)),
                         ..default()
                     },
                     background_color: data.foreground.into(),
                     ..default()
+                })
+                .insert(ProgressBarForeground {
+                    percent: data.percent.clone(),
                 });
-            });
+        });
     }
 }
 
-fn update_progress_bars(mut query: Query<(&ProgressBarData, &mut Style)>) {
-    // for (data, mut style) in query.iter_mut() {
-    //     let percent = *(data.value) / (data.max - data.min);
-    //     style.size.width = Val::Percent(percent);
-    // }
+fn update_progress_bars(mut child_query: Query<(&ProgressBarForeground, &mut Style)>) {
+    for (data, mut style) in child_query.iter_mut() {
+        let value = *data.percent.lock().unwrap();
+        style.size.width = Val::Percent(value);
+    }
 }

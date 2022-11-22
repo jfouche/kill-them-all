@@ -34,8 +34,8 @@ fn main() {
         .add_plugin(world::WorldPlugin)
         .add_plugin(top_menu::TopMenuPlugin)
         .add_plugin(player::PlayerPlugin)
-        // .add_plugin(monster::MonsterPlugin)
-        // .add_plugin(collisions::CollisionsPlugin)
+        .add_plugin(monster::MonsterPlugin)
+        .add_plugin(collisions::CollisionsPlugin)
         // resources
         .init_resource::<ScoreResource>()
         .insert_resource(ClearColor(Color::rgb(0.04, 0.04, 0.04)))

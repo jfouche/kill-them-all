@@ -39,3 +39,6 @@ impl Life {
         self.0
     }
 }
+
+#[derive(Component)]
+pub struct MaxLife(pub u16);
