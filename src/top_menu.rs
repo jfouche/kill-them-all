@@ -26,9 +26,8 @@ impl Plugin for TopMenuPlugin {
             .add_system(spawn_life)
             .add_system(update_life)
             .add_system(update_life_bar)
-            /* 
-            .add_startup_system(spawn_speed)
-            .add_system(update_speed) */;
+            .add_system(spawn_speed)
+            .add_system(update_speed);
     }
 }
 
@@ -125,36 +124,26 @@ fn spawn_life(
     }
 }
 
-fn spawn_speed(mut commands: Commands, font: Res<UiFont>) {
-    commands
-        .spawn(
-            TextBundle::from_sections([
-                TextSection::new(
-                    "Speed: ",
-                    TextStyle {
-                        font: font.clone(),
-                        font_size: 10.0,
-                        color: Color::WHITE,
-                    },
-                ),
-                TextSection::from_style(TextStyle {
-                    font: font.clone(),
-                    font_size: 10.0,
-                    color: Color::WHITE,
-                }),
-            ])
-            .with_text_alignment(TextAlignment::TOP_CENTER)
-            .with_style(Style {
-                position_type: PositionType::Absolute,
-                position: UiRect {
-                    top: Val::Px(5.0),
-                    left: Val::Px(600.0),
-                    ..default()
-                },
-                ..default()
-            }),
-        )
-        .insert(SpeedText);
+fn spawn_speed(
+    mut commands: Commands,
+    font: Res<UiFont>,
+    query: Query<Entity, (With<TopMenu>, Added<TopMenu>)>,
+) {
+    if let Ok(top_menu_entity) = query.get_single() {
+        let style = TextStyle {
+            font: font.clone(),
+            font_size: 20.0,
+            color: Color::WHITE,
+        };
+        commands.entity(top_menu_entity).with_children(|top_menu| {
+            top_menu
+                .spawn(TextBundle::from_sections([
+                    TextSection::new("Speed: ", style.clone()),
+                    TextSection::from_style(style),
+                ]))
+                .insert(SpeedText);
+        });
+    }
 }
 
 fn update_score(score: Res<ScoreResource>, mut q_text: Query<&mut Text, With<ScoreText>>) {
