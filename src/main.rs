@@ -7,6 +7,7 @@ mod player;
 mod prelude;
 mod resources;
 mod top_menu;
+mod ui;
 mod world;
 
 use bevy::render::camera::ScalingMode;
@@ -26,13 +27,15 @@ fn main() {
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         // debug plugins
         // .add_plugin(RapierDebugRenderPlugin::default())
-        // .add_plugin(bevy_inspector_egui::WorldInspectorPlugin::new())
+        .add_plugin(bevy_inspector_egui::WorldInspectorPlugin::new())
+        // utils plugins
+        .add_plugin(ui::ProgressBarPlugin)
         // Game plugins
         .add_plugin(world::WorldPlugin)
         .add_plugin(top_menu::TopMenuPlugin)
         .add_plugin(player::PlayerPlugin)
-        .add_plugin(monster::MonsterPlugin)
-        .add_plugin(collisions::CollisionsPlugin)
+        // .add_plugin(monster::MonsterPlugin)
+        // .add_plugin(collisions::CollisionsPlugin)
         // resources
         .init_resource::<ScoreResource>()
         .insert_resource(ClearColor(Color::rgb(0.04, 0.04, 0.04)))
