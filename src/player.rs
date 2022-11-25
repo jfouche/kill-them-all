@@ -36,7 +36,6 @@ struct PlayerBundle {
     collider: Collider,
     velocity: Velocity,
     constraints: LockedAxes,
-    gravity: GravityScale,
     events: ActiveEvents,
     animation_timer: AnimationTimer,
 }
@@ -59,7 +58,6 @@ impl PlayerBundle {
             max_life: MaxLife(10),
             body: RigidBody::Dynamic,
             collider: Collider::cuboid(PLAYER_SIZE.x / 2., PLAYER_SIZE.y / 2.),
-            gravity: GravityScale(0.0),
             constraints: LockedAxes::ROTATION_LOCKED,
             events: ActiveEvents::COLLISION_EVENTS,
             velocity: Velocity::default(),

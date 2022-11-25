@@ -24,7 +24,6 @@ struct MonsterBundle {
     life: Life,
     body: RigidBody,
     collider: Collider,
-    gravity: GravityScale,
     constraints: LockedAxes,
     velocity: Velocity,
 }
@@ -47,7 +46,6 @@ impl MonsterBundle {
             life: Life::new(2),
             body: RigidBody::Dynamic,
             collider: Collider::cuboid(size.x / 2., size.y / 2.),
-            gravity: GravityScale(0.0),
             constraints: LockedAxes::ROTATION_LOCKED,
             velocity: Velocity::linear(Vec2::default()),
         }

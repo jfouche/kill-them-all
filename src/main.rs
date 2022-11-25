@@ -47,10 +47,15 @@ fn main() {
         .add_event::<MonsterDeathEvent>()
         // startup
         .add_startup_system_to_stage(StartupStage::PreStartup, load_font)
+        .add_startup_system(init_rapier)
         .add_startup_system(init_camera)
         // systems
         // RUN
         .run();
+}
+
+fn init_rapier(mut conf: ResMut<RapierConfiguration>) {
+    conf.gravity = Vect::ZERO;
 }
 
 fn init_camera(mut commands: Commands) {
