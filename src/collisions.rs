@@ -86,11 +86,13 @@ fn invulnerability_finished(
     mut commands: Commands,
     time: Res<Time>,
     mut query: Query<(Entity, &mut CollisionGroups, &mut Invulnerable)>,
+    mut events: EventWriter<InvulnerabilityEvent>,
 ) {
     if let Ok((entity, mut collision_groups, mut invulnerable)) = query.get_single_mut() {
         if invulnerable.tick_and_finished(time) {
             collision_groups.filters |= invulnerable.filters;
             commands.entity(entity).remove::<Invulnerable>();
+            events.send(InvulnerabilityEvent::Stop(entity));
         }
     }
 }

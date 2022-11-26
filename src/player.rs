@@ -27,6 +27,15 @@ impl Default for AnimationTimer {
     }
 }
 
+#[derive(Component, Deref, DerefMut)]
+struct InvulnerabilityAnimationTimer(Timer);
+
+impl Default for InvulnerabilityAnimationTimer {
+    fn default() -> Self {
+        InvulnerabilityAnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating))
+    }
+}
+
 const PLAYER_SIZE: Vec2 = Vec2::new(1.0, 1.0);
 
 fn spawn_player(commands: &mut Commands, texture_atlas_handle: Handle<TextureAtlas>) {
@@ -152,7 +161,7 @@ fn on_player_hit(
             if life.is_dead() {
                 commands.entity(event.entity).despawn();
             } else {
-                send_invulnerability.send(InvulnerabilityEvent::new(event.entity));
+                send_invulnerability.send(InvulnerabilityEvent::Start(event.entity));
                 collision_groups.filters &= !GROUP_ENEMY;
             }
         }
@@ -197,14 +206,16 @@ fn set_invulnerable(
 ) {
     if let Ok(mut collision_groups) = q_player.get_single_mut() {
         for event in events.iter() {
-            warn!("set_invulnerable");
-            commands
-                .entity(event.entity)
-                .insert(Invulnerable::new(0.5, GROUP_ENEMY))
-                .insert(AnimationTimer::default());
+            if let InvulnerabilityEvent::Start(entity) = event {
+                warn!("set_invulnerable");
+                commands
+                    .entity(*entity)
+                    .insert(Invulnerable::new(0.5, GROUP_ENEMY))
+                    .insert(InvulnerabilityAnimationTimer::default());
 
-            // To allow player to not collide with enemies
-            collision_groups.filters &= !GROUP_ENEMY;
+                // To allow player to not collide with enemies
+                collision_groups.filters &= !GROUP_ENEMY;
+            }
         }
     }
 }
@@ -214,7 +225,10 @@ fn set_invulnerable(
 ///
 fn animate_invulnerability(
     time: Res<Time>,
-    mut q_player: Query<(&mut Visibility, &mut AnimationTimer), (With<Player>, With<Invulnerable>)>,
+    mut q_player: Query<
+        (&mut Visibility, &mut InvulnerabilityAnimationTimer),
+        (With<Player>, With<Invulnerable>),
+    >,
 ) {
     if let Ok((mut visibility, mut timer)) = q_player.get_single_mut() {
         timer.0.tick(time.delta());
@@ -230,15 +244,21 @@ fn animate_invulnerability(
 ///
 fn player_invulnerability_finished(
     mut commands: Commands,
-    removed: RemovedComponents<Invulnerable>,
+    mut events: EventReader<InvulnerabilityEvent>,
     mut q_player: Query<(Entity, &mut Visibility), With<Player>>,
 ) {
     if let Ok((player_entity, mut visibility)) = q_player.get_single_mut() {
-        for entity in removed.iter() {
-            if player_entity == entity {
-                warn!("player_invulnerability_finished");
-                commands.entity(player_entity).remove::<AnimationTimer>();
-                visibility.is_visible = true;
+        warn!("player_invulnerability_finished 0");
+        for event in events.iter() {
+            if let InvulnerabilityEvent::Stop(entity) = event {
+                warn!("player_invulnerability_finished 1");
+                if player_entity == *entity {
+                    warn!("player_invulnerability_finished 2");
+                    commands
+                        .entity(player_entity)
+                        .remove::<InvulnerabilityAnimationTimer>();
+                    visibility.is_visible = true;
+                }
             }
         }
     }

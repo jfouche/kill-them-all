@@ -29,12 +29,7 @@ impl PlayerHitEvent {
 }
 
 // Event to notify an entity is invulnerable
-pub struct InvulnerabilityEvent {
-    pub entity: Entity,
-}
-
-impl InvulnerabilityEvent {
-    pub fn new(entity: Entity) -> Self {
-        InvulnerabilityEvent { entity }
-    }
+pub enum InvulnerabilityEvent {
+    Start(Entity),
+    Stop(Entity),
 }
