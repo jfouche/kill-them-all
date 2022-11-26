@@ -45,6 +45,7 @@ fn main() {
         .add_event::<PlayerHitEvent>()
         .add_event::<MonsterHitEvent>()
         .add_event::<MonsterDeathEvent>()
+        .add_event::<InvulnerabilityEvent>()
         // startup
         .add_startup_system_to_stage(StartupStage::PreStartup, load_font)
         .add_startup_system(init_rapier)

@@ -1,4 +1,5 @@
 use crate::bullets::{spawn_bullet_at, BulletOptions};
+use crate::collisions::{GROUP_ENEMY, GROUP_PLAYER};
 use crate::prelude::*;
 use std::ops::Mul;
 
@@ -10,7 +11,10 @@ impl Plugin for PlayerPlugin {
             .add_system(player_movement)
             .add_system(animate_sprite.after(player_movement))
             .add_system(player_fires)
-            .add_system(on_player_hit);
+            .add_system(on_player_hit)
+            .add_system(set_invulnerable)
+            .add_system(animate_invulnerability)
+            .add_system(player_invulnerability_finished);
     }
 }
 
@@ -45,6 +49,7 @@ fn spawn_player(commands: &mut Commands, texture_atlas_handle: Handle<TextureAtl
         // Rapier
         .insert(RigidBody::Dynamic)
         .insert(Collider::cuboid(PLAYER_SIZE.x / 2., PLAYER_SIZE.y / 2.))
+        .insert(CollisionGroups::new(GROUP_PLAYER, Group::ALL))
         .insert(LockedAxes::ROTATION_LOCKED)
         .insert(ActiveEvents::COLLISION_EVENTS)
         .insert(Velocity::default());
@@ -137,15 +142,18 @@ fn player_fires(
 fn on_player_hit(
     mut commands: Commands,
     mut player_hit_events: EventReader<PlayerHitEvent>,
-    mut q_player: Query<&mut Life, With<Player>>,
-    // mut send_player_death: EventWriter<PlayerDeathEvent>,
+    mut q_player: Query<(&mut Life, &mut CollisionGroups), With<Player>>,
+    mut send_invulnerability: EventWriter<InvulnerabilityEvent>,
 ) {
-    if let Ok(mut life) = q_player.get_single_mut() {
+    if let Ok((mut life, mut collision_groups)) = q_player.get_single_mut() {
         for event in player_hit_events.iter() {
             warn!("on_player_hit");
             life.hit(1);
             if life.is_dead() {
                 commands.entity(event.entity).despawn();
+            } else {
+                send_invulnerability.send(InvulnerabilityEvent::new(event.entity));
+                collision_groups.filters &= !GROUP_ENEMY;
             }
         }
     }
@@ -174,6 +182,63 @@ fn animate_sprite(
                         _ => 4,
                     }
                 }
+            }
+        }
+    }
+}
+
+///
+///
+///
+fn set_invulnerable(
+    mut commands: Commands,
+    mut events: EventReader<InvulnerabilityEvent>,
+    mut q_player: Query<&mut CollisionGroups, With<Player>>,
+) {
+    if let Ok(mut collision_groups) = q_player.get_single_mut() {
+        for event in events.iter() {
+            warn!("set_invulnerable");
+            commands
+                .entity(event.entity)
+                .insert(Invulnerable::new(0.5, GROUP_ENEMY))
+                .insert(AnimationTimer::default());
+
+            // To allow player to not collide with enemies
+            collision_groups.filters &= !GROUP_ENEMY;
+        }
+    }
+}
+
+///
+///
+///
+fn animate_invulnerability(
+    time: Res<Time>,
+    mut q_player: Query<(&mut Visibility, &mut AnimationTimer), (With<Player>, With<Invulnerable>)>,
+) {
+    if let Ok((mut visibility, mut timer)) = q_player.get_single_mut() {
+        timer.0.tick(time.delta());
+        if timer.0.finished() {
+            warn!("animate_invulnerability");
+            visibility.is_visible = !visibility.is_visible;
+        }
+    }
+}
+
+///
+///
+///
+fn player_invulnerability_finished(
+    mut commands: Commands,
+    removed: RemovedComponents<Invulnerable>,
+    mut q_player: Query<(Entity, &mut Visibility), With<Player>>,
+) {
+    if let Ok((player_entity, mut visibility)) = q_player.get_single_mut() {
+        for entity in removed.iter() {
+            if player_entity == entity {
+                warn!("player_invulnerability_finished");
+                commands.entity(player_entity).remove::<AnimationTimer>();
+                visibility.is_visible = true;
             }
         }
     }

@@ -5,10 +5,14 @@ pub struct CollisionsPlugin;
 
 impl Plugin for CollisionsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(monster_hit_by_bullet)
+        app.add_system(invulnerability_finished)
+            .add_system(monster_hit_by_bullet)
             .add_system(player_touched_by_monster);
     }
 }
+
+pub const GROUP_PLAYER: Group = Group::GROUP_1;
+pub const GROUP_ENEMY: Group = Group::GROUP_2;
 
 ///
 /// Monster hit by a bullet
@@ -73,4 +77,20 @@ fn player_touched_by_monster(
                 }
             }
         });
+}
+
+///
+///
+///
+fn invulnerability_finished(
+    mut commands: Commands,
+    time: Res<Time>,
+    mut query: Query<(Entity, &mut CollisionGroups, &mut Invulnerable)>,
+) {
+    if let Ok((entity, mut collision_groups, mut invulnerable)) = query.get_single_mut() {
+        if invulnerable.tick_and_finished(time) {
+            collision_groups.filters |= invulnerable.filters;
+            commands.entity(entity).remove::<Invulnerable>();
+        }
+    }
 }
