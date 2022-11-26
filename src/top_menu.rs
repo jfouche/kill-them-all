@@ -155,19 +155,18 @@ fn update_score(score: Res<ScoreResource>, mut q_text: Query<&mut Text, With<Sco
 fn update_life(q_player: Query<&Life, With<Player>>, mut q_text: Query<&mut Text, With<LifeText>>) {
     if let Ok(mut text) = q_text.get_single_mut() {
         if let Ok(life) = q_player.get_single() {
-            text.sections[1].value = format!("{}", life.value());
+            text.sections[1].value = format!("{}", life.life());
         }
     }
 }
 
 fn update_life_bar(
-    q_player: Query<(&Life, &MaxLife), With<Player>>,
+    q_player: Query<&Life, With<Player>>,
     mut q_bar: Query<&mut ProgressBarData, With<LifeBar>>,
 ) {
     if let Ok(mut progressbar) = q_bar.get_single_mut() {
-        if let Ok((life, max_life)) = q_player.get_single() {
-            let percent = 100.0 * life.value() as f32 / max_life.0 as f32;
-            progressbar.set_percent(percent)
+        if let Ok(life) = q_player.get_single() {
+            progressbar.set_percent(life.percent())
         }
     }
 }

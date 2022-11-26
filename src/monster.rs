@@ -15,68 +15,45 @@ impl Plugin for MonsterPlugin {
     }
 }
 
-#[derive(Bundle)]
-struct MonsterBundle {
-    #[bundle]
-    sprite_bundle: SpriteBundle,
-    monster: Monster,
-    speed: Speed,
-    life: Life,
-    body: RigidBody,
-    collider: Collider,
-    constraints: LockedAxes,
-    velocity: Velocity,
-}
-
-impl MonsterBundle {
-    fn from_xy(x: f32, y: f32) -> Self {
-        let size = Vec2::new(1., 1.);
-        MonsterBundle {
-            sprite_bundle: SpriteBundle {
-                sprite: Sprite {
-                    color: Color::rgb(0.8, 0.3, 0.3),
-                    custom_size: Some(size),
-                    ..Default::default()
-                },
-                transform: Transform::from_xyz(x, y, 1.),
+fn spawn_monster(commands: &mut Commands, x: f32, y: f32) {
+    let size = Vec2::new(1., 1.);
+    commands
+        .spawn(Monster)
+        .insert(Name::new("Monster"))
+        .insert(Speed(5.0))
+        .insert(Life::new(2))
+        // Sprite
+        .insert(SpriteBundle {
+            sprite: Sprite {
+                color: Color::rgb(0.8, 0.3, 0.3),
+                custom_size: Some(size),
                 ..Default::default()
             },
-            monster: Monster,
-            speed: Speed(5.0),
-            life: Life::new(2),
-            body: RigidBody::Dynamic,
-            collider: Collider::cuboid(size.x / 2., size.y / 2.),
-            constraints: LockedAxes::ROTATION_LOCKED,
-            velocity: Velocity::linear(Vec2::default()),
-        }
-    }
+            transform: Transform::from_xyz(x, y, 1.),
+            ..Default::default()
+        })
+        // Rapier
+        .insert(RigidBody::Dynamic)
+        .insert(Collider::cuboid(size.x / 2., size.y / 2.))
+        .insert(LockedAxes::ROTATION_LOCKED)
+        .insert(Velocity::linear(Vec2::default()));
 }
 
-#[derive(Bundle)]
-struct SpawningMonsterBundle {
-    #[bundle]
-    sprite_bundle: SpriteBundle,
-    monster: SpawningMonster,
-    config: MonsterSpawnConfig,
-}
-
-impl SpawningMonsterBundle {
-    fn from_xy(x: f32, y: f32) -> Self {
-        let size = Vec2::new(1., 1.);
-        SpawningMonsterBundle {
-            sprite_bundle: SpriteBundle {
-                sprite: Sprite {
-                    color: Color::rgba(0.8, 0.3, 0.3, 0.2),
-                    custom_size: Some(size),
-                    ..Default::default()
-                },
-                transform: Transform::from_xyz(x, y, 1.),
+fn spawning_monster(commands: &mut Commands, x: f32, y: f32) {
+    let size = Vec2::new(1., 1.);
+    commands
+        .spawn(SpawningMonster)
+        .insert(Name::new("Spawning monster"))
+        .insert(SpriteBundle {
+            sprite: Sprite {
+                color: Color::rgba(0.8, 0.3, 0.3, 0.2),
+                custom_size: Some(size),
                 ..Default::default()
             },
-            monster: SpawningMonster,
-            config: MonsterSpawnConfig::new(x, y),
-        }
-    }
+            transform: Transform::from_xyz(x, y, 1.),
+            ..Default::default()
+        })
+        .insert(MonsterSpawnConfig::new(x, y));
 }
 
 #[derive(Resource)]
@@ -130,9 +107,7 @@ fn spawning_monsters(
         for _ in 0..config.enemy_count {
             let x: f32 = rng.gen_range(-15. ..15.);
             let y: f32 = rng.gen_range(-10. ..10.);
-            commands
-                .spawn(SpawningMonsterBundle::from_xy(x, y))
-                .insert(Name::new("Enemy spawning"));
+            spawning_monster(&mut commands, x, y);
         }
         config.enemy_count += 2;
     }
@@ -150,10 +125,7 @@ fn spawn_monsters(
         config.timer.tick(time.delta());
         if config.timer.finished() {
             commands.entity(entity).despawn();
-
-            commands
-                .spawn(MonsterBundle::from_xy(config.x, config.y))
-                .insert(Name::new("Enemy"));
+            spawn_monster(&mut commands, config.x, config.y);
         }
     }
 }

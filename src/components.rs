@@ -16,27 +16,41 @@ pub struct SpawningMonster;
 pub struct Bullet;
 
 #[derive(Component)]
-pub struct Life(u16);
+pub struct Life {
+    life: u16,
+    max_life: u16,
+}
 
 impl Life {
     pub fn new(life: u16) -> Self {
-        Life(life)
+        Life {
+            life,
+            max_life: life,
+        }
     }
 
     pub fn hit(&mut self, damage: u16) {
-        if damage > self.0 {
-            self.0 = 0;
+        if damage > self.life {
+            self.life = 0;
         } else {
-            self.0 -= damage;
+            self.life -= damage;
         }
     }
 
     pub fn is_dead(&self) -> bool {
-        self.0 == 0
+        self.life == 0
     }
 
-    pub fn value(&self) -> u16 {
-        self.0
+    pub fn life(&self) -> u16 {
+        self.life
+    }
+
+    // pub fn max_life(&self) -> u16 {
+    //     self.max_life
+    // }
+
+    pub fn percent(&self) -> f32 {
+        100.0 * self.life as f32 / self.max_life as f32
     }
 }
 

@@ -20,43 +20,9 @@ impl BulletOptions {
     }
 }
 
-#[derive(Bundle)]
-struct BulletBundle {
-    #[bundle]
-    sprite_bundle: SpriteBundle,
-    body: RigidBody,
-    collider: Collider,
-    velocity: Velocity,
-    constraints: LockedAxes,
-    events: ActiveEvents,
-    bullet: Bullet,
-}
-
-impl BulletBundle {
-    fn new(options: BulletOptions) -> Self {
-        let velocity = options.direction.normalize() * BULLET_SPEED;
-        let pos = ellipse_pos(&options);
-        let size = 0.3;
-        BulletBundle {
-            sprite_bundle: SpriteBundle {
-                sprite: Sprite {
-                    color: Color::YELLOW,
-                    custom_size: Some(Vec2::new(size, size)),
-                    ..Default::default()
-                },
-                transform: Transform::from_translation(pos),
-                ..Default::default()
-            },
-            body: RigidBody::Dynamic,
-            collider: Collider::cuboid(size / 2., size / 2.),
-            constraints: LockedAxes::ROTATION_LOCKED,
-            events: ActiveEvents::COLLISION_EVENTS,
-            velocity: Velocity::linear(velocity),
-            bullet: Bullet,
-        }
-    }
-}
-
+///
+///  Retrieve the pos of the bullet, according to an Ellipse around the player
+///
 fn ellipse_pos(options: &BulletOptions) -> Vec3 {
     let angle = Vec2::X.angle_between(options.direction);
     let x = angle.cos() * SQRT_2 * options.size.x / 2.0 + options.pos.x;
@@ -72,7 +38,26 @@ pub fn spawn_bullet_at(
     // materials: &Res<Materials>,
     options: BulletOptions,
 ) {
+    let velocity = options.direction.normalize() * BULLET_SPEED;
+    let pos = ellipse_pos(&options);
+    let size = 0.3;
     commands
-        .spawn(BulletBundle::new(options))
-        .insert(Name::new("Bullet"));
+        .spawn(Bullet)
+        .insert(Name::new("Bullet"))
+        // Sprite
+        .insert(SpriteBundle {
+            sprite: Sprite {
+                color: Color::YELLOW,
+                custom_size: Some(Vec2::new(size, size)),
+                ..Default::default()
+            },
+            transform: Transform::from_translation(pos),
+            ..Default::default()
+        })
+        // Rapier
+        .insert(RigidBody::Dynamic)
+        .insert(Collider::cuboid(size / 2., size / 2.))
+        .insert(LockedAxes::ROTATION_LOCKED)
+        .insert(ActiveEvents::COLLISION_EVENTS)
+        .insert(Velocity::linear(velocity));
 }

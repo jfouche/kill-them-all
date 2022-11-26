@@ -25,45 +25,29 @@ impl Default for AnimationTimer {
 
 const PLAYER_SIZE: Vec2 = Vec2::new(1.0, 1.0);
 
-#[derive(Bundle)]
-struct PlayerBundle {
-    sprite: SpriteSheetBundle,
-    player: Player,
-    speed: Speed,
-    life: Life,
-    max_life: MaxLife,
-    body: RigidBody,
-    collider: Collider,
-    velocity: Velocity,
-    constraints: LockedAxes,
-    events: ActiveEvents,
-    animation_timer: AnimationTimer,
-}
-
-impl PlayerBundle {
-    fn new(texture_atlas_handle: Handle<TextureAtlas>) -> Self {
-        PlayerBundle {
-            sprite: SpriteSheetBundle {
-                sprite: TextureAtlasSprite {
-                    custom_size: Some(PLAYER_SIZE),
-                    ..Default::default()
-                },
-                texture_atlas: texture_atlas_handle,
-                transform: Transform::from_xyz(0., 0., 10.),
+fn spawn_player(commands: &mut Commands, texture_atlas_handle: Handle<TextureAtlas>) {
+    commands
+        .spawn(Player)
+        .insert(Speed(8.))
+        .insert(Life::new(10))
+        .insert(Name::new("Player"))
+        // Sprite
+        .insert(SpriteSheetBundle {
+            sprite: TextureAtlasSprite {
+                custom_size: Some(PLAYER_SIZE),
                 ..Default::default()
             },
-            player: Player,
-            speed: Speed(8.),
-            life: Life::new(10),
-            max_life: MaxLife(10),
-            body: RigidBody::Dynamic,
-            collider: Collider::cuboid(PLAYER_SIZE.x / 2., PLAYER_SIZE.y / 2.),
-            constraints: LockedAxes::ROTATION_LOCKED,
-            events: ActiveEvents::COLLISION_EVENTS,
-            velocity: Velocity::default(),
-            animation_timer: AnimationTimer::default(),
-        }
-    }
+            texture_atlas: texture_atlas_handle,
+            transform: Transform::from_xyz(0., 0., 10.),
+            ..Default::default()
+        })
+        .insert(AnimationTimer::default())
+        // Rapier
+        .insert(RigidBody::Dynamic)
+        .insert(Collider::cuboid(PLAYER_SIZE.x / 2., PLAYER_SIZE.y / 2.))
+        .insert(LockedAxes::ROTATION_LOCKED)
+        .insert(ActiveEvents::COLLISION_EVENTS)
+        .insert(Velocity::default());
 }
 
 ///
@@ -80,11 +64,7 @@ fn setup(
         TextureAtlas::from_grid(texture_handle, Vec2::new(16.0, 16.0), 4, 7, None, None);
     let texture_atlas_handle = texture_atlases.add(texture_atlas);
 
-    // spawn player
-    commands
-        .spawn(PlayerBundle::new(texture_atlas_handle))
-        .insert(Name::new("Player"));
-
+    spawn_player(&mut commands, texture_atlas_handle);
     commands.insert_resource(PlayerFireConfig {
         timer: Timer::from_seconds(1., TimerMode::Repeating),
     });
@@ -116,7 +96,7 @@ fn player_movement(
 }
 
 ///
-/// Spawn monster at Timer times
+/// Player fires
 ///
 fn player_fires(
     mut commands: Commands,
@@ -125,7 +105,6 @@ fn player_fires(
     q_player: Query<&Transform, With<Player>>,
     q_monsters: Query<&Transform, With<Monster>>,
 ) {
-    // tick the timer
     config.timer.tick(time.delta());
 
     if config.timer.finished() {
