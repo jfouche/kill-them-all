@@ -160,6 +160,8 @@ fn on_player_hit(
             life.hit(1);
             if life.is_dead() {
                 commands.entity(event.entity).despawn();
+                // break to ensure we don't try to despawn player if already dead
+                break;
             } else {
                 send_invulnerability.send(InvulnerabilityEvent::Start(event.entity));
                 collision_groups.filters &= !GROUP_ENEMY;
