@@ -248,12 +248,9 @@ fn player_invulnerability_finished(
     mut q_player: Query<(Entity, &mut Visibility), With<Player>>,
 ) {
     if let Ok((player_entity, mut visibility)) = q_player.get_single_mut() {
-        warn!("player_invulnerability_finished 0");
         for event in events.iter() {
             if let InvulnerabilityEvent::Stop(entity) = event {
-                warn!("player_invulnerability_finished 1");
                 if player_entity == *entity {
-                    warn!("player_invulnerability_finished 2");
                     commands
                         .entity(player_entity)
                         .remove::<InvulnerabilityAnimationTimer>();

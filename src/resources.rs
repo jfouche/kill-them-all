@@ -11,3 +11,8 @@ pub struct PlayerFireConfig {
     /// timer between attacks per seconds
     pub timer: Timer,
 }
+
+#[derive(Resource, Default)]
+pub struct GameTextures {
+    pub money: Handle<Image>,
+}

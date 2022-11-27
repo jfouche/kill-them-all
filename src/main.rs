@@ -41,6 +41,7 @@ fn main() {
         // resources
         .init_resource::<ScoreResource>()
         .insert_resource(ClearColor(Color::rgb(0.04, 0.04, 0.04)))
+        .init_resource::<GameTextures>()
         // Events
         .add_event::<PlayerHitEvent>()
         .add_event::<MonsterHitEvent>()

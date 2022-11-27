@@ -73,3 +73,6 @@ impl Invulnerable {
         self.timer.finished()
     }
 }
+
+#[derive(Component)]
+pub struct Bonus;
