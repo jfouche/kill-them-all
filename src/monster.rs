@@ -7,11 +7,14 @@ pub struct MonsterPlugin;
 impl Plugin for MonsterPlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(init_monster_spawning)
-            .add_system(spawning_monsters)
-            .add_system(spawn_monsters)
-            .add_system(monsters_moves)
-            .add_system(on_monster_hit)
-            .add_system(on_monster_death);
+            .add_system_set(
+                SystemSet::on_update(GameState::InGame)
+                    .with_system(spawning_monsters)
+                    .with_system(spawn_monsters)
+                    .with_system(monsters_moves)
+                    .with_system(on_monster_hit)
+                    .with_system(on_monster_death),
+            );
     }
 }
 

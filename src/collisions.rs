@@ -5,9 +5,12 @@ pub struct CollisionsPlugin;
 
 impl Plugin for CollisionsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(invulnerability_finished)
-            .add_system(monster_hit_by_bullet)
-            .add_system(player_touched_by_monster);
+        app.add_system_set(
+            SystemSet::on_update(GameState::InGame)
+                .with_system(invulnerability_finished)
+                .with_system(monster_hit_by_bullet)
+                .with_system(player_touched_by_monster),
+        );
     }
 }
 
