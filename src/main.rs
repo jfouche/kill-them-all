@@ -29,11 +29,7 @@ fn main() {
         .add_plugin(ui::ProgressBarPlugin)
         // Game plugins
         .add_plugin(top_menu::TopMenuPlugin)
-        .add_plugin(in_game::WorldPlugin)
-        .add_plugin(in_game::PlayerPlugin)
-        .add_plugin(in_game::MonsterPlugin)
-        .add_plugin(in_game::CollisionsPlugin)
-        .add_plugin(in_game::BonusPlugin)
+        .add_plugins(in_game::InGamePlugins)
         .add_plugin(pause::PausePlugin)
         // States
         .add_state(GameState::InGame)

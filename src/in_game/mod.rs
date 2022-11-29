@@ -5,8 +5,17 @@ mod monster;
 mod player;
 mod world;
 
-pub use bonus::BonusPlugin;
-pub use collisions::CollisionsPlugin;
-pub use monster::MonsterPlugin;
-pub use player::PlayerPlugin;
-pub use world::WorldPlugin;
+use bevy::{app::PluginGroupBuilder, prelude::PluginGroup};
+
+pub struct InGamePlugins;
+
+impl PluginGroup for InGamePlugins {
+    fn build(self) -> PluginGroupBuilder {
+        PluginGroupBuilder::start::<Self>()
+            .add(bonus::BonusPlugin)
+            .add(collisions::CollisionsPlugin)
+            .add(monster::MonsterPlugin)
+            .add(player::PlayerPlugin)
+            .add(world::WorldPlugin)
+    }
+}
