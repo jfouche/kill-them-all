@@ -15,7 +15,8 @@ impl Plugin for PausePlugin {
             .add_system_set(
                 SystemSet::on_update(GameState::GamePaused)
                     .with_system(update_skill::<SpeedText>)
-                    .with_system(update_skill::<MoneyText>),
+                    .with_system(update_skill::<MoneyText>)
+                    .with_system(update_skill::<ExperienceText>),
             );
     }
 }
@@ -52,6 +53,13 @@ impl Skill for MoneyText {
     type SkillComponent = Money;
 }
 
+#[derive(Component)]
+struct ExperienceText;
+
+impl Skill for ExperienceText {
+    type SkillComponent = Experience;
+}
+
 fn switch_game_state(mut state: ResMut<State<GameState>>, keyboard_input: Res<Input<KeyCode>>) {
     if keyboard_input.just_pressed(KeyCode::Escape) {
         match state.current() {
@@ -83,6 +91,7 @@ fn spawn_pause_menu(mut commands: Commands, font: Res<UiFont>) {
             // SKILLS
             spawn_skill(menu, font.clone(), "Speed :", SpeedText);
             spawn_skill(menu, font.clone(), "Money :", MoneyText);
+            spawn_skill(menu, font.clone(), "Experience :", ExperienceText);
         });
 }
 

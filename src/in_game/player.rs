@@ -15,7 +15,8 @@ impl Plugin for PlayerPlugin {
                 .with_system(on_player_hit)
                 .with_system(set_invulnerable)
                 .with_system(animate_invulnerability.after(player_movement))
-                .with_system(player_invulnerability_finished),
+                .with_system(player_invulnerability_finished)
+                .with_system(increment_player_experience),
         );
     }
 }
@@ -43,10 +44,11 @@ const PLAYER_SIZE: Vec2 = Vec2::new(1.0, 1.0);
 fn spawn_player(commands: &mut Commands, texture_atlas_handle: Handle<TextureAtlas>) {
     commands
         .spawn(Player)
+        .insert(Name::new("Player"))
         .insert(Speed(8.))
         .insert(Life::new(10))
         .insert(Money(0))
-        .insert(Name::new("Player"))
+        .insert(Experience::default())
         // Sprite
         .insert(SpriteSheetBundle {
             sprite: TextureAtlasSprite {
@@ -258,12 +260,28 @@ fn player_invulnerability_finished(
         for event in events.iter() {
             if let InvulnerabilityEvent::Stop(entity) = event {
                 if player_entity == *entity {
+                    warn!("player_invulnerability_finished");
                     commands
                         .entity(player_entity)
                         .remove::<InvulnerabilityAnimationTimer>();
                     visibility.is_visible = true;
                 }
             }
+        }
+    }
+}
+
+///
+/// Update player XP when monster died
+///
+fn increment_player_experience(
+    mut monster_hit_events: EventReader<MonsterDeathEvent>,
+    mut q_player: Query<&mut Experience, With<Player>>,
+) {
+    if let Ok(mut experience) = q_player.get_single_mut() {
+        for _ in monster_hit_events.iter() {
+            warn!("increment_score");
+            experience.add(1);
         }
     }
 }

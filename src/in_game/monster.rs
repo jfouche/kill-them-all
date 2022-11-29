@@ -16,7 +16,7 @@ impl Plugin for MonsterPlugin {
                     .with_system(spawn_monsters)
                     .with_system(monsters_moves)
                     .with_system(on_monster_hit)
-                    .with_system(on_monster_death),
+                    .with_system(increment_score),
             );
     }
 }
@@ -178,15 +178,16 @@ fn on_monster_hit(
 }
 
 ///
-/// monster died
+/// Increment score when monster died
 ///
-fn on_monster_death(
+fn increment_score(
     mut commands: Commands,
     mut monster_hit_events: EventReader<MonsterDeathEvent>,
     mut score: ResMut<ScoreResource>,
 ) {
     for event in monster_hit_events.iter() {
-        warn!("on_monster_death");
+        warn!("increment_score");
+        // TODO: ("split in 2 systems");
         commands.entity(event.entity).despawn();
         score.0 += 1;
     }

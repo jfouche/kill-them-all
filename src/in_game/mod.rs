@@ -14,6 +14,7 @@ pub struct InGamePluginsGroup;
 impl PluginGroup for InGamePluginsGroup {
     fn build(self) -> PluginGroupBuilder {
         PluginGroupBuilder::start::<Self>()
+            .add(InGamePlugin)
             .add(bonus::BonusPlugin)
             .add(collisions::CollisionsPlugin)
             .add(monster::MonsterPlugin)
