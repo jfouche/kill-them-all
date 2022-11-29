@@ -2,6 +2,7 @@ mod bonus;
 mod bullets;
 mod collisions;
 mod components;
+mod debug;
 mod events;
 mod monster;
 mod pause;
@@ -13,7 +14,6 @@ mod ui;
 mod world;
 
 use bevy::render::camera::ScalingMode;
-use bevy_inspector_egui::RegisterInspectable;
 use prelude::*;
 
 fn main() {
@@ -29,9 +29,7 @@ fn main() {
         }))
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         // debug plugins
-        // .add_plugin(RapierDebugRenderPlugin::default())
-        .add_plugin(bevy_inspector_egui::WorldInspectorPlugin::new())
-        .register_inspectable::<Money>()
+        .add_plugin(debug::DebugPlugin)
         // utils plugins
         .add_plugin(ui::ProgressBarPlugin)
         // Game plugins
