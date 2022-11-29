@@ -138,7 +138,7 @@ impl std::fmt::Display for Experience {
             "{}/{} (level {})",
             self.0,
             self.get_current_level_min_max_exp().1,
-            self.level(),
+            self.level() + 1,
         )
     }
 }
