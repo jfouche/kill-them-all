@@ -48,6 +48,7 @@ fn main() {
         .init_resource::<GameTextures>()
         // Events
         .add_event::<PlayerHitEvent>()
+        .add_event::<PlayerDeathEvent>()
         .add_event::<MonsterHitEvent>()
         .add_event::<MonsterDeathEvent>()
         .add_event::<InvulnerabilityEvent>()

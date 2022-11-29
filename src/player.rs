@@ -156,6 +156,7 @@ fn on_player_hit(
     mut player_hit_events: EventReader<PlayerHitEvent>,
     mut q_player: Query<(&mut Life, &mut CollisionGroups), With<Player>>,
     mut send_invulnerability: EventWriter<InvulnerabilityEvent>,
+    mut send_death: EventWriter<PlayerDeathEvent>,
 ) {
     if let Ok((mut life, mut collision_groups)) = q_player.get_single_mut() {
         for event in player_hit_events.iter() {
@@ -163,6 +164,7 @@ fn on_player_hit(
             life.hit(1);
             if life.is_dead() {
                 commands.entity(event.entity).despawn();
+                send_death.send(PlayerDeathEvent);
                 // break to ensure we don't try to despawn player if already dead
                 break;
             } else {

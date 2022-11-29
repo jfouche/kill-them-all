@@ -24,7 +24,9 @@ impl Plugin for TopMenuPlugin {
             .add_system(update_score)
             .add_system(update_life)
             .add_system(update_life_bar)
-            .add_system(update_speed);
+            .add_system(update_speed)
+            .add_system(update_life_on_death)
+            .add_system(update_life_bar_on_death);
     }
 }
 
@@ -203,7 +205,7 @@ fn update_life_bar(
 ) {
     if let Ok(mut progressbar) = q_bar.get_single_mut() {
         if let Ok(life) = q_player.get_single() {
-            progressbar.set_percent(life.percent())
+            progressbar.set_percent(life.percent());
         }
     }
 }
@@ -215,6 +217,28 @@ fn update_speed(
     if let Ok(mut text) = q_text.get_single_mut() {
         if let Ok(speed) = q_player.get_single() {
             text.sections[1].value = format!("{}", speed.0);
+        }
+    }
+}
+
+fn update_life_on_death(
+    mut player_death_events: EventReader<PlayerDeathEvent>,
+    mut q_text: Query<&mut Text, With<LifeText>>,
+) {
+    if let Ok(mut text) = q_text.get_single_mut() {
+        for _ in player_death_events.iter() {
+            text.sections[1].value = "0".to_string();
+        }
+    }
+}
+
+fn update_life_bar_on_death(
+    mut player_death_events: EventReader<PlayerDeathEvent>,
+    mut q_bar: Query<&mut ProgressBarData, With<LifeBar>>,
+) {
+    if let Ok(mut progressbar) = q_bar.get_single_mut() {
+        for _ in player_death_events.iter() {
+            progressbar.set_percent(0.0);
         }
     }
 }
