@@ -1,4 +1,5 @@
-use crate::{collisions::GROUP_BONUS, prelude::*};
+use crate::in_game::collisions::GROUP_BONUS;
+use crate::prelude::*;
 use rand::{thread_rng, Rng};
 
 pub struct BonusPlugin;

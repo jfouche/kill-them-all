@@ -1,5 +1,5 @@
 use crate::{
-    collisions::{GROUP_BONUS, GROUP_ENEMY},
+    in_game::collisions::{GROUP_BONUS, GROUP_ENEMY},
     prelude::*,
 };
 use rand::{thread_rng, Rng};

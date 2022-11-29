@@ -1,17 +1,12 @@
-mod bonus;
-mod bullets;
-mod collisions;
 mod components;
 mod debug;
 mod events;
-mod monster;
+mod in_game;
 mod pause;
-mod player;
 mod prelude;
 mod resources;
 mod top_menu;
 mod ui;
-mod world;
 
 use bevy::render::camera::ScalingMode;
 use prelude::*;
@@ -33,12 +28,12 @@ fn main() {
         // utils plugins
         .add_plugin(ui::ProgressBarPlugin)
         // Game plugins
-        .add_plugin(world::WorldPlugin)
         .add_plugin(top_menu::TopMenuPlugin)
-        .add_plugin(player::PlayerPlugin)
-        .add_plugin(monster::MonsterPlugin)
-        .add_plugin(collisions::CollisionsPlugin)
-        .add_plugin(bonus::BonusPlugin)
+        .add_plugin(in_game::WorldPlugin)
+        .add_plugin(in_game::PlayerPlugin)
+        .add_plugin(in_game::MonsterPlugin)
+        .add_plugin(in_game::CollisionsPlugin)
+        .add_plugin(in_game::BonusPlugin)
         .add_plugin(pause::PausePlugin)
         // States
         .add_state(GameState::InGame)

@@ -1,5 +1,5 @@
-use crate::bullets::{spawn_bullet_at, BulletOptions};
-use crate::collisions::{GROUP_ENEMY, GROUP_PLAYER};
+use crate::in_game::bullets::{spawn_bullet_at, BulletOptions};
+use crate::in_game::collisions::{GROUP_ENEMY, GROUP_PLAYER};
 use crate::prelude::*;
 use std::ops::Mul;
 
