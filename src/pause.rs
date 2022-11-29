@@ -26,7 +26,7 @@ fn switch_game_state(mut state: ResMut<State<GameState>>, keyboard_input: Res<In
     }
 }
 
-fn spawn_pause_menu(mut commands: Commands) {
+fn spawn_pause_menu(mut commands: Commands, font: Res<UiFont>) {
     commands
         .spawn(PauseMenu)
         .insert(Name::new("Pause menu"))
@@ -42,6 +42,18 @@ fn spawn_pause_menu(mut commands: Commands) {
             },
             background_color: Color::BLUE.into(),
             ..Default::default()
+        })
+        .with_children(|menu| {
+            // TITLE
+            menu.spawn(TextBundle::from_section(
+                "Pause",
+                TextStyle {
+                    font: font.clone(),
+                    font_size: 20.0,
+                    color: Color::WHITE,
+                },
+            ));
+            // SKILLS
         });
 }
 
