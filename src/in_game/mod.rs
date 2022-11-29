@@ -5,11 +5,13 @@ mod monster;
 mod player;
 mod world;
 
-use bevy::{app::PluginGroupBuilder, prelude::PluginGroup};
+use bevy::app::PluginGroupBuilder;
 
-pub struct InGamePlugins;
+use crate::prelude::*;
 
-impl PluginGroup for InGamePlugins {
+pub struct InGamePluginsGroup;
+
+impl PluginGroup for InGamePluginsGroup {
     fn build(self) -> PluginGroupBuilder {
         PluginGroupBuilder::start::<Self>()
             .add(bonus::BonusPlugin)
@@ -18,4 +20,21 @@ impl PluginGroup for InGamePlugins {
             .add(player::PlayerPlugin)
             .add(world::WorldPlugin)
     }
+}
+
+struct InGamePlugin;
+
+impl Plugin for InGamePlugin {
+    fn build(&self, app: &mut bevy::prelude::App) {
+        app.add_system_set(SystemSet::on_enter(GameState::InGame).with_system(start_in_game))
+            .add_system_set(SystemSet::on_exit(GameState::InGame).with_system(stop_in_game));
+    }
+}
+
+fn start_in_game(mut conf: ResMut<RapierConfiguration>) {
+    conf.physics_pipeline_active = true;
+}
+
+fn stop_in_game(mut conf: ResMut<RapierConfiguration>) {
+    conf.physics_pipeline_active = false;
 }
