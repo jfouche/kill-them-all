@@ -71,7 +71,8 @@ impl ProgressBarBundle {
             node: NodeBundle {
                 style: Style {
                     size,
-                    border: UiRect::all(Val::Px(4.0)),
+                    margin: UiRect::all(Val::Px(3.0)),
+                    border: UiRect::all(Val::Px(2.0)),
                     ..Default::default()
                 },
                 background_color,

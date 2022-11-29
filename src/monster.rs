@@ -21,8 +21,9 @@ impl Plugin for MonsterPlugin {
     }
 }
 
+const MONSTER_SIZE: Vec2 = Vec2::new(1.0, 1.0);
+
 fn spawn_monster(commands: &mut Commands, x: f32, y: f32) {
-    let size = Vec2::new(1., 1.);
     commands
         .spawn(Monster)
         .insert(Name::new("Monster"))
@@ -32,7 +33,7 @@ fn spawn_monster(commands: &mut Commands, x: f32, y: f32) {
         .insert(SpriteBundle {
             sprite: Sprite {
                 color: Color::rgb(0.8, 0.3, 0.3),
-                custom_size: Some(size),
+                custom_size: Some(MONSTER_SIZE),
                 ..Default::default()
             },
             transform: Transform::from_xyz(x, y, 1.),
@@ -40,21 +41,20 @@ fn spawn_monster(commands: &mut Commands, x: f32, y: f32) {
         })
         // Rapier
         .insert(RigidBody::Dynamic)
-        .insert(Collider::cuboid(size.x / 2., size.y / 2.))
+        .insert(Collider::cuboid(MONSTER_SIZE.x / 2., MONSTER_SIZE.y / 2.))
         .insert(CollisionGroups::new(GROUP_ENEMY, Group::ALL & !GROUP_BONUS))
         .insert(LockedAxes::ROTATION_LOCKED)
         .insert(Velocity::linear(Vec2::default()));
 }
 
 fn spawning_monster(commands: &mut Commands, x: f32, y: f32) {
-    let size = Vec2::new(1., 1.);
     commands
         .spawn(SpawningMonster)
         .insert(Name::new("Spawning monster"))
         .insert(SpriteBundle {
             sprite: Sprite {
                 color: Color::rgba(0.8, 0.3, 0.3, 0.2),
-                custom_size: Some(size),
+                custom_size: Some(MONSTER_SIZE),
                 ..Default::default()
             },
             transform: Transform::from_xyz(x, y, 1.),
@@ -72,7 +72,7 @@ impl MonsterSpawningConfig {
     fn default() -> Self {
         MonsterSpawningConfig {
             timer: Timer::from_seconds(8., TimerMode::Repeating),
-            enemy_count: 5,
+            enemy_count: 3,
         }
     }
 }
@@ -116,7 +116,7 @@ fn spawning_monsters(
             let y: f32 = rng.gen_range(-10. ..10.);
             spawning_monster(&mut commands, x, y);
         }
-        config.enemy_count += 2;
+        config.enemy_count += 1;
     }
 }
 

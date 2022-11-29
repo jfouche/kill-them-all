@@ -21,21 +21,18 @@ pub struct TopMenuPlugin;
 impl Plugin for TopMenuPlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(spawn_top_menu)
-            .add_system(spawn_score)
             .add_system(update_score)
-            .add_system(spawn_life)
             .add_system(update_life)
             .add_system(update_life_bar)
-            .add_system(spawn_speed)
             .add_system(update_speed);
     }
 }
 
-fn spawn_top_menu(mut commands: Commands) {
+fn spawn_top_menu(mut commands: Commands, font: Res<UiFont>) {
     commands
         .spawn(NodeBundle {
             style: Style {
-                size: Size::new(Val::Percent(100.0), Val::Px(70.0)),
+                size: Size::new(Val::Percent(100.0), Val::Px(30.)),
                 justify_content: JustifyContent::SpaceBetween,
                 ..default()
             },
@@ -43,7 +40,47 @@ fn spawn_top_menu(mut commands: Commands) {
             ..Default::default()
         })
         .insert(TopMenu)
-        .insert(Name::new("Top menu"));
+        .insert(Name::new("Top menu"))
+        .with_children(|top_menu| {
+            let text_style = TextStyle {
+                font: font.clone(),
+                font_size: 20.0,
+                color: Color::WHITE,
+            };
+            // -----------------------------------------
+            // LIFE
+            top_menu
+                .spawn(
+                    TextBundle::from_sections([
+                        TextSection::new("Life: ", text_style.clone()),
+                        TextSection::from_style(text_style.clone()),
+                    ])
+                    .with_style(Style {
+                        margin: UiRect::all(Val::Px(2.)),
+                        size: Size::new(Val::Px(180.), Val::Auto),
+                        ..Default::default()
+                    }),
+                )
+                .insert(LifeText)
+                .insert(Name::new("Life"));
+
+            top_menu
+                .spawn(ProgressBarBundle::new(
+                    ProgressBarData::from_size(Size::new(Val::Px(600.0), Val::Px(20.0)))
+                        .with_colors(Color::BLACK, Color::RED),
+                ))
+                .insert(LifeBar)
+                .insert(Name::new("Life bar"));
+            // -----------------------------------------
+            // SCORE
+            top_menu
+                .spawn(TextBundle::from_sections([
+                    TextSection::new("Score: ", text_style.clone()),
+                    TextSection::from_style(text_style.clone()),
+                ]))
+                .insert(ScoreText)
+                .insert(Name::new("Score"));
+        });
 }
 
 fn spawn_score(mut commands: Commands, font: Res<UiFont>, query: Query<Entity, Added<TopMenu>>) {
