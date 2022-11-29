@@ -9,6 +9,12 @@ pub struct Monster;
 #[derive(Component, Deref)]
 pub struct Speed(pub f32);
 
+impl std::fmt::Display for Speed {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
 #[derive(Component)]
 pub struct SpawningMonster;
 
@@ -79,3 +85,9 @@ pub struct Bonus;
 
 #[derive(Component, Reflect)]
 pub struct Money(pub u16);
+
+impl std::fmt::Display for Money {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}

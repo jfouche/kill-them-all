@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use std::fmt::Display;
 
 pub struct PausePlugin;
 
@@ -11,15 +12,45 @@ impl Plugin for PausePlugin {
             .add_system_set(
                 SystemSet::on_exit(GameState::GamePaused).with_system(despawn_pause_menu),
             )
-            .add_system_set(SystemSet::on_update(GameState::GamePaused).with_system(update_speed));
+            .add_system_set(
+                SystemSet::on_update(GameState::GamePaused)
+                    .with_system(update_skill::<SpeedText>)
+                    .with_system(update_skill::<MoneyText>),
+            );
     }
 }
 
 #[derive(Component)]
 struct PauseMenu;
 
+///
+/// Trait to print a player skill
+///
+trait Skill {
+    /// Component of the player skill
+    type SkillComponent: Component + Display;
+
+    /// Format the skill of the player.
+    ///
+    /// By default, it formats the skill using the Display trait
+    fn format(component: &Self::SkillComponent) -> String {
+        format!("{}", component)
+    }
+}
+
 #[derive(Component)]
 struct SpeedText;
+
+impl Skill for SpeedText {
+    type SkillComponent = Speed;
+}
+
+#[derive(Component)]
+struct MoneyText;
+
+impl Skill for MoneyText {
+    type SkillComponent = Money;
+}
 
 fn switch_game_state(mut state: ResMut<State<GameState>>, keyboard_input: Res<Input<KeyCode>>) {
     if keyboard_input.just_pressed(KeyCode::Escape) {
@@ -51,6 +82,7 @@ fn spawn_pause_menu(mut commands: Commands, font: Res<UiFont>) {
             spawn_title(menu, font.clone());
             // SKILLS
             spawn_skill(menu, font.clone(), "Speed :", SpeedText);
+            spawn_skill(menu, font.clone(), "Money :", MoneyText);
         });
 }
 
@@ -71,6 +103,12 @@ fn spawn_title(menu: &mut ChildBuilder, font: Handle<Font>) {
     );
 }
 
+fn despawn_pause_menu(mut commands: Commands, query: Query<Entity, With<PauseMenu>>) {
+    if let Ok(entity) = query.get_single() {
+        commands.entity(entity).despawn_recursive();
+    }
+}
+
 fn spawn_skill(
     menu: &mut ChildBuilder,
     font: Handle<Font>,
@@ -88,19 +126,16 @@ fn spawn_skill(
     ]));
 }
 
-fn despawn_pause_menu(mut commands: Commands, query: Query<Entity, With<PauseMenu>>) {
-    if let Ok(entity) = query.get_single() {
-        commands.entity(entity).despawn_recursive();
-    }
-}
-
-fn update_speed(
-    q_player: Query<&Speed, With<Player>>,
-    mut q_text: Query<&mut Text, With<SpeedText>>,
+///
+/// Update the skill value depending on the Text tag
+///
+fn update_skill<T: Skill + Component>(
+    q_player: Query<&T::SkillComponent, With<Player>>,
+    mut q_text: Query<&mut Text, With<T>>,
 ) {
     if let Ok(mut text) = q_text.get_single_mut() {
-        if let Ok(speed) = q_player.get_single() {
-            text.sections[1].value = format!("{}", speed.0);
+        if let Ok(component) = q_player.get_single() {
+            text.sections[1].value = T::format(component);
         }
     }
 }
