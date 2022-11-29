@@ -1,3 +1,5 @@
+use bevy_inspector_egui::Inspectable;
+
 use crate::prelude::*;
 
 #[derive(Component)]
@@ -76,3 +78,6 @@ impl Invulnerable {
 
 #[derive(Component)]
 pub struct Bonus;
+
+#[derive(Component, Inspectable)]
+pub struct Money(pub u16);

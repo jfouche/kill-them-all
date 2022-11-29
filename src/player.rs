@@ -45,6 +45,7 @@ fn spawn_player(commands: &mut Commands, texture_atlas_handle: Handle<TextureAtl
         .spawn(Player)
         .insert(Speed(8.))
         .insert(Life::new(10))
+        .insert(Money(0))
         .insert(Name::new("Player"))
         // Sprite
         .insert(SpriteSheetBundle {

@@ -1,4 +1,4 @@
-use crate::prelude::*;
+use crate::{collisions::GROUP_BONUS, prelude::*};
 use rand::{thread_rng, Rng};
 
 pub struct BonusPlugin;
@@ -10,6 +10,8 @@ impl Plugin for BonusPlugin {
 }
 
 const MONEY_ASSET_PATH: &str = "items/crystal_01a.png";
+
+const BONUS_SIZE: Vec2 = Vec2::new(0.8, 0.8);
 
 fn load_asset(asset_server: Res<AssetServer>, mut textures: ResMut<GameTextures>) {
     textures.money = asset_server.load(MONEY_ASSET_PATH);
@@ -26,12 +28,20 @@ fn spawn_bonus(
             commands
                 .spawn(Bonus)
                 .insert(Name::new("Bonus"))
+                // sprite
                 .insert(SpriteBundle {
+                    sprite: Sprite {
+                        custom_size: Some(BONUS_SIZE),
+                        ..Default::default()
+                    },
                     texture: textures.money.clone(),
-                    transform: Transform::from_translation(event.pos)
-                        .with_scale(Vec3::new(0.02, 0.02, 1.)),
+                    transform: Transform::from_translation(event.pos),
                     ..Default::default()
-                });
+                })
+                // rapier
+                .insert(RigidBody::Fixed)
+                .insert(Collider::cuboid(BONUS_SIZE.x / 2.0, BONUS_SIZE.y / 2.0))
+                .insert(CollisionGroups::new(GROUP_BONUS, Group::ALL));
         }
     }
 }

@@ -13,6 +13,7 @@ mod ui;
 mod world;
 
 use bevy::render::camera::ScalingMode;
+use bevy_inspector_egui::RegisterInspectable;
 use prelude::*;
 
 fn main() {
@@ -30,6 +31,7 @@ fn main() {
         // debug plugins
         // .add_plugin(RapierDebugRenderPlugin::default())
         .add_plugin(bevy_inspector_egui::WorldInspectorPlugin::new())
+        .register_inspectable::<Money>()
         // utils plugins
         .add_plugin(ui::ProgressBarPlugin)
         // Game plugins

@@ -1,4 +1,7 @@
-use crate::{collisions::GROUP_ENEMY, prelude::*};
+use crate::{
+    collisions::{GROUP_BONUS, GROUP_ENEMY},
+    prelude::*,
+};
 use rand::{thread_rng, Rng};
 use std::ops::Mul;
 
@@ -38,7 +41,7 @@ fn spawn_monster(commands: &mut Commands, x: f32, y: f32) {
         // Rapier
         .insert(RigidBody::Dynamic)
         .insert(Collider::cuboid(size.x / 2., size.y / 2.))
-        .insert(CollisionGroups::new(GROUP_ENEMY, Group::ALL))
+        .insert(CollisionGroups::new(GROUP_ENEMY, Group::ALL & !GROUP_BONUS))
         .insert(LockedAxes::ROTATION_LOCKED)
         .insert(Velocity::linear(Vec2::default()));
 }

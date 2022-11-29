@@ -9,13 +9,15 @@ impl Plugin for CollisionsPlugin {
             SystemSet::on_update(GameState::InGame)
                 .with_system(invulnerability_finished)
                 .with_system(monster_hit_by_bullet)
-                .with_system(player_touched_by_monster),
+                .with_system(player_touched_by_monster)
+                .with_system(player_hits_bonus),
         );
     }
 }
 
 pub const GROUP_PLAYER: Group = Group::GROUP_1;
 pub const GROUP_ENEMY: Group = Group::GROUP_2;
+pub const GROUP_BONUS: Group = Group::GROUP_3;
 
 ///
 /// Monster hit by a bullet
@@ -97,5 +99,32 @@ fn invulnerability_finished(
             commands.entity(entity).remove::<Invulnerable>();
             events.send(InvulnerabilityEvent::Stop(entity));
         }
+    }
+}
+
+///
+/// Player takes bonus
+///
+fn player_hits_bonus(
+    mut commands: Commands,
+    mut collisions: EventReader<CollisionEvent>,
+    mut q_player: Query<(Entity, &mut Money), With<Player>>,
+    q_bonus: Query<Entity, With<Bonus>>,
+) {
+    if let Ok((player, mut money)) = q_player.get_single_mut() {
+        collisions
+            .iter()
+            .filter_map(|e| match e {
+                CollisionEvent::Started(e1, e2, _) => Some((e1, e2)),
+                _ => None,
+            })
+            .for_each(|(&e1, &e2)| {
+                for bonus in q_bonus.iter() {
+                    if (e1 == bonus && e2 == player) || (e1 == player && e2 == bonus) {
+                        money.0 += 1;
+                        commands.entity(bonus).despawn();
+                    }
+                }
+            });
     }
 }
