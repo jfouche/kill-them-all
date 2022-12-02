@@ -36,3 +36,6 @@ pub enum InvulnerabilityEvent {
     Start(Entity),
     Stop(Entity),
 }
+
+// Event to notify a player level up
+pub struct LevelUpEvent;

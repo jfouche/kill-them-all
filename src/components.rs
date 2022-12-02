@@ -1,3 +1,5 @@
+use std::cmp::min;
+
 use crate::prelude::*;
 
 #[derive(Component)]
@@ -7,9 +9,9 @@ pub struct Player;
 pub struct Monster;
 
 #[derive(Component, Deref)]
-pub struct Speed(pub f32);
+pub struct MovementSpeed(pub f32);
 
-impl std::fmt::Display for Speed {
+impl std::fmt::Display for MovementSpeed {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
     }
@@ -25,6 +27,7 @@ pub struct Bullet;
 pub struct Life {
     life: u16,
     max_life: u16,
+    increases: u16,
 }
 
 impl Life {
@@ -32,6 +35,7 @@ impl Life {
         Life {
             life,
             max_life: life,
+            increases: 0,
         }
     }
 
@@ -52,13 +56,21 @@ impl Life {
     }
 
     pub fn max_life(&self) -> u16 {
-        self.max_life
+        (self.max_life as f32 * (100.0 + self.increases as f32) / 100.0) as u16
+    }
+
+    pub fn increases(&mut self, percent: u16) {
+        self.increases += percent;
+    }
+
+    pub fn regenerate(&mut self, life: u16) {
+        self.life = min(self.max_life, self.life + life);
     }
 }
 
 impl std::fmt::Display for Life {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}/{}", self.life, self.max_life)
+        write!(f, "{}/{} +{}%", self.life, self.max_life(), self.increases)
     }
 }
 
@@ -98,7 +110,7 @@ impl std::fmt::Display for Money {
 pub struct Experience(u32);
 
 impl Experience {
-    const LEVELS: [u32; 4] = [4, 10, 40, 100];
+    const LEVELS: [u32; 6] = [4, 10, 40, 100, 400, 1000];
 
     pub fn add(&mut self, xp: u32) {
         self.0 += xp;
@@ -127,7 +139,9 @@ impl Experience {
             0 => &0,
             _ => Experience::LEVELS.get(level as usize - 1).unwrap_or(&100),
         };
-        let max = Experience::LEVELS.get(level as usize).unwrap_or(&100);
+        let max = Experience::LEVELS
+            .get(level as usize)
+            .unwrap_or(Experience::LEVELS.last().unwrap());
         (*min, *max)
     }
 }

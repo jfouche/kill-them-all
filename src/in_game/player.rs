@@ -10,13 +10,14 @@ impl Plugin for PlayerPlugin {
         app.add_startup_system(setup).add_system_set(
             SystemSet::on_update(GameState::InGame)
                 .with_system(player_movement)
-                .with_system(animate_sprite.after(player_movement))
+                .with_system(animate_sprite)
                 .with_system(player_fires)
                 .with_system(on_player_hit)
                 .with_system(set_invulnerable)
-                .with_system(animate_invulnerability.after(player_movement))
-                .with_system(player_invulnerability_finished)
-                .with_system(increment_player_experience),
+                .with_system(animate_invulnerability)
+                .with_system(player_invulnerability_finished.after(animate_invulnerability))
+                .with_system(increment_player_experience)
+                .with_system(level_up),
         );
     }
 }
@@ -45,7 +46,7 @@ fn spawn_player(commands: &mut Commands, texture_atlas_handle: Handle<TextureAtl
     commands
         .spawn(Player)
         .insert(Name::new("Player"))
-        .insert(Speed(8.))
+        .insert(MovementSpeed(8.))
         .insert(Life::new(10))
         .insert(Money(0))
         .insert(Experience::default())
@@ -94,7 +95,7 @@ fn setup(
 ///
 fn player_movement(
     keyboard_input: Res<Input<KeyCode>>,
-    mut players: Query<(&Speed, &mut Velocity), With<Player>>,
+    mut players: Query<(&MovementSpeed, &mut Velocity), With<Player>>,
 ) {
     for (speed, mut velocity) in players.iter_mut() {
         let mut linvel = Vec2::default();
@@ -275,13 +276,33 @@ fn player_invulnerability_finished(
 /// Update player XP when monster died
 ///
 fn increment_player_experience(
-    mut monster_hit_events: EventReader<MonsterDeathEvent>,
+    mut monster_death_reader: EventReader<MonsterDeathEvent>,
     mut q_player: Query<&mut Experience, With<Player>>,
+    mut level_up_sender: EventWriter<LevelUpEvent>,
 ) {
     if let Ok(mut experience) = q_player.get_single_mut() {
-        for _ in monster_hit_events.iter() {
-            warn!("increment_score");
+        for _ in monster_death_reader.iter() {
+            warn!("increment_player_experience");
+            let level_before = experience.level();
             experience.add(1);
+            if experience.level() > level_before {
+                // LEVEL UP !
+                level_up_sender.send(LevelUpEvent);
+            }
+        }
+    }
+}
+
+fn level_up(
+    mut q_player: Query<(&mut Life), With<Player>>,
+    mut level_up_rcv: EventReader<LevelUpEvent>,
+) {
+    if let Ok((mut life)) = q_player.get_single_mut() {
+        for _ in level_up_rcv.iter() {
+            warn!("level_up");
+            life.increases(10);
+            let max_life = life.max_life();
+            life.regenerate(max_life);
         }
     }
 }

@@ -27,7 +27,7 @@ fn spawn_monster(commands: &mut Commands, x: f32, y: f32) {
     commands
         .spawn(Monster)
         .insert(Name::new("Monster"))
-        .insert(Speed(5.0))
+        .insert(MovementSpeed(5.0))
         .insert(Life::new(2))
         // Sprite
         .insert(SpriteBundle {
@@ -141,7 +141,10 @@ fn spawn_monsters(
 /// Monsters moves in direction of the Player
 ///
 fn monsters_moves(
-    mut q_monsters: Query<(&Transform, &mut Velocity, &Speed), (With<Monster>, Without<Player>)>,
+    mut q_monsters: Query<
+        (&Transform, &mut Velocity, &MovementSpeed),
+        (With<Monster>, Without<Player>),
+    >,
     q_player: Query<&Transform, With<Player>>,
 ) {
     if let Ok(player) = q_player.get_single() {
