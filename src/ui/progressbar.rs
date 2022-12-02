@@ -62,6 +62,11 @@ pub struct ProgressBarBundle {
     node: NodeBundle,
 }
 
+pub trait Percent {
+    /// Percent : 1.0 is 1%, 100.0 is 100%
+    fn percent(&self) -> f32;
+}
+
 impl ProgressBarBundle {
     pub fn new(data: ProgressBarData) -> Self {
         let background_color = data.background.into();

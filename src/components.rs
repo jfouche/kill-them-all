@@ -51,12 +51,8 @@ impl Life {
         self.life
     }
 
-    // pub fn max_life(&self) -> u16 {
-    //     self.max_life
-    // }
-
-    pub fn percent(&self) -> f32 {
-        100.0 * self.life as f32 / self.max_life as f32
+    pub fn max_life(&self) -> u16 {
+        self.max_life
     }
 }
 
@@ -97,7 +93,6 @@ pub struct Experience(u32);
 
 impl Experience {
     const LEVELS: [u32; 4] = [4, 10, 40, 100];
-    const MAX_LEVEL: u8 = Experience::LEVELS.len() as u8;
 
     pub fn add(&mut self, xp: u32) {
         self.0 += xp;
