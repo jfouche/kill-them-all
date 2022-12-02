@@ -14,6 +14,7 @@ impl Plugin for PausePlugin {
             )
             .add_system_set(
                 SystemSet::on_update(GameState::GamePaused)
+                    .with_system(update_skill::<LifeText>)
                     .with_system(update_skill::<SpeedText>)
                     .with_system(update_skill::<MoneyText>)
                     .with_system(update_skill::<ExperienceText>),
@@ -37,6 +38,13 @@ trait Skill {
     fn format(component: &Self::SkillComponent) -> String {
         format!("{}", component)
     }
+}
+
+#[derive(Component)]
+struct LifeText;
+
+impl Skill for LifeText {
+    type SkillComponent = Life;
 }
 
 #[derive(Component)]
@@ -89,6 +97,7 @@ fn spawn_pause_menu(mut commands: Commands, font: Res<UiFont>) {
         .with_children(|menu| {
             spawn_title(menu, font.clone());
             // SKILLS
+            spawn_skill(menu, font.clone(), "Life :", LifeText);
             spawn_skill(menu, font.clone(), "Speed :", SpeedText);
             spawn_skill(menu, font.clone(), "Money :", MoneyText);
             spawn_skill(menu, font.clone(), "Experience :", ExperienceText);
@@ -129,10 +138,12 @@ fn spawn_skill(
         font_size: 20.0,
         color: Color::WHITE,
     };
-    menu.spawn(component).insert(TextBundle::from_sections([
-        TextSection::new(label, text_style.clone()),
-        TextSection::from_style(text_style),
-    ]));
+    menu.spawn(component)
+        .insert(TextBundle::from_sections([
+            TextSection::new(label, text_style.clone()),
+            TextSection::from_style(text_style),
+        ]))
+        .insert(BackgroundColor(Color::BLACK));
 }
 
 ///

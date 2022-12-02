@@ -92,7 +92,6 @@ fn create_progress_bars(
     query: Query<(Entity, &ProgressBarData), Added<ProgressBarData>>,
 ) {
     for (entity, data) in query.iter() {
-        warn!("create_progress_bars({:?})", data);
         commands.entity(entity).with_children(|parent| {
             // foreground
             parent
