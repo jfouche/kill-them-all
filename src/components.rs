@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use rand::Rng;
 use std::{cmp::min, time::Duration};
 
 #[derive(Component)]
@@ -14,7 +15,26 @@ pub struct SpawningMonster;
 pub struct Bullet;
 
 // ==================================================================
-// #region Skills
+// Weapon
+
+#[derive(Component)]
+pub struct Weapon {
+    damage_min: u16,
+    damage_max: u16,
+}
+
+impl Weapon {
+    pub fn new(damage_min: u16, damage_max: u16) -> Self {
+        Weapon {
+            damage_min,
+            damage_max,
+        }
+    }
+
+    pub fn damage(&self) -> u16 {
+        rand::thread_rng().gen_range(self.damage_min..=self.damage_max)
+    }
+}
 
 // ==================================================================
 // MovementSpeed
@@ -139,8 +159,8 @@ impl std::fmt::Display for AttackSpeed {
     }
 }
 
-// #endregion
 // ==================================================================
+// AttackTimer
 
 #[derive(Component)]
 pub struct AttackTimer {
@@ -161,6 +181,9 @@ impl AttackTimer {
         self.timer.tick(delta)
     }
 }
+
+// ==================================================================
+// AttackTimer
 
 #[derive(Component)]
 #[component(storage = "SparseSet")]
@@ -183,8 +206,14 @@ impl Invulnerable {
     }
 }
 
+// ==================================================================
+// AttackTimer
+
 #[derive(Component)]
 pub struct Bonus;
+
+// ==================================================================
+// AttackTimer
 
 #[derive(Component, Reflect)]
 pub struct Money(pub u16);
@@ -194,6 +223,9 @@ impl std::fmt::Display for Money {
         write!(f, "{}", self.0)
     }
 }
+
+// ==================================================================
+// AttackTimer
 
 #[derive(Component, Default)]
 pub struct Experience(u32);
