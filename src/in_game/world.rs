@@ -11,7 +11,6 @@ impl Plugin for WorldPlugin {
 const WORLD_WIDTH: f32 = 35.0;
 const WORLD_HEIGH: f32 = 25.0;
 
-const TRANSPARENT: Color = Color::rgba(0.0, 0.0, 0.0, 0.0);
 const BORDER: f32 = 1.0;
 
 #[derive(Bundle)]
@@ -48,7 +47,7 @@ impl Border {
             sprite: SpriteBundle {
                 sprite: Sprite {
                     custom_size: Some(Vec2::new(WORLD_WIDTH, BORDER)),
-                    color: TRANSPARENT,
+                    color: Color::NONE,
                     ..Default::default()
                 },
                 transform: Transform::from_xyz(0., WORLD_HEIGH / 2. + BORDER / 2., 0.0),
@@ -63,7 +62,7 @@ impl Border {
             sprite: SpriteBundle {
                 sprite: Sprite {
                     custom_size: Some(Vec2::new(BORDER, WORLD_HEIGH)),
-                    color: TRANSPARENT,
+                    color: Color::NONE,
                     ..Default::default()
                 },
                 transform: Transform::from_xyz(WORLD_WIDTH / 2. + BORDER / 2., 0.0, 0.0),
@@ -78,7 +77,7 @@ impl Border {
             sprite: SpriteBundle {
                 sprite: Sprite {
                     custom_size: Some(Vec2::new(WORLD_WIDTH, BORDER)),
-                    color: TRANSPARENT,
+                    color: Color::NONE,
                     ..Default::default()
                 },
                 transform: Transform::from_xyz(0., -WORLD_HEIGH / 2. - BORDER / 2., 0.0),
@@ -93,7 +92,7 @@ impl Border {
             sprite: SpriteBundle {
                 sprite: Sprite {
                     custom_size: Some(Vec2::new(WORLD_WIDTH, BORDER)),
-                    color: TRANSPARENT,
+                    color: Color::NONE,
                     ..Default::default()
                 },
                 transform: Transform::from_xyz(-WORLD_WIDTH / 2. - BORDER / 2., 0.0, 0.0),
