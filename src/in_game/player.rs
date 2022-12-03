@@ -42,14 +42,20 @@ impl Default for InvulnerabilityAnimationTimer {
 
 const PLAYER_SIZE: Vec2 = Vec2::new(1.0, 1.0);
 
-fn spawn_player(commands: &mut Commands, texture_atlas_handle: Handle<TextureAtlas>) {
+fn spawn_player(
+    commands: &mut Commands,
+    config: PlayerConfig,
+    texture_atlas_handle: Handle<TextureAtlas>,
+) {
     commands
         .spawn(Player)
         .insert(Name::new("Player"))
-        .insert(MovementSpeed::new(8.))
-        .insert(Life::new(10))
+        .insert(MovementSpeed::new(config.movement_speed))
+        .insert(Life::new(config.life))
+        .insert(AttackSpeed::new(config.attack_speed))
         .insert(Money(0))
         .insert(Experience::default())
+        .insert(AttackTimer::new(config.attack_speed))
         // Sprite
         .insert(SpriteSheetBundle {
             sprite: TextureAtlasSprite {
@@ -84,10 +90,12 @@ fn setup(
         TextureAtlas::from_grid(texture_handle, Vec2::new(16.0, 16.0), 4, 7, None, None);
     let texture_atlas_handle = texture_atlases.add(texture_atlas);
 
-    spawn_player(&mut commands, texture_atlas_handle);
-    commands.insert_resource(PlayerFireConfig {
-        timer: Timer::from_seconds(1., TimerMode::Repeating),
-    });
+    let player_config = PlayerConfig {
+        life: 20,
+        movement_speed: 8.,
+        attack_speed: 1.,
+    };
+    spawn_player(&mut commands, player_config, texture_atlas_handle);
 }
 
 ///
@@ -121,14 +129,11 @@ fn player_movement(
 fn player_fires(
     mut commands: Commands,
     time: Res<Time>,
-    mut config: ResMut<PlayerFireConfig>,
-    q_player: Query<&Transform, With<Player>>,
+    mut q_player: Query<(&Transform, &mut AttackTimer, &AttackSpeed), With<Player>>,
     q_monsters: Query<&Transform, With<Monster>>,
 ) {
-    config.timer.tick(time.delta());
-
-    if config.timer.finished() {
-        if let Ok(player) = q_player.get_single() {
+    if let Ok((player, mut timer, attack_speed)) = q_player.get_single_mut() {
+        if timer.tick(time.delta(), attack_speed.value()).finished() {
             let player = player.translation;
             // Get the nearest monster
             let nearest_monster = q_monsters
@@ -294,14 +299,15 @@ fn increment_player_experience(
 }
 
 fn level_up(
-    mut q_player: Query<(&mut Life, &mut MovementSpeed), With<Player>>,
+    mut q_player: Query<(&mut Life, &mut MovementSpeed, &mut AttackSpeed), With<Player>>,
     mut level_up_rcv: EventReader<LevelUpEvent>,
 ) {
-    if let Ok((mut life, mut movement_speed)) = q_player.get_single_mut() {
+    if let Ok((mut life, mut movement_speed, mut attack_speed)) = q_player.get_single_mut() {
         for _ in level_up_rcv.iter() {
             warn!("level_up");
             life.increases(10.);
             movement_speed.increases(10.);
+            attack_speed.increases(10.);
             // Regen life
             let max_life = life.max_life();
             life.regenerate(max_life);

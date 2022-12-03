@@ -15,7 +15,8 @@ impl Plugin for PausePlugin {
             .add_system_set(
                 SystemSet::on_update(GameState::GamePaused)
                     .with_system(update_skill::<LifeText>)
-                    .with_system(update_skill::<SpeedText>)
+                    .with_system(update_skill::<MovementSpeedText>)
+                    .with_system(update_skill::<AttackSpeedText>)
                     .with_system(update_skill::<MoneyText>)
                     .with_system(update_skill::<ExperienceText>),
             );
@@ -48,10 +49,17 @@ impl Skill for LifeText {
 }
 
 #[derive(Component)]
-struct SpeedText;
+struct MovementSpeedText;
 
-impl Skill for SpeedText {
+impl Skill for MovementSpeedText {
     type SkillComponent = MovementSpeed;
+}
+
+#[derive(Component)]
+struct AttackSpeedText;
+
+impl Skill for AttackSpeedText {
+    type SkillComponent = AttackSpeed;
 }
 
 #[derive(Component)]
@@ -98,7 +106,8 @@ fn spawn_pause_menu(mut commands: Commands, font: Res<UiFont>) {
             spawn_title(menu, font.clone());
             // SKILLS
             spawn_skill(menu, font.clone(), "Life :", LifeText);
-            spawn_skill(menu, font.clone(), "Speed :", SpeedText);
+            spawn_skill(menu, font.clone(), "Movement speed :", MovementSpeedText);
+            spawn_skill(menu, font.clone(), "Attack speed :", AttackSpeedText);
             spawn_skill(menu, font.clone(), "Money :", MoneyText);
             spawn_skill(menu, font.clone(), "Experience :", ExperienceText);
         });

@@ -1,12 +1,23 @@
-use std::cmp::min;
-
 use crate::prelude::*;
+use std::{cmp::min, time::Duration};
 
 #[derive(Component)]
 pub struct Player;
 
 #[derive(Component)]
 pub struct Monster;
+
+#[derive(Component)]
+pub struct SpawningMonster;
+
+#[derive(Component)]
+pub struct Bullet;
+
+// ==================================================================
+// #region Skills
+
+// ==================================================================
+// MovementSpeed
 
 #[derive(Component)]
 pub struct MovementSpeed {
@@ -21,7 +32,6 @@ impl MovementSpeed {
             increases: 0.0,
         }
     }
-
     pub fn value(&self) -> f32 {
         self.speed * (100.0 + self.increases) / 100.0
     }
@@ -33,15 +43,12 @@ impl MovementSpeed {
 
 impl std::fmt::Display for MovementSpeed {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}\t+{:.0}", self.speed, self.increases)
+        write!(f, "{}    {:.0}%", self.value(), self.increases)
     }
 }
 
-#[derive(Component)]
-pub struct SpawningMonster;
-
-#[derive(Component)]
-pub struct Bullet;
+// ==================================================================
+// Life
 
 #[derive(Component)]
 pub struct Life {
@@ -90,11 +97,73 @@ impl Life {
 
 impl std::fmt::Display for Life {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}/{} +{}%", self.life, self.max_life(), self.increases)
+        write!(
+            f,
+            "{}/{}    +{}%",
+            self.life(),
+            self.max_life(),
+            self.increases
+        )
+    }
+}
+
+// ==================================================================
+// AttackSpeed
+
+#[derive(Component)]
+pub struct AttackSpeed {
+    speed: f32,
+    increases: f32,
+}
+
+impl AttackSpeed {
+    pub fn new(speed: f32) -> Self {
+        AttackSpeed {
+            speed,
+            increases: 0.0,
+        }
+    }
+
+    pub fn value(&self) -> f32 {
+        self.speed * (100.0 + self.increases) / 100.0
+    }
+
+    pub fn increases(&mut self, percent: f32) {
+        self.increases += percent;
+    }
+}
+
+impl std::fmt::Display for AttackSpeed {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}  +{:.0}%", self.value(), self.increases)
+    }
+}
+
+// #endregion
+// ==================================================================
+
+#[derive(Component)]
+pub struct AttackTimer {
+    timer: Timer,
+}
+
+impl AttackTimer {
+    pub fn new(attack_speed: f32) -> Self {
+        let delay = 1. / attack_speed;
+        AttackTimer {
+            timer: Timer::from_seconds(delay, TimerMode::Repeating),
+        }
+    }
+
+    pub fn tick(&mut self, delta: Duration, attack_speed: f32) -> &Timer {
+        let delay = 1. / attack_speed;
+        self.timer.set_duration(Duration::from_secs_f32(delay));
+        self.timer.tick(delta)
     }
 }
 
 #[derive(Component)]
+#[component(storage = "SparseSet")]
 pub struct Invulnerable {
     pub filters: Group,
     timer: Timer,
