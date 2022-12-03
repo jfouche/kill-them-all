@@ -27,7 +27,7 @@ fn spawn_monster(commands: &mut Commands, x: f32, y: f32) {
     commands
         .spawn(Monster)
         .insert(Name::new("Monster"))
-        .insert(MovementSpeed(5.0))
+        .insert(MovementSpeed::new(5.0))
         .insert(Life::new(2))
         // Sprite
         .insert(SpriteBundle {
@@ -151,7 +151,7 @@ fn monsters_moves(
         for (transform, mut velocity, speed) in q_monsters.iter_mut() {
             let direction = player.translation - transform.translation;
             let offset = Vec2::new(direction.x, direction.y);
-            velocity.linvel = offset.normalize_or_zero().mul(**speed);
+            velocity.linvel = offset.normalize_or_zero().mul(speed.value());
         }
     }
 }

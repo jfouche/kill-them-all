@@ -46,7 +46,7 @@ fn spawn_player(commands: &mut Commands, texture_atlas_handle: Handle<TextureAtl
     commands
         .spawn(Player)
         .insert(Name::new("Player"))
-        .insert(MovementSpeed(8.))
+        .insert(MovementSpeed::new(8.))
         .insert(Life::new(10))
         .insert(Money(0))
         .insert(Experience::default())
@@ -111,7 +111,7 @@ fn player_movement(
         if keyboard_input.any_pressed([KeyCode::Down, KeyCode::Numpad2]) {
             linvel.y = -1.0;
         }
-        velocity.linvel = linvel.normalize_or_zero().mul(**speed);
+        velocity.linvel = linvel.normalize_or_zero().mul(speed.value());
     }
 }
 
@@ -294,13 +294,15 @@ fn increment_player_experience(
 }
 
 fn level_up(
-    mut q_player: Query<(&mut Life), With<Player>>,
+    mut q_player: Query<(&mut Life, &mut MovementSpeed), With<Player>>,
     mut level_up_rcv: EventReader<LevelUpEvent>,
 ) {
-    if let Ok((mut life)) = q_player.get_single_mut() {
+    if let Ok((mut life, mut movement_speed)) = q_player.get_single_mut() {
         for _ in level_up_rcv.iter() {
             warn!("level_up");
-            life.increases(10);
+            life.increases(10.);
+            movement_speed.increases(10.);
+            // Regen life
             let max_life = life.max_life();
             life.regenerate(max_life);
         }

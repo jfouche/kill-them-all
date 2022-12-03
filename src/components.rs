@@ -8,12 +8,32 @@ pub struct Player;
 #[derive(Component)]
 pub struct Monster;
 
-#[derive(Component, Deref)]
-pub struct MovementSpeed(pub f32);
+#[derive(Component)]
+pub struct MovementSpeed {
+    speed: f32,
+    increases: f32,
+}
+
+impl MovementSpeed {
+    pub fn new(speed: f32) -> Self {
+        MovementSpeed {
+            speed,
+            increases: 0.0,
+        }
+    }
+
+    pub fn value(&self) -> f32 {
+        self.speed * (100.0 + self.increases) / 100.0
+    }
+
+    pub fn increases(&mut self, percent: f32) {
+        self.increases += percent;
+    }
+}
 
 impl std::fmt::Display for MovementSpeed {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
+        write!(f, "{}\t+{:.0}", self.speed, self.increases)
     }
 }
 
@@ -27,7 +47,7 @@ pub struct Bullet;
 pub struct Life {
     life: u16,
     max_life: u16,
-    increases: u16,
+    increases: f32,
 }
 
 impl Life {
@@ -35,7 +55,7 @@ impl Life {
         Life {
             life,
             max_life: life,
-            increases: 0,
+            increases: 0.,
         }
     }
 
@@ -56,15 +76,15 @@ impl Life {
     }
 
     pub fn max_life(&self) -> u16 {
-        (self.max_life as f32 * (100.0 + self.increases as f32) / 100.0) as u16
+        (self.max_life as f32 * (100.0 + self.increases) / 100.0) as u16
     }
 
-    pub fn increases(&mut self, percent: u16) {
+    pub fn increases(&mut self, percent: f32) {
         self.increases += percent;
     }
 
     pub fn regenerate(&mut self, life: u16) {
-        self.life = min(self.max_life, self.life + life);
+        self.life = min(self.max_life(), self.life + life);
     }
 }
 
