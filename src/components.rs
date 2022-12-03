@@ -14,6 +14,9 @@ pub struct SpawningMonster;
 #[derive(Component)]
 pub struct Bullet;
 
+#[derive(Component)]
+pub struct Damage(pub u16);
+
 // ==================================================================
 // Weapon
 
@@ -33,6 +36,12 @@ impl Weapon {
 
     pub fn damage(&self) -> u16 {
         rand::thread_rng().gen_range(self.damage_min..=self.damage_max)
+    }
+}
+
+impl std::fmt::Display for Weapon {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}-{}", self.damage_min, self.damage_max)
     }
 }
 
@@ -129,6 +138,7 @@ impl std::fmt::Display for Life {
 
 // ==================================================================
 // AttackSpeed
+// TODO: move speed to Weapon
 
 #[derive(Component)]
 pub struct AttackSpeed {

@@ -5,15 +5,17 @@ const BULLET_SPEED: f32 = 25.0;
 
 pub struct BulletOptions {
     pos: Vec3,
+    damage: u16,
     direction: Vect,
     size: Vec2,
 }
 
 impl BulletOptions {
-    pub fn new(player_pos: Vec3, player_size: Vec2, target: Vec3) -> Self {
+    pub fn new(player_pos: Vec3, damage: u16, player_size: Vec2, target: Vec3) -> Self {
         let dir = target - player_pos;
         BulletOptions {
             pos: player_pos,
+            damage,
             direction: Vect::new(dir.x, dir.y),
             size: player_size,
         }
@@ -44,6 +46,7 @@ pub fn spawn_bullet_at(
     commands
         .spawn(Bullet)
         .insert(Name::new("Bullet"))
+        .insert(Damage(options.damage))
         // Sprite
         .insert(SpriteBundle {
             sprite: Sprite {

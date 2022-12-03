@@ -3,11 +3,12 @@ use bevy::prelude::*;
 /// Event to notify a monster was hit
 pub struct MonsterHitEvent {
     pub entity: Entity,
+    pub damage: u16,
 }
 
 impl MonsterHitEvent {
-    pub fn new(entity: Entity) -> Self {
-        MonsterHitEvent { entity }
+    pub fn new(entity: Entity, damage: u16) -> Self {
+        MonsterHitEvent { entity, damage }
     }
 }
 

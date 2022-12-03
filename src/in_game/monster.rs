@@ -168,7 +168,7 @@ fn on_monster_hit(
         warn!("on_monster_hit");
         for (entity, mut life, transform) in q_monsters.iter_mut() {
             if entity == event.entity {
-                life.hit(1);
+                life.hit(event.damage);
                 if life.is_dead() {
                     monster_death_events.send(MonsterDeathEvent {
                         entity,
