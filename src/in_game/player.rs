@@ -7,18 +7,23 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(setup).add_system_set(
-            SystemSet::on_update(GameState::InGame)
-                .with_system(player_movement)
-                .with_system(animate_sprite)
-                .with_system(player_fires)
-                .with_system(on_player_hit)
-                .with_system(set_invulnerable)
-                .with_system(animate_invulnerability)
-                .with_system(player_invulnerability_finished.after(animate_invulnerability))
-                .with_system(increment_player_experience)
-                .with_system(level_up),
-        );
+        app.add_startup_system(setup)
+            .add_system_set(
+                SystemSet::on_update(GameState::InGame)
+                    .with_system(player_movement)
+                    .with_system(animate_sprite)
+                    .with_system(player_fires)
+                    .with_system(on_player_hit)
+                    .with_system(set_invulnerable)
+                    .with_system(animate_invulnerability)
+                    .with_system(increment_player_experience)
+                    .with_system(level_up),
+            )
+            .add_system_set_to_stage(
+                CoreStage::PostUpdate,
+                SystemSet::on_update(GameState::InGame)
+                    .with_system(player_invulnerability_finished),
+            );
     }
 }
 
