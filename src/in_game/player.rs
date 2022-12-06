@@ -16,8 +16,7 @@ impl Plugin for PlayerPlugin {
                 .with_system(set_invulnerable)
                 .with_system(animate_invulnerability)
                 .with_system(player_invulnerability_finished.after(animate_invulnerability))
-                .with_system(increment_player_experience)
-                .with_system(level_up),
+                .with_system(increment_player_experience), // .with_system(level_up)
         );
     }
 }

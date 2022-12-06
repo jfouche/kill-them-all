@@ -2,6 +2,7 @@ mod components;
 mod debug;
 mod events;
 mod in_game;
+mod level_up_menu;
 mod pause_menu;
 mod prelude;
 mod resources;
@@ -31,6 +32,7 @@ fn main() {
         .add_plugin(top_menu::TopMenuPlugin)
         .add_plugins(in_game::InGamePluginsGroup)
         .add_plugin(pause_menu::PausePlugin)
+        .add_plugin(level_up_menu::LevelUpMenuPlugin)
         // States
         .add_state(GameState::InGame)
         // resources

@@ -89,6 +89,7 @@ fn switch_game_state(mut state: ResMut<State<GameState>>, keyboard_input: Res<In
         match state.current() {
             GameState::InGame => state.set(GameState::GamePaused).unwrap(),
             GameState::GamePaused => state.set(GameState::InGame).unwrap(),
+            _ => {}
         }
     }
 }

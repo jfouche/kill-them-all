@@ -6,4 +6,5 @@ pub use bevy_rapier2d::prelude::*;
 pub enum GameState {
     InGame,
     GamePaused,
+    LevelUp,
 }
