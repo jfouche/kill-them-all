@@ -14,7 +14,9 @@ impl Plugin for LevelUpMenuPlugin {
             .add_system_set(
                 SystemSet::on_update(GameState::LevelUp)
                     .with_system(back_to_game)
-                    .with_system(upgrade_max_life),
+                    .with_system(upgrade_skill::<MaxLifeButton>)
+                    .with_system(upgrade_skill::<MovementSpeedButton>)
+                    .with_system(upgrade_skill::<AttackSpeedButton>),
             );
     }
 }
@@ -34,14 +36,46 @@ fn enter_level_up_state(
 #[derive(Component)]
 struct LevelUpMenu;
 
+///
+/// Trait to print a player skill
+///
+trait Skill {
+    /// Component of the player skill
+    type SkillComponent: Component;
+
+    /// upgrade the skill
+    fn upgrade(component: &mut Self::SkillComponent);
+}
+
 #[derive(Component)]
 struct MaxLifeButton;
+
+impl Skill for MaxLifeButton {
+    type SkillComponent = Life;
+    fn upgrade(component: &mut Self::SkillComponent) {
+        component.increases(10.);
+    }
+}
 
 #[derive(Component)]
 struct AttackSpeedButton;
 
+impl Skill for AttackSpeedButton {
+    type SkillComponent = AttackSpeed;
+    fn upgrade(component: &mut Self::SkillComponent) {
+        component.increases(10.);
+    }
+}
+
 #[derive(Component)]
 struct MovementSpeedButton;
+
+impl Skill for MovementSpeedButton {
+    type SkillComponent = MovementSpeed;
+    fn upgrade(component: &mut Self::SkillComponent) {
+        component.increases(10.);
+    }
+}
 
 #[derive(Component)]
 struct DamageButton;
@@ -136,15 +170,18 @@ fn spawn_skill(
         });
 }
 
-fn upgrade_max_life(
-    mut q_btn: Query<&Interaction, (Changed<Interaction>, With<Button>)>,
-    mut q_player: Query<&mut Life, With<Player>>,
+///
+/// Upgrade a skill of the player, returning back to game
+///
+fn upgrade_skill<T: Skill + Component>(
+    mut q_btn: Query<&Interaction, (Changed<Interaction>, With<T>)>,
+    mut q_player: Query<&mut T::SkillComponent, With<Player>>,
     mut state: ResMut<State<GameState>>,
 ) {
-    if let Ok(mut life) = q_player.get_single_mut() {
+    if let Ok(mut skill) = q_player.get_single_mut() {
         for interaction in &mut q_btn {
             if *interaction == Interaction::Clicked {
-                life.increases(10.);
+                T::upgrade(&mut skill);
                 state.set(GameState::InGame).unwrap();
             }
         }

@@ -16,7 +16,8 @@ impl Plugin for PlayerPlugin {
                 .with_system(set_invulnerable)
                 .with_system(animate_invulnerability)
                 .with_system(player_invulnerability_finished.after(animate_invulnerability))
-                .with_system(increment_player_experience), // .with_system(level_up)
+                .with_system(increment_player_experience)
+                .with_system(level_up),
         );
     }
 }
@@ -300,15 +301,12 @@ fn increment_player_experience(
 }
 
 fn level_up(
-    mut q_player: Query<(&mut Life, &mut MovementSpeed, &mut AttackSpeed), With<Player>>,
+    mut q_player: Query<&mut Life, With<Player>>,
     mut level_up_rcv: EventReader<LevelUpEvent>,
 ) {
-    if let Ok((mut life, mut movement_speed, mut attack_speed)) = q_player.get_single_mut() {
+    if let Ok(mut life) = q_player.get_single_mut() {
         for _ in level_up_rcv.iter() {
             warn!("level_up");
-            life.increases(10.);
-            movement_speed.increases(10.);
-            attack_speed.increases(10.);
             // Regen life
             let max_life = life.max_life();
             life.regenerate(max_life);
