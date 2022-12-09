@@ -12,7 +12,7 @@ impl Plugin for MonsterPlugin {
         app.add_startup_system(init_monster_spawning)
             .add_system_set(
                 SystemSet::on_update(GameState::InGame)
-                    .with_system(spawning_monsters)
+                    .with_system(monster_spawning_timer)
                     .with_system(spawn_monsters)
                     .with_system(monsters_moves)
                     .with_system(on_monster_hit)
@@ -47,7 +47,7 @@ fn spawn_monster(commands: &mut Commands, x: f32, y: f32) {
         .insert(Velocity::linear(Vec2::default()));
 }
 
-fn spawning_monster(commands: &mut Commands, x: f32, y: f32) {
+fn spawn_monster_futur_pos(commands: &mut Commands, x: f32, y: f32) {
     commands
         .spawn(SpawningMonster)
         .insert(Name::new("Spawning monster"))
@@ -101,7 +101,7 @@ fn init_monster_spawning(mut commands: Commands) {
 ///
 /// Spawn monster at Timer times
 ///
-fn spawning_monsters(
+fn monster_spawning_timer(
     mut commands: Commands,
     time: Res<Time>,
     mut config: ResMut<MonsterSpawningConfig>,
@@ -114,7 +114,7 @@ fn spawning_monsters(
         for _ in 0..config.enemy_count {
             let x: f32 = rng.gen_range(-15. ..15.);
             let y: f32 = rng.gen_range(-10. ..10.);
-            spawning_monster(&mut commands, x, y);
+            spawn_monster_futur_pos(&mut commands, x, y);
         }
         config.enemy_count += 1;
     }
