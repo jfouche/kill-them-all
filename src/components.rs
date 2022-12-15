@@ -193,7 +193,7 @@ impl AttackTimer {
 }
 
 // ==================================================================
-// AttackTimer
+// Invulnerable
 
 #[derive(Component)]
 #[component(storage = "SparseSet")]
@@ -217,13 +217,13 @@ impl Invulnerable {
 }
 
 // ==================================================================
-// AttackTimer
+// Bonus
 
 #[derive(Component)]
 pub struct Bonus;
 
 // ==================================================================
-// AttackTimer
+// Money
 
 #[derive(Component, Reflect)]
 pub struct Money(pub u16);
@@ -235,7 +235,7 @@ impl std::fmt::Display for Money {
 }
 
 // ==================================================================
-// AttackTimer
+// Experience
 
 #[derive(Component, Default)]
 pub struct Experience(u32);
@@ -286,5 +286,17 @@ impl std::fmt::Display for Experience {
             self.get_current_level_min_max_exp().1,
             self.level() + 1,
         )
+    }
+}
+
+// ==================================================================
+// RoundTimer
+
+#[derive(Component)]
+pub struct RoundTimer(pub Timer);
+
+impl RoundTimer {
+    pub fn new() -> Self {
+        RoundTimer(Timer::from_seconds(30., TimerMode::Repeating))
     }
 }

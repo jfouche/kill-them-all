@@ -6,6 +6,7 @@ mod level_up_menu;
 mod pause_menu;
 mod prelude;
 mod resources;
+mod round;
 mod top_menu;
 mod ui;
 
@@ -39,6 +40,7 @@ fn main() {
         .init_resource::<ScoreResource>()
         .insert_resource(ClearColor(Color::rgb(0.04, 0.04, 0.04)))
         .init_resource::<GameTextures>()
+        .insert_resource(Round(0))
         // Events
         .add_event::<PlayerHitEvent>()
         .add_event::<PlayerDeathEvent>()

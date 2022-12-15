@@ -17,3 +17,6 @@ pub struct PlayerConfig {
     pub movement_speed: f32,
     pub attack_speed: f32,
 }
+
+#[derive(Resource)]
+pub struct Round(pub u16);
