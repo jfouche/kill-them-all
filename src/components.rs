@@ -288,15 +288,3 @@ impl std::fmt::Display for Experience {
         )
     }
 }
-
-// ==================================================================
-// RoundTimer
-
-#[derive(Component)]
-pub struct RoundTimer(pub Timer);
-
-impl RoundTimer {
-    pub fn new() -> Self {
-        RoundTimer(Timer::from_seconds(30., TimerMode::Repeating))
-    }
-}

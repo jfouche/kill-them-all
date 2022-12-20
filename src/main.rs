@@ -34,13 +34,14 @@ fn main() {
         .add_plugins(in_game::InGamePluginsGroup)
         .add_plugin(pause_menu::PausePlugin)
         .add_plugin(level_up_menu::LevelUpMenuPlugin)
+        .add_plugin(round::RoundPlugin)
         // States
         .add_state(GameState::InGame)
         // resources
         .init_resource::<ScoreResource>()
         .insert_resource(ClearColor(Color::rgb(0.04, 0.04, 0.04)))
         .init_resource::<GameTextures>()
-        .insert_resource(Round(0))
+        .insert_resource(Round::new(15.))
         // Events
         .add_event::<PlayerHitEvent>()
         .add_event::<PlayerDeathEvent>()

@@ -8,6 +8,9 @@ struct TopMenu;
 struct ScoreText;
 
 #[derive(Component)]
+struct RoundText;
+
+#[derive(Component)]
 struct LifeText;
 
 #[derive(Component)]
@@ -35,7 +38,7 @@ impl Plugin for TopMenuPlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(spawn_top_menu)
             .add_system(update_score)
-            // .add_system(update_life)
+            .add_system(update_round)
             .add_system(update_life_bar)
             .add_system(update_xp_bar)
             .add_system(update_life_on_death)
@@ -59,6 +62,7 @@ fn spawn_top_menu(mut commands: Commands, font: Res<UiFont>) {
         .with_children(|top_menu| {
             spawn_life_bar(top_menu);
             spawn_xp_bar(top_menu);
+            spawn_round(top_menu, font.clone());
             spawn_score(top_menu, font.clone());
         });
 }
@@ -83,6 +87,21 @@ fn spawn_xp_bar(parent: &mut ChildBuilder) {
         ));
 }
 
+fn spawn_round(parent: &mut ChildBuilder, font: Handle<Font>) {
+    let text_style = TextStyle {
+        font,
+        font_size: 20.0,
+        color: Color::WHITE,
+    };
+    parent
+        .spawn(RoundText)
+        .insert(Name::new("Round"))
+        .insert(TextBundle::from_sections([
+            TextSection::new("Round: ", text_style.clone()),
+            TextSection::from_style(text_style),
+        ]));
+}
+
 fn spawn_score(parent: &mut ChildBuilder, font: Handle<Font>) {
     let text_style = TextStyle {
         font,
@@ -101,6 +120,12 @@ fn spawn_score(parent: &mut ChildBuilder, font: Handle<Font>) {
 fn update_score(score: Res<ScoreResource>, mut q_text: Query<&mut Text, With<ScoreText>>) {
     if let Ok(mut text) = q_text.get_single_mut() {
         text.sections[1].value = format!("{}", score.0);
+    }
+}
+
+fn update_round(round: Res<Round>, mut q_text: Query<&mut Text, With<RoundText>>) {
+    if let Ok(mut text) = q_text.get_single_mut() {
+        text.sections[1].value = format!("{}", round.level());
     }
 }
 

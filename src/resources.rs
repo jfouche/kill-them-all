@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use bevy::prelude::*;
 
 #[derive(Default, Resource)]
@@ -19,4 +21,28 @@ pub struct PlayerConfig {
 }
 
 #[derive(Resource)]
-pub struct Round(pub u16);
+pub struct Round {
+    level: u16,
+    timer: Timer,
+}
+
+impl Round {
+    /// Initialise round of `duration`seconds
+    pub fn new(duration: f32) -> Self {
+        Round {
+            level: 0,
+            timer: Timer::from_seconds(duration, TimerMode::Repeating),
+        }
+    }
+
+    pub fn tick(&mut self, delta: Duration) {
+        self.timer.tick(delta);
+        if self.timer.just_finished() {
+            self.level += 1;
+        }
+    }
+
+    pub fn level(&self) -> u16 {
+        self.level
+    }
+}
