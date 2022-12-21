@@ -9,36 +9,50 @@ pub struct MonsterPlugin;
 
 impl Plugin for MonsterPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(init_monster_spawning)
+        app.add_startup_system(load_assets)
+            .add_startup_system(init_monster_spawning)
             .add_system_set(
                 SystemSet::on_update(GameState::InGame)
                     .with_system(monster_spawning_timer)
                     .with_system(spawn_monsters)
                     .with_system(monsters_moves)
                     .with_system(on_monster_hit)
+                    .with_system(animate_sprite)
                     .with_system(increment_score),
             );
     }
 }
 
+fn load_assets(
+    asset_server: Res<AssetServer>,
+    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+    mut textures: ResMut<GameTextures>,
+) {
+    let texture_handle = asset_server.load("characters/Cyclope/SpriteSheet.png");
+    let texture_atlas =
+        TextureAtlas::from_grid(texture_handle, Vec2::new(16.0, 16.0), 4, 4, None, None);
+    textures.monster = texture_atlases.add(texture_atlas);
+}
+
 const MONSTER_SIZE: Vec2 = Vec2::new(1.0, 1.0);
 
-fn spawn_monster(commands: &mut Commands, x: f32, y: f32) {
+fn spawn_monster(commands: &mut Commands, x: f32, y: f32, atlas: Handle<TextureAtlas>) {
     commands
         .spawn(Monster)
         .insert(Name::new("Monster"))
         .insert(MovementSpeed::new(5.0))
         .insert(Life::new(2))
         // Sprite
-        .insert(SpriteBundle {
-            sprite: Sprite {
-                color: Color::rgb(0.8, 0.3, 0.3),
+        .insert(SpriteSheetBundle {
+            sprite: TextureAtlasSprite {
                 custom_size: Some(MONSTER_SIZE),
                 ..Default::default()
             },
-            transform: Transform::from_xyz(x, y, 1.),
+            texture_atlas: atlas,
+            transform: Transform::from_xyz(x, y, 10.),
             ..Default::default()
         })
+        .insert(AnimationTimer::default())
         // Rapier
         .insert(RigidBody::Dynamic)
         .insert(Collider::cuboid(MONSTER_SIZE.x / 2., MONSTER_SIZE.y / 2.))
@@ -127,12 +141,13 @@ fn spawn_monsters(
     mut commands: Commands,
     time: Res<Time>,
     mut query: Query<(Entity, &mut MonsterSpawnConfig)>,
+    textures: Res<GameTextures>,
 ) {
     for (entity, mut config) in query.iter_mut() {
         config.timer.tick(time.delta());
         if config.timer.finished() {
             commands.entity(entity).despawn();
-            spawn_monster(&mut commands, config.x, config.y);
+            spawn_monster(&mut commands, config.x, config.y, textures.monster.clone());
         }
     }
 }
@@ -193,5 +208,30 @@ fn increment_score(
         // TODO: ("split in 2 systems");
         commands.entity(event.entity).despawn();
         score.0 += 1;
+    }
+}
+
+///
+/// Animate the monster sprite
+///
+fn animate_sprite(
+    time: Res<Time>,
+    mut q_monster: Query<(&Velocity, &mut AnimationTimer, &mut TextureAtlasSprite), With<Monster>>,
+) {
+    for (&velocity, mut timer, mut sprite) in q_monster.iter_mut() {
+        timer.tick(time.delta());
+        if timer.just_finished() {
+            sprite.index = if velocity == Velocity::zero() {
+                0
+            } else {
+                match sprite.index {
+                    0 => 4,
+                    4 => 8,
+                    8 => 12,
+                    12 => 0,
+                    _ => 0,
+                }
+            }
+        }
     }
 }

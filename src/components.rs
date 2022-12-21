@@ -18,6 +18,18 @@ pub struct Bullet;
 pub struct Damage(pub u16);
 
 // ==================================================================
+// AnimationTimer
+
+#[derive(Component, Deref, DerefMut)]
+pub struct AnimationTimer(Timer);
+
+impl Default for AnimationTimer {
+    fn default() -> Self {
+        AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating))
+    }
+}
+
+// ==================================================================
 // Weapon
 
 #[derive(Component)]

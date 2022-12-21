@@ -23,15 +23,6 @@ impl Plugin for PlayerPlugin {
 }
 
 #[derive(Component, Deref, DerefMut)]
-struct AnimationTimer(Timer);
-
-impl Default for AnimationTimer {
-    fn default() -> Self {
-        AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating))
-    }
-}
-
-#[derive(Component, Deref, DerefMut)]
 struct InvulnerabilityAnimationTimer(Timer);
 
 impl Default for InvulnerabilityAnimationTimer {
@@ -190,23 +181,20 @@ fn on_player_hit(
 ///
 fn animate_sprite(
     time: Res<Time>,
-    mut query: Query<(&mut AnimationTimer, &mut TextureAtlasSprite)>,
-    q_player: Query<&Velocity, With<Player>>,
+    mut q_player: Query<(&Velocity, &mut AnimationTimer, &mut TextureAtlasSprite), With<Player>>,
 ) {
-    if let Ok(&velocity) = q_player.get_single() {
-        for (mut timer, mut sprite) in &mut query {
-            timer.tick(time.delta());
-            if timer.just_finished() {
-                sprite.index = if velocity == Velocity::zero() {
-                    0
-                } else {
-                    match sprite.index {
-                        4 => 8,
-                        8 => 12,
-                        12 => 16,
-                        16 => 4,
-                        _ => 4,
-                    }
+    if let Ok((&velocity, mut timer, mut sprite)) = q_player.get_single_mut() {
+        timer.tick(time.delta());
+        if timer.just_finished() {
+            sprite.index = if velocity == Velocity::zero() {
+                0
+            } else {
+                match sprite.index {
+                    4 => 8,
+                    8 => 12,
+                    12 => 16,
+                    16 => 4,
+                    _ => 4,
                 }
             }
         }
