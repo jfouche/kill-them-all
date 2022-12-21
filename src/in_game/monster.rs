@@ -28,10 +28,17 @@ fn load_assets(
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     mut textures: ResMut<GameTextures>,
 ) {
+    // Monster type 1
     let texture_handle = asset_server.load("characters/Cyclope/SpriteSheet.png");
     let texture_atlas =
         TextureAtlas::from_grid(texture_handle, Vec2::new(16.0, 16.0), 4, 4, None, None);
-    textures.monster = texture_atlases.add(texture_atlas);
+    textures.monsters.push(texture_atlases.add(texture_atlas));
+
+    // Monster type 2
+    let texture_handle = asset_server.load("characters/Skull/SpriteSheet.png");
+    let texture_atlas =
+        TextureAtlas::from_grid(texture_handle, Vec2::new(16.0, 16.0), 4, 4, None, None);
+    textures.monsters.push(texture_atlases.add(texture_atlas));
 }
 
 const MONSTER_SIZE: Vec2 = Vec2::new(1.0, 1.0);
@@ -147,7 +154,18 @@ fn spawn_monsters(
         config.timer.tick(time.delta());
         if config.timer.finished() {
             commands.entity(entity).despawn();
-            spawn_monster(&mut commands, config.x, config.y, textures.monster.clone());
+
+            let monster_type = rand::thread_rng().gen_range(0..textures.monsters.len());
+            spawn_monster(
+                &mut commands,
+                config.x,
+                config.y,
+                textures
+                    .monsters
+                    .get(monster_type)
+                    .expect("Monster type out of range !")
+                    .clone(),
+            );
         }
     }
 }

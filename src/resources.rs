@@ -11,7 +11,7 @@ pub struct UiFont(pub Handle<Font>);
 #[derive(Resource, Default)]
 pub struct GameTextures {
     pub money: Handle<Image>,
-    pub monster: Handle<TextureAtlas>,
+    pub monsters: Vec<Handle<TextureAtlas>>,
 }
 
 #[derive(Resource)]
