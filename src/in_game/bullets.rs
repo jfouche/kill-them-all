@@ -1,6 +1,8 @@
 use crate::prelude::*;
 use std::f32::consts::SQRT_2;
 
+use super::collisions::{GROUP_BONUS, GROUP_BULLET};
+
 const BULLET_SPEED: f32 = 25.0;
 
 pub struct BulletOptions {
@@ -60,6 +62,10 @@ pub fn spawn_bullet_at(
         // Rapier
         .insert(RigidBody::Dynamic)
         .insert(Collider::cuboid(size / 2., size / 2.))
+        .insert(CollisionGroups::new(
+            GROUP_BULLET,
+            Group::ALL & !GROUP_BONUS,
+        ))
         .insert(LockedAxes::ROTATION_LOCKED)
         .insert(ActiveEvents::COLLISION_EVENTS)
         .insert(Velocity::linear(velocity));
