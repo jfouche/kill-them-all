@@ -22,20 +22,41 @@ pub struct Damage(pub u16);
 
 #[derive(Component)]
 pub struct Weapon {
+    attack_speed: f32,
     damage_min: u16,
     damage_max: u16,
+    timer: Timer,
+    ready: bool,
 }
 
 impl Weapon {
-    pub fn new(damage_min: u16, damage_max: u16) -> Self {
+    pub fn new(attack_per_second: f32, damage_min: u16, damage_max: u16) -> Self {
         Weapon {
+            attack_speed: attack_per_second,
             damage_min,
             damage_max,
+            timer: Timer::from_seconds(1. / attack_per_second, TimerMode::Repeating),
+            ready: false,
         }
     }
 
-    pub fn damage(&self) -> u16 {
+    pub fn attack(&mut self) -> u16 {
+        self.ready = false;
         rand::thread_rng().gen_range(self.damage_min..=self.damage_max)
+    }
+
+    pub fn tick(&mut self, delta: Duration, player_attack_speed_increases: f32) -> &Timer {
+        let attack_speed = self.attack_speed * (1. + player_attack_speed_increases / 100.);
+        self.timer
+            .set_duration(Duration::from_secs_f32(1. / attack_speed));
+        if self.timer.tick(delta).just_finished() {
+            self.ready = true;
+        }
+        &self.timer
+    }
+
+    pub fn ready(&self) -> bool {
+        self.ready
     }
 }
 
@@ -138,24 +159,19 @@ impl std::fmt::Display for Life {
 
 // ==================================================================
 // AttackSpeed
-// TODO: move speed to Weapon
 
 #[derive(Component)]
 pub struct AttackSpeed {
-    speed: f32,
     increases: f32,
 }
 
 impl AttackSpeed {
-    pub fn new(speed: f32) -> Self {
-        AttackSpeed {
-            speed,
-            increases: 0.0,
-        }
+    pub fn new() -> Self {
+        AttackSpeed { increases: 0.0 }
     }
 
     pub fn value(&self) -> f32 {
-        self.speed * (100.0 + self.increases) / 100.0
+        self.increases
     }
 
     pub fn increases(&mut self, percent: f32) {
@@ -165,30 +181,7 @@ impl AttackSpeed {
 
 impl std::fmt::Display for AttackSpeed {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}  +{:.0}%", self.value(), self.increases)
-    }
-}
-
-// ==================================================================
-// AttackTimer
-
-#[derive(Component)]
-pub struct AttackTimer {
-    timer: Timer,
-}
-
-impl AttackTimer {
-    pub fn new(attack_speed: f32) -> Self {
-        let delay = 1. / attack_speed;
-        AttackTimer {
-            timer: Timer::from_seconds(delay, TimerMode::Repeating),
-        }
-    }
-
-    pub fn tick(&mut self, delta: Duration, attack_speed: f32) -> &Timer {
-        let delay = 1. / attack_speed;
-        self.timer.set_duration(Duration::from_secs_f32(delay));
-        self.timer.tick(delta)
+        write!(f, " +{:.0}%", self.increases)
     }
 }
 

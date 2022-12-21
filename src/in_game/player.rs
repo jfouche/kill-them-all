@@ -52,9 +52,8 @@ fn spawn_player(
         .insert(Name::new("Player"))
         .insert(MovementSpeed::new(config.movement_speed))
         .insert(Life::new(config.life))
-        .insert(AttackSpeed::new(config.attack_speed))
-        .insert(AttackTimer::new(config.attack_speed))
-        .insert(Weapon::new(1, 4))
+        .insert(AttackSpeed::new())
+        .insert(Weapon::new(config.attack_speed, 1, 4))
         .insert(Money(0))
         .insert(Experience::default())
         // Sprite
@@ -130,11 +129,12 @@ fn player_movement(
 fn player_fires(
     mut commands: Commands,
     time: Res<Time>,
-    mut q_player: Query<(&Transform, &mut AttackTimer, &Weapon, &AttackSpeed), With<Player>>,
+    mut q_player: Query<(&Transform, &mut Weapon, &AttackSpeed), With<Player>>,
     q_monsters: Query<&Transform, With<Monster>>,
 ) {
-    if let Ok((player, mut timer, weapon, attack_speed)) = q_player.get_single_mut() {
-        if timer.tick(time.delta(), attack_speed.value()).finished() {
+    if let Ok((player, mut weapon, attack_speed)) = q_player.get_single_mut() {
+        weapon.tick(time.delta(), attack_speed.value());
+        if weapon.ready() {
             let player = player.translation;
             // Get the nearest monster
             let nearest_monster = q_monsters
@@ -148,7 +148,7 @@ fn player_fires(
                     }
                 });
             if let Some(nearest) = nearest_monster {
-                let damage = weapon.damage();
+                let damage = weapon.attack();
                 spawn_bullet_at(
                     &mut commands,
                     BulletOptions::new(player, damage, PLAYER_SIZE, nearest),
