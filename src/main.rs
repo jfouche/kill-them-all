@@ -17,7 +17,7 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             window: WindowDescriptor {
-                title: "Platformer!".to_string(),
+                title: "Kill'em All".to_string(),
                 width: 1024.0,
                 height: 730.0,
                 ..Default::default()
