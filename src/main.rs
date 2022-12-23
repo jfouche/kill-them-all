@@ -25,6 +25,7 @@ fn main() {
             ..default()
         }))
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
+        .add_plugins(bevy_ui_navigation::DefaultNavigationPlugins)
         // debug plugins
         .add_plugin(debug::DebugPlugin)
         // utils plugins
