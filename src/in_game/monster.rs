@@ -28,60 +28,120 @@ fn load_assets(
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     mut textures: ResMut<GameTextures>,
 ) {
-    // Monster type 1
+    // Monster kind 1
     let texture_handle = asset_server.load("characters/Cyclope/SpriteSheet.png");
     let texture_atlas =
         TextureAtlas::from_grid(texture_handle, Vec2::new(16.0, 16.0), 4, 4, None, None);
     textures.monsters.push(texture_atlases.add(texture_atlas));
 
-    // Monster type 2
+    // Monster kind 2
     let texture_handle = asset_server.load("characters/Skull/SpriteSheet.png");
+    let texture_atlas =
+        TextureAtlas::from_grid(texture_handle, Vec2::new(16.0, 16.0), 4, 4, None, None);
+    textures.monsters.push(texture_atlases.add(texture_atlas));
+
+    // Monster kind 3
+    let texture_handle = asset_server.load("characters/DragonYellow/SpriteSheet.png");
     let texture_atlas =
         TextureAtlas::from_grid(texture_handle, Vec2::new(16.0, 16.0), 4, 4, None, None);
     textures.monsters.push(texture_atlases.add(texture_atlas));
 }
 
-const MONSTER_SIZE: Vec2 = Vec2::new(1.0, 1.0);
+const KIND_COUNT: usize = 3;
 
-fn spawn_monster(commands: &mut Commands, x: f32, y: f32, atlas: Handle<TextureAtlas>) {
+enum MonsterRarity {
+    Normal,
+    Rare,
+}
+
+/// Contains the monster informations to spawn
+struct MonsterSpawnParams {
+    pos: Vec2,
+    rarity: MonsterRarity,
+    kind: usize,
+}
+
+impl MonsterSpawnParams {
+    fn rand() -> Self {
+        let mut rng = thread_rng();
+        // Position
+        let x: f32 = rng.gen_range(-15. ..15.);
+        let y: f32 = rng.gen_range(-10. ..10.);
+        // Rarity
+        let rarity = match rng.gen_range(0..5) {
+            0 => MonsterRarity::Rare,
+            _ => MonsterRarity::Normal,
+        };
+        // Kind
+        let kind = rand::thread_rng().gen_range(0..KIND_COUNT);
+
+        // Create the params
+        MonsterSpawnParams {
+            pos: Vec2::new(x, y),
+            kind,
+            rarity,
+        }
+    }
+
+    fn size(&self) -> Vec2 {
+        match self.rarity {
+            MonsterRarity::Normal => Vec2::new(1.0, 1.0),
+            MonsterRarity::Rare => Vec2::new(2.0, 2.0),
+        }
+    }
+
+    fn life(&self) -> u16 {
+        match self.rarity {
+            MonsterRarity::Normal => 2,
+            MonsterRarity::Rare => 5,
+        }
+    }
+}
+
+fn spawn_monster(
+    commands: &mut Commands,
+    params: &MonsterSpawnParams,
+    atlas: Handle<TextureAtlas>,
+) {
+    let size = params.size();
     commands
         .spawn(Monster)
         .insert(Name::new("Monster"))
         .insert(MovementSpeed::new(5.0))
-        .insert(Life::new(2))
+        .insert(Life::new(params.life()))
         // Sprite
         .insert(SpriteSheetBundle {
             sprite: TextureAtlasSprite {
-                custom_size: Some(MONSTER_SIZE),
+                custom_size: Some(size),
                 ..Default::default()
             },
             texture_atlas: atlas,
-            transform: Transform::from_xyz(x, y, 10.),
+            transform: Transform::from_xyz(params.pos.x, params.pos.y, 10.),
             ..Default::default()
         })
         .insert(AnimationTimer::default())
         // Rapier
         .insert(RigidBody::Dynamic)
-        .insert(Collider::cuboid(MONSTER_SIZE.x / 2., MONSTER_SIZE.y / 2.))
+        .insert(Collider::cuboid(size.x / 2., size.y / 2.))
         .insert(CollisionGroups::new(GROUP_ENEMY, Group::ALL & !GROUP_BONUS))
         .insert(LockedAxes::ROTATION_LOCKED)
         .insert(Velocity::linear(Vec2::default()));
 }
 
-fn spawn_monster_futur_pos(commands: &mut Commands, x: f32, y: f32) {
+fn spawn_monster_futur_pos(commands: &mut Commands, params: MonsterSpawnParams) {
     commands
         .spawn(SpawningMonster)
         .insert(Name::new("Spawning monster"))
         .insert(SpriteBundle {
             sprite: Sprite {
                 color: Color::rgba(0.8, 0.3, 0.3, 0.2),
-                custom_size: Some(MONSTER_SIZE),
+                custom_size: Some(params.size()),
                 ..Default::default()
             },
-            transform: Transform::from_xyz(x, y, 1.),
+            transform: Transform::from_xyz(params.pos.x, params.pos.y, 1.),
             ..Default::default()
         })
-        .insert(MonsterSpawnConfig::new(x, y));
+        .insert(MonsterSpawnConfig::new(params));
 }
 
 #[derive(Resource)]
@@ -92,7 +152,7 @@ struct MonsterSpawningConfig {
 impl MonsterSpawningConfig {
     fn default() -> Self {
         MonsterSpawningConfig {
-            timer: Timer::from_seconds(8., TimerMode::Repeating),
+            timer: Timer::from_seconds(6., TimerMode::Repeating),
             enemy_count: 3,
         }
     }
@@ -101,16 +161,14 @@ impl MonsterSpawningConfig {
 #[derive(Component)]
 struct MonsterSpawnConfig {
     timer: Timer,
-    x: f32,
-    y: f32,
+    params: MonsterSpawnParams,
 }
 
 impl MonsterSpawnConfig {
-    fn new(x: f32, y: f32) -> Self {
+    fn new(params: MonsterSpawnParams) -> Self {
         MonsterSpawnConfig {
             timer: Timer::from_seconds(1., TimerMode::Once),
-            x,
-            y,
+            params,
         }
     }
 }
@@ -129,13 +187,9 @@ fn monster_spawning_timer(
 ) {
     // tick the timer
     config.timer.tick(time.delta());
-
     if config.timer.finished() {
-        let mut rng = thread_rng();
         for _ in 0..config.enemy_count {
-            let x: f32 = rng.gen_range(-15. ..15.);
-            let y: f32 = rng.gen_range(-10. ..10.);
-            spawn_monster_futur_pos(&mut commands, x, y);
+            spawn_monster_futur_pos(&mut commands, MonsterSpawnParams::rand());
         }
         config.enemy_count += 1;
     }
@@ -154,15 +208,12 @@ fn spawn_monsters(
         config.timer.tick(time.delta());
         if config.timer.finished() {
             commands.entity(entity).despawn();
-
-            let monster_type = rand::thread_rng().gen_range(0..textures.monsters.len());
             spawn_monster(
                 &mut commands,
-                config.x,
-                config.y,
+                &config.params,
                 textures
                     .monsters
-                    .get(monster_type)
+                    .get(config.params.kind)
                     .expect("Monster type out of range !")
                     .clone(),
             );
