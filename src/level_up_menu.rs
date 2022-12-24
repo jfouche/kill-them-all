@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use bevy_ui_navigation::prelude::*;
 
 pub struct LevelUpMenuPlugin;
 
@@ -17,7 +18,9 @@ impl Plugin for LevelUpMenuPlugin {
                     .with_system(upgrade_skill::<MaxLifeButton>)
                     .with_system(upgrade_skill::<MovementSpeedButton>)
                     .with_system(upgrade_skill::<AttackSpeedButton>),
-            );
+            )
+            .add_system(button_system)
+            .add_system(print_nav_events);
     }
 }
 
@@ -30,6 +33,24 @@ fn enter_level_up_state(
         if state.current() == &GameState::InGame {
             state.set(GameState::LevelUp).unwrap();
         }
+    }
+}
+
+fn button_system(
+    mut interaction_query: Query<(&Focusable, &mut BackgroundColor), Changed<Focusable>>,
+) {
+    for (focusable, mut material) in interaction_query.iter_mut() {
+        if let FocusState::Focused = focusable.state() {
+            *material = Color::ORANGE_RED.into();
+        } else {
+            *material = Color::DARK_GRAY.into();
+        }
+    }
+}
+
+fn print_nav_events(mut events: EventReader<NavEvent>) {
+    for event in events.iter() {
+        println!("{:?}", event);
     }
 }
 
@@ -161,6 +182,7 @@ fn spawn_skill(
             background_color: Color::GOLD.into(),
             ..default()
         })
+        .insert(Focusable::default())
         .with_children(|btn| {
             btn.spawn(TextBundle::from_sections([
                 TextSection::new(label, text_style.clone()),
