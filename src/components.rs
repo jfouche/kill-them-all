@@ -198,30 +198,6 @@ impl std::fmt::Display for AttackSpeed {
 }
 
 // ==================================================================
-// Invulnerable
-
-#[derive(Component)]
-#[component(storage = "SparseSet")]
-pub struct Invulnerable {
-    pub filters: Group,
-    timer: Timer,
-}
-
-impl Invulnerable {
-    pub fn new(duration: f32, filters: Group) -> Self {
-        Invulnerable {
-            timer: Timer::from_seconds(duration, TimerMode::Once),
-            filters,
-        }
-    }
-
-    pub fn tick_and_finished(&mut self, time: Res<Time>) -> bool {
-        self.timer.tick(time.delta());
-        self.timer.finished()
-    }
-}
-
-// ==================================================================
 // Bonus
 
 #[derive(Component)]

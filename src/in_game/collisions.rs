@@ -7,7 +7,6 @@ impl Plugin for CollisionsPlugin {
     fn build(&self, app: &mut App) {
         app.add_system_set(
             SystemSet::on_update(GameState::InGame)
-                .with_system(invulnerability_finished)
                 .with_system(monster_hit_by_bullet)
                 .with_system(player_touched_by_monster)
                 .with_system(player_hits_bonus),
@@ -83,24 +82,6 @@ fn player_touched_by_monster(
                 }
             }
         });
-}
-
-///
-///
-///
-fn invulnerability_finished(
-    mut commands: Commands,
-    time: Res<Time>,
-    mut query: Query<(Entity, &mut CollisionGroups, &mut Invulnerable)>,
-    mut events: EventWriter<InvulnerabilityEvent>,
-) {
-    if let Ok((entity, mut collision_groups, mut invulnerable)) = query.get_single_mut() {
-        if invulnerable.tick_and_finished(time) {
-            collision_groups.filters |= invulnerable.filters;
-            commands.entity(entity).remove::<Invulnerable>();
-            events.send(InvulnerabilityEvent::Stop(entity));
-        }
-    }
 }
 
 ///

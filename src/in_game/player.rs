@@ -1,24 +1,27 @@
 use crate::in_game::bullets::{spawn_bullet_at, BulletOptions};
 use crate::in_game::collisions::{GROUP_ENEMY, GROUP_PLAYER};
+use crate::prelude::invulnerable::{InvulnerabilityEvent, Invulnerable};
 use crate::prelude::*;
 use std::ops::Mul;
+use std::time::Duration;
 
 pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(setup).add_system_set(
-            SystemSet::on_update(GameState::InGame)
-                .with_system(player_movement)
-                .with_system(animate_sprite)
-                .with_system(player_fires)
-                .with_system(on_player_hit)
-                .with_system(set_invulnerable)
-                .with_system(animate_invulnerability)
-                .with_system(player_invulnerability_finished.after(animate_invulnerability))
-                .with_system(increment_player_experience)
-                .with_system(level_up),
-        );
+        app.add_startup_system(setup)
+            .add_system_set(
+                SystemSet::on_update(GameState::InGame)
+                    .with_system(player_movement)
+                    .with_system(animate_sprite)
+                    .with_system(player_fires)
+                    .with_system(on_player_hit)
+                    .with_system(player_invulnerability_finished)
+                    .with_system(increment_player_experience)
+                    .with_system(level_up),
+            )
+            .add_system_set(SystemSet::on_enter(GameState::InGame).with_system(unpause))
+            .add_system_set(SystemSet::on_exit(GameState::InGame).with_system(pause));
     }
 }
 
@@ -90,6 +93,22 @@ fn setup(
 }
 
 ///
+fn pause(mut query: Query<(&mut Invulnerable, &mut Blink), With<Player>>) {
+    if let Ok((mut invulnerable, mut blink)) = query.get_single_mut() {
+        invulnerable.pause(true);
+        blink.pause(true);
+    }
+}
+
+///
+fn unpause(mut query: Query<(&mut Invulnerable, &mut Blink), With<Player>>) {
+    if let Ok((mut invulnerable, mut blink)) = query.get_single_mut() {
+        invulnerable.pause(false);
+        blink.pause(false);
+    }
+}
+
+///
 /// Manage the keyboard to move the player
 ///
 fn player_movement(
@@ -156,7 +175,6 @@ fn on_player_hit(
     mut commands: Commands,
     mut player_hit_events: EventReader<PlayerHitEvent>,
     mut q_player: Query<(&mut Life, &mut CollisionGroups), With<Player>>,
-    mut send_invulnerability: EventWriter<InvulnerabilityEvent>,
     mut send_death: EventWriter<PlayerDeathEvent>,
 ) {
     if let Ok((mut life, mut collision_groups)) = q_player.get_single_mut() {
@@ -169,7 +187,13 @@ fn on_player_hit(
                 // break to ensure we don't try to despawn player if already dead
                 break;
             } else {
-                send_invulnerability.send(InvulnerabilityEvent::Start(event.entity));
+                // Set player invulnerable
+                commands
+                    .entity(event.entity)
+                    .insert(Invulnerable::new(Duration::from_secs_f32(2.0), GROUP_ENEMY))
+                    .insert(Blink::new(Duration::from_secs_f32(0.15)));
+
+                // To allow player to not collide with enemies
                 collision_groups.filters &= !GROUP_ENEMY;
             }
         }
@@ -204,63 +228,18 @@ fn animate_sprite(
 ///
 ///
 ///
-fn set_invulnerable(
-    mut commands: Commands,
-    mut events: EventReader<InvulnerabilityEvent>,
-    mut q_player: Query<&mut CollisionGroups, With<Player>>,
-) {
-    if let Ok(mut collision_groups) = q_player.get_single_mut() {
-        for event in events.iter() {
-            if let InvulnerabilityEvent::Start(entity) = event {
-                warn!("set_invulnerable");
-                commands
-                    .entity(*entity)
-                    .insert(Invulnerable::new(0.5, GROUP_ENEMY))
-                    .insert(InvulnerabilityAnimationTimer::default());
-
-                // To allow player to not collide with enemies
-                collision_groups.filters &= !GROUP_ENEMY;
-            }
-        }
-    }
-}
-
-///
-///
-///
-fn animate_invulnerability(
-    time: Res<Time>,
-    mut q_player: Query<
-        (&mut Visibility, &mut InvulnerabilityAnimationTimer),
-        (With<Player>, With<Invulnerable>),
-    >,
-) {
-    if let Ok((mut visibility, mut timer)) = q_player.get_single_mut() {
-        timer.0.tick(time.delta());
-        if timer.0.finished() {
-            warn!("animate_invulnerability");
-            visibility.is_visible = !visibility.is_visible;
-        }
-    }
-}
-
-///
-///
-///
 fn player_invulnerability_finished(
     mut commands: Commands,
     mut events: EventReader<InvulnerabilityEvent>,
-    mut q_player: Query<(Entity, &mut Visibility), With<Player>>,
+    mut q_player: Query<Entity, With<Player>>,
 ) {
-    if let Ok((player_entity, mut visibility)) = q_player.get_single_mut() {
+    if let Ok(player_entity) = q_player.get_single_mut() {
         for event in events.iter() {
             if let InvulnerabilityEvent::Stop(entity) = event {
                 if player_entity == *entity {
                     warn!("player_invulnerability_finished");
-                    commands
-                        .entity(player_entity)
-                        .remove::<InvulnerabilityAnimationTimer>();
-                    visibility.is_visible = true;
+                    commands.entity(player_entity).remove::<Blink>();
+                    // visibility.is_visible = true;
                 }
             }
         }

@@ -8,6 +8,7 @@ mod prelude;
 mod resources;
 mod top_menu;
 mod ui;
+mod utils;
 
 use bevy::render::camera::ScalingMode;
 use prelude::*;
@@ -29,6 +30,8 @@ fn main() {
         .add_plugin(debug::DebugPlugin)
         // utils plugins
         .add_plugin(ui::ProgressBarPlugin)
+        .add_plugin(utils::blink::BlinkPlugin)
+        .add_plugin(utils::invulnerable::InvulnerabilityPlugin)
         // Game plugins
         .add_plugin(top_menu::TopMenuPlugin)
         .add_plugins(in_game::InGamePluginsGroup)
@@ -45,7 +48,6 @@ fn main() {
         .add_event::<PlayerDeathEvent>()
         .add_event::<MonsterHitEvent>()
         .add_event::<MonsterDeathEvent>()
-        .add_event::<InvulnerabilityEvent>()
         .add_event::<LevelUpEvent>()
         // startup
         .add_startup_system_to_stage(StartupStage::PreStartup, load_font)

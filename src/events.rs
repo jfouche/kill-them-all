@@ -32,11 +32,5 @@ impl PlayerHitEvent {
 // Event to notify the player died
 pub struct PlayerDeathEvent;
 
-// Event to notify an entity is invulnerable
-pub enum InvulnerabilityEvent {
-    Start(Entity),
-    Stop(Entity),
-}
-
 // Event to notify a player level up
 pub struct LevelUpEvent;
