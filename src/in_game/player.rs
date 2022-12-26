@@ -1,6 +1,6 @@
 use crate::in_game::bullets::{spawn_bullet_at, BulletOptions};
 use crate::in_game::collisions::{GROUP_ENEMY, GROUP_PLAYER};
-use crate::prelude::invulnerable::{InvulnerabilityEvent, Invulnerable};
+use crate::prelude::invulnerable::Invulnerable;
 use crate::prelude::*;
 use std::ops::Mul;
 use std::time::Duration;
@@ -230,17 +230,14 @@ fn animate_sprite(
 ///
 fn player_invulnerability_finished(
     mut commands: Commands,
-    mut events: EventReader<InvulnerabilityEvent>,
     mut q_player: Query<Entity, With<Player>>,
+    entities: RemovedComponents<Invulnerable>,
 ) {
     if let Ok(player_entity) = q_player.get_single_mut() {
-        for event in events.iter() {
-            if let InvulnerabilityEvent::Stop(entity) = event {
-                if player_entity == *entity {
-                    warn!("player_invulnerability_finished");
-                    commands.entity(player_entity).remove::<Blink>();
-                    // visibility.is_visible = true;
-                }
+        for entity in entities.iter() {
+            if player_entity == entity {
+                warn!("player_invulnerability_finished");
+                commands.entity(player_entity).remove::<Blink>();
             }
         }
     }

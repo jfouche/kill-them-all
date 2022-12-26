@@ -6,16 +6,9 @@ pub struct InvulnerabilityPlugin;
 
 impl Plugin for InvulnerabilityPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<InvulnerabilityEvent>()
-            .add_system(invulnerability_started)
+        app.add_system(invulnerability_started)
             .add_system(invulnerability_finished);
     }
-}
-
-// Event to notify an entity is invulnerable
-pub enum InvulnerabilityEvent {
-    Start(Entity),
-    Stop(Entity),
 }
 
 #[derive(Component)]
@@ -35,11 +28,6 @@ impl Invulnerable {
         }
     }
 
-    pub fn tick_and_finished(&mut self, time: Res<Time>) -> bool {
-        self.timer.tick(time.delta());
-        self.timer.finished()
-    }
-
     /// pause invulnerability
     pub fn pause(&mut self, pause: bool) {
         self.pause = pause;
@@ -47,26 +35,21 @@ impl Invulnerable {
 }
 
 ///
-/// Send [`InvulnerabilityEvent::Start`] when [`Invulnerable`] starts
+/// [`Invulnerable`] starts
 ///
-fn invulnerability_started(
-    query: Query<Entity, Added<Invulnerable>>,
-    mut events: EventWriter<InvulnerabilityEvent>,
-) {
-    for entity in query.iter() {
+fn invulnerability_started(query: Query<Entity, Added<Invulnerable>>) {
+    for _entity in query.iter() {
         warn!("invulnerability_started");
-        events.send(InvulnerabilityEvent::Start(entity));
     }
 }
 
 ///
-/// Send [`InvulnerabilityEvent::Stop`] when [`Invulnerable`] finishes
+/// [`Invulnerable`] finishes
 ///
 fn invulnerability_finished(
     mut commands: Commands,
     time: Res<Time>,
     mut query: Query<(Entity, &mut CollisionGroups, &mut Invulnerable)>,
-    mut events: EventWriter<InvulnerabilityEvent>,
 ) {
     if let Ok((entity, mut collision_groups, mut invulnerable)) = query.get_single_mut() {
         if !invulnerable.pause {
@@ -75,7 +58,6 @@ fn invulnerability_finished(
                 warn!("invulnerability_finished");
                 collision_groups.filters |= invulnerable.filters;
                 commands.entity(entity).remove::<Invulnerable>();
-                events.send(InvulnerabilityEvent::Stop(entity));
             }
         }
     }
