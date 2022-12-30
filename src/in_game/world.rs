@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use rand::{thread_rng, Rng};
 
 pub struct WorldPlugin;
 
@@ -115,29 +116,15 @@ fn init_world(
         .spawn(WorldBundle::default())
         .insert(Name::new("World"))
         .with_children(|world| {
-            const TOP: usize = 0;
-            const BOTTOM: usize = WORLD_HEIGHT - 1;
-            const LEFT: usize = 0;
-            const RIGHT: usize = WORLD_HEIGHT - 1;
             let texture_handle = asset_server.load("background/TilesetFloor.png");
             let texture_atlas =
                 TextureAtlas::from_grid(texture_handle, Vec2::new(16.0, 16.0), 22, 28, None, None);
             let texture_atlas_handle = texture_atlases.add(texture_atlas);
             for row in 0..WORLD_HEIGHT {
                 for col in 0..WORLD_WIDTH {
-                    let index = match (row, col) {
-                        (TOP, LEFT) => 0,
-                        (TOP, RIGHT) => 3,
-                        (BOTTOM, LEFT) => 44,
-                        (BOTTOM, RIGHT) => 46,
-                        (TOP, _) => 1,
-                        (BOTTOM, _) => 45,
-                        (_, LEFT) => 22,
-                        (_, RIGHT) => 24,
-                        (_, _) => 23,
-                    };
-                    let x = col as f32;
-                    let y = row as f32;
+                    let index = tileset_index(row, col);
+                    let x = col as f32 - WORLD_WIDTH_F32 / 2.;
+                    let y = row as f32 - WORLD_HEIGHT_F32 / 2.;
 
                     world
                         .spawn(SpriteSheetBundle {
@@ -160,4 +147,26 @@ fn init_world(
     //     builder.spawn(Border::bottom());
     //     builder.spawn(Border::left());
     // });
+}
+
+fn tileset_index(row: usize, col: usize) -> usize {
+    const TOP: usize = WORLD_HEIGHT - 1;
+    const BOTTOM: usize = 0;
+    const LEFT: usize = 0;
+    const RIGHT: usize = WORLD_WIDTH - 1;
+    match (row, col) {
+        (TOP, LEFT) => 0,
+        (TOP, RIGHT) => 3,
+        (BOTTOM, LEFT) => 44,
+        (BOTTOM, RIGHT) => 46,
+        (TOP, _) => 1,
+        (BOTTOM, _) => 45,
+        (_, LEFT) => 22,
+        (_, RIGHT) => 24,
+        (_, _) => match thread_rng().gen_range(0..8) {
+            0 => 88,
+            1 => 89,
+            _ => 23,
+        },
+    }
 }
