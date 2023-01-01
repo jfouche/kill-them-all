@@ -1,6 +1,6 @@
 use crate::in_game::bullets::{spawn_bullet_at, BulletOptions};
 use crate::in_game::collisions::{GROUP_ENEMY, GROUP_PLAYER};
-use crate::prelude::invulnerable::Invulnerable;
+use crate::prelude::Invulnerable;
 use crate::prelude::*;
 use std::ops::Mul;
 use std::time::Duration;

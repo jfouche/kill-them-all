@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use crate::in_game::collisions::GROUP_BONUS;
 use crate::prelude::*;
 use rand::{thread_rng, Rng};
@@ -29,6 +31,10 @@ fn spawn_bonus(
             commands
                 .spawn(Bonus)
                 .insert(Name::new("Bonus"))
+                .insert(Temporary::new(
+                    Duration::from_secs(10),
+                    Duration::from_secs(3),
+                ))
                 // sprite
                 .insert(SpriteBundle {
                     sprite: Sprite {

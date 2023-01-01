@@ -30,8 +30,8 @@ fn main() {
         .add_plugin(debug::DebugPlugin)
         // utils plugins
         .add_plugin(ui::ProgressBarPlugin)
-        .add_plugin(utils::blink::BlinkPlugin)
-        .add_plugin(utils::invulnerable::InvulnerabilityPlugin)
+        .add_plugin(utils::BlinkPlugin)
+        .add_plugin(utils::InvulnerabilityPlugin)
         // Game plugins
         .add_plugin(top_menu::TopMenuPlugin)
         .add_plugins(in_game::InGamePluginsGroup)
