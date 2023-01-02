@@ -76,7 +76,7 @@ fn player_touched_by_monster(
             if let Ok(player) = q_player.get_single() {
                 for monster in q_monsters.iter() {
                     if (e1 == player && e2 == monster) || (e1 == monster && e2 == player) {
-                        warn!("player_touched_by_monster");
+                        info!("player_touched_by_monster");
                         player_hit_events.send(PlayerHitEvent::new(player));
                     }
                 }

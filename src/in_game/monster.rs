@@ -249,7 +249,7 @@ fn on_monster_hit(
     mut monster_death_events: EventWriter<MonsterDeathEvent>,
 ) {
     for event in monster_hit_events.iter() {
-        warn!("on_monster_hit");
+        info!("on_monster_hit");
         for (entity, mut life, transform) in q_monsters.iter_mut() {
             if entity == event.entity {
                 life.hit(event.damage);
@@ -273,7 +273,7 @@ fn increment_score(
     mut score: ResMut<ScoreResource>,
 ) {
     for event in monster_hit_events.iter() {
-        warn!("increment_score");
+        info!("increment_score");
         // TODO: ("split in 2 systems");
         commands.entity(event.entity).despawn();
         score.0 += 1;

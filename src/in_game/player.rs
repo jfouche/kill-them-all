@@ -9,19 +9,15 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(setup)
-            .add_system_set(
-                SystemSet::on_update(GameState::InGame)
-                    .with_system(player_movement)
-                    .with_system(animate_sprite)
-                    .with_system(player_fires)
-                    .with_system(on_player_hit)
-                    .with_system(player_invulnerability_finished)
-                    .with_system(increment_player_experience)
-                    .with_system(level_up),
-            )
-            .add_system_set(SystemSet::on_enter(GameState::InGame).with_system(unpause))
-            .add_system_set(SystemSet::on_exit(GameState::InGame).with_system(pause));
+        app.add_startup_system(setup).add_system_set(
+            SystemSet::on_update(GameState::InGame)
+                .with_system(player_movement)
+                .with_system(animate_sprite)
+                .with_system(player_fires)
+                .with_system(on_player_hit)
+                .with_system(increment_player_experience)
+                .with_system(level_up),
+        );
     }
 }
 
@@ -90,22 +86,6 @@ fn setup(
         attack_speed: 1.,
     };
     spawn_player(&mut commands, player_config, texture_atlas_handle);
-}
-
-///
-fn pause(mut query: Query<(&mut Invulnerable, &mut Blink), With<Player>>) {
-    if let Ok((mut invulnerable, mut blink)) = query.get_single_mut() {
-        invulnerable.pause(true);
-        blink.pause(true);
-    }
-}
-
-///
-fn unpause(mut query: Query<(&mut Invulnerable, &mut Blink), With<Player>>) {
-    if let Ok((mut invulnerable, mut blink)) = query.get_single_mut() {
-        invulnerable.pause(false);
-        blink.pause(false);
-    }
 }
 
 ///
@@ -179,7 +159,7 @@ fn on_player_hit(
 ) {
     if let Ok((mut life, mut collision_groups)) = q_player.get_single_mut() {
         for event in player_hit_events.iter() {
-            warn!("on_player_hit");
+            info!("on_player_hit");
             life.hit(1);
             if life.is_dead() {
                 commands.entity(event.entity).despawn();
@@ -190,8 +170,7 @@ fn on_player_hit(
                 // Set player invulnerable
                 commands
                     .entity(event.entity)
-                    .insert(Invulnerable::new(Duration::from_secs_f32(2.0), GROUP_ENEMY))
-                    .insert(Blink::new(Duration::from_secs_f32(0.15)));
+                    .insert(Invulnerable::new(Duration::from_secs_f32(2.0), GROUP_ENEMY));
 
                 // To allow player to not collide with enemies
                 collision_groups.filters &= !GROUP_ENEMY;
@@ -226,24 +205,6 @@ fn animate_sprite(
 }
 
 ///
-///
-///
-fn player_invulnerability_finished(
-    mut commands: Commands,
-    mut q_player: Query<Entity, With<Player>>,
-    entities: RemovedComponents<Invulnerable>,
-) {
-    if let Ok(player_entity) = q_player.get_single_mut() {
-        for entity in entities.iter() {
-            if player_entity == entity {
-                warn!("player_invulnerability_finished");
-                commands.entity(player_entity).remove::<Blink>();
-            }
-        }
-    }
-}
-
-///
 /// Update player XP when monster died
 ///
 fn increment_player_experience(
@@ -253,7 +214,7 @@ fn increment_player_experience(
 ) {
     if let Ok(mut experience) = q_player.get_single_mut() {
         for _ in monster_death_reader.iter() {
-            warn!("increment_player_experience");
+            info!("increment_player_experience");
             let level_before = experience.level();
             experience.add(1);
             if experience.level() > level_before {
@@ -270,7 +231,7 @@ fn level_up(
 ) {
     if let Ok(mut life) = q_player.get_single_mut() {
         for _ in level_up_rcv.iter() {
-            warn!("level_up");
+            info!("level_up");
             // Regen life
             let max_life = life.max_life();
             life.regenerate(max_life);

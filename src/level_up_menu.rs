@@ -29,7 +29,7 @@ fn enter_level_up_state(
     mut state: ResMut<State<GameState>>,
 ) {
     for _ in level_up_rcv.iter() {
-        warn!("enter_level_up_state");
+        info!("enter_level_up_state");
         if state.current() == &GameState::InGame {
             state.set(GameState::LevelUp).unwrap();
         }

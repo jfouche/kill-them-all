@@ -2,6 +2,8 @@ use bevy::prelude::*;
 use bevy_rapier2d::prelude::{CollisionGroups, Group};
 use std::time::Duration;
 
+use crate::prelude::Blink;
+
 pub struct InvulnerabilityPlugin;
 
 impl Plugin for InvulnerabilityPlugin {
@@ -16,7 +18,6 @@ impl Plugin for InvulnerabilityPlugin {
 pub struct Invulnerable {
     pub filters: Group,
     timer: Timer,
-    pause: bool,
 }
 
 impl Invulnerable {
@@ -24,22 +25,19 @@ impl Invulnerable {
         Invulnerable {
             timer: Timer::new(duration, TimerMode::Once),
             filters,
-            pause: false,
         }
-    }
-
-    /// pause invulnerability
-    pub fn pause(&mut self, pause: bool) {
-        self.pause = pause;
     }
 }
 
 ///
 /// [`Invulnerable`] starts
 ///
-fn invulnerability_started(query: Query<Entity, Added<Invulnerable>>) {
-    for _entity in query.iter() {
-        warn!("invulnerability_started");
+fn invulnerability_started(mut commands: Commands, query: Query<Entity, Added<Invulnerable>>) {
+    for entity in query.iter() {
+        info!("invulnerability_started");
+        commands
+            .entity(entity)
+            .insert(Blink::new(Duration::from_millis(250)));
     }
 }
 
@@ -52,13 +50,11 @@ fn invulnerability_finished(
     mut query: Query<(Entity, &mut CollisionGroups, &mut Invulnerable)>,
 ) {
     if let Ok((entity, mut collision_groups, mut invulnerable)) = query.get_single_mut() {
-        if !invulnerable.pause {
-            invulnerable.timer.tick(time.delta());
-            if invulnerable.timer.just_finished() {
-                warn!("invulnerability_finished");
-                collision_groups.filters |= invulnerable.filters;
-                commands.entity(entity).remove::<Invulnerable>();
-            }
+        invulnerable.timer.tick(time.delta());
+        if invulnerable.timer.just_finished() {
+            info!("invulnerability_finished");
+            collision_groups.filters |= invulnerable.filters;
+            commands.entity(entity).remove::<(Invulnerable, Blink)>();
         }
     }
 }
