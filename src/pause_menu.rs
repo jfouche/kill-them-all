@@ -101,7 +101,7 @@ fn spawn_pause_menu(mut commands: Commands, font: Res<UiFont>) {
         .insert(NodeBundle {
             style: Style {
                 position_type: PositionType::Absolute,
-                size: Size::new(Val::Percent(50.0), Val::Percent(50.)),
+                size: Size::new(Val::Percent(30.0), Val::Percent(30.)),
                 align_self: AlignSelf::Center,
                 position: UiRect::left(Val::Percent(25.)),
                 flex_direction: FlexDirection::Column,
@@ -129,7 +129,7 @@ fn spawn_title(menu: &mut ChildBuilder, font: Handle<Font>) {
             "Pause",
             TextStyle {
                 font,
-                font_size: 30.0,
+                font_size: 20.0,
                 color: Color::WHITE,
             },
         )
@@ -154,14 +154,20 @@ fn spawn_skill(
 ) {
     let text_style = TextStyle {
         font,
-        font_size: 20.0,
+        font_size: 12.0,
         color: Color::WHITE,
     };
     menu.spawn(component)
-        .insert(TextBundle::from_sections([
-            TextSection::new(label, text_style.clone()),
-            TextSection::from_style(text_style),
-        ]))
+        .insert(
+            TextBundle::from_sections([
+                TextSection::new(label, text_style.clone()),
+                TextSection::from_style(text_style),
+            ])
+            .with_style(Style {
+                margin: UiRect::all(Val::Auto),
+                ..Default::default()
+            }),
+        )
         .insert(BackgroundColor(Color::BLACK));
 }
 
