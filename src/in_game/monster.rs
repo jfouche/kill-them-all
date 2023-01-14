@@ -116,7 +116,7 @@ fn spawn_monster(
                 ..Default::default()
             },
             texture_atlas: atlas,
-            transform: Transform::from_xyz(params.pos.x, params.pos.y, 10.),
+            transform: Transform::from_xyz(params.pos.x, params.pos.y, 3.),
             ..Default::default()
         })
         .insert(AnimationTimer::default())
@@ -138,7 +138,7 @@ fn spawn_monster_futur_pos(commands: &mut Commands, params: MonsterSpawnParams) 
                 custom_size: Some(params.size()),
                 ..Default::default()
             },
-            transform: Transform::from_xyz(params.pos.x, params.pos.y, 1.),
+            transform: Transform::from_xyz(params.pos.x, params.pos.y, 3.),
             ..Default::default()
         })
         .insert(MonsterSpawnConfig::new(params));
@@ -203,7 +203,16 @@ fn spawn_monsters(
     time: Res<Time>,
     mut query: Query<(Entity, &mut MonsterSpawnConfig)>,
     textures: Res<GameTextures>,
+    level_query: Query<&Handle<LdtkLevel>, (Without<OrthographicProjection>, Without<Player>)>,
+    level_selection: Res<LevelSelection>,
+    ldtk_levels: Res<Assets<LdtkLevel>>,
 ) {
+    for level_handle in &level_query {
+        if let Some(ldtk_level) = ldtk_levels.get(level_handle) {
+            let level = &ldtk_level.level;
+            if level_selection.is_match(&0, level) {}
+        }
+    }
     for (entity, mut config) in query.iter_mut() {
         config.timer.tick(time.delta());
         if config.timer.finished() {

@@ -1,9 +1,92 @@
+use crate::in_game::GROUP_PLAYER;
 use crate::prelude::*;
+use bevy_ecs_ldtk::prelude::*;
 use rand::Rng;
 use std::{cmp::min, time::Duration};
 
-#[derive(Component)]
+#[derive(Clone, Debug, Default, Bundle, LdtkIntCell)]
+pub struct ColliderBundle {
+    pub collider: Collider,
+    pub rigid_body: RigidBody,
+    pub velocity: Velocity,
+    pub rotation_constraints: LockedAxes,
+    pub collision_groups: CollisionGroups,
+    // pub gravity_scale: GravityScale,
+    // pub friction: Friction,
+    // pub density: ColliderMassProperties,
+}
+
+impl From<EntityInstance> for ColliderBundle {
+    fn from(entity_instance: EntityInstance) -> ColliderBundle {
+        match entity_instance.identifier.as_ref() {
+            "Player" => ColliderBundle {
+                collider: Collider::cuboid(8., 8.),
+                rigid_body: RigidBody::Dynamic,
+                // friction: Friction {
+                //     coefficient: 0.0,
+                //     combine_rule: CoefficientCombineRule::Min,
+                // },
+                collision_groups: CollisionGroups::new(GROUP_PLAYER, Group::ALL),
+                rotation_constraints: LockedAxes::ROTATION_LOCKED,
+                ..Default::default()
+            },
+            _ => ColliderBundle::default(),
+        }
+    }
+}
+
+// ==================================================================
+// CharacterBundle
+
+#[derive(Default, Bundle)]
+pub struct CharacterBundle {
+    name: Name,
+    movement_speed: MovementSpeed,
+    life: Life,
+    attack_speed: AttackSpeed,
+    weapon: Weapon,
+}
+
+impl From<EntityInstance> for CharacterBundle {
+    fn from(entity_instance: EntityInstance) -> Self {
+        match entity_instance.identifier.as_ref() {
+            "Player" => CharacterBundle {
+                name: "Player".into(),
+                movement_speed: MovementSpeed::new(120.0),
+                life: Life::new(24),
+                attack_speed: AttackSpeed::default(),
+                weapon: Weapon::new(1.2, 2, 4),
+            },
+            _ => CharacterBundle::default(),
+        }
+    }
+}
+
+// ==================================================================
+// Player
+
+#[derive(Default, Component)]
 pub struct Player;
+
+#[derive(Bundle, LdtkEntity)]
+pub struct PlayerBundle {
+    player: Player,
+    #[from_entity_instance]
+    #[bundle]
+    character: CharacterBundle,
+    money: Money,
+    experience: Experience,
+    #[sprite_sheet_bundle]
+    #[bundle]
+    sprite_sheet_bundle: SpriteSheetBundle,
+    anim_timer: AnimationTimer,
+    #[from_entity_instance]
+    #[bundle]
+    pub collider_bundle: ColliderBundle,
+}
+
+// ==================================================================
+// Monster
 
 #[derive(Component)]
 pub struct Monster;
@@ -32,13 +115,27 @@ impl Default for AnimationTimer {
 // ==================================================================
 // Weapon
 
-#[derive(Component)]
+#[derive(Component, Reflect, FromReflect)]
+#[reflect(Component)]
 pub struct Weapon {
     attack_speed: f32,
     damage_min: u16,
     damage_max: u16,
     timer: Timer,
     ready: bool,
+}
+
+impl Default for Weapon {
+    fn default() -> Self {
+        const DEFAULT_ATTACK_PER_SEC: f32 = 1.0;
+        Weapon {
+            attack_speed: DEFAULT_ATTACK_PER_SEC,
+            damage_min: 1,
+            damage_max: 4,
+            timer: Timer::from_seconds(1. / DEFAULT_ATTACK_PER_SEC, TimerMode::Repeating),
+            ready: false,
+        }
+    }
 }
 
 impl Weapon {
@@ -48,7 +145,7 @@ impl Weapon {
             damage_min,
             damage_max,
             timer: Timer::from_seconds(1. / attack_per_second, TimerMode::Repeating),
-            ready: false,
+            ..Default::default()
         }
     }
 
@@ -81,19 +178,30 @@ impl std::fmt::Display for Weapon {
 // ==================================================================
 // MovementSpeed
 
-#[derive(Component)]
+#[derive(Component, Reflect, FromReflect)]
+#[reflect(Component)]
 pub struct MovementSpeed {
     speed: f32,
     increases: f32,
+}
+
+impl Default for MovementSpeed {
+    fn default() -> Self {
+        MovementSpeed {
+            speed: 150.0,
+            increases: 0.0,
+        }
+    }
 }
 
 impl MovementSpeed {
     pub fn new(speed: f32) -> Self {
         MovementSpeed {
             speed,
-            increases: 0.0,
+            ..Default::default()
         }
     }
+
     pub fn value(&self) -> f32 {
         self.speed * (100.0 + self.increases) / 100.0
     }
@@ -112,11 +220,22 @@ impl std::fmt::Display for MovementSpeed {
 // ==================================================================
 // Life
 
-#[derive(Component)]
+#[derive(Component, Reflect, FromReflect)]
+#[reflect(Component)]
 pub struct Life {
     life: u16,
     max_life: u16,
     increases: f32,
+}
+
+impl Default for Life {
+    fn default() -> Self {
+        Life {
+            life: 20,
+            max_life: 20,
+            increases: 0.,
+        }
+    }
 }
 
 impl Life {
@@ -124,7 +243,7 @@ impl Life {
         Life {
             life,
             max_life: life,
-            increases: 0.,
+            ..Default::default()
         }
     }
 
@@ -172,16 +291,19 @@ impl std::fmt::Display for Life {
 // ==================================================================
 // AttackSpeed
 
-#[derive(Component)]
+#[derive(Component, Reflect, FromReflect)]
+#[reflect(Component)]
 pub struct AttackSpeed {
     increases: f32,
 }
 
-impl AttackSpeed {
-    pub fn new() -> Self {
+impl Default for AttackSpeed {
+    fn default() -> Self {
         AttackSpeed { increases: 0.0 }
     }
+}
 
+impl AttackSpeed {
     pub fn value(&self) -> f32 {
         self.increases
     }
@@ -206,7 +328,8 @@ pub struct Bonus;
 // ==================================================================
 // Money
 
-#[derive(Component, Reflect)]
+#[derive(Default, Component, Reflect, FromReflect)]
+#[reflect(Component)]
 pub struct Money(pub u16);
 
 impl std::fmt::Display for Money {
@@ -218,7 +341,7 @@ impl std::fmt::Display for Money {
 // ==================================================================
 // Experience
 
-#[derive(Component, Default)]
+#[derive(Component, Default, Reflect, FromReflect)]
 pub struct Experience(u32);
 
 impl Experience {

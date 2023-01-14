@@ -1,11 +1,11 @@
 use crate::prelude::*;
-use rand::{thread_rng, Rng};
-
 pub struct WorldPlugin;
 
 impl Plugin for WorldPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(init_world);
+        app.add_startup_system(init_world)
+            .add_system(camera_fit_inside_current_level)
+            .add_system(test);
     }
 }
 
@@ -107,66 +107,100 @@ impl Border {
     }
 }
 
-fn init_world(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
-) {
+fn init_world(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands
-        .spawn(WorldBundle::default())
-        .insert(Name::new("World"))
-        .with_children(|world| {
-            let texture_handle = asset_server.load("background/TilesetFloor.png");
-            let texture_atlas =
-                TextureAtlas::from_grid(texture_handle, Vec2::new(16.0, 16.0), 22, 28, None, None);
-            let texture_atlas_handle = texture_atlases.add(texture_atlas);
-            for row in 0..WORLD_HEIGHT {
-                for col in 0..WORLD_WIDTH {
-                    let index = tileset_index(row, col);
-                    let x = col as f32 - WORLD_WIDTH_F32 / 2.;
-                    let y = row as f32 - WORLD_HEIGHT_F32 / 2.;
-
-                    world
-                        .spawn(SpriteSheetBundle {
-                            sprite: TextureAtlasSprite {
-                                custom_size: Some(Vec2::new(1.0, 1.0)),
-                                index,
-                                ..Default::default()
-                            },
-                            texture_atlas: texture_atlas_handle.clone(),
-                            transform: Transform::from_xyz(x, y, 10.),
-                            ..Default::default()
-                        })
-                        .insert(Name::new("Tile"));
-                }
-            }
-        });
-    // .add_children(|builder| {
-    //     builder.spawn(Border::top());
-    //     builder.spawn(Border::right());
-    //     builder.spawn(Border::bottom());
-    //     builder.spawn(Border::left());
-    // });
+        .spawn(LdtkWorldBundle {
+            ldtk_handle: asset_server.load("kill-them-all.ldtk"),
+            ..Default::default()
+        })
+        .insert(Name::new("World"));
 }
 
-fn tileset_index(row: usize, col: usize) -> usize {
-    const TOP: usize = WORLD_HEIGHT - 1;
-    const BOTTOM: usize = 0;
-    const LEFT: usize = 0;
-    const RIGHT: usize = WORLD_WIDTH - 1;
-    match (row, col) {
-        (TOP, LEFT) => 0,
-        (TOP, RIGHT) => 3,
-        (BOTTOM, LEFT) => 44,
-        (BOTTOM, RIGHT) => 46,
-        (TOP, _) => 1,
-        (BOTTOM, _) => 45,
-        (_, LEFT) => 22,
-        (_, RIGHT) => 24,
-        (_, _) => match thread_rng().gen_range(0..8) {
-            0 => 88,
-            1 => 89,
-            _ => 23,
-        },
+const ASPECT_RATIO: f32 = 16. / 9.;
+
+fn camera_fit_inside_current_level(
+    mut camera_query: Query<(&mut OrthographicProjection, &mut Transform), Without<Player>>,
+    player_query: Query<&Transform, With<Player>>,
+    level_query: Query<
+        (&Transform, &Handle<LdtkLevel>),
+        (Without<OrthographicProjection>, Without<Player>),
+    >,
+    level_selection: Res<LevelSelection>,
+    ldtk_levels: Res<Assets<LdtkLevel>>,
+) {
+    if let Ok(Transform {
+        translation: player_translation,
+        ..
+    }) = player_query.get_single()
+    {
+        let (mut orthographic_projection, mut camera_transform) = camera_query.single_mut();
+
+        for (level_transform, level_handle) in &level_query {
+            if let Some(ldtk_level) = ldtk_levels.get(level_handle) {
+                let level = &ldtk_level.level;
+                if level_selection.is_match(&0, level) {
+                    let level_ratio = level.px_wid as f32 / ldtk_level.level.px_hei as f32;
+
+                    orthographic_projection.scaling_mode = bevy::render::camera::ScalingMode::None;
+                    orthographic_projection.bottom = 0.;
+                    orthographic_projection.left = 0.;
+                    if level_ratio > ASPECT_RATIO {
+                        // level is wider than the screen
+                        orthographic_projection.top = (level.px_hei as f32 / 9.).round() * 9.;
+                        orthographic_projection.right = orthographic_projection.top * ASPECT_RATIO;
+                        camera_transform.translation.x = (player_translation.x
+                            - level_transform.translation.x
+                            - orthographic_projection.right / 2.)
+                            .clamp(0., level.px_wid as f32 - orthographic_projection.right);
+                        camera_transform.translation.y = 0.;
+                    } else {
+                        // level is taller than the screen
+                        orthographic_projection.right = (level.px_wid as f32 / 16.).round() * 16.;
+                        orthographic_projection.top = orthographic_projection.right / ASPECT_RATIO;
+                        camera_transform.translation.y = (player_translation.y
+                            - level_transform.translation.y
+                            - orthographic_projection.top / 2.)
+                            .clamp(0., level.px_hei as f32 - orthographic_projection.top);
+                        camera_transform.translation.x = 0.;
+                    }
+
+                    camera_transform.translation.x += level_transform.translation.x;
+                    camera_transform.translation.y += level_transform.translation.y;
+                }
+            }
+        }
+    }
+}
+
+fn test(
+    mut commands: Commands,
+    keyboard_input: Res<Input<KeyCode>>,
+    level_assets: Res<Assets<LdtkLevel>>,
+    level_query: Query<(Entity, &Handle<LdtkLevel>)>,
+) {
+    if keyboard_input.just_pressed(KeyCode::Space) {
+        warn!("test 1");
+        for (ldtk_entity, level_handle) in level_query.iter() {
+            warn!("test 2");
+            if let Some(level) = level_assets.get(level_handle) {
+                let level = &level.level;
+                if let Some(layer_instances) = &level.layer_instances {
+                    let z = layer_instances.len() as f32;
+                    commands.entity(ldtk_entity).with_children(|layer| {
+                        layer
+                            .spawn(SpriteBundle {
+                                sprite: Sprite {
+                                    color: Color::BLACK,
+                                    custom_size: Some(Vec2::new(5.0, 5.0)),
+                                    ..Default::default()
+                                },
+                                transform: Transform::from_translation(Vec3::new(0., 0., z)),
+                                ..Default::default()
+                            })
+                            .insert(Name::new("==TEST=="));
+                    });
+                }
+            }
+        }
     }
 }

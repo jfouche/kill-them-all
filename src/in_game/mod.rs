@@ -10,6 +10,8 @@ use bevy::app::PluginGroupBuilder;
 
 use crate::prelude::*;
 
+pub use crate::in_game::collisions::*;
+
 pub struct InGamePluginsGroup;
 
 impl PluginGroup for InGamePluginsGroup {

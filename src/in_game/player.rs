@@ -1,5 +1,5 @@
 use crate::in_game::bullets::{spawn_bullet_at, BulletOptions};
-use crate::in_game::collisions::{GROUP_ENEMY, GROUP_PLAYER};
+use crate::in_game::collisions::GROUP_ENEMY;
 use crate::prelude::invulnerable::Invulnerable;
 use crate::prelude::*;
 use std::ops::Mul;
@@ -9,7 +9,7 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(setup).add_system_set(
+        app.add_system_set(
             SystemSet::on_update(GameState::InGame)
                 .with_system(player_movement)
                 .with_system(animate_sprite)
@@ -31,62 +31,6 @@ impl Default for InvulnerabilityAnimationTimer {
 }
 
 const PLAYER_SIZE: Vec2 = Vec2::new(1.0, 1.0);
-
-fn spawn_player(
-    commands: &mut Commands,
-    config: PlayerConfig,
-    texture_atlas_handle: Handle<TextureAtlas>,
-) {
-    commands
-        .spawn(Player)
-        .insert(Name::new("Player"))
-        .insert(MovementSpeed::new(config.movement_speed))
-        .insert(Life::new(config.life))
-        .insert(AttackSpeed::new())
-        .insert(Weapon::new(config.attack_speed, 1, 4))
-        .insert(Money(0))
-        .insert(Experience::default())
-        // Sprite
-        .insert(SpriteSheetBundle {
-            sprite: TextureAtlasSprite {
-                custom_size: Some(PLAYER_SIZE),
-                ..Default::default()
-            },
-            texture_atlas: texture_atlas_handle,
-            transform: Transform::from_xyz(0., 0., 10.),
-            ..Default::default()
-        })
-        .insert(AnimationTimer::default())
-        // Rapier
-        .insert(RigidBody::Dynamic)
-        .insert(Collider::cuboid(PLAYER_SIZE.x / 2., PLAYER_SIZE.y / 2.))
-        .insert(CollisionGroups::new(GROUP_PLAYER, Group::ALL))
-        .insert(LockedAxes::ROTATION_LOCKED)
-        .insert(ActiveEvents::COLLISION_EVENTS)
-        .insert(Velocity::default());
-}
-
-///
-///  
-///
-fn setup(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
-) {
-    // load player texture_atlas
-    let texture_handle = asset_server.load("characters/RedNinja/SpriteSheet.png");
-    let texture_atlas =
-        TextureAtlas::from_grid(texture_handle, Vec2::new(16.0, 16.0), 4, 7, None, None);
-    let texture_atlas_handle = texture_atlases.add(texture_atlas);
-
-    let player_config = PlayerConfig {
-        life: 20,
-        movement_speed: 8.,
-        attack_speed: 1.,
-    };
-    spawn_player(&mut commands, player_config, texture_atlas_handle);
-}
 
 ///
 /// Manage the keyboard to move the player

@@ -10,22 +10,31 @@ mod top_menu;
 mod ui;
 mod utils;
 
-use bevy::render::camera::ScalingMode;
+use bevy_ecs_ldtk::{prelude::RegisterLdtkObjects, LevelSelection};
 use prelude::*;
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins.set(WindowPlugin {
-            window: WindowDescriptor {
-                title: "Kill'em All".to_string(),
-                width: 1024.0,
-                height: 730.0,
-                ..Default::default()
-            },
-            ..default()
-        }))
-        .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
+        .add_plugins(
+            DefaultPlugins
+                .set(WindowPlugin {
+                    window: WindowDescriptor {
+                        title: "Kill'em All".to_string(),
+                        width: 1000.0,
+                        height: 700.0,
+                        position: WindowPosition::At(Vec2::new(250., 0.)),
+                        ..Default::default()
+                    },
+                    ..default()
+                })
+                .set(ImagePlugin::default_nearest()),
+        )
+        .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
         .add_plugins(bevy_ui_navigation::DefaultNavigationPlugins)
+        // LDtk
+        .add_plugin(bevy_ecs_ldtk::LdtkPlugin)
+        .insert_resource(LevelSelection::Index(0))
+        .register_ldtk_entity::<PlayerBundle>("Player")
         // debug plugins
         .add_plugin(debug::DebugPlugin)
         // utils plugins
@@ -63,9 +72,7 @@ fn init_rapier(mut conf: ResMut<RapierConfiguration>) {
 }
 
 fn init_camera(mut commands: Commands) {
-    let far = 1000.0;
-    let mut camera = Camera2dBundle::new_with_far(far);
-    camera.projection.scaling_mode = ScalingMode::FixedHorizontal(40.0);
+    let camera = Camera2dBundle::default();
     commands.spawn(camera);
 }
 
