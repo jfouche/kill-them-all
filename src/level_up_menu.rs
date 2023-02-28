@@ -182,7 +182,7 @@ fn spawn_skill(
                 align_items: AlignItems::Center,
                 ..default()
             },
-            background_color: Color::GOLD.into(),
+            background_color: Color::GRAY.into(),
             ..default()
         })
         .insert(Focusable::default())
@@ -191,7 +191,7 @@ fn spawn_skill(
                 TextSection::new(label, text_style.clone()),
                 TextSection::from_style(text_style),
             ]))
-            .insert(BackgroundColor(Color::GOLD));
+            .insert(BackgroundColor(Color::NONE));
         });
 }
 

@@ -106,6 +106,7 @@ fn spawn_pause_menu(mut commands: Commands, font: Res<UiFont>) {
                 position: UiRect::left(Val::Percent(25.)),
                 flex_direction: FlexDirection::Column,
                 justify_content: JustifyContent::SpaceBetween,
+                padding: UiRect::all(Val::Px(10.)),
                 ..default()
             },
             background_color: Color::BLUE.into(),
@@ -158,10 +159,18 @@ fn spawn_skill(
         color: Color::WHITE,
     };
     menu.spawn(component)
-        .insert(TextBundle::from_sections([
-            TextSection::new(label, text_style.clone()),
-            TextSection::from_style(text_style),
-        ]))
+        .insert(
+            TextBundle::from_sections([
+                TextSection::new(label, text_style.clone()),
+                TextSection::from_style(text_style),
+            ])
+            .with_style(Style {
+                size: Size::new(Val::Percent(90.0), Val::Auto),
+                margin: UiRect::all(Val::Px(5.)),
+                padding: UiRect::all(Val::Px(5.)),
+                ..default()
+            }),
+        )
         .insert(BackgroundColor(Color::BLACK));
 }
 
