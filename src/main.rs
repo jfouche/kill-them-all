@@ -15,21 +15,24 @@ use prelude::*;
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins.set(WindowPlugin {
-            window: WindowDescriptor {
-                title: "Kill'em All".to_string(),
-                width: 1024.0,
-                height: 730.0,
-                ..Default::default()
-            },
-            ..default()
-        }))
+        .add_plugins(
+            DefaultPlugins
+                .set(WindowPlugin {
+                    window: WindowDescriptor {
+                        title: "Kill'em All".to_string(),
+                        width: 1024.0,
+                        height: 730.0,
+                        ..Default::default()
+                    },
+                    ..default()
+                })
+                .set(ImagePlugin::default_nearest()),
+        )
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
-        .add_plugins(bevy_ui_navigation::DefaultNavigationPlugins)
         // debug plugins
         .add_plugin(debug::DebugPlugin)
         // utils plugins
-        .add_plugin(ui::ProgressBarPlugin)
+        .add_plugin(ui::UiPlugin)
         .add_plugin(utils::blink::BlinkPlugin)
         .add_plugin(utils::invulnerable::InvulnerabilityPlugin)
         // Game plugins

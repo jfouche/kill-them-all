@@ -104,6 +104,7 @@ impl Border {
 }
 
 fn init_world(mut commands: Commands) {
+    warn!("init_world");
     commands
         .spawn(WorldBundle::default())
         .insert(Name::new("World"))

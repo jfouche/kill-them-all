@@ -16,8 +16,11 @@ impl Plugin for LevelUpMenuPlugin {
                 SystemSet::on_update(GameState::LevelUp)
                     .with_system(back_to_game)
                     .with_system(upgrade_skill::<MaxLifeButton>)
+                    .with_system(handle_nav_events::<MaxLifeButton>)
                     .with_system(upgrade_skill::<MovementSpeedButton>)
-                    .with_system(upgrade_skill::<AttackSpeedButton>),
+                    .with_system(handle_nav_events::<MovementSpeedButton>)
+                    .with_system(upgrade_skill::<AttackSpeedButton>)
+                    .with_system(handle_nav_events::<AttackSpeedButton>),
             )
             .add_system(button_system)
             .add_system(print_nav_events);
@@ -206,6 +209,20 @@ fn upgrade_skill<T: Skill + Component>(
                 T::upgrade(&mut skill);
                 state.set(GameState::InGame).unwrap();
             }
+        }
+    }
+}
+
+fn handle_nav_events<T: Skill + Component>(
+    q_btn: Query<(), With<T>>,
+    mut events: EventReader<NavEvent>,
+    mut q_player: Query<&mut T::SkillComponent, With<Player>>,
+    mut state: ResMut<State<GameState>>,
+) {
+    if let Ok(mut skill) = q_player.get_single_mut() {
+        for _ in events.nav_iter().activated_in_query(&q_btn) {
+            T::upgrade(&mut skill);
+            state.set(GameState::InGame).unwrap();
         }
     }
 }
