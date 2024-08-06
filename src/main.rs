@@ -18,33 +18,35 @@ fn main() {
         .add_plugins(
             DefaultPlugins
                 .set(WindowPlugin {
-                    window: WindowDescriptor {
+                    primary_window: Some(Window {
                         title: "Kill'em All".to_string(),
-                        width: 1024.0,
-                        height: 730.0,
                         ..Default::default()
-                    },
+                    }),
                     ..default()
                 })
                 .set(ImagePlugin::default_nearest()),
         )
-        .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
+        .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
         // debug plugins
-        .add_plugin(debug::DebugPlugin)
+        .add_plugins(debug::DebugPlugin)
         // utils plugins
-        .add_plugin(ui::UiPlugin)
-        .add_plugin(utils::blink::BlinkPlugin)
-        .add_plugin(utils::invulnerable::InvulnerabilityPlugin)
+        .add_plugins((
+            ui::UiPlugins,
+            utils::blink::BlinkPlugin,
+            utils::invulnerable::InvulnerabilityPlugin,
+        ))
         // Game plugins
-        .add_plugin(top_menu::TopMenuPlugin)
-        .add_plugins(in_game::InGamePluginsGroup)
-        .add_plugin(pause_menu::PausePlugin)
-        .add_plugin(level_up_menu::LevelUpMenuPlugin)
+        .add_plugins((
+            top_menu::TopMenuPlugin,
+            in_game::InGamePluginsGroup,
+            pause_menu::PausePlugin,
+            level_up_menu::LevelUpMenuPlugin,
+        ))
         // States
-        .add_state(GameState::InGame)
+        .init_state::<GameState>()
         // resources
         .init_resource::<ScoreResource>()
-        .insert_resource(ClearColor(Color::rgb(0.04, 0.04, 0.04)))
+        .insert_resource(ClearColor(Color::srgb(0.04, 0.04, 0.04)))
         .init_resource::<GameTextures>()
         // Events
         .add_event::<PlayerHitEvent>()
@@ -53,9 +55,8 @@ fn main() {
         .add_event::<MonsterDeathEvent>()
         .add_event::<LevelUpEvent>()
         // startup
-        .add_startup_system_to_stage(StartupStage::PreStartup, load_font)
-        .add_startup_system(init_rapier)
-        .add_startup_system(init_camera)
+        .add_systems(PreStartup, load_font)
+        .add_systems(Startup, (init_rapier, init_camera))
         // systems
         // RUN
         .run();

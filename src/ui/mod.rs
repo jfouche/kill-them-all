@@ -1,30 +1,63 @@
-use crate::prelude::*;
-
+mod button;
+mod popup;
 mod progressbar;
 
-use bevy_ui_navigation::{systems::InputMapping, DefaultNavigationPlugins};
+pub use button::*;
+pub use popup::*;
 pub use progressbar::*;
 
-pub struct UiPlugin;
+use crate::prelude::*;
+use bevy::app::PluginGroupBuilder;
 
-impl Plugin for UiPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_plugins(DefaultNavigationPlugins)
-            .add_plugin(ProgressBarPlugin)
-            .add_startup_system(init_menu_keyboard);
+pub struct UiPlugins;
+
+impl PluginGroup for UiPlugins {
+    fn build(self) -> bevy::app::PluginGroupBuilder {
+        PluginGroupBuilder::start::<Self>().add(progressbar::plugin)
     }
 }
 
-fn init_menu_keyboard(mut input: ResMut<InputMapping>) {
-    warn!("init_menu_keyboard");
-    input.keyboard_navigation = true;
-    input.key_down = KeyCode::Down;
-    input.key_down_alt = KeyCode::Numpad2;
-    input.key_up = KeyCode::Up;
-    input.key_up_alt = KeyCode::Numpad8;
-    input.key_left = KeyCode::Left;
-    input.key_left_alt = KeyCode::Numpad4;
-    input.key_right = KeyCode::Right;
-    input.key_right_alt = KeyCode::Numpad6;
-    input.key_action = KeyCode::Space;
+pub fn fullscreen_style() -> Style {
+    Style {
+        width: Val::Percent(100.0),
+        height: Val::Percent(100.0),
+        ..default()
+    }
+}
+
+pub fn centered_style() -> Style {
+    Style {
+        align_items: AlignItems::Center,
+        justify_content: JustifyContent::Center,
+        ..fullscreen_style()
+    }
+}
+
+pub fn centered() -> NodeBundle {
+    NodeBundle {
+        style: centered_style(),
+        ..default()
+    }
+}
+
+pub fn hsizer() -> NodeBundle {
+    NodeBundle {
+        style: Style {
+            flex_direction: FlexDirection::Row,
+            align_items: AlignItems::Center,
+            ..default()
+        },
+        ..default()
+    }
+}
+
+pub fn vsizer() -> NodeBundle {
+    NodeBundle {
+        style: Style {
+            flex_direction: FlexDirection::Column,
+            align_items: AlignItems::Center,
+            ..default()
+        },
+        ..default()
+    }
 }

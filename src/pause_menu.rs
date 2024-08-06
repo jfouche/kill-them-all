@@ -1,25 +1,24 @@
-use crate::prelude::*;
+use crate::{prelude::*, ui::spawn_popup};
 use std::fmt::Display;
 
 pub struct PausePlugin;
 
 impl Plugin for PausePlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(switch_game_state)
-            .add_system_set(
-                SystemSet::on_enter(GameState::GamePaused).with_system(spawn_pause_menu),
-            )
-            .add_system_set(
-                SystemSet::on_exit(GameState::GamePaused).with_system(despawn_pause_menu),
-            )
-            .add_system_set(
-                SystemSet::on_update(GameState::GamePaused)
-                    .with_system(update_skill::<LifeText>)
-                    .with_system(update_skill::<MovementSpeedText>)
-                    .with_system(update_skill::<AttackSpeedText>)
-                    .with_system(update_skill::<WeaponText>)
-                    .with_system(update_skill::<MoneyText>)
-                    .with_system(update_skill::<ExperienceText>),
+        app.add_systems(Update, switch_game_state)
+            .add_systems(OnEnter(GameState::GamePaused), spawn_pause_menu)
+            .add_systems(OnExit(GameState::GamePaused), despawn_pause_menu)
+            .add_systems(
+                Update,
+                (
+                    update_skill::<LifeText>,
+                    update_skill::<MovementSpeedText>,
+                    update_skill::<AttackSpeedText>,
+                    update_skill::<WeaponText>,
+                    update_skill::<MoneyText>,
+                    update_skill::<ExperienceText>,
+                )
+                    .run_if(in_state(GameState::GamePaused)),
             );
     }
 }
@@ -84,61 +83,29 @@ impl Skill for ExperienceText {
     type SkillComponent = Experience;
 }
 
-fn switch_game_state(mut state: ResMut<State<GameState>>, keyboard_input: Res<Input<KeyCode>>) {
-    if keyboard_input.just_pressed(KeyCode::Escape) {
-        match state.current() {
-            GameState::InGame => state.set(GameState::GamePaused).unwrap(),
-            GameState::GamePaused => state.set(GameState::InGame).unwrap(),
+fn switch_game_state(
+    state: Res<State<GameState>>,
+    mut next_state: ResMut<NextState<GameState>>,
+    keys: Res<ButtonInput<KeyCode>>,
+) {
+    if keys.just_pressed(KeyCode::Escape) {
+        match **state {
+            GameState::InGame => next_state.set(GameState::GamePaused),
+            GameState::GamePaused => next_state.set(GameState::InGame),
             _ => {}
         }
     }
 }
 
-fn spawn_pause_menu(mut commands: Commands, font: Res<UiFont>) {
-    commands
-        .spawn(PauseMenu)
-        .insert(Name::new("Pause menu"))
-        .insert(NodeBundle {
-            style: Style {
-                position_type: PositionType::Absolute,
-                size: Size::new(Val::Percent(50.0), Val::Percent(50.)),
-                align_self: AlignSelf::Center,
-                position: UiRect::left(Val::Percent(25.)),
-                flex_direction: FlexDirection::Column,
-                justify_content: JustifyContent::SpaceBetween,
-                padding: UiRect::all(Val::Px(10.)),
-                ..default()
-            },
-            background_color: Color::BLUE.into(),
-            ..Default::default()
-        })
-        .with_children(|menu| {
-            spawn_title(menu, font.clone());
-            // SKILLS
-            spawn_skill(menu, font.clone(), "Life :", LifeText);
-            spawn_skill(menu, font.clone(), "Movement speed :", MovementSpeedText);
-            spawn_skill(menu, font.clone(), "Attack speed :", AttackSpeedText);
-            spawn_skill(menu, font.clone(), "Weapon :", WeaponText);
-            spawn_skill(menu, font.clone(), "Money :", MoneyText);
-            spawn_skill(menu, font.clone(), "Experience :", ExperienceText);
-        });
-}
-
-fn spawn_title(menu: &mut ChildBuilder, font: Handle<Font>) {
-    menu.spawn(
-        TextBundle::from_section(
-            "Pause",
-            TextStyle {
-                font,
-                font_size: 30.0,
-                color: Color::WHITE,
-            },
-        )
-        .with_style(Style {
-            align_self: AlignSelf::Center,
-            ..Default::default()
-        }),
-    );
+fn spawn_pause_menu(commands: Commands, font: Res<UiFont>) {
+    spawn_popup(commands, "Pause", (), |popup| {
+        spawn_skill(popup, font.clone(), "Life :", LifeText);
+        spawn_skill(popup, font.clone(), "Movement speed :", MovementSpeedText);
+        spawn_skill(popup, font.clone(), "Attack speed :", AttackSpeedText);
+        spawn_skill(popup, font.clone(), "Weapon :", WeaponText);
+        spawn_skill(popup, font.clone(), "Money :", MoneyText);
+        spawn_skill(popup, font.clone(), "Experience :", ExperienceText);
+    });
 }
 
 fn despawn_pause_menu(mut commands: Commands, query: Query<Entity, With<PauseMenu>>) {
@@ -165,7 +132,8 @@ fn spawn_skill(
                 TextSection::from_style(text_style),
             ])
             .with_style(Style {
-                size: Size::new(Val::Percent(90.0), Val::Auto),
+                width: Val::Percent(90.0),
+                height: Val::Auto,
                 margin: UiRect::all(Val::Px(5.)),
                 padding: UiRect::all(Val::Px(5.)),
                 ..default()

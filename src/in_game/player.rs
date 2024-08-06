@@ -9,19 +9,22 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(setup)
-            .add_system_set(
-                SystemSet::on_update(GameState::InGame)
-                    .with_system(player_movement)
-                    .with_system(animate_sprite)
-                    .with_system(player_fires)
-                    .with_system(on_player_hit)
-                    .with_system(player_invulnerability_finished)
-                    .with_system(increment_player_experience)
-                    .with_system(level_up),
+        app.add_systems(Startup, setup)
+            .add_systems(
+                Update,
+                (
+                    player_movement,
+                    animate_sprite,
+                    player_fires,
+                    on_player_hit,
+                    player_invulnerability_finished,
+                    increment_player_experience,
+                    level_up,
+                )
+                    .run_if(in_state(GameState::InGame)),
             )
-            .add_system_set(SystemSet::on_enter(GameState::InGame).with_system(unpause))
-            .add_system_set(SystemSet::on_exit(GameState::InGame).with_system(pause));
+            .add_systems(OnEnter(GameState::InGame), unpause)
+            .add_systems(OnExit(GameState::InGame), pause);
     }
 }
 
@@ -39,7 +42,8 @@ const PLAYER_SIZE: Vec2 = Vec2::new(1.0, 1.0);
 fn spawn_player(
     commands: &mut Commands,
     config: PlayerConfig,
-    texture_atlas_handle: Handle<TextureAtlas>,
+    texture: Handle<Image>,
+    texture_atlas_handle: Handle<TextureAtlasLayout>,
 ) {
     commands
         .spawn(Player)
@@ -51,13 +55,17 @@ fn spawn_player(
         .insert(Money(0))
         .insert(Experience::default())
         // Sprite
-        .insert(SpriteSheetBundle {
-            sprite: TextureAtlasSprite {
+        .insert(SpriteBundle {
+            texture,
+            sprite: Sprite {
                 custom_size: Some(PLAYER_SIZE),
                 ..Default::default()
             },
-            texture_atlas: texture_atlas_handle,
             transform: Transform::from_xyz(0., 0., 10.),
+            ..Default::default()
+        })
+        .insert(TextureAtlas {
+            layout: texture_atlas_handle,
             ..Default::default()
         })
         .insert(AnimationTimer::default())
@@ -76,20 +84,24 @@ fn spawn_player(
 fn setup(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+    mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
 ) {
     // load player texture_atlas
     let texture_handle = asset_server.load("characters/RedNinja/SpriteSheet.png");
-    let texture_atlas =
-        TextureAtlas::from_grid(texture_handle, Vec2::new(16.0, 16.0), 4, 7, None, None);
-    let texture_atlas_handle = texture_atlases.add(texture_atlas);
+    let texture_atlas_layout = TextureAtlasLayout::from_grid(UVec2::new(16, 16), 4, 7, None, None);
+    let texture_atlas_handle = texture_atlases.add(texture_atlas_layout);
 
     let player_config = PlayerConfig {
         life: 20,
         movement_speed: 8.,
         attack_speed: 1.,
     };
-    spawn_player(&mut commands, player_config, texture_atlas_handle);
+    spawn_player(
+        &mut commands,
+        player_config,
+        texture_handle,
+        texture_atlas_handle,
+    );
 }
 
 ///
@@ -112,21 +124,21 @@ fn unpause(mut query: Query<(&mut Invulnerable, &mut Blink), With<Player>>) {
 /// Manage the keyboard to move the player
 ///
 fn player_movement(
-    keyboard_input: Res<Input<KeyCode>>,
+    keys: Res<ButtonInput<KeyCode>>,
     mut players: Query<(&MovementSpeed, &mut Velocity), With<Player>>,
 ) {
-    for (speed, mut velocity) in players.iter_mut() {
+    if let Ok((speed, mut velocity)) = players.get_single_mut() {
         let mut linvel = Vec2::default();
-        if keyboard_input.any_pressed([KeyCode::Left, KeyCode::Numpad4]) {
+        if keys.any_pressed([KeyCode::ArrowLeft, KeyCode::Numpad4]) {
             linvel.x = -1.0;
         }
-        if keyboard_input.any_pressed([KeyCode::Right, KeyCode::Numpad6]) {
+        if keys.any_pressed([KeyCode::ArrowRight, KeyCode::Numpad6]) {
             linvel.x = 1.0;
         }
-        if keyboard_input.any_pressed([KeyCode::Up, KeyCode::Numpad8]) {
+        if keys.any_pressed([KeyCode::ArrowUp, KeyCode::Numpad8]) {
             linvel.y = 1.0;
         }
-        if keyboard_input.any_pressed([KeyCode::Down, KeyCode::Numpad2]) {
+        if keys.any_pressed([KeyCode::ArrowDown, KeyCode::Numpad2]) {
             linvel.y = -1.0;
         }
         velocity.linvel = linvel.normalize_or_zero().mul(speed.value());
@@ -178,7 +190,7 @@ fn on_player_hit(
     mut send_death: EventWriter<PlayerDeathEvent>,
 ) {
     if let Ok((mut life, mut collision_groups)) = q_player.get_single_mut() {
-        for event in player_hit_events.iter() {
+        for event in player_hit_events.read() {
             warn!("on_player_hit");
             life.hit(1);
             if life.is_dead() {
@@ -205,15 +217,15 @@ fn on_player_hit(
 ///
 fn animate_sprite(
     time: Res<Time>,
-    mut q_player: Query<(&Velocity, &mut AnimationTimer, &mut TextureAtlasSprite), With<Player>>,
+    mut q_player: Query<(&Velocity, &mut AnimationTimer, &mut TextureAtlas), With<Player>>,
 ) {
-    if let Ok((&velocity, mut timer, mut sprite)) = q_player.get_single_mut() {
+    if let Ok((&velocity, mut timer, mut atlas)) = q_player.get_single_mut() {
         timer.tick(time.delta());
         if timer.just_finished() {
-            sprite.index = if velocity == Velocity::zero() {
+            atlas.index = if velocity == Velocity::zero() {
                 0
             } else {
-                match sprite.index {
+                match atlas.index {
                     4 => 8,
                     8 => 12,
                     12 => 16,
@@ -230,15 +242,13 @@ fn animate_sprite(
 ///
 fn player_invulnerability_finished(
     mut commands: Commands,
-    mut q_player: Query<Entity, With<Player>>,
-    entities: RemovedComponents<Invulnerable>,
+    q_player: Query<(), With<Player>>,
+    mut entities: RemovedComponents<Invulnerable>,
 ) {
-    if let Ok(player_entity) = q_player.get_single_mut() {
-        for entity in entities.iter() {
-            if player_entity == entity {
-                warn!("player_invulnerability_finished");
-                commands.entity(player_entity).remove::<Blink>();
-            }
+    for entity in entities.read() {
+        if let Ok(_) = q_player.get(entity) {
+            info!("player_invulnerability_finished");
+            commands.entity(entity).remove::<Blink>();
         }
     }
 }
@@ -252,7 +262,7 @@ fn increment_player_experience(
     mut level_up_sender: EventWriter<LevelUpEvent>,
 ) {
     if let Ok(mut experience) = q_player.get_single_mut() {
-        for _ in monster_death_reader.iter() {
+        for _ in monster_death_reader.read() {
             warn!("increment_player_experience");
             let level_before = experience.level();
             experience.add(1);
@@ -269,7 +279,7 @@ fn level_up(
     mut level_up_rcv: EventReader<LevelUpEvent>,
 ) {
     if let Ok(mut life) = q_player.get_single_mut() {
-        for _ in level_up_rcv.iter() {
+        for _ in level_up_rcv.read() {
             warn!("level_up");
             // Regen life
             let max_life = life.max_life();

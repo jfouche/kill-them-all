@@ -4,8 +4,9 @@ pub struct RoundPlugin;
 
 impl Plugin for RoundPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_set(
-            SystemSet::on_update(GameState::InGame).with_system(round_duration_timer),
+        app.add_systems(
+            Update,
+            round_duration_timer.run_if(in_state(GameState::InGame)),
         );
     }
 }

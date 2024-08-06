@@ -4,7 +4,7 @@ pub struct WorldPlugin;
 
 impl Plugin for WorldPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(init_world);
+        app.add_systems(Startup, init_world);
     }
 }
 
@@ -15,7 +15,6 @@ const BORDER: f32 = 1.0;
 
 #[derive(Bundle)]
 struct WorldBundle {
-    #[bundle]
     sprite: SpriteBundle,
 }
 
@@ -25,7 +24,7 @@ impl WorldBundle {
             sprite: SpriteBundle {
                 sprite: Sprite {
                     custom_size: Some(Vec2::new(WORLD_WIDTH, WORLD_HEIGH)),
-                    color: Color::rgb(0.6, 0.6, 0.6),
+                    color: Color::srgb(0.6, 0.6, 0.6),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -36,7 +35,6 @@ impl WorldBundle {
 
 #[derive(Bundle)]
 struct Border {
-    #[bundle]
     sprite: SpriteBundle,
     collider: Collider,
 }
@@ -108,7 +106,7 @@ fn init_world(mut commands: Commands) {
     commands
         .spawn(WorldBundle::default())
         .insert(Name::new("World"))
-        .add_children(|builder| {
+        .with_children(|builder| {
             builder.spawn(Border::top());
             builder.spawn(Border::right());
             builder.spawn(Border::bottom());

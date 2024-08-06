@@ -5,11 +5,14 @@ pub struct CollisionsPlugin;
 
 impl Plugin for CollisionsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_set(
-            SystemSet::on_update(GameState::InGame)
-                .with_system(monster_hit_by_bullet)
-                .with_system(player_touched_by_monster)
-                .with_system(player_hits_bonus),
+        app.add_systems(
+            Update,
+            (
+                monster_hit_by_bullet,
+                player_touched_by_monster,
+                player_hits_bonus,
+            )
+                .run_if(in_state(GameState::InGame)),
         );
     }
 }
@@ -32,7 +35,7 @@ fn monster_hit_by_bullet(
     let mut monster_hit = HashMap::new();
     let mut bullet_hit = HashSet::new();
     collisions
-        .iter()
+        .read()
         .filter_map(|e| match e {
             CollisionEvent::Started(e1, e2, _) => Some((e1, e2)),
             _ => None,
@@ -67,7 +70,7 @@ fn player_touched_by_monster(
     mut player_hit_events: EventWriter<PlayerHitEvent>,
 ) {
     collisions
-        .iter()
+        .read()
         .filter_map(|e| match e {
             CollisionEvent::Started(e1, e2, _) => Some((e1, e2)),
             _ => None,
@@ -95,7 +98,7 @@ fn player_hits_bonus(
 ) {
     if let Ok((player, mut money)) = q_player.get_single_mut() {
         collisions
-            .iter()
+            .read()
             .filter_map(|e| match e {
                 CollisionEvent::Started(e1, e2, _) => Some((e1, e2)),
                 _ => None,

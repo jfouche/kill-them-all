@@ -1,61 +1,62 @@
+use bevy::color::palettes::css::{BLUE, DARK_GRAY, GRAY, ORANGE_RED};
+
 use crate::prelude::*;
-use bevy_ui_navigation::prelude::*;
 
 pub struct LevelUpMenuPlugin;
 
 impl Plugin for LevelUpMenuPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(enter_level_up_state)
-            .add_system_set(
-                SystemSet::on_enter(GameState::LevelUp).with_system(spawn_level_up_menu),
+        app.add_systems(Update, enter_level_up_state)
+            .add_systems(OnEnter(GameState::LevelUp), spawn_level_up_menu)
+            .add_systems(OnExit(GameState::LevelUp), despawn_level_up_menu)
+            .add_systems(Update, back_to_game.run_if(in_state(GameState::LevelUp)))
+            .add_systems(
+                Update,
+                (
+                    upgrade_skill::<MaxLifeButton>,
+                    // handle_nav_events::<MaxLifeButton>,
+                    upgrade_skill::<MovementSpeedButton>,
+                    // handle_nav_events::<MovementSpeedButton>,
+                    upgrade_skill::<AttackSpeedButton>,
+                    // handle_nav_events::<AttackSpeedButton>,
+                )
+                    .run_if(in_state(GameState::InGame)),
             )
-            .add_system_set(
-                SystemSet::on_exit(GameState::LevelUp).with_system(despawn_level_up_menu),
-            )
-            .add_system_set(
-                SystemSet::on_update(GameState::LevelUp)
-                    .with_system(back_to_game)
-                    .with_system(upgrade_skill::<MaxLifeButton>)
-                    .with_system(handle_nav_events::<MaxLifeButton>)
-                    .with_system(upgrade_skill::<MovementSpeedButton>)
-                    .with_system(handle_nav_events::<MovementSpeedButton>)
-                    .with_system(upgrade_skill::<AttackSpeedButton>)
-                    .with_system(handle_nav_events::<AttackSpeedButton>),
-            )
-            .add_system(button_system)
-            .add_system(print_nav_events);
+            // .add_systems(Update, (button_system, print_nav_events))
+            ;
     }
 }
 
 fn enter_level_up_state(
     mut level_up_rcv: EventReader<LevelUpEvent>,
-    mut state: ResMut<State<GameState>>,
+    state: Res<State<GameState>>,
+    mut next_state: ResMut<NextState<GameState>>,
 ) {
-    for _ in level_up_rcv.iter() {
+    for _ in level_up_rcv.read() {
         warn!("enter_level_up_state");
-        if state.current() == &GameState::InGame {
-            state.set(GameState::LevelUp).unwrap();
+        if **state == GameState::InGame {
+            next_state.set(GameState::LevelUp);
         }
     }
 }
 
-fn button_system(
-    mut interaction_query: Query<(&Focusable, &mut BackgroundColor), Changed<Focusable>>,
-) {
-    for (focusable, mut material) in interaction_query.iter_mut() {
-        if let FocusState::Focused = focusable.state() {
-            *material = Color::ORANGE_RED.into();
-        } else {
-            *material = Color::DARK_GRAY.into();
-        }
-    }
-}
+// fn button_system(
+//     mut interaction_query: Query<(&Focusable, &mut BackgroundColor), Changed<Focusable>>,
+// ) {
+//     for (focusable, mut material) in interaction_query.iter_mut() {
+//         if let FocusState::Focused = focusable.state() {
+//             *material = ORANGE_RED.into();
+//         } else {
+//             *material = DARK_GRAY.into();
+//         }
+//     }
+// }
 
-fn print_nav_events(mut events: EventReader<NavEvent>) {
-    for event in events.iter() {
-        println!("{:?}", event);
-    }
-}
+// fn print_nav_events(mut events: EventReader<NavEvent>) {
+//     for event in events.read() {
+//         println!("{:?}", event);
+//     }
+// }
 
 #[derive(Component)]
 struct LevelUpMenu;
@@ -111,14 +112,15 @@ fn spawn_level_up_menu(mut commands: Commands, font: Res<UiFont>) {
         .insert(NodeBundle {
             style: Style {
                 position_type: PositionType::Absolute,
-                size: Size::new(Val::Percent(50.0), Val::Percent(50.)),
+                width: Val::Percent(50.0),
+                height: Val::Percent(50.),
                 align_self: AlignSelf::Center,
-                position: UiRect::left(Val::Percent(25.)),
+                left: Val::Percent(25.),
                 flex_direction: FlexDirection::Column,
                 justify_content: JustifyContent::SpaceBetween,
                 ..default()
             },
-            background_color: Color::BLUE.into(),
+            background_color: BLUE.into(),
             ..Default::default()
         })
         .with_children(|window| {
@@ -136,9 +138,9 @@ fn despawn_level_up_menu(mut commands: Commands, query: Query<Entity, With<Level
     }
 }
 
-fn back_to_game(mut state: ResMut<State<GameState>>, keyboard_input: Res<Input<KeyCode>>) {
-    if keyboard_input.just_pressed(KeyCode::Escape) && state.current() == &GameState::LevelUp {
-        state.set(GameState::InGame).unwrap();
+fn back_to_game(mut state: ResMut<NextState<GameState>>, keys: Res<ButtonInput<KeyCode>>) {
+    if keys.just_pressed(KeyCode::Escape) {
+        state.set(GameState::InGame);
     }
 }
 
@@ -173,7 +175,8 @@ fn spawn_skill(
     menu.spawn(component)
         .insert(ButtonBundle {
             style: Style {
-                size: Size::new(Val::Px(150.0), Val::Px(65.0)),
+                width: Val::Px(150.0),
+                height: Val::Px(65.0),
                 // center button
                 margin: UiRect::all(Val::Auto),
                 // horizontally center child text
@@ -182,10 +185,10 @@ fn spawn_skill(
                 align_items: AlignItems::Center,
                 ..default()
             },
-            background_color: Color::GRAY.into(),
+            background_color: GRAY.into(),
             ..default()
         })
-        .insert(Focusable::default())
+        // .insert(Focusable::default())
         .with_children(|btn| {
             btn.spawn(TextBundle::from_sections([
                 TextSection::new(label, text_style.clone()),
@@ -201,28 +204,28 @@ fn spawn_skill(
 fn upgrade_skill<T: Skill + Component>(
     mut q_btn: Query<&Interaction, (Changed<Interaction>, With<T>)>,
     mut q_player: Query<&mut T::SkillComponent, With<Player>>,
-    mut state: ResMut<State<GameState>>,
+    mut state: ResMut<NextState<GameState>>,
 ) {
     if let Ok(mut skill) = q_player.get_single_mut() {
         for interaction in &mut q_btn {
-            if *interaction == Interaction::Clicked {
+            if *interaction == Interaction::Pressed {
                 T::upgrade(&mut skill);
-                state.set(GameState::InGame).unwrap();
+                state.set(GameState::InGame);
             }
         }
     }
 }
 
-fn handle_nav_events<T: Skill + Component>(
-    q_btn: Query<(), With<T>>,
-    mut events: EventReader<NavEvent>,
-    mut q_player: Query<&mut T::SkillComponent, With<Player>>,
-    mut state: ResMut<State<GameState>>,
-) {
-    if let Ok(mut skill) = q_player.get_single_mut() {
-        for _ in events.nav_iter().activated_in_query(&q_btn) {
-            T::upgrade(&mut skill);
-            state.set(GameState::InGame).unwrap();
-        }
-    }
-}
+// fn handle_nav_events<T: Skill + Component>(
+//     q_btn: Query<(), With<T>>,
+//     mut events: EventReader<NavEvent>,
+//     mut q_player: Query<&mut T::SkillComponent, With<Player>>,
+//     mut state: ResMut<State<GameState>>,
+// ) {
+//     if let Ok(mut skill) = q_player.get_single_mut() {
+//         for _ in events.nav_iter().activated_in_query(&q_btn) {
+//             T::upgrade(&mut skill);
+//             state.set(GameState::InGame).unwrap();
+//         }
+//     }
+// }

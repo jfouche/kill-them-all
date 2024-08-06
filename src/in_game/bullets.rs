@@ -1,3 +1,5 @@
+use bevy::color::palettes::css::YELLOW;
+
 use crate::prelude::*;
 use std::f32::consts::SQRT_2;
 
@@ -52,7 +54,7 @@ pub fn spawn_bullet_at(
         // Sprite
         .insert(SpriteBundle {
             sprite: Sprite {
-                color: Color::YELLOW,
+                color: YELLOW.into(),
                 custom_size: Some(Vec2::new(size, size)),
                 ..Default::default()
             },

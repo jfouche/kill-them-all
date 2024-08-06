@@ -6,7 +6,8 @@ pub struct BonusPlugin;
 
 impl Plugin for BonusPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(load_asset).add_system(spawn_bonus);
+        app.add_systems(Startup, load_asset)
+            .add_systems(Update, spawn_bonus);
     }
 }
 
@@ -24,13 +25,12 @@ fn spawn_bonus(
     textures: Res<GameTextures>,
 ) {
     let mut rng = thread_rng();
-    for event in monster_death_events.iter() {
+    for event in monster_death_events.read() {
         if rng.gen_range(0..100) < 20 {
-            commands
-                .spawn(Bonus)
-                .insert(Name::new("Bonus"))
-                // sprite
-                .insert(SpriteBundle {
+            commands.spawn((
+                Bonus,
+                Name::new("Bonus"),
+                SpriteBundle {
                     sprite: Sprite {
                         custom_size: Some(BONUS_SIZE),
                         ..Default::default()
@@ -38,11 +38,11 @@ fn spawn_bonus(
                     texture: textures.money.clone(),
                     transform: Transform::from_translation(event.pos),
                     ..Default::default()
-                })
-                // rapier
-                .insert(RigidBody::Fixed)
-                .insert(Collider::cuboid(BONUS_SIZE.x / 2.0, BONUS_SIZE.y / 2.0))
-                .insert(CollisionGroups::new(GROUP_BONUS, Group::ALL));
+                },
+                RigidBody::Fixed,
+                Collider::cuboid(BONUS_SIZE.x / 2.0, BONUS_SIZE.y / 2.0),
+                CollisionGroups::new(GROUP_BONUS, Group::ALL),
+            ));
         }
     }
 }

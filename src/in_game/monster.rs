@@ -9,42 +9,47 @@ pub struct MonsterPlugin;
 
 impl Plugin for MonsterPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(load_assets)
-            .add_startup_system(init_monster_spawning)
-            .add_system_set(
-                SystemSet::on_update(GameState::InGame)
-                    .with_system(monster_spawning_timer)
-                    .with_system(spawn_monsters)
-                    .with_system(monsters_moves)
-                    .with_system(on_monster_hit)
-                    .with_system(animate_sprite)
-                    .with_system(increment_score),
+        app.add_systems(Startup, (load_assets, init_monster_spawning))
+            .add_systems(
+                Update,
+                (
+                    monster_spawning_timer,
+                    spawn_monsters,
+                    monsters_moves,
+                    on_monster_hit,
+                    animate_sprite,
+                    increment_score,
+                )
+                    .run_if(in_state(GameState::InGame)),
             );
     }
 }
 
 fn load_assets(
     asset_server: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+    mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
     mut textures: ResMut<GameTextures>,
 ) {
     // Monster kind 1
     let texture_handle = asset_server.load("characters/Cyclope/SpriteSheet.png");
-    let texture_atlas =
-        TextureAtlas::from_grid(texture_handle, Vec2::new(16.0, 16.0), 4, 4, None, None);
-    textures.monsters.push(texture_atlases.add(texture_atlas));
+    let texture_atlas_layout = TextureAtlasLayout::from_grid(UVec2::new(16, 16), 4, 4, None, None);
+    textures
+        .monsters
+        .push((texture_handle, texture_atlases.add(texture_atlas_layout)));
 
     // Monster kind 2
     let texture_handle = asset_server.load("characters/Skull/SpriteSheet.png");
-    let texture_atlas =
-        TextureAtlas::from_grid(texture_handle, Vec2::new(16.0, 16.0), 4, 4, None, None);
-    textures.monsters.push(texture_atlases.add(texture_atlas));
+    let texture_atlas_layout = TextureAtlasLayout::from_grid(UVec2::new(16, 16), 4, 4, None, None);
+    textures
+        .monsters
+        .push((texture_handle, texture_atlases.add(texture_atlas_layout)));
 
     // Monster kind 3
     let texture_handle = asset_server.load("characters/DragonYellow/SpriteSheet.png");
-    let texture_atlas =
-        TextureAtlas::from_grid(texture_handle, Vec2::new(16.0, 16.0), 4, 4, None, None);
-    textures.monsters.push(texture_atlases.add(texture_atlas));
+    let texture_atlas_layout = TextureAtlasLayout::from_grid(UVec2::new(16, 16), 4, 4, None, None);
+    textures
+        .monsters
+        .push((texture_handle, texture_atlases.add(texture_atlas_layout)));
 }
 
 const KIND_COUNT: usize = 3;
@@ -101,7 +106,8 @@ impl MonsterSpawnParams {
 fn spawn_monster(
     commands: &mut Commands,
     params: &MonsterSpawnParams,
-    atlas: Handle<TextureAtlas>,
+    texture: Handle<Image>,
+    atlas: Handle<TextureAtlasLayout>,
 ) {
     let size = params.size();
     commands
@@ -110,13 +116,17 @@ fn spawn_monster(
         .insert(MovementSpeed::new(5.0))
         .insert(Life::new(params.life()))
         // Sprite
-        .insert(SpriteSheetBundle {
-            sprite: TextureAtlasSprite {
+        .insert(SpriteBundle {
+            texture,
+            sprite: Sprite {
                 custom_size: Some(size),
                 ..Default::default()
             },
-            texture_atlas: atlas,
             transform: Transform::from_xyz(params.pos.x, params.pos.y, 10.),
+            ..Default::default()
+        })
+        .insert(TextureAtlas {
+            layout: atlas,
             ..Default::default()
         })
         .insert(AnimationTimer::default())
@@ -134,7 +144,7 @@ fn spawn_monster_futur_pos(commands: &mut Commands, params: MonsterSpawnParams) 
         .insert(Name::new("Spawning monster"))
         .insert(SpriteBundle {
             sprite: Sprite {
-                color: Color::rgba(0.8, 0.3, 0.3, 0.2),
+                color: Color::srgba(0.8, 0.3, 0.3, 0.2),
                 custom_size: Some(params.size()),
                 ..Default::default()
             },
@@ -208,14 +218,16 @@ fn spawn_monsters(
         config.timer.tick(time.delta());
         if config.timer.finished() {
             commands.entity(entity).despawn();
+            let (texture, atlas) = textures
+                .monsters
+                .get(config.params.kind)
+                .expect("Monster type out of range !");
+
             spawn_monster(
                 &mut commands,
                 &config.params,
-                textures
-                    .monsters
-                    .get(config.params.kind)
-                    .expect("Monster type out of range !")
-                    .clone(),
+                texture.clone(),
+                atlas.clone(),
             );
         }
     }
@@ -245,20 +257,18 @@ fn monsters_moves(
 ///
 fn on_monster_hit(
     mut monster_hit_events: EventReader<MonsterHitEvent>,
-    mut q_monsters: Query<(Entity, &mut Life, &Transform), With<Monster>>,
+    mut q_monsters: Query<(&mut Life, &Transform), With<Monster>>,
     mut monster_death_events: EventWriter<MonsterDeathEvent>,
 ) {
-    for event in monster_hit_events.iter() {
+    for event in monster_hit_events.read() {
         warn!("on_monster_hit");
-        for (entity, mut life, transform) in q_monsters.iter_mut() {
-            if entity == event.entity {
-                life.hit(event.damage);
-                if life.is_dead() {
-                    monster_death_events.send(MonsterDeathEvent {
-                        entity,
-                        pos: transform.translation,
-                    })
-                }
+        if let Ok((mut life, transform)) = q_monsters.get_mut(event.entity) {
+            life.hit(event.damage);
+            if life.is_dead() {
+                monster_death_events.send(MonsterDeathEvent {
+                    entity: event.entity,
+                    pos: transform.translation,
+                });
             }
         }
     }
@@ -272,7 +282,7 @@ fn increment_score(
     mut monster_hit_events: EventReader<MonsterDeathEvent>,
     mut score: ResMut<ScoreResource>,
 ) {
-    for event in monster_hit_events.iter() {
+    for event in monster_hit_events.read() {
         warn!("increment_score");
         // TODO: ("split in 2 systems");
         commands.entity(event.entity).despawn();
@@ -285,15 +295,15 @@ fn increment_score(
 ///
 fn animate_sprite(
     time: Res<Time>,
-    mut q_monster: Query<(&Velocity, &mut AnimationTimer, &mut TextureAtlasSprite), With<Monster>>,
+    mut q_monster: Query<(&Velocity, &mut AnimationTimer, &mut TextureAtlas), With<Monster>>,
 ) {
-    for (&velocity, mut timer, mut sprite) in q_monster.iter_mut() {
+    for (&velocity, mut timer, mut atlas) in q_monster.iter_mut() {
         timer.tick(time.delta());
         if timer.just_finished() {
-            sprite.index = if velocity == Velocity::zero() {
+            atlas.index = if velocity == Velocity::zero() {
                 0
             } else {
-                match sprite.index {
+                match atlas.index {
                     0 => 4,
                     4 => 8,
                     8 => 12,
