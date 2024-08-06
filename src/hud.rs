@@ -1,9 +1,27 @@
 use crate::prelude::*;
 use crate::ui::ProgressBar;
-use bevy::color::palettes::css::{GOLD, GRAY, RED};
+use bevy::color::palettes::css::{GOLD, RED};
 
-#[derive(Component)]
-struct TopMenu;
+pub struct TopMenuPlugin;
+
+impl Plugin for TopMenuPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(
+            Startup,
+            (spawn_life_bar, spawn_xp_bar, spawn_round, spawn_score),
+        )
+        .add_systems(
+            Update,
+            (
+                update_score,
+                update_round,
+                update_life_bar,
+                update_xp_bar,
+                update_life_bar_on_death,
+            ),
+        );
+    }
+}
 
 #[derive(Component)]
 struct ScoreText;
@@ -12,125 +30,79 @@ struct ScoreText;
 struct RoundText;
 
 #[derive(Component)]
-struct LifeText;
-
-#[derive(Component)]
 struct LifeBar;
 
 #[derive(Component)]
 struct ExperienceBar;
 
-// impl Percent for Life {
-//     fn percent(&self) -> f32 {
-//         100.0 * self.life() as f32 / self.max_life() as f32
-//     }
-// }
-
-// impl Percent for Experience {
-//     fn percent(&self) -> f32 {
-//         let (min, max) = self.get_current_level_min_max_exp();
-//         100.0 * (self.current() - min) as f32 / (max - min) as f32
-//     }
-// }
-
-pub struct TopMenuPlugin;
-
-impl Plugin for TopMenuPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_systems(Startup, spawn_top_menu).add_systems(
-            Update,
-            (
-                update_score,
-                update_round,
-                update_life_bar,
-                update_xp_bar,
-                update_life_on_death,
-                update_life_bar_on_death,
-            ),
-        );
-    }
-}
-
-fn spawn_top_menu(mut commands: Commands, font: Res<UiFont>) {
-    commands
-        .spawn(NodeBundle {
+fn spawn_life_bar(mut commands: Commands) {
+    commands.spawn((
+        LifeBar,
+        Name::new("HUD - LifeBar"),
+        NodeBundle {
             style: Style {
-                width: Val::Percent(100.0),
+                position_type: PositionType::Absolute,
+                left: Val::Px(50.),
+                top: Val::Px(20.),
+                width: Val::Px(200.),
                 height: Val::Px(30.),
-                justify_content: JustifyContent::SpaceBetween,
-                ..default()
-            },
-            background_color: GRAY.into(),
-            ..Default::default()
-        })
-        .insert(TopMenu)
-        .insert(Name::new("Top menu"))
-        .with_children(|top_menu| {
-            spawn_life_bar(top_menu);
-            spawn_xp_bar(top_menu);
-            spawn_round(top_menu, font.clone());
-            spawn_score(top_menu, font.clone());
-        });
-}
-
-fn spawn_life_bar(parent: &mut ChildBuilder) {
-    parent
-        .spawn(LifeBar)
-        .insert(Name::new("Life bar"))
-        .insert(NodeBundle {
-            style: Style {
-                width: Val::Px(600.0),
-                height: Val::Px(20.0),
                 ..Default::default()
             },
             ..Default::default()
-        })
-        .insert(ProgressBar::new(0.0, 100.0, 60.0).with_colors(Color::BLACK, RED.into()));
+        },
+        ProgressBar::new(0.0, 100.0, 60.0).with_colors(Color::BLACK, RED.into()),
+    ));
 }
 
-fn spawn_xp_bar(parent: &mut ChildBuilder) {
-    parent
-        .spawn(ExperienceBar)
-        .insert(Name::new("Xp bar"))
-        .insert(NodeBundle {
+fn spawn_xp_bar(mut commands: Commands) {
+    commands.spawn((
+        ExperienceBar,
+        Name::new("HUD - ExperienceBar"),
+        NodeBundle {
             style: Style {
-                width: Val::Px(600.0),
-                height: Val::Px(20.0),
+                position_type: PositionType::Absolute,
+                right: Val::Px(50.),
+                top: Val::Px(20.),
+                width: Val::Px(200.),
+                height: Val::Px(30.),
                 ..Default::default()
             },
             ..Default::default()
-        })
-        .insert(ProgressBar::new(0.0, 100.0, 0.0).with_colors(Color::BLACK, GOLD.into()));
+        },
+        ProgressBar::new(0.0, 100.0, 0.0).with_colors(Color::BLACK, GOLD.into()),
+    ));
 }
 
-fn spawn_round(parent: &mut ChildBuilder, font: Handle<Font>) {
+fn spawn_round(mut commands: Commands, font: Res<UiFont>) {
     let text_style = TextStyle {
-        font,
+        font: font.clone(),
         font_size: 20.0,
         color: Color::WHITE,
     };
-    parent
-        .spawn(RoundText)
-        .insert(Name::new("Round"))
-        .insert(TextBundle::from_sections([
+    commands.spawn((
+        RoundText,
+        Name::new("HUD - Round"),
+        TextBundle::from_sections([
             TextSection::new("Round: ", text_style.clone()),
             TextSection::from_style(text_style),
-        ]));
+        ]),
+    ));
 }
 
-fn spawn_score(parent: &mut ChildBuilder, font: Handle<Font>) {
+fn spawn_score(mut commands: Commands, font: Res<UiFont>) {
     let text_style = TextStyle {
-        font,
+        font: font.clone(),
         font_size: 20.0,
         color: Color::WHITE,
     };
-    parent
-        .spawn(ScoreText)
-        .insert(Name::new("Score"))
-        .insert(TextBundle::from_sections([
+    commands.spawn((
+        ScoreText,
+        Name::new("HUD - Score"),
+        TextBundle::from_sections([
             TextSection::new("Score: ", text_style.clone()),
             TextSection::from_style(text_style),
-        ]));
+        ]),
+    ));
 }
 
 fn update_score(score: Res<ScoreResource>, mut q_text: Query<&mut Text, With<ScoreText>>) {
@@ -166,17 +138,6 @@ fn update_xp_bar(
             let (min, max) = xp.get_current_level_min_max_exp();
             progressbar.set_range(min as f32, max as f32);
             progressbar.set_value(xp.current() as f32);
-        }
-    }
-}
-
-fn update_life_on_death(
-    mut player_death_events: EventReader<PlayerDeathEvent>,
-    mut q_text: Query<&mut Text, With<LifeText>>,
-) {
-    if let Ok(mut text) = q_text.get_single_mut() {
-        for _ in player_death_events.read() {
-            text.sections[1].value = "0".to_string();
         }
     }
 }
