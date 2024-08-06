@@ -20,7 +20,7 @@ pub fn button_bundle() -> ButtonBundle {
 #[inline]
 pub fn button_style() -> Style {
     Style {
-        width: Val::Px(160.0),
+        width: Val::Px(180.0),
         height: Val::Px(50.0),
         margin: UiRect::all(Val::Px(10.0)),
         justify_content: JustifyContent::Center,
@@ -33,18 +33,18 @@ pub fn button_style() -> Style {
 #[inline]
 pub fn button_text_style() -> TextStyle {
     TextStyle {
-        font_size: 24.0,
+        font_size: 20.0,
         color: BUTTON_TEXT_COLOR,
         ..default()
     }
 }
 
 #[inline]
-pub fn button_text(text: &str) -> TextBundle {
+pub fn button_text(text: impl Into<String>) -> TextBundle {
     TextBundle::from_section(text, button_text_style())
 }
 
-pub fn spawn_button(commands: &mut ChildBuilder, label: &str, bundle: impl Bundle) {
+pub fn spawn_button(commands: &mut ChildBuilder, label: impl Into<String>, bundle: impl Bundle) {
     commands
         .spawn((button_bundle(), bundle))
         .with_children(|parent| {
@@ -92,4 +92,8 @@ pub fn setting_button<T: Resource + Component + PartialEq + Copy>(
             *setting = *button_setting;
         }
     }
+}
+
+pub fn button_plugin(app: &mut App) {
+    app.add_systems(Update, button_system);
 }

@@ -78,9 +78,6 @@ fn spawn_player(
         .insert(Velocity::default());
 }
 
-///
-///  
-///
 fn setup(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
@@ -104,7 +101,6 @@ fn setup(
     );
 }
 
-///
 fn pause(mut query: Query<(&mut Invulnerable, &mut Blink), With<Player>>) {
     if let Ok((mut invulnerable, mut blink)) = query.get_single_mut() {
         invulnerable.pause(true);
@@ -112,7 +108,6 @@ fn pause(mut query: Query<(&mut Invulnerable, &mut Blink), With<Player>>) {
     }
 }
 
-///
 fn unpause(mut query: Query<(&mut Invulnerable, &mut Blink), With<Player>>) {
     if let Ok((mut invulnerable, mut blink)) = query.get_single_mut() {
         invulnerable.pause(false);
@@ -237,16 +232,13 @@ fn animate_sprite(
     }
 }
 
-///
-///
-///
 fn player_invulnerability_finished(
     mut commands: Commands,
     q_player: Query<(), With<Player>>,
     mut entities: RemovedComponents<Invulnerable>,
 ) {
     for entity in entities.read() {
-        if let Ok(_) = q_player.get(entity) {
+        if q_player.get(entity).is_ok() {
             info!("player_invulnerability_finished");
             commands.entity(entity).remove::<Blink>();
         }

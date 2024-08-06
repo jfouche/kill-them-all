@@ -7,7 +7,7 @@ impl Plugin for PausePlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Update, switch_game_state)
             .add_systems(OnEnter(GameState::GamePaused), spawn_pause_menu)
-            .add_systems(OnExit(GameState::GamePaused), despawn_pause_menu)
+            .add_systems(OnExit(GameState::GamePaused), despawn_all::<PauseMenu>)
             .add_systems(
                 Update,
                 (
@@ -98,7 +98,7 @@ fn switch_game_state(
 }
 
 fn spawn_pause_menu(commands: Commands, font: Res<UiFont>) {
-    spawn_popup(commands, "Pause", (), |popup| {
+    spawn_popup(commands, "Pause", PauseMenu, |popup| {
         spawn_skill(popup, font.clone(), "Life :", LifeText);
         spawn_skill(popup, font.clone(), "Movement speed :", MovementSpeedText);
         spawn_skill(popup, font.clone(), "Attack speed :", AttackSpeedText);
@@ -106,12 +106,6 @@ fn spawn_pause_menu(commands: Commands, font: Res<UiFont>) {
         spawn_skill(popup, font.clone(), "Money :", MoneyText);
         spawn_skill(popup, font.clone(), "Experience :", ExperienceText);
     });
-}
-
-fn despawn_pause_menu(mut commands: Commands, query: Query<Entity, With<PauseMenu>>) {
-    if let Ok(entity) = query.get_single() {
-        commands.entity(entity).despawn_recursive();
-    }
 }
 
 fn spawn_skill(

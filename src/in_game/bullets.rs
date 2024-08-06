@@ -37,7 +37,7 @@ fn ellipse_pos(options: &BulletOptions) -> Vec3 {
 }
 
 ///
-///
+/// Spawn a bullet
 ///
 pub fn spawn_bullet_at(
     commands: &mut Commands,

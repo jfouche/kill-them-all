@@ -13,7 +13,9 @@ pub struct UiPlugins;
 
 impl PluginGroup for UiPlugins {
     fn build(self) -> bevy::app::PluginGroupBuilder {
-        PluginGroupBuilder::start::<Self>().add(progressbar::plugin)
+        PluginGroupBuilder::start::<Self>()
+            .add(progressbar_plugin)
+            .add(button_plugin)
     }
 }
 

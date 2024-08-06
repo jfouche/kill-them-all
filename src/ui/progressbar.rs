@@ -2,7 +2,7 @@ use std::sync::{Arc, Mutex};
 
 use bevy::prelude::*;
 
-pub fn plugin(app: &mut App) {
+pub fn progressbar_plugin(app: &mut App) {
     app.add_systems(Update, (create_progress_bars, update_progress_bars));
 }
 

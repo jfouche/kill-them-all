@@ -222,7 +222,7 @@ impl std::fmt::Display for Money {
 pub struct Experience(u32);
 
 impl Experience {
-    const LEVELS: [u32; 6] = [4, 10, 40, 100, 400, 1000];
+    const LEVELS: [u32; 6] = [2, 10, 40, 100, 400, 1000];
 
     pub fn add(&mut self, xp: u32) {
         self.0 += xp;
@@ -267,5 +267,12 @@ impl std::fmt::Display for Experience {
             self.get_current_level_min_max_exp().1,
             self.level() + 1,
         )
+    }
+}
+
+/// Generic system that takes a component as a parameter, and will despawn all entities with that component
+pub fn despawn_all<T: Component>(to_despawn: Query<Entity, With<T>>, mut commands: Commands) {
+    for entity in &to_despawn {
+        commands.entity(entity).despawn_recursive();
     }
 }
