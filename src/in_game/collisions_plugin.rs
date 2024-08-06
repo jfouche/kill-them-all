@@ -17,11 +17,6 @@ impl Plugin for CollisionsPlugin {
     }
 }
 
-pub const GROUP_PLAYER: Group = Group::GROUP_1;
-pub const GROUP_ENEMY: Group = Group::GROUP_2;
-pub const GROUP_BONUS: Group = Group::GROUP_3;
-pub const GROUP_BULLET: Group = Group::GROUP_4;
-
 ///
 /// Monster hit by a bullet
 ///

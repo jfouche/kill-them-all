@@ -1,14 +1,12 @@
-mod bonus;
-mod bullets;
-mod collisions;
-mod monster;
-mod player;
-mod round;
-mod world;
-
-use bevy::app::PluginGroupBuilder;
+mod bonus_plugin;
+mod collisions_plugin;
+mod monster_plugin;
+mod player_plugin;
+mod round_plugin;
+mod world_plugin;
 
 use crate::prelude::*;
+use bevy::app::PluginGroupBuilder;
 
 pub struct InGamePluginsGroup;
 
@@ -16,12 +14,12 @@ impl PluginGroup for InGamePluginsGroup {
     fn build(self) -> PluginGroupBuilder {
         PluginGroupBuilder::start::<Self>()
             .add(InGamePlugin)
-            .add(bonus::BonusPlugin)
-            .add(collisions::CollisionsPlugin)
-            .add(monster::MonsterPlugin)
-            .add(player::PlayerPlugin)
-            .add(round::RoundPlugin)
-            .add(world::WorldPlugin)
+            .add(bonus_plugin::BonusPlugin)
+            .add(collisions_plugin::CollisionsPlugin)
+            .add(monster_plugin::MonsterPlugin)
+            .add(player_plugin::PlayerPlugin)
+            .add(round_plugin::RoundPlugin)
+            .add(world_plugin::WorldPlugin)
     }
 }
 

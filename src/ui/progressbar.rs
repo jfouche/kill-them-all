@@ -38,6 +38,15 @@ impl ProgressBar {
             *store = value;
         }
     }
+
+    pub fn set_range(&mut self, min: f32, max: f32) {
+        if let Ok(mut store) = self.min.lock() {
+            *store = min;
+        }
+        if let Ok(mut store) = self.max.lock() {
+            *store = max;
+        }
+    }
 }
 
 #[derive(Component)]

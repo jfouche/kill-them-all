@@ -1,12 +1,12 @@
 mod components;
 mod debug;
 mod events;
+mod hud;
 mod in_game;
 mod level_up_menu;
 mod pause_menu;
 mod prelude;
 mod resources;
-mod top_menu;
 mod ui;
 mod utils;
 
@@ -37,7 +37,7 @@ fn main() {
         ))
         // Game plugins
         .add_plugins((
-            top_menu::TopMenuPlugin,
+            hud::TopMenuPlugin,
             in_game::InGamePluginsGroup,
             pause_menu::PausePlugin,
             level_up_menu::LevelUpMenuPlugin,
@@ -47,12 +47,7 @@ fn main() {
         // resources
         .init_resource::<ScoreResource>()
         .insert_resource(ClearColor(Color::srgb(0.04, 0.04, 0.04)))
-        .init_resource::<GameTextures>()
         // Events
-        .add_event::<PlayerHitEvent>()
-        .add_event::<PlayerDeathEvent>()
-        .add_event::<MonsterHitEvent>()
-        .add_event::<MonsterDeathEvent>()
         .add_event::<LevelUpEvent>()
         // startup
         .add_systems(PreStartup, load_font)

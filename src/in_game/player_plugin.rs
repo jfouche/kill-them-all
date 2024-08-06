@@ -1,5 +1,3 @@
-use crate::in_game::bullets::{spawn_bullet_at, BulletOptions};
-use crate::in_game::collisions::{GROUP_ENEMY, GROUP_PLAYER};
 use crate::prelude::invulnerable::Invulnerable;
 use crate::prelude::*;
 use std::ops::Mul;
@@ -9,12 +7,15 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup)
+        app.add_event::<PlayerHitEvent>()
+            .add_event::<PlayerDeathEvent>()
+            .add_systems(Startup, load_player_assets)
+            .add_systems(PostStartup, spawn_player)
             .add_systems(
                 Update,
                 (
                     player_movement,
-                    animate_sprite,
+                    animate_player_sprite,
                     player_fires,
                     on_player_hit,
                     player_invulnerability_finished,
@@ -37,68 +38,24 @@ impl Default for InvulnerabilityAnimationTimer {
     }
 }
 
-const PLAYER_SIZE: Vec2 = Vec2::new(1.0, 1.0);
-
-fn spawn_player(
-    commands: &mut Commands,
-    config: PlayerConfig,
-    texture: Handle<Image>,
-    texture_atlas_handle: Handle<TextureAtlasLayout>,
-) {
-    commands
-        .spawn(Player)
-        .insert(Name::new("Player"))
-        .insert(MovementSpeed::new(config.movement_speed))
-        .insert(Life::new(config.life))
-        .insert(AttackSpeed::new())
-        .insert(Weapon::new(config.attack_speed, 1, 4))
-        .insert(Money(0))
-        .insert(Experience::default())
-        // Sprite
-        .insert(SpriteBundle {
-            texture,
-            sprite: Sprite {
-                custom_size: Some(PLAYER_SIZE),
-                ..Default::default()
-            },
-            transform: Transform::from_xyz(0., 0., 10.),
-            ..Default::default()
-        })
-        .insert(TextureAtlas {
-            layout: texture_atlas_handle,
-            ..Default::default()
-        })
-        .insert(AnimationTimer::default())
-        // Rapier
-        .insert(RigidBody::Dynamic)
-        .insert(Collider::cuboid(PLAYER_SIZE.x / 2., PLAYER_SIZE.y / 2.))
-        .insert(CollisionGroups::new(GROUP_PLAYER, Group::ALL))
-        .insert(LockedAxes::ROTATION_LOCKED)
-        .insert(ActiveEvents::COLLISION_EVENTS)
-        .insert(Velocity::default());
-}
-
-fn setup(
+fn load_player_assets(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
 ) {
-    // load player texture_atlas
     let texture_handle = asset_server.load("characters/RedNinja/SpriteSheet.png");
     let texture_atlas_layout = TextureAtlasLayout::from_grid(UVec2::new(16, 16), 4, 7, None, None);
     let texture_atlas_handle = texture_atlases.add(texture_atlas_layout);
 
-    let player_config = PlayerConfig {
-        life: 20,
-        movement_speed: 8.,
-        attack_speed: 1.,
+    let player_assets = PlayerAssets {
+        texture: texture_handle,
+        texture_atlas_layout: texture_atlas_handle,
     };
-    spawn_player(
-        &mut commands,
-        player_config,
-        texture_handle,
-        texture_atlas_handle,
-    );
+    commands.insert_resource(player_assets)
+}
+
+fn spawn_player(mut commands: Commands, assets: Res<PlayerAssets>) {
+    commands.spawn(PlayerBundle::from_assets(&assets));
 }
 
 fn pause(mut query: Query<(&mut Invulnerable, &mut Blink), With<Player>>) {
@@ -165,11 +122,12 @@ fn player_fires(
                     }
                 });
             if let Some(nearest) = nearest_monster {
-                let damage = weapon.attack();
-                spawn_bullet_at(
-                    &mut commands,
-                    BulletOptions::new(player, damage, PLAYER_SIZE, nearest),
-                );
+                commands.spawn(BulletBundle::new(BulletOptions::new(
+                    player,
+                    weapon.attack(),
+                    PLAYER_SIZE,
+                    nearest,
+                )));
             }
         }
     }
@@ -210,7 +168,7 @@ fn on_player_hit(
 ///
 /// Animate the player sprite
 ///
-fn animate_sprite(
+fn animate_player_sprite(
     time: Res<Time>,
     mut q_player: Query<(&Velocity, &mut AnimationTimer, &mut TextureAtlas), With<Player>>,
 ) {
