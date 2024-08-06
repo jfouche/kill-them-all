@@ -1,6 +1,5 @@
 mod components;
 mod debug;
-mod events;
 mod hud;
 mod in_game;
 mod level_up_menu;

@@ -187,3 +187,23 @@ impl MonsterFuturePosBundle {
         }
     }
 }
+
+/// Event to notify a monster was hit
+#[derive(Event)]
+pub struct MonsterHitEvent {
+    pub entity: Entity,
+    pub damage: u16,
+}
+
+impl MonsterHitEvent {
+    pub fn new(entity: Entity, damage: u16) -> Self {
+        MonsterHitEvent { entity, damage }
+    }
+}
+
+/// Event to notify a monster died
+#[derive(Event)]
+pub struct MonsterDeathEvent {
+    pub entity: Entity,
+    pub pos: Vec3,
+}

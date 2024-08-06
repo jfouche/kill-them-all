@@ -81,3 +81,23 @@ pub struct PlayerAssets {
     pub texture: Handle<Image>,
     pub texture_atlas_layout: Handle<TextureAtlasLayout>,
 }
+
+/// Event to notify the player was hit
+#[derive(Event)]
+pub struct PlayerHitEvent {
+    pub entity: Entity,
+}
+
+impl PlayerHitEvent {
+    pub fn new(entity: Entity) -> Self {
+        PlayerHitEvent { entity }
+    }
+}
+
+/// Event to notify the player died
+#[derive(Event)]
+pub struct PlayerDeathEvent;
+
+/// Event to notify a player level up
+#[derive(Event)]
+pub struct LevelUpEvent;
