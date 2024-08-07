@@ -1,25 +1,27 @@
-use crate::{
-    prelude::*,
-    ui::{spawn_button, spawn_popup},
-};
+use crate::components::*;
+use crate::schedule::*;
+use crate::ui::{spawn_button, spawn_popup};
+use bevy::prelude::*;
+
+use super::back_to_game;
 
 pub struct LevelUpMenuPlugin;
 
 impl Plugin for LevelUpMenuPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, enter_level_up_state.run_if(in_state(GameState::InGame)))
-            .add_systems(OnEnter(GameState::LevelUp), spawn_level_up_menu)
-            .add_systems(OnExit(GameState::LevelUp), despawn_all::<LevelUpMenu>)
-            .add_systems(Update, back_to_game.run_if(in_state(GameState::LevelUp)))
+        app.add_systems(Update, enter_level_up_state.in_set(InGameSet::EntityUpdate))
+            .add_systems(OnEnter(InGameState::LevelUp), spawn_level_up_menu)
+            .add_systems(OnExit(InGameState::LevelUp), despawn_all::<LevelUpMenu>)
             .add_systems(
                 Update,
                 (
+                    back_to_game,
                     upgrade_skill::<MaxLifeButton>,
                     upgrade_skill::<MovementSpeedButton>,
                     upgrade_skill::<AttackSpeedButton>,
 
                 )
-                    .run_if(in_state(GameState::LevelUp)),
+                    .run_if(in_state(InGameState::LevelUp)),
             )
             // .add_systems(Update, (button_system, print_nav_events))
             ;
@@ -28,11 +30,11 @@ impl Plugin for LevelUpMenuPlugin {
 
 fn enter_level_up_state(
     mut level_up_rcv: EventReader<LevelUpEvent>,
-    mut next_state: ResMut<NextState<GameState>>,
+    mut next_state: ResMut<NextState<InGameState>>,
 ) {
     if level_up_rcv.read().next().is_some() {
         warn!("enter_level_up_state");
-        next_state.set(GameState::LevelUp);
+        next_state.set(InGameState::LevelUp);
     }
 }
 
@@ -82,25 +84,10 @@ impl UpgradeSkill for MovementSpeedButton {
 
 fn spawn_level_up_menu(commands: Commands) {
     spawn_popup(commands, "Level up!", LevelUpMenu, |window| {
-        spawn_skill(window, "Max life", MaxLifeButton);
-        spawn_skill(window, "Attack speed", AttackSpeedButton);
-        spawn_skill(window, "Movement speed", MovementSpeedButton);
+        spawn_button(window, "Max life", MaxLifeButton);
+        spawn_button(window, "Attack speed", AttackSpeedButton);
+        spawn_button(window, "Movement speed", MovementSpeedButton);
     });
-}
-
-fn back_to_game(mut state: ResMut<NextState<GameState>>, keys: Res<ButtonInput<KeyCode>>) {
-    if keys.just_pressed(KeyCode::Escape) {
-        state.set(GameState::InGame);
-    }
-}
-
-fn spawn_skill(
-    commands: &mut ChildBuilder,
-    // font: Handle<Font>,
-    label: impl Into<String>,
-    bundle: impl Bundle,
-) {
-    spawn_button(commands, label, bundle);
 }
 
 ///
@@ -109,13 +96,13 @@ fn spawn_skill(
 fn upgrade_skill<T: UpgradeSkill + Component>(
     mut q_btn: Query<&Interaction, (Changed<Interaction>, With<T>)>,
     mut q_player: Query<&mut T::SkillComponent, With<Player>>,
-    mut state: ResMut<NextState<GameState>>,
+    mut state: ResMut<NextState<InGameState>>,
 ) {
     if let Ok(mut skill) = q_player.get_single_mut() {
         for interaction in &mut q_btn {
             if *interaction == Interaction::Pressed {
                 T::upgrade(&mut skill);
-                state.set(GameState::InGame);
+                state.set(InGameState::Running);
             }
         }
     }

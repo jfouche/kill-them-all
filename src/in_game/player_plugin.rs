@@ -1,5 +1,9 @@
-use crate::prelude::invulnerable::Invulnerable;
-use crate::prelude::*;
+use crate::components::*;
+use crate::schedule::*;
+use crate::utils::invulnerable::Invulnerable;
+use crate::utils::Blink;
+use bevy::prelude::*;
+use bevy_rapier2d::prelude::*;
 use std::ops::Mul;
 use std::time::Duration;
 
@@ -10,22 +14,23 @@ impl Plugin for PlayerPlugin {
         app.add_event::<PlayerHitEvent>()
             .add_event::<PlayerDeathEvent>()
             .add_systems(Startup, load_player_assets)
-            .add_systems(PostStartup, spawn_player)
+            .add_systems(OnEnter(GameState::InGame), spawn_player)
+            .add_systems(OnExit(GameState::InGame), despawn_all::<Player>)
+            .add_systems(OnEnter(GameState::InGame), unpause)
+            .add_systems(OnExit(GameState::InGame), pause)
             .add_systems(
                 Update,
                 (
                     player_movement,
                     animate_player_sprite,
                     player_fires,
-                    on_player_hit,
                     player_invulnerability_finished,
                     increment_player_experience,
                     level_up,
                 )
-                    .run_if(in_state(GameState::InGame)),
+                    .in_set(InGameSet::EntityUpdate),
             )
-            .add_systems(OnEnter(GameState::InGame), unpause)
-            .add_systems(OnExit(GameState::InGame), pause);
+            .add_systems(Update, on_player_hit.in_set(InGameSet::CollisionDetection));
     }
 }
 

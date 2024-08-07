@@ -1,10 +1,13 @@
-use crate::prelude::*;
+use bevy::prelude::*;
+use bevy_rapier2d::prelude::*;
+
+use crate::schedule::GameState;
 
 pub struct WorldPlugin;
 
 impl Plugin for WorldPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, init_world);
+        app.add_systems(OnEnter(GameState::InGame), init_world);
     }
 }
 

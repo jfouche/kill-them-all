@@ -1,4 +1,6 @@
-use crate::prelude::*;
+use crate::{components::*, resources::ScoreResource, schedule::*};
+use bevy::prelude::*;
+use bevy_rapier2d::prelude::*;
 use std::ops::Mul;
 
 pub struct MonsterPlugin;
@@ -14,12 +16,12 @@ impl Plugin for MonsterPlugin {
                     monster_spawning_timer,
                     spawn_monsters,
                     monsters_moves,
-                    on_monster_hit,
                     animate_sprite,
                     increment_score,
                 )
-                    .run_if(in_state(GameState::InGame)),
-            );
+                    .in_set(InGameSet::EntityUpdate),
+            )
+            .add_systems(Update, on_monster_hit.in_set(InGameSet::CollisionDetection));
     }
 }
 

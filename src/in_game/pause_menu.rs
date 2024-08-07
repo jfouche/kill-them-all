@@ -1,16 +1,22 @@
-use crate::{prelude::*, ui::spawn_popup};
+use crate::components::*;
+use crate::resources::UiFont;
+use crate::schedule::*;
+use crate::ui::spawn_popup;
+use bevy::prelude::*;
 use std::fmt::Display;
+
+use super::back_to_game;
 
 pub struct PausePlugin;
 
 impl Plugin for PausePlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, switch_game_state)
-            .add_systems(OnEnter(GameState::GamePaused), spawn_pause_menu)
-            .add_systems(OnExit(GameState::GamePaused), despawn_all::<PauseMenu>)
+        app.add_systems(OnEnter(InGameState::Pause), spawn_pause_menu)
+            .add_systems(OnExit(InGameState::Pause), despawn_all::<PauseMenu>)
             .add_systems(
                 Update,
                 (
+                    back_to_game,
                     update_skill::<LifeText>,
                     update_skill::<MovementSpeedText>,
                     update_skill::<AttackSpeedText>,
@@ -18,7 +24,7 @@ impl Plugin for PausePlugin {
                     update_skill::<MoneyText>,
                     update_skill::<ExperienceText>,
                 )
-                    .run_if(in_state(GameState::GamePaused)),
+                    .run_if(in_state(InGameState::Pause)),
             );
     }
 }
@@ -81,20 +87,6 @@ struct ExperienceText;
 
 impl Skill for ExperienceText {
     type SkillComponent = Experience;
-}
-
-fn switch_game_state(
-    state: Res<State<GameState>>,
-    mut next_state: ResMut<NextState<GameState>>,
-    keys: Res<ButtonInput<KeyCode>>,
-) {
-    if keys.just_pressed(KeyCode::Escape) {
-        match **state {
-            GameState::InGame => next_state.set(GameState::GamePaused),
-            GameState::GamePaused => next_state.set(GameState::InGame),
-            _ => {}
-        }
-    }
 }
 
 fn spawn_pause_menu(commands: Commands, font: Res<UiFont>) {

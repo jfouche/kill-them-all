@@ -1,13 +1,13 @@
-use crate::prelude::*;
+use crate::resources::Round;
+use crate::schedule::*;
+use bevy::prelude::*;
 
 pub struct RoundPlugin;
 
 impl Plugin for RoundPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(
-            Update,
-            round_duration_timer.run_if(in_state(GameState::InGame)),
-        );
+        app.init_resource::<Round>()
+            .add_systems(Update, round_duration_timer.in_set(InGameSet::EntityUpdate));
     }
 }
 

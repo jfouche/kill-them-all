@@ -14,15 +14,16 @@ pub struct Round {
     timer: Timer,
 }
 
-impl Round {
-    /// Initialise round of `duration`seconds
-    pub fn new(duration: f32) -> Self {
+impl Default for Round {
+    fn default() -> Self {
         Round {
             level: 0,
-            timer: Timer::from_seconds(duration, TimerMode::Repeating),
+            timer: Timer::from_seconds(10., TimerMode::Repeating),
         }
     }
+}
 
+impl Round {
     pub fn tick(&mut self, delta: Duration) {
         self.timer.tick(delta);
         if self.timer.just_finished() {

@@ -6,8 +6,8 @@ pub use button::*;
 pub use popup::*;
 pub use progressbar::*;
 
-use crate::prelude::*;
 use bevy::app::PluginGroupBuilder;
+use bevy::prelude::*;
 
 pub struct UiPlugins;
 

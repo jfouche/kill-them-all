@@ -1,16 +1,20 @@
 mod components;
+mod cursor;
 mod debug;
 mod hud;
 mod in_game;
-mod level_up_menu;
-mod pause_menu;
-mod prelude;
+mod main_menu;
 mod resources;
+mod schedule;
+mod splash;
 mod ui;
 mod utils;
 
+use bevy::prelude::*;
 use bevy::render::camera::ScalingMode;
-use prelude::*;
+use bevy_rapier2d::prelude::*;
+use components::*;
+use resources::{ScoreResource, UiFont};
 
 fn main() {
     App::new()
@@ -36,13 +40,12 @@ fn main() {
         ))
         // Game plugins
         .add_plugins((
+            schedule::schedule_plugin,
+            splash::splash_plugin,
             hud::TopMenuPlugin,
             in_game::InGamePluginsGroup,
-            pause_menu::PausePlugin,
-            level_up_menu::LevelUpMenuPlugin,
+            main_menu::main_menu_plugin,
         ))
-        // States
-        .init_state::<GameState>()
         // resources
         .init_resource::<ScoreResource>()
         .insert_resource(ClearColor(Color::srgb(0.04, 0.04, 0.04)))

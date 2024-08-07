@@ -1,5 +1,8 @@
-use crate::prelude::*;
+use crate::components::*;
+use crate::schedule::*;
+use bevy::prelude::*;
 use bevy::utils::{HashMap, HashSet};
+use bevy_rapier2d::prelude::*;
 
 pub struct CollisionsPlugin;
 
@@ -12,7 +15,7 @@ impl Plugin for CollisionsPlugin {
                 player_touched_by_monster,
                 player_hits_bonus,
             )
-                .run_if(in_state(GameState::InGame)),
+                .in_set(InGameSet::CollisionDetection),
         );
     }
 }

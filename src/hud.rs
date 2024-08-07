@@ -1,6 +1,8 @@
-use crate::prelude::*;
+use crate::components::*;
+use crate::resources::*;
 use crate::ui::ProgressBar;
 use bevy::color::palettes::css::{GOLD, RED};
+use bevy::prelude::*;
 
 pub struct TopMenuPlugin;
 
