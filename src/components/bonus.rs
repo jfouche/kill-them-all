@@ -36,7 +36,7 @@ impl BonusBundle {
     }
 }
 
-const BONUS_SIZE: Vec2 = Vec2::new(0.8, 0.8);
+const BONUS_SIZE: Vec2 = Vec2::new(12., 12.);
 
 #[derive(Resource)]
 pub struct BonusAssets {

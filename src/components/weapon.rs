@@ -86,10 +86,10 @@ impl Default for BulletBundle {
 
 impl BulletBundle {
     pub fn new(options: BulletOptions) -> Self {
-        const BULLET_SPEED: f32 = 25.0;
+        const BULLET_SPEED: f32 = 300.0;
         let velocity = options.direction.normalize() * BULLET_SPEED;
         let pos = options.ellipse_pos();
-        let size = 0.3;
+        let size = 5.;
         BulletBundle {
             damage: Damage(options.damage),
             sprite: SpriteBundle {

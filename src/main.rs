@@ -29,7 +29,7 @@ fn main() {
                 })
                 .set(ImagePlugin::default_nearest()),
         )
-        .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
+        .add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(16.))
         // debug plugins
         .add_plugins(debug::DebugPlugin)
         // utils plugins
@@ -64,10 +64,10 @@ fn init_rapier(mut conf: ResMut<RapierConfiguration>) {
 }
 
 fn init_camera(mut commands: Commands) {
-    let far = 1000.0;
-    let mut camera = Camera2dBundle::new_with_far(far);
-    camera.projection.scaling_mode = ScalingMode::FixedHorizontal(40.0);
-    commands.spawn(camera);
+    // let far = 1000.0;
+    // let mut camera = Camera2dBundle::new_with_far(far);
+    // camera.projection.scaling_mode = ScalingMode::FixedHorizontal(40.0);
+    commands.spawn(Camera2dBundle::default());
 }
 
 fn load_font(mut commands: Commands, server: Res<AssetServer>) {

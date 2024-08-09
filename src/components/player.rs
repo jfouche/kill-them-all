@@ -41,7 +41,7 @@ impl Default for PlayerBundle {
             animation_timer: AnimationTimer::default(),
             life: Life::new(20),
             attack_speed: AttackSpeed::default(),
-            movement_speed: MovementSpeed::new(8.),
+            movement_speed: MovementSpeed::new(130.),
             weapon: Weapon::new(1., 1, 4),
             body: RigidBody::Dynamic,
             velocity: Velocity::zero(),
@@ -74,7 +74,7 @@ impl PlayerBundle {
     }
 }
 
-pub const PLAYER_SIZE: Vec2 = Vec2::new(1.0, 1.0);
+pub const PLAYER_SIZE: Vec2 = Vec2::new(16.0, 16.0);
 
 #[derive(Resource)]
 pub struct PlayerAssets {

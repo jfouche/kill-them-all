@@ -42,7 +42,7 @@ impl Default for MonsterBundle {
             texture_atlas: TextureAtlas::default(),
             animation_timer: AnimationTimer::default(),
             life: Life::new(20),
-            movement_speed: MovementSpeed::new(5.),
+            movement_speed: MovementSpeed::new(80.),
             body: RigidBody::Dynamic,
             velocity: Velocity::zero(),
             collider: Collider::default(),
@@ -95,8 +95,8 @@ impl MonsterSpawnParams {
     pub fn rand() -> Self {
         let mut rng = thread_rng();
         // Position
-        let x: f32 = rng.gen_range(-15. ..15.);
-        let y: f32 = rng.gen_range(-10. ..10.);
+        let x: f32 = rng.gen_range(-150. ..150.);
+        let y: f32 = rng.gen_range(-100. ..100.);
         // Rarity
         let rarity = match rng.gen_range(0..5) {
             0 => MonsterRarity::Rare,
@@ -115,8 +115,8 @@ impl MonsterSpawnParams {
 
     fn size(&self) -> Vec2 {
         match self.rarity {
-            MonsterRarity::Normal => Vec2::new(1.0, 1.0),
-            MonsterRarity::Rare => Vec2::new(2.0, 2.0),
+            MonsterRarity::Normal => Vec2::new(16.0, 16.0),
+            MonsterRarity::Rare => Vec2::new(32.0, 32.0),
         }
     }
 
