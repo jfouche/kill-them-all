@@ -27,7 +27,6 @@ pub enum InGameState {
 pub enum InGameSet {
     UserInput,
     EntityUpdate,
-    CollisionDetection,
     DespawnEntities,
 }
 
@@ -41,7 +40,6 @@ pub fn schedule_plugin(app: &mut App) {
                 // apply_deffer will be added here
                 InGameSet::UserInput,
                 InGameSet::EntityUpdate,
-                InGameSet::CollisionDetection,
             )
                 .chain()
                 .run_if(game_is_running),

@@ -15,7 +15,7 @@ impl Plugin for CollisionsPlugin {
                 player_touched_by_monster,
                 player_hits_bonus,
             )
-                .in_set(InGameSet::CollisionDetection),
+                .in_set(InGameSet::EntityUpdate),
         );
     }
 }

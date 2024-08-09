@@ -7,7 +7,7 @@ pub struct BonusPlugin;
 impl Plugin for BonusPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, load_asset)
-            .add_systems(Update, spawn_bonus.in_set(InGameSet::CollisionDetection));
+            .add_systems(Update, spawn_bonus.in_set(InGameSet::EntityUpdate));
     }
 }
 
