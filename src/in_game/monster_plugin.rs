@@ -20,7 +20,7 @@ impl Plugin for MonsterPlugin {
                     increment_score,
                     on_monster_hit,
                 )
-                    .in_set(InGameSet::EntityUpdate),
+                    .in_set(GameRunningSet::EntityUpdate),
             );
     }
 }

@@ -1,4 +1,4 @@
-use crate::{components::*, schedule::InGameSet};
+use crate::{components::*, schedule::GameRunningSet};
 use bevy::prelude::*;
 use rand::{thread_rng, Rng};
 
@@ -7,7 +7,7 @@ pub struct BonusPlugin;
 impl Plugin for BonusPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, load_asset)
-            .add_systems(Update, spawn_bonus.in_set(InGameSet::EntityUpdate));
+            .add_systems(Update, spawn_bonus.in_set(GameRunningSet::EntityUpdate));
     }
 }
 

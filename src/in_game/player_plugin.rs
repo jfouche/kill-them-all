@@ -29,7 +29,7 @@ impl Plugin for PlayerPlugin {
                     level_up,
                     on_player_hit,
                 )
-                    .in_set(InGameSet::EntityUpdate),
+                    .in_set(GameRunningSet::EntityUpdate),
             );
     }
 }

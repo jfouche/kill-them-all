@@ -17,14 +17,14 @@ pub enum InGameState {
     Running,
     Pause,
     // PlayerEndedLevel,
-    // PlayerDied,
+    PlayerDied,
     // ShowPopup,
     // LoadLevel,
     LevelUp,
 }
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone, Copy, SystemSet)]
-pub enum InGameSet {
+pub enum GameRunningSet {
     UserInput,
     EntityUpdate,
     DespawnEntities,
@@ -36,10 +36,10 @@ pub fn schedule_plugin(app: &mut App) {
         .configure_sets(
             Update,
             (
-                InGameSet::DespawnEntities,
+                GameRunningSet::DespawnEntities,
                 // apply_deffer will be added here
-                InGameSet::UserInput,
-                InGameSet::EntityUpdate,
+                GameRunningSet::UserInput,
+                GameRunningSet::EntityUpdate,
             )
                 .chain()
                 .run_if(game_is_running),
@@ -47,8 +47,8 @@ pub fn schedule_plugin(app: &mut App) {
         .add_systems(
             Update,
             apply_deferred
-                .after(InGameSet::DespawnEntities)
-                .before(InGameSet::UserInput),
+                .after(GameRunningSet::DespawnEntities)
+                .before(GameRunningSet::UserInput),
         )
         .add_systems(OnExit(GameState::InGame), end_game);
 }

@@ -1,15 +1,14 @@
+use super::back_to_game;
 use crate::components::*;
 use crate::schedule::*;
 use crate::ui::{spawn_button, spawn_popup};
 use bevy::prelude::*;
 
-use super::back_to_game;
-
 pub struct LevelUpMenuPlugin;
 
 impl Plugin for LevelUpMenuPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, enter_level_up_state.in_set(InGameSet::EntityUpdate))
+        app.add_systems(Update, enter_level_up_state.in_set(GameRunningSet::EntityUpdate))
             .add_systems(OnEnter(InGameState::LevelUp), spawn_level_up_menu)
             .add_systems(OnExit(InGameState::LevelUp), despawn_all::<LevelUpMenu>)
             .add_systems(
