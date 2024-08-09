@@ -1,6 +1,5 @@
 mod components;
 mod cursor;
-mod debug;
 mod in_game;
 mod main_menu;
 mod resources;
@@ -9,15 +8,17 @@ mod splash;
 mod ui;
 mod utils;
 
+#[cfg(feature = "debug")]
+mod debug;
+
 use bevy::prelude::*;
-use bevy::render::camera::ScalingMode;
 use bevy_rapier2d::prelude::*;
 use components::*;
 use resources::{ScoreResource, UiFont};
 
 fn main() {
-    App::new()
-        .add_plugins(
+    let mut app = App::new();
+    app.add_plugins(
             DefaultPlugins
                 .set(WindowPlugin {
                     primary_window: Some(Window {
@@ -29,8 +30,6 @@ fn main() {
                 .set(ImagePlugin::default_nearest()),
         )
         .add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(16.))
-        // debug plugins
-        .add_plugins(debug::DebugPlugin)
         // utils plugins
         .add_plugins((
             ui::UiPlugins,
@@ -53,8 +52,13 @@ fn main() {
         .add_systems(PreStartup, load_font)
         .add_systems(Startup, (init_rapier, init_camera))
         // systems
-        // RUN
-        .run();
+        ;
+
+    #[cfg(feature = "debug")]
+    app.add_plugins(debug::DebugPlugin);
+
+    // RUN
+    app.run();
 }
 
 fn init_rapier(mut conf: ResMut<RapierConfiguration>) {
