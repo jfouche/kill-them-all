@@ -13,7 +13,6 @@ mod debug;
 
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
-use components::*;
 use resources::{ScoreResource, UiFont};
 
 fn main() {
@@ -44,10 +43,7 @@ fn main() {
             in_game::InGamePluginsGroup,
         ))
         // resources
-        .init_resource::<ScoreResource>()
-        .insert_resource(ClearColor(Color::srgb(0.04, 0.04, 0.04)))
-        // Events
-        .add_event::<LevelUpEvent>()
+        .init_resource::<ScoreResource>() // TODO: Move to plugin
         // startup
         .add_systems(PreStartup, load_font)
         .add_systems(Startup, (init_rapier, init_camera))

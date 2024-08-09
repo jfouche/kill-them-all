@@ -7,14 +7,13 @@ mod pause_menu;
 mod player_died_menu;
 mod player_plugin;
 mod round_plugin;
-mod world_plugin;
+mod world_map_plugin;
 
+use crate::components::{LifeTime, PlayerDeathEvent};
 use crate::cursor::*;
 use crate::schedule::*;
 use crate::utils::invulnerable::Invulnerable;
 use crate::utils::Blink;
-use crate::LifeTime;
-use crate::PlayerDeathEvent;
 use bevy::app::PluginGroupBuilder;
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
@@ -30,7 +29,7 @@ impl PluginGroup for InGamePluginsGroup {
             .add(monster_plugin::MonsterPlugin)
             .add(player_plugin::PlayerPlugin)
             .add(round_plugin::RoundPlugin)
-            .add(world_plugin::WorldPlugin)
+            .add(world_map_plugin::WorldMapPlugin)
             .add(pause_menu::PausePlugin)
             .add(level_up_menu::LevelUpMenuPlugin)
             .add(player_died_menu::PlayerDiedPlugin)

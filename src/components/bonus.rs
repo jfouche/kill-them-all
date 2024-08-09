@@ -19,7 +19,7 @@ impl BonusBundle {
     pub fn new(pos: Vec3, assets: &BonusAssets) -> Self {
         BonusBundle {
             tag: Bonus,
-            name: Name::new("Bous"),
+            name: Name::new("Bonus"),
             sprite: SpriteBundle {
                 sprite: Sprite {
                     custom_size: Some(BONUS_SIZE),

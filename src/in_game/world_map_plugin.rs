@@ -1,11 +1,11 @@
-use crate::{despawn_all, schedule::GameState};
+use crate::{components::*, schedule::GameState};
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
 use bevy_rapier2d::prelude::*;
 
-pub struct WorldPlugin;
+pub struct WorldMapPlugin;
 
-impl Plugin for WorldPlugin {
+impl Plugin for WorldMapPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(TilemapPlugin)
             .add_systems(Startup, load_assets)
@@ -18,14 +18,6 @@ const WORLD_WIDTH: f32 = 35.0;
 const WORLD_HEIGH: f32 = 25.0;
 
 const BORDER: f32 = 1.0;
-
-#[derive(Resource)]
-pub struct WorldMapAssets {
-    texture: Handle<Image>,
-}
-
-#[derive(Component)]
-pub struct WorldMap;
 
 #[derive(Bundle)]
 struct WorldBundle {
@@ -122,46 +114,42 @@ fn load_assets(mut commands: Commands, asset_server: Res<AssetServer>) {
 }
 
 fn spawn_worldmap(mut commands: Commands, assets: Res<WorldMapAssets>) {
-    // Create the tilemap which will be referenced by all tiles
     let map_size = TilemapSize { x: 32, y: 32 };
     let mut tile_storage = TileStorage::empty(map_size);
-    let tilemap_entity = commands
+    let map_builder = WorldMapBuilder::new(map_size);
+    let tile_size = TilemapTileSize { x: 16.0, y: 16.0 };
+    let grid_size = tile_size.into();
+
+    // Create the tilemap which will be referenced by all tiles
+    commands
         .spawn((WorldMap, Name::new("WorldMap")))
         .with_children(|map| {
+            let tilemap_entity = map.parent_entity();
             // spawn tiles
             for x in 0..map_size.x {
                 for y in 0..map_size.y {
                     let tile_pos = TilePos { x, y };
-                    let tile_entity = map
-                        .spawn((
-                            Name::new("Tile"),
-                            TileBundle {
-                                position: tile_pos,
-                                tilemap_id: TilemapId(map.parent_entity()),
-                                ..Default::default()
-                            },
-                        ))
-                        .id();
+                    let tile_bundle = map_builder.generate_tile(tile_pos, tilemap_entity);
+                    let tile_entity = map.spawn((Name::new("Tile"), tile_bundle)).id();
                     tile_storage.set(&tile_pos, tile_entity);
                 }
             }
         })
-        .id();
-
-    let tile_size = TilemapTileSize { x: 16.0, y: 16.0 };
-    let grid_size = tile_size.into();
-    let map_type = TilemapType::default();
-
-    commands.entity(tilemap_entity).insert(TilemapBundle {
-        grid_size,
-        map_type,
-        size: map_size,
-        storage: tile_storage,
-        texture: TilemapTexture::Single(assets.texture.clone()),
-        tile_size,
-        transform: get_tilemap_center_transform(&map_size, &grid_size, &map_type, 0.0),
-        ..Default::default()
-    });
+        .insert(TilemapBundle {
+            grid_size,
+            map_type: TilemapType::Square,
+            size: map_size,
+            storage: tile_storage,
+            texture: TilemapTexture::Single(assets.texture.clone()),
+            tile_size,
+            transform: get_tilemap_center_transform(
+                &map_size,
+                &grid_size,
+                &TilemapType::Square,
+                0.0,
+            ),
+            ..Default::default()
+        });
 
     // commands
     //     .spawn(WorldBundle::default())

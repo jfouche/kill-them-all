@@ -3,12 +3,14 @@ mod monster;
 mod player;
 mod skills;
 mod weapon;
+mod world_map;
 
 pub use bonus::*;
 pub use monster::*;
 pub use player::*;
 pub use skills::*;
 pub use weapon::*;
+pub use world_map::*;
 
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
