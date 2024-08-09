@@ -3,6 +3,7 @@ mod collisions_plugin;
 mod level_up_menu;
 mod monster_plugin;
 mod pause_menu;
+mod player_died_menu;
 mod player_plugin;
 mod round_plugin;
 mod world_plugin;
@@ -11,6 +12,7 @@ use crate::cursor::*;
 use crate::schedule::*;
 use crate::utils::invulnerable::Invulnerable;
 use crate::utils::Blink;
+use crate::PlayerDeathEvent;
 use bevy::app::PluginGroupBuilder;
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
@@ -28,6 +30,7 @@ impl PluginGroup for InGamePluginsGroup {
             .add(world_plugin::WorldPlugin)
             .add(pause_menu::PausePlugin)
             .add(level_up_menu::LevelUpMenuPlugin)
+            .add(player_died_menu::PlayerDiedPlugin)
             .add(in_game_schedule_plugin)
     }
 }
@@ -40,7 +43,8 @@ fn in_game_schedule_plugin(app: &mut App) {
         .add_systems(OnExit(InGameState::Running), (ungrab_cursor, stop_physics))
         .add_systems(OnEnter(InGameState::Pause), pause)
         .add_systems(OnExit(InGameState::Pause), unpause)
-        .add_systems(Update, switch_to_pause.in_set(InGameSet::UserInput));
+        .add_systems(Update, switch_to_pause.in_set(GameRunningSet::UserInput))
+        .add_systems(Update, on_player_death.in_set(GameRunningSet::EntityUpdate));
 }
 
 fn run_game(mut state: ResMut<NextState<InGameState>>) {
@@ -90,4 +94,13 @@ fn stop_physics(mut physics: ResMut<RapierConfiguration>) {
 fn reset_physics(mut commands: Commands) {
     commands.insert_resource(Events::<CollisionEvent>::default());
     commands.insert_resource(Events::<ContactForceEvent>::default());
+}
+
+fn on_player_death(
+    mut player_death_events: EventReader<PlayerDeathEvent>,
+    mut in_game_state: ResMut<NextState<InGameState>>,
+) {
+    for _ in player_death_events.read() {
+        in_game_state.set(InGameState::PlayerDied);
+    }
 }

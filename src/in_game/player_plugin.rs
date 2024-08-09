@@ -27,10 +27,10 @@ impl Plugin for PlayerPlugin {
                     player_invulnerability_finished,
                     increment_player_experience,
                     level_up,
+                    on_player_hit,
                 )
-                    .in_set(InGameSet::EntityUpdate),
-            )
-            .add_systems(Update, on_player_hit.in_set(InGameSet::CollisionDetection));
+                    .in_set(GameRunningSet::EntityUpdate),
+            );
     }
 }
 

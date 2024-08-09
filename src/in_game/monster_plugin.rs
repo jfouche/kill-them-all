@@ -18,10 +18,10 @@ impl Plugin for MonsterPlugin {
                     monsters_moves,
                     animate_sprite,
                     increment_score,
+                    on_monster_hit,
                 )
-                    .in_set(InGameSet::EntityUpdate),
-            )
-            .add_systems(Update, on_monster_hit.in_set(InGameSet::CollisionDetection));
+                    .in_set(GameRunningSet::EntityUpdate),
+            );
     }
 }
 

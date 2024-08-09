@@ -9,7 +9,7 @@ impl Plugin for DebugPlugin {
         app
             .add_plugins((bevy_inspector_egui::quick::WorldInspectorPlugin::new(), bevy_rapier2d::render::RapierDebugRenderPlugin::default()))
             .add_systems(Update, 
-                (toggle_grab, state_transition::<GameState>, state_transition::<InGameState>, display_collision_events.in_set(InGameSet::EntityUpdate)))
+                (toggle_grab, state_transition::<GameState>, state_transition::<InGameState>, display_collision_events.in_set(GameRunningSet::EntityUpdate)))
             // .register_type::<Money>() 
             // .add_system(print_nav_events.after(NavRequestSystem))
             ;
