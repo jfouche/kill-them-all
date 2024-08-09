@@ -1,4 +1,4 @@
-use crate::schedule::GameState;
+use crate::{despawn_all, schedule::GameState};
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
 use bevy_rapier2d::prelude::*;
@@ -9,7 +9,8 @@ impl Plugin for WorldPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(TilemapPlugin)
             .add_systems(Startup, load_assets)
-            .add_systems(OnEnter(GameState::InGame), spawn_worldmap);
+            .add_systems(OnEnter(GameState::InGame), spawn_worldmap)
+            .add_systems(OnExit(GameState::InGame), despawn_all::<WorldMap>);
     }
 }
 
@@ -22,6 +23,9 @@ const BORDER: f32 = 1.0;
 pub struct WorldMapAssets {
     texture: Handle<Image>,
 }
+
+#[derive(Component)]
+pub struct WorldMap;
 
 #[derive(Bundle)]
 struct WorldBundle {
@@ -122,7 +126,7 @@ fn spawn_worldmap(mut commands: Commands, assets: Res<WorldMapAssets>) {
     let map_size = TilemapSize { x: 32, y: 32 };
     let mut tile_storage = TileStorage::empty(map_size);
     let tilemap_entity = commands
-        .spawn(Name::new("TileMap"))
+        .spawn((WorldMap, Name::new("WorldMap")))
         .with_children(|map| {
             // spawn tiles
             for x in 0..map_size.x {

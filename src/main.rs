@@ -1,7 +1,6 @@
 mod components;
 mod cursor;
 mod debug;
-mod hud;
 mod in_game;
 mod main_menu;
 mod resources;
@@ -42,9 +41,8 @@ fn main() {
         .add_plugins((
             schedule::schedule_plugin,
             splash::splash_plugin,
-            hud::TopMenuPlugin,
-            in_game::InGamePluginsGroup,
             main_menu::main_menu_plugin,
+            in_game::InGamePluginsGroup,
         ))
         // resources
         .init_resource::<ScoreResource>()

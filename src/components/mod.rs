@@ -103,3 +103,12 @@ impl Default for AnimationTimer {
         AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating))
     }
 }
+
+#[derive(Component, Deref, DerefMut)]
+pub struct LifeTime(Timer);
+
+impl LifeTime {
+    pub fn new(secs: f32) -> Self {
+        LifeTime(Timer::from_seconds(secs, TimerMode::Once))
+    }
+}

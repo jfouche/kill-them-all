@@ -10,6 +10,7 @@ impl Plugin for MonsterPlugin {
         app.add_event::<MonsterHitEvent>()
             .add_event::<MonsterDeathEvent>()
             .add_systems(Startup, (load_assets, init_monster_spawning))
+            .add_systems(OnExit(GameState::InGame), despawn_all::<Monster>)
             .add_systems(
                 Update,
                 (
