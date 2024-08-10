@@ -49,21 +49,21 @@ fn popup_title(title: impl Into<String>) -> TextBundle {
     )
 }
 
-#[inline]
-pub fn popup_text_content(content: impl Into<String>) -> TextBundle {
-    TextBundle::from_section(
-        content,
-        TextStyle {
-            font_size: 24.0,
-            color: Color::WHITE,
-            ..Default::default()
-        },
-    )
-    .with_style(Style {
-        margin: UiRect::all(Val::Px(7.0)),
-        ..Default::default()
-    })
-}
+// #[inline]
+// pub fn popup_text_content(content: impl Into<String>) -> TextBundle {
+//     TextBundle::from_section(
+//         content,
+//         TextStyle {
+//             font_size: 24.0,
+//             color: Color::WHITE,
+//             ..Default::default()
+//         },
+//     )
+//     .with_style(Style {
+//         margin: UiRect::all(Val::Px(7.0)),
+//         ..Default::default()
+//     })
+// }
 
 pub fn spawn_popup(
     mut commands: Commands,
