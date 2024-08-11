@@ -20,7 +20,7 @@ fn load_assets(mut commands: Commands, asset_server: Res<AssetServer>) {
 }
 
 fn spawn_worldmap(mut commands: Commands, assets: Res<WorldMapAssets>) {
-    let map_size = TilemapSize { x: 32, y: 32 };
+    let map_size = TilemapSize { x: 50, y: 32 };
     let tile_size = TilemapTileSize { x: 16.0, y: 16.0 };
     let mut map_builder = WorldMapBuilder::new(map_size, tile_size);
 

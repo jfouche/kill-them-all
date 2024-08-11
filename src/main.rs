@@ -1,3 +1,4 @@
+mod camera;
 mod components;
 mod cursor;
 mod in_game;
@@ -38,6 +39,7 @@ fn main() {
         // Game plugins
         .add_plugins((
             schedule::schedule_plugin,
+            camera::camera_plugin,
             splash::splash_plugin,
             main_menu::main_menu_plugin,
             in_game::InGamePluginsGroup,
@@ -46,7 +48,7 @@ fn main() {
         .init_resource::<ScoreResource>() // TODO: Move to plugin
         // startup
         .add_systems(PreStartup, load_font)
-        .add_systems(Startup, (init_rapier, init_camera))
+        .add_systems(Startup, init_rapier)
         // systems
         ;
 
@@ -59,13 +61,6 @@ fn main() {
 
 fn init_rapier(mut conf: ResMut<RapierConfiguration>) {
     conf.gravity = Vect::ZERO;
-}
-
-fn init_camera(mut commands: Commands) {
-    // let far = 1000.0;
-    // let mut camera = Camera2dBundle::new_with_far(far);
-    // camera.projection.scaling_mode = ScalingMode::FixedHorizontal(40.0);
-    commands.spawn(Camera2dBundle::default());
 }
 
 fn load_font(mut commands: Commands, server: Res<AssetServer>) {
