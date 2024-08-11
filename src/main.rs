@@ -3,7 +3,6 @@ mod components;
 mod cursor;
 mod in_game;
 mod main_menu;
-mod resources;
 mod schedule;
 mod splash;
 mod ui;
@@ -14,7 +13,6 @@ mod debug;
 
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
-use resources::{ScoreResource, UiFont};
 
 fn main() {
     let mut app = App::new();
@@ -45,9 +43,8 @@ fn main() {
             in_game::InGamePluginsGroup,
         ))
         // resources
-        .init_resource::<ScoreResource>() // TODO: Move to plugin
+        .init_resource::<components::ScoreResource>() // TODO: Move to plugin
         // startup
-        .add_systems(PreStartup, load_font)
         .add_systems(Startup, init_rapier)
         // systems
         ;
@@ -61,9 +58,4 @@ fn main() {
 
 fn init_rapier(mut conf: ResMut<RapierConfiguration>) {
     conf.gravity = Vect::ZERO;
-}
-
-fn load_font(mut commands: Commands, server: Res<AssetServer>) {
-    let handle: Handle<Font> = server.load("fonts/FiraSans-Bold.ttf");
-    commands.insert_resource(UiFont(handle));
 }

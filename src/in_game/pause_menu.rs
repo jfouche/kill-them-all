@@ -1,5 +1,4 @@
 use crate::components::*;
-use crate::resources::UiFont;
 use crate::schedule::*;
 use crate::ui::spawn_popup;
 use bevy::prelude::*;
@@ -89,27 +88,22 @@ impl Skill for ExperienceText {
     type SkillComponent = Experience;
 }
 
-fn spawn_pause_menu(commands: Commands, font: Res<UiFont>) {
+fn spawn_pause_menu(commands: Commands) {
     spawn_popup(commands, "Pause", PauseMenu, |popup| {
-        spawn_skill(popup, font.clone(), "Life :", LifeText);
-        spawn_skill(popup, font.clone(), "Movement speed :", MovementSpeedText);
-        spawn_skill(popup, font.clone(), "Attack speed :", AttackSpeedText);
-        spawn_skill(popup, font.clone(), "Weapon :", WeaponText);
-        spawn_skill(popup, font.clone(), "Money :", MoneyText);
-        spawn_skill(popup, font.clone(), "Experience :", ExperienceText);
+        spawn_skill(popup, "Life :", LifeText);
+        spawn_skill(popup, "Movement speed :", MovementSpeedText);
+        spawn_skill(popup, "Attack speed :", AttackSpeedText);
+        spawn_skill(popup, "Weapon :", WeaponText);
+        spawn_skill(popup, "Money :", MoneyText);
+        spawn_skill(popup, "Experience :", ExperienceText);
     });
 }
 
-fn spawn_skill(
-    menu: &mut ChildBuilder,
-    font: Handle<Font>,
-    label: impl Into<String>,
-    component: impl Bundle,
-) {
+fn spawn_skill(menu: &mut ChildBuilder, label: impl Into<String>, component: impl Bundle) {
     let text_style = TextStyle {
-        font,
         font_size: 20.0,
         color: Color::WHITE,
+        ..Default::default()
     };
     menu.spawn(component)
         .insert(

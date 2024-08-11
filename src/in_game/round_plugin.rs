@@ -1,4 +1,4 @@
-use crate::resources::Round;
+use crate::components::Round;
 use crate::schedule::*;
 use bevy::prelude::*;
 

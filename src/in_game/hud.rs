@@ -1,7 +1,6 @@
 use super::GameRunningSet;
 use super::GameState;
 use crate::components::*;
-use crate::resources::*;
 use crate::ui::ProgressBar;
 use bevy::color::palettes::css::{GOLD, RED};
 use bevy::prelude::*;
@@ -82,11 +81,11 @@ fn spawn_xp_bar(mut commands: Commands) {
     ));
 }
 
-fn spawn_round(mut commands: Commands, font: Res<UiFont>) {
+fn spawn_round(mut commands: Commands) {
     let text_style = TextStyle {
-        font: font.clone(),
         font_size: 20.0,
         color: Color::WHITE,
+        ..Default::default()
     };
     commands.spawn((
         (Hud, RoundText),
@@ -98,11 +97,11 @@ fn spawn_round(mut commands: Commands, font: Res<UiFont>) {
     ));
 }
 
-fn spawn_score(mut commands: Commands, font: Res<UiFont>) {
+fn spawn_score(mut commands: Commands) {
     let text_style = TextStyle {
-        font: font.clone(),
         font_size: 20.0,
         color: Color::WHITE,
+        ..Default::default()
     };
     commands.spawn((
         (Hud, ScoreText),

@@ -1,4 +1,4 @@
-use crate::{components::*, resources::ScoreResource, schedule::*};
+use crate::{components::*, schedule::*};
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 use std::ops::Mul;

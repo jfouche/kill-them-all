@@ -14,6 +14,7 @@ pub use world_map::*;
 
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
+use std::time::Duration;
 
 pub const GROUP_PLAYER: Group = Group::GROUP_1;
 pub const GROUP_ENEMY: Group = Group::GROUP_2;
@@ -112,5 +113,36 @@ pub struct LifeTime(Timer);
 impl LifeTime {
     pub fn new(secs: f32) -> Self {
         LifeTime(Timer::from_seconds(secs, TimerMode::Once))
+    }
+}
+
+#[derive(Default, Resource)]
+pub struct ScoreResource(pub u16);
+
+#[derive(Resource)]
+pub struct Round {
+    level: u16,
+    timer: Timer,
+}
+
+impl Default for Round {
+    fn default() -> Self {
+        Round {
+            level: 0,
+            timer: Timer::from_seconds(10., TimerMode::Repeating),
+        }
+    }
+}
+
+impl Round {
+    pub fn tick(&mut self, delta: Duration) {
+        self.timer.tick(delta);
+        if self.timer.just_finished() {
+            self.level += 1;
+        }
+    }
+
+    pub fn level(&self) -> u16 {
+        self.level
     }
 }
