@@ -19,40 +19,19 @@ impl PluginGroup for UiPlugins {
     }
 }
 
-pub fn fullscreen_style() -> Style {
-    Style {
-        width: Val::Percent(100.0),
-        height: Val::Percent(100.0),
-        ..default()
-    }
-}
+// #[inline]
+// pub fn hsizer() -> NodeBundle {
+//     NodeBundle {
+//         style: Style {
+//             flex_direction: FlexDirection::Row,
+//             align_items: AlignItems::Center,
+//             ..default()
+//         },
+//         ..default()
+//     }
+// }
 
-pub fn centered_style() -> Style {
-    Style {
-        align_items: AlignItems::Center,
-        justify_content: JustifyContent::Center,
-        ..fullscreen_style()
-    }
-}
-
-pub fn centered() -> NodeBundle {
-    NodeBundle {
-        style: centered_style(),
-        ..default()
-    }
-}
-
-pub fn hsizer() -> NodeBundle {
-    NodeBundle {
-        style: Style {
-            flex_direction: FlexDirection::Row,
-            align_items: AlignItems::Center,
-            ..default()
-        },
-        ..default()
-    }
-}
-
+#[inline]
 pub fn vsizer() -> NodeBundle {
     NodeBundle {
         style: Style {

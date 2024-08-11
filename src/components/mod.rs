@@ -3,12 +3,14 @@ mod monster;
 mod player;
 mod skills;
 mod weapon;
+mod world_map;
 
 pub use bonus::*;
 pub use monster::*;
 pub use player::*;
 pub use skills::*;
 pub use weapon::*;
+pub use world_map::*;
 
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
@@ -101,5 +103,14 @@ pub struct AnimationTimer(Timer);
 impl Default for AnimationTimer {
     fn default() -> Self {
         AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating))
+    }
+}
+
+#[derive(Component, Deref, DerefMut)]
+pub struct LifeTime(Timer);
+
+impl LifeTime {
+    pub fn new(secs: f32) -> Self {
+        LifeTime(Timer::from_seconds(secs, TimerMode::Once))
     }
 }

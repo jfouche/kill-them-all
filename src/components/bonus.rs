@@ -19,7 +19,7 @@ impl BonusBundle {
     pub fn new(pos: Vec3, assets: &BonusAssets) -> Self {
         BonusBundle {
             tag: Bonus,
-            name: Name::new("Bous"),
+            name: Name::new("Bonus"),
             sprite: SpriteBundle {
                 sprite: Sprite {
                     custom_size: Some(BONUS_SIZE),
@@ -36,7 +36,7 @@ impl BonusBundle {
     }
 }
 
-const BONUS_SIZE: Vec2 = Vec2::new(0.8, 0.8);
+const BONUS_SIZE: Vec2 = Vec2::new(12., 12.);
 
 #[derive(Resource)]
 pub struct BonusAssets {

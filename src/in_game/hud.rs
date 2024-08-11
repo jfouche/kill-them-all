@@ -1,3 +1,5 @@
+use super::GameRunningSet;
+use super::GameState;
 use crate::components::*;
 use crate::resources::*;
 use crate::ui::ProgressBar;
@@ -9,9 +11,10 @@ pub struct TopMenuPlugin;
 impl Plugin for TopMenuPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
-            Startup,
+            OnEnter(GameState::InGame),
             (spawn_life_bar, spawn_xp_bar, spawn_round, spawn_score),
         )
+        .add_systems(OnExit(GameState::InGame), despawn_all::<Hud>)
         .add_systems(
             Update,
             (
@@ -20,10 +23,14 @@ impl Plugin for TopMenuPlugin {
                 update_life_bar,
                 update_xp_bar,
                 update_life_bar_on_death,
-            ),
+            )
+                .in_set(GameRunningSet::EntityUpdate),
         );
     }
 }
+
+#[derive(Component)]
+struct Hud;
 
 #[derive(Component)]
 struct ScoreText;
@@ -39,7 +46,7 @@ struct ExperienceBar;
 
 fn spawn_life_bar(mut commands: Commands) {
     commands.spawn((
-        LifeBar,
+        (Hud, LifeBar),
         Name::new("HUD - LifeBar"),
         NodeBundle {
             style: Style {
@@ -58,7 +65,7 @@ fn spawn_life_bar(mut commands: Commands) {
 
 fn spawn_xp_bar(mut commands: Commands) {
     commands.spawn((
-        ExperienceBar,
+        (Hud, ExperienceBar),
         Name::new("HUD - ExperienceBar"),
         NodeBundle {
             style: Style {
@@ -82,7 +89,7 @@ fn spawn_round(mut commands: Commands, font: Res<UiFont>) {
         color: Color::WHITE,
     };
     commands.spawn((
-        RoundText,
+        (Hud, RoundText),
         Name::new("HUD - Round"),
         TextBundle::from_sections([
             TextSection::new("Round: ", text_style.clone()),
@@ -98,7 +105,7 @@ fn spawn_score(mut commands: Commands, font: Res<UiFont>) {
         color: Color::WHITE,
     };
     commands.spawn((
-        ScoreText,
+        (Hud, ScoreText),
         Name::new("HUD - Score"),
         TextBundle::from_sections([
             TextSection::new("Score: ", text_style.clone()),
