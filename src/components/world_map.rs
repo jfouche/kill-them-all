@@ -21,6 +21,8 @@ pub struct WorldMapBundle {
 impl WorldMapBundle {
     pub fn new(builder: WorldMapBuilder, assets: &WorldMapAssets) -> Self {
         let grid_size = builder.tile_size.into();
+        let transform =
+            get_tilemap_center_transform(&builder.map_size, &grid_size, &TilemapType::Square, 0.0);
         WorldMapBundle {
             tag: WorldMap,
             name: Name::new("WorldMap"),
@@ -31,12 +33,7 @@ impl WorldMapBundle {
                 storage: builder.tile_storage,
                 texture: TilemapTexture::Single(assets.texture.clone()),
                 tile_size: builder.tile_size,
-                transform: get_tilemap_center_transform(
-                    &builder.map_size,
-                    &grid_size,
-                    &TilemapType::Square,
-                    0.0,
-                ),
+                transform,
                 ..Default::default()
             },
         }
@@ -69,6 +66,7 @@ pub struct WorldMapBuilder {
     map_size: TilemapSize,
     tile_size: TilemapTileSize,
     tile_storage: TileStorage,
+    map_type: u32,
 }
 
 impl WorldMapBuilder {
@@ -77,6 +75,7 @@ impl WorldMapBuilder {
             map_size,
             tile_size,
             tile_storage: TileStorage::empty(map_size),
+            map_type: rand::thread_rng().gen_range(0..8),
         }
     }
 
@@ -86,7 +85,20 @@ impl WorldMapBuilder {
         let left = 0;
         let right = self.map_size.x - 1;
 
-        if pos.y == top && pos.x == left {
+        const TOP_LEFT_INDEX: u32 = 0;
+        const TOP_RIGHT_INDEX: u32 = 2;
+        const BOTTOM_LEFT_INDEX: u32 = 44;
+        const BOTTOM_RIGHT_INDEX: u32 = 46;
+        const TOP_INDEX: u32 = 1;
+        const BOTTOM_INDEX: u32 = 45;
+        const LEFT_INDEX: u32 = 22;
+        const RIGHT_INDEX: u32 = 24;
+        const FLOOR1_INDEX: u32 = 88;
+        const FLOOR2_INDEX: u32 = 89;
+        // const OBSTACLE_INDEX: u32 = 111;
+        const DEFAULT_INDEX: u32 = 23;
+
+        let idx = if pos.y == top && pos.x == left {
             TOP_LEFT_INDEX
         } else if pos.y == top && pos.x == right {
             TOP_RIGHT_INDEX
@@ -106,9 +118,18 @@ impl WorldMapBuilder {
             match rand::thread_rng().gen_range(0..100) {
                 0..=6 => FLOOR1_INDEX,
                 7..=13 => FLOOR2_INDEX,
+                // 14..=15 => OBSTACLE_INDEX,
                 _ => DEFAULT_INDEX,
             }
-        }
+        };
+        // add an offset to match the map images in the atlas
+        warn!(
+            "map_type: {}, idx : {idx}, final idx : {}",
+            self.map_type,
+            idx + 7 * 11 * 2 * (self.map_type / 2) + (self.map_type % 2) * 11
+        );
+
+        idx + 7 * 11 * 2 * (self.map_type / 2) + (self.map_type % 2) * 11
     }
 
     pub fn spawn_tile(&mut self, child_builder: &mut ChildBuilder, pos: &TilePos) {
@@ -172,15 +193,3 @@ impl WorldMapBuilder {
         });
     }
 }
-
-const TOP_LEFT_INDEX: u32 = 0;
-const TOP_RIGHT_INDEX: u32 = 2;
-const BOTTOM_LEFT_INDEX: u32 = 44;
-const BOTTOM_RIGHT_INDEX: u32 = 46;
-const TOP_INDEX: u32 = 1;
-const BOTTOM_INDEX: u32 = 45;
-const LEFT_INDEX: u32 = 22;
-const RIGHT_INDEX: u32 = 24;
-const FLOOR1_INDEX: u32 = 88;
-const FLOOR2_INDEX: u32 = 89;
-const DEFAULT_INDEX: u32 = 23;

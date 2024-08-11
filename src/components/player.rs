@@ -39,7 +39,7 @@ impl Default for PlayerBundle {
             sprite: SpriteBundle::default(),
             texture_atlas: TextureAtlas::default(),
             animation_timer: AnimationTimer::default(),
-            life: Life::new(20),
+            life: Life::new(10),
             attack_speed: AttackSpeed::default(),
             movement_speed: MovementSpeed::new(130.),
             weapon: Weapon::new(1., 1, 4),
