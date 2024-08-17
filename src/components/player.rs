@@ -42,7 +42,7 @@ impl Default for PlayerBundle {
             life: Life::new(10),
             attack_speed: AttackSpeed::default(),
             movement_speed: MovementSpeed::new(130.),
-            weapon: Weapon::new(1., 1, 4),
+            weapon: WeaponType::Gun.into(),
             body: RigidBody::Dynamic,
             velocity: Velocity::zero(),
             collider: Collider::cuboid(PLAYER_SIZE.x / 2., PLAYER_SIZE.y / 2.),

@@ -4,8 +4,15 @@ use bevy_rapier2d::prelude::*;
 use rand::Rng;
 use std::{f32::consts::SQRT_2, time::Duration};
 
+pub enum WeaponType {
+    Gun,
+    Shuriken,
+}
+
 #[derive(Component)]
 pub struct Weapon {
+    weapon_type: WeaponType,
+    /// Attack per second
     attack_speed: f32,
     damage_min: u16,
     damage_max: u16,
@@ -13,9 +20,24 @@ pub struct Weapon {
     ready: bool,
 }
 
+impl From<WeaponType> for Weapon {
+    fn from(value: WeaponType) -> Self {
+        match value {
+            WeaponType::Gun => Weapon::new(WeaponType::Gun, 1., 1, 2),
+            WeaponType::Shuriken => Weapon::new(WeaponType::Shuriken, 0.4, 2, 6),
+        }
+    }
+}
+
 impl Weapon {
-    pub fn new(attack_per_second: f32, damage_min: u16, damage_max: u16) -> Self {
+    fn new(
+        weapon_type: WeaponType,
+        attack_per_second: f32,
+        damage_min: u16,
+        damage_max: u16,
+    ) -> Self {
         Weapon {
+            weapon_type,
             attack_speed: attack_per_second,
             damage_min,
             damage_max,
