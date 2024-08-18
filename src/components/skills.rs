@@ -26,7 +26,7 @@ impl MovementSpeed {
 
 impl std::fmt::Display for MovementSpeed {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}    {:.0}%", self.value(), self.increases)
+        write!(f, "{}  (+{:.0}%)", self.value(), self.increases)
     }
 }
 
@@ -82,7 +82,7 @@ impl std::fmt::Display for Life {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "{}/{}    +{}%",
+            "{}/{}  (+{}%)",
             self.life(),
             self.max_life(),
             self.increases
@@ -116,7 +116,7 @@ impl AttackSpeed {
 
 impl std::fmt::Display for AttackSpeed {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, " +{:.0}%", self.increases)
+        write!(f, "+{:.0}%", self.increases)
     }
 }
 

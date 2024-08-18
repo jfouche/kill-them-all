@@ -1,10 +1,9 @@
+use super::back_to_game;
 use crate::components::*;
 use crate::schedule::*;
 use crate::ui::spawn_popup;
 use bevy::prelude::*;
 use std::fmt::Display;
-
-use super::back_to_game;
 
 pub struct PausePlugin;
 
@@ -90,36 +89,71 @@ impl Skill for ExperienceText {
 
 fn spawn_pause_menu(commands: Commands) {
     spawn_popup(commands, "Pause", PauseMenu, |popup| {
-        spawn_skill(popup, "Life :", LifeText);
-        spawn_skill(popup, "Movement speed :", MovementSpeedText);
-        spawn_skill(popup, "Attack speed :", AttackSpeedText);
-        spawn_skill(popup, "Weapon :", WeaponText);
-        spawn_skill(popup, "Money :", MoneyText);
-        spawn_skill(popup, "Experience :", ExperienceText);
+        popup
+            .spawn(NodeBundle {
+                style: Style {
+                    display: bevy::ui::Display::Flex,
+                    flex_direction: FlexDirection::Column,
+                    width: Val::Percent(95.),
+                    ..Default::default()
+                },
+                ..Default::default()
+            })
+            .with_children(|flex| {
+                spawn_skill(flex, "Life :", LifeText);
+                spawn_skill(flex, "Movement speed :", MovementSpeedText);
+                spawn_skill(flex, "Attack speed :", AttackSpeedText);
+                spawn_skill(flex, "Weapon :", WeaponText);
+                spawn_skill(flex, "Money :", MoneyText);
+                spawn_skill(flex, "Experience :", ExperienceText);
+            });
     });
 }
 
-fn spawn_skill(menu: &mut ChildBuilder, label: impl Into<String>, component: impl Bundle) {
+fn spawn_skill(panel: &mut ChildBuilder, label: impl Into<String>, component: impl Bundle) {
+    const MARGIN: Val = Val::Px(12.);
     let text_style = TextStyle {
-        font_size: 20.0,
+        font_size: 16.0,
         color: Color::WHITE,
         ..Default::default()
     };
-    menu.spawn(component)
-        .insert(
-            TextBundle::from_sections([
-                TextSection::new(label, text_style.clone()),
-                TextSection::from_style(text_style),
-            ])
-            .with_style(Style {
-                width: Val::Percent(90.0),
-                height: Val::Auto,
-                margin: UiRect::all(Val::Px(5.)),
-                padding: UiRect::all(Val::Px(5.)),
-                ..default()
-            }),
-        )
-        .insert(BackgroundColor(Color::BLACK));
+    panel
+        .spawn(NodeBundle {
+            style: Style {
+                width: Val::Percent(100.),
+                height: Val::Percent(100.),
+                flex_direction: FlexDirection::Row,
+                padding: UiRect::all(Val::Px(4.0)),
+                column_gap: MARGIN,
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .with_children(|row| {
+            // Label
+            row.spawn(
+                TextBundle::from_section(label, text_style.clone())
+                    .with_text_justify(JustifyText::Right)
+                    .with_style(Style {
+                        width: Val::Percent(50.0),
+                        // height: Val::Auto,
+                        // margin: UiRect::all(Val::Px(5.)),
+                        // padding: UiRect::all(Val::Px(5.)),
+                        ..default()
+                    }),
+            );
+            // Value
+            row.spawn((
+                component,
+                TextBundle::from_section("", text_style).with_style(Style {
+                    width: Val::Percent(50.0),
+                    // height: Val::Auto,
+                    // margin: UiRect::all(Val::Px(5.)),
+                    // padding: UiRect::all(Val::Px(5.)),
+                    ..default()
+                }),
+            ));
+        });
 }
 
 ///
@@ -131,7 +165,7 @@ fn update_skill<T: Skill + Component>(
 ) {
     if let Ok(mut text) = q_text.get_single_mut() {
         if let Ok(component) = q_player.get_single() {
-            text.sections[1].value = T::format(component);
+            text.sections[0].value = T::format(component);
         }
     }
 }
