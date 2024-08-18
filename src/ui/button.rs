@@ -23,6 +23,7 @@ pub fn button_style() -> Style {
         width: Val::Px(180.0),
         height: Val::Px(50.0),
         margin: UiRect::all(Val::Px(10.0)),
+        padding: UiRect::all(Val::Px(2.0)),
         justify_content: JustifyContent::Center,
         align_items: AlignItems::Center,
         border: UiRect::all(Val::Px(1.0)),
@@ -33,7 +34,7 @@ pub fn button_style() -> Style {
 #[inline]
 pub fn button_text_style() -> TextStyle {
     TextStyle {
-        font_size: 20.0,
+        font_size: 18.0,
         color: BUTTON_TEXT_COLOR,
         ..default()
     }
@@ -41,7 +42,7 @@ pub fn button_text_style() -> TextStyle {
 
 #[inline]
 pub fn button_text(text: impl Into<String>) -> TextBundle {
-    TextBundle::from_section(text, button_text_style())
+    TextBundle::from_section(text, button_text_style()).with_text_justify(JustifyText::Center)
 }
 
 pub fn spawn_button(commands: &mut ChildBuilder, label: impl Into<String>, bundle: impl Bundle) {

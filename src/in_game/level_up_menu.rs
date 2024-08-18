@@ -43,7 +43,7 @@ fn enter_level_up_state(
 struct LevelUpMenu;
 
 ///
-/// Trait to print a player skill
+/// Trait to upgrade a player skill
 ///
 trait UpgradeSkill {
     /// Component of the player skill
@@ -53,9 +53,23 @@ trait UpgradeSkill {
     fn upgrade(&self, component: &mut Self::SkillComponent);
 }
 
+///
+/// Trait to print a player skill label on a button
+///
+trait UpgradeSkillButton {
+    /// label to display
+    fn label(&self) -> String;
+}
+
 #[derive(Component)]
 struct MaxLifeButton {
     increase: f32,
+}
+
+impl UpgradeSkillButton for MaxLifeButton {
+    fn label(&self) -> String {
+        format!("Increase max life : +{:.0}%", self.increase)
+    }
 }
 
 impl UpgradeSkill for MaxLifeButton {
@@ -70,6 +84,12 @@ struct AttackSpeedButton {
     increase: f32,
 }
 
+impl UpgradeSkillButton for AttackSpeedButton {
+    fn label(&self) -> String {
+        format!("Increase attack speed : +{:.0}%", self.increase)
+    }
+}
+
 impl UpgradeSkill for AttackSpeedButton {
     type SkillComponent = AttackSpeed;
     fn upgrade(&self, component: &mut Self::SkillComponent) {
@@ -82,6 +102,11 @@ struct MovementSpeedButton {
     increase: f32,
 }
 
+impl UpgradeSkillButton for MovementSpeedButton {
+    fn label(&self) -> String {
+        format!("Increase movement speed : +{:.0}%", self.increase)
+    }
+}
 impl UpgradeSkill for MovementSpeedButton {
     type SkillComponent = MovementSpeed;
     fn upgrade(&self, component: &mut Self::SkillComponent) {
@@ -96,18 +121,25 @@ fn spawn_level_up_menu(commands: Commands) {
             if let Some(upgrade) = upgrade_provider.gen() {
                 match upgrade {
                     Upgrade::IncreaseAttackSpeed(increase) => {
-                        spawn_button(window, "Attack speed", AttackSpeedButton { increase });
+                        spawn_upgrade_button(window, AttackSpeedButton { increase });
                     }
                     Upgrade::IncreaseMaxLife(increase) => {
-                        spawn_button(window, "Max life", MaxLifeButton { increase });
+                        spawn_upgrade_button(window, MaxLifeButton { increase });
                     }
                     Upgrade::IncreasemovementSpeed(increase) => {
-                        spawn_button(window, "Movement speed", MovementSpeedButton { increase });
+                        spawn_upgrade_button(window, MovementSpeedButton { increase });
                     }
                 }
             }
         }
     });
+}
+
+fn spawn_upgrade_button<B>(parent: &mut ChildBuilder, button: B)
+where
+    B: Component + UpgradeSkillButton,
+{
+    spawn_button(parent, button.label(), button);
 }
 
 ///
