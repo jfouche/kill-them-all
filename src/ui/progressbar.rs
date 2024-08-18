@@ -69,7 +69,7 @@ impl ProgressBarForeground {
         let min = self.min.lock().unwrap();
         let max = self.max.lock().unwrap();
         let value = self.value.lock().unwrap();
-        *value / (*max - *min)
+        (*value - *min) / (*max - *min)
     }
 }
 
