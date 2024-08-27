@@ -13,6 +13,11 @@ impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<PlayerHitEvent>()
             .add_event::<PlayerDeathEvent>()
+            .register_type::<Experience>()
+            .register_type::<MovementSpeed>()
+            .register_type::<Life>()
+            .register_type::<AttackSpeed>()
+            .register_type::<PierceChance>()
             .add_systems(Startup, load_player_assets)
             .add_systems(OnEnter(GameState::InGame), spawn_player)
             .add_systems(OnExit(GameState::InGame), despawn_all::<Player>)
@@ -108,10 +113,10 @@ fn player_movement(
 fn player_fires(
     mut commands: Commands,
     time: Res<Time>,
-    mut q_player: Query<(&Transform, &mut Weapon, &AttackSpeed), With<Player>>,
+    mut q_player: Query<(&Transform, &mut Weapon, &AttackSpeed, &PierceChance), With<Player>>,
     q_monsters: Query<&Transform, With<Monster>>,
 ) {
-    if let Ok((player, mut weapon, attack_speed)) = q_player.get_single_mut() {
+    if let Ok((player, mut weapon, attack_speed, pierce)) = q_player.get_single_mut() {
         weapon.tick(time.delta(), attack_speed.value());
         if weapon.ready() {
             let player = player.translation;
@@ -119,17 +124,18 @@ fn player_fires(
             let nearest_monster = q_monsters
                 .iter()
                 .map(|transform| transform.translation)
-                .reduce(|current, other| {
-                    if player.distance(other) < player.distance(current) {
-                        other
+                .reduce(|nearest, other| {
+                    if player.distance(other) < player.distance(nearest) {
+                        other // new nearest
                     } else {
-                        current
+                        nearest
                     }
                 });
             if let Some(nearest) = nearest_monster {
                 commands.spawn(BulletBundle::new(BulletOptions::new(
                     player,
                     weapon.attack(),
+                    **pierce,
                     PLAYER_SIZE,
                     nearest,
                 )));
@@ -217,10 +223,10 @@ fn increment_player_experience(
     mut level_up_sender: EventWriter<LevelUpEvent>,
 ) {
     if let Ok(mut experience) = q_player.get_single_mut() {
-        for _ in monster_death_reader.read() {
+        for monster_death_ev in monster_death_reader.read() {
             warn!("increment_player_experience");
             let level_before = experience.level();
-            experience.add(1);
+            experience.add(monster_death_ev.xp);
             if experience.level() > level_before {
                 // LEVEL UP !
                 level_up_sender.send(LevelUpEvent);

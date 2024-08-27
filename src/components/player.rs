@@ -16,9 +16,7 @@ pub struct PlayerBundle {
     texture_atlas: TextureAtlas,
     animation_timer: AnimationTimer,
     // skills
-    life: Life,
-    attack_speed: AttackSpeed,
-    movement_speed: MovementSpeed,
+    skills: SkillsBundle,
     weapon: Weapon,
     // physics
     body: RigidBody,
@@ -39,9 +37,11 @@ impl Default for PlayerBundle {
             sprite: SpriteBundle::default(),
             texture_atlas: TextureAtlas::default(),
             animation_timer: AnimationTimer::default(),
-            life: Life::new(10),
-            attack_speed: AttackSpeed::default(),
-            movement_speed: MovementSpeed::new(130.),
+            skills: SkillsBundle {
+                life: Life::new(10),
+                movement_speed: MovementSpeed::new(130.),
+                ..Default::default()
+            },
             weapon: WeaponType::Gun.into(),
             body: RigidBody::Dynamic,
             velocity: Velocity::zero(),

@@ -1,5 +1,5 @@
-use super::back_to_game;
 use crate::components::*;
+use crate::in_game::back_to_game;
 use crate::schedule::*;
 use crate::ui::spawn_popup;
 use bevy::prelude::*;
@@ -18,6 +18,7 @@ impl Plugin for PausePlugin {
                     update_skill::<LifeText>,
                     update_skill::<MovementSpeedText>,
                     update_skill::<AttackSpeedText>,
+                    update_skill::<PierceChanceText>,
                     update_skill::<WeaponText>,
                     update_skill::<MoneyText>,
                     update_skill::<ExperienceText>,
@@ -65,6 +66,12 @@ struct AttackSpeedText;
 impl Skill for AttackSpeedText {
     type SkillComponent = AttackSpeed;
 }
+#[derive(Component)]
+struct PierceChanceText;
+
+impl Skill for PierceChanceText {
+    type SkillComponent = PierceChance;
+}
 
 #[derive(Component)]
 struct WeaponText;
@@ -103,9 +110,10 @@ fn spawn_pause_menu(commands: Commands) {
                 spawn_skill(flex, "Life :", LifeText);
                 spawn_skill(flex, "Movement speed :", MovementSpeedText);
                 spawn_skill(flex, "Attack speed :", AttackSpeedText);
+                spawn_skill(flex, "Pierce chance :", PierceChanceText);
                 spawn_skill(flex, "Weapon :", WeaponText);
-                spawn_skill(flex, "Money :", MoneyText);
                 spawn_skill(flex, "Experience :", ExperienceText);
+                spawn_skill(flex, "Money :", MoneyText);
             });
     });
 }

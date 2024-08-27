@@ -133,17 +133,18 @@ fn monsters_moves(
 ///
 fn on_monster_hit(
     mut monster_hit_events: EventReader<MonsterHitEvent>,
-    mut q_monsters: Query<(&mut Life, &Transform), With<Monster>>,
+    mut q_monsters: Query<(&mut Life, &Transform, &XpOnDeath), With<Monster>>,
     mut monster_death_events: EventWriter<MonsterDeathEvent>,
 ) {
     for event in monster_hit_events.read() {
         warn!("on_monster_hit");
-        if let Ok((mut life, transform)) = q_monsters.get_mut(event.entity) {
+        if let Ok((mut life, transform, xp)) = q_monsters.get_mut(event.entity) {
             life.hit(event.damage);
             if life.is_dead() {
                 monster_death_events.send(MonsterDeathEvent {
                     entity: event.entity,
                     pos: transform.translation,
+                    xp: **xp,
                 });
             }
         }

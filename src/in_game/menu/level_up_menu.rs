@@ -1,5 +1,5 @@
-use super::back_to_game;
 use crate::components::*;
+use crate::in_game::back_to_game;
 use crate::schedule::*;
 use crate::ui::{spawn_button, spawn_popup};
 use bevy::prelude::*;
@@ -8,9 +8,11 @@ pub struct LevelUpMenuPlugin;
 
 impl Plugin for LevelUpMenuPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .add_event::<LevelUpEvent>()
-            .add_systems(Update, enter_level_up_state.in_set(GameRunningSet::EntityUpdate))
+        app.add_event::<LevelUpEvent>()
+            .add_systems(
+                Update,
+                enter_level_up_state.in_set(GameRunningSet::EntityUpdate),
+            )
             .add_systems(OnEnter(InGameState::LevelUp), spawn_level_up_menu)
             .add_systems(OnExit(InGameState::LevelUp), despawn_all::<LevelUpMenu>)
             .add_systems(
@@ -20,12 +22,10 @@ impl Plugin for LevelUpMenuPlugin {
                     upgrade_skill::<MaxLifeButton>,
                     upgrade_skill::<MovementSpeedButton>,
                     upgrade_skill::<AttackSpeedButton>,
-
+                    upgrade_skill::<PierceChanceButton>,
                 )
                     .run_if(in_state(InGameState::LevelUp)),
-            )
-            // .add_systems(Update, (button_system, print_nav_events))
-            ;
+            );
     }
 }
 
@@ -107,8 +107,27 @@ impl UpgradeSkillButton for MovementSpeedButton {
         format!("Increase movement speed : +{:.0}%", self.increase)
     }
 }
+
 impl UpgradeSkill for MovementSpeedButton {
     type SkillComponent = MovementSpeed;
+    fn upgrade(&self, component: &mut Self::SkillComponent) {
+        component.increases(self.increase);
+    }
+}
+
+#[derive(Component)]
+struct PierceChanceButton {
+    increase: f32,
+}
+
+impl UpgradeSkillButton for PierceChanceButton {
+    fn label(&self) -> String {
+        format!("Increase pierce chance : +{:.0}%", self.increase)
+    }
+}
+
+impl UpgradeSkill for PierceChanceButton {
+    type SkillComponent = PierceChance;
     fn upgrade(&self, component: &mut Self::SkillComponent) {
         component.increases(self.increase);
     }
@@ -128,6 +147,9 @@ fn spawn_level_up_menu(commands: Commands) {
                     }
                     Upgrade::IncreasemovementSpeed(increase) => {
                         spawn_upgrade_button(window, MovementSpeedButton { increase });
+                    }
+                    Upgrade::Pierce(increase) => {
+                        spawn_upgrade_button(window, PierceChanceButton { increase });
                     }
                 }
             }

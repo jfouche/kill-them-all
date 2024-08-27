@@ -1,8 +1,19 @@
 use bevy::prelude::*;
-use rand::{rngs::ThreadRng, seq::IteratorRandom, Rng};
-use std::collections::HashMap;
+use rand::Rng;
 
-#[derive(Component)]
+#[derive(Bundle, Default)]
+
+pub struct SkillsBundle {
+    pub movement_speed: MovementSpeed,
+    pub life: Life,
+    pub attack_speed: AttackSpeed,
+    pub pierce: PierceChance,
+}
+
+// ==================================================================
+// MovementSpeed
+
+#[derive(Component, Default, Reflect)]
 pub struct MovementSpeed {
     speed: f32,
     increases: f32,
@@ -33,7 +44,7 @@ impl std::fmt::Display for MovementSpeed {
 // ==================================================================
 // Life
 
-#[derive(Component)]
+#[derive(Component, Default, Reflect)]
 pub struct Life {
     life: u16,
     max_life: u16,
@@ -93,7 +104,7 @@ impl std::fmt::Display for Life {
 // ==================================================================
 // AttackSpeed
 
-#[derive(Component)]
+#[derive(Component, Reflect)]
 pub struct AttackSpeed {
     increases: f32,
 }
@@ -121,82 +132,28 @@ impl std::fmt::Display for AttackSpeed {
 }
 
 // ==================================================================
-// Upgrades
+// Pierce
 
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
-enum UpgradeType {
-    /// Increase max life percentage, 1.0 is 100%
-    IncreaseMaxLife,
-    /// Increase attack speed percentage, 1.0 is 100%
-    IncreaseAttackSpeed,
-    /// Increase movement speed percentage, 1.0 is 100%
-    IncreasemovementSpeed,
-}
+#[derive(Component, Default, Deref, DerefMut, Reflect)]
+pub struct PierceChance(pub f32);
 
-impl UpgradeType {
-    fn gen(&self, rng: &mut ThreadRng) -> Upgrade {
-        match self {
-            UpgradeType::IncreaseMaxLife => Upgrade::IncreaseMaxLife(rng.gen_range(2..10) as f32),
-            UpgradeType::IncreaseAttackSpeed => {
-                Upgrade::IncreaseAttackSpeed(rng.gen_range(2..20) as f32)
-            }
-            UpgradeType::IncreasemovementSpeed => {
-                Upgrade::IncreasemovementSpeed(rng.gen_range(2..20) as f32)
-            }
+impl PierceChance {
+    pub fn increases(&mut self, percent: f32) {
+        **self += percent;
+    }
+
+    pub fn try_pierce(&mut self) -> bool {
+        if rand::thread_rng().gen_range(0. ..100.) < **self {
+            **self -= 100.;
+            true
+        } else {
+            false
         }
     }
 }
 
-#[derive(Clone, Copy)]
-pub enum Upgrade {
-    /// Increase max life percentage, 1.0 is 100%
-    IncreaseMaxLife(f32),
-    /// Increase attack speed percentage, 1.0 is 100%
-    IncreaseAttackSpeed(f32),
-    /// Increase movement speed percentage, 1.0 is 100%
-    IncreasemovementSpeed(f32),
-}
-
-pub struct UpgradeProvider {
-    upgrades: HashMap<UpgradeType, Vec<UpgradeType>>,
-    filters: Vec<UpgradeType>,
-}
-
-impl UpgradeProvider {
-    pub fn new() -> Self {
-        let mut upgrades = HashMap::new();
-        upgrades.insert(
-            UpgradeType::IncreaseMaxLife,
-            vec![UpgradeType::IncreaseMaxLife; 40],
-        );
-        upgrades.insert(
-            UpgradeType::IncreaseAttackSpeed,
-            vec![UpgradeType::IncreaseAttackSpeed; 20],
-        );
-        upgrades.insert(
-            UpgradeType::IncreasemovementSpeed,
-            vec![UpgradeType::IncreasemovementSpeed; 40],
-        );
-
-        UpgradeProvider {
-            upgrades,
-            filters: vec![],
-        }
-    }
-
-    /// generate a rand upgrade, removing the option the select it next time
-    pub fn gen(&mut self) -> Option<Upgrade> {
-        let mut rng = rand::thread_rng();
-
-        let upgrade_type = self
-            .upgrades
-            .iter()
-            .filter(|(upgrade_type, _v)| !self.filters.contains(upgrade_type))
-            .flat_map(|(_upgrade_type, v)| v)
-            .choose(&mut rng)?;
-
-        self.filters.push(*upgrade_type);
-        let upgrade = upgrade_type.gen(&mut rng);
-        Some(upgrade)
+impl std::fmt::Display for PierceChance {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "+{:.0}%", **self)
     }
 }

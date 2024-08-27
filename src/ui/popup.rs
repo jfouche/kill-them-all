@@ -9,14 +9,9 @@ fn popup() -> NodeBundle {
         border_color: Color::BLACK.into(),
         style: Style {
             border: UiRect::all(Val::Px(2.0)),
-            width: Val::Percent(35.0),
+            width: Val::Percent(40.0),
             margin: UiRect::all(Val::Auto),
-            padding: UiRect {
-                left: Val::Px(0.0),
-                right: Val::Px(0.0),
-                top: Val::Px(0.0),
-                bottom: Val::Px(7.0),
-            },
+            padding: UiRect::bottom(Val::Px(7.0)),
             ..vsizer.style
         },
         ..vsizer
@@ -30,7 +25,6 @@ fn popup_title_bar() -> NodeBundle {
         style: Style {
             width: Val::Percent(100.0),
             justify_content: JustifyContent::Center,
-            padding: UiRect::all(Val::Px(2.0)),
             ..Default::default()
         },
         ..Default::default()

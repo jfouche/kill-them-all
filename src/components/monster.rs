@@ -23,8 +23,8 @@ pub struct MonsterBundle {
     texture_atlas: TextureAtlas,
     animation_timer: AnimationTimer,
     // skills
-    life: Life,
-    movement_speed: MovementSpeed,
+    skills: SkillsBundle,
+    xp_on_death: XpOnDeath,
     // physics
     body: RigidBody,
     velocity: Velocity,
@@ -41,8 +41,12 @@ impl Default for MonsterBundle {
             sprite: SpriteBundle::default(),
             texture_atlas: TextureAtlas::default(),
             animation_timer: AnimationTimer::default(),
-            life: Life::new(20),
-            movement_speed: MovementSpeed::new(80.),
+            skills: SkillsBundle {
+                life: Life::new(20),
+                movement_speed: MovementSpeed::new(80.),
+                ..Default::default()
+            },
+            xp_on_death: XpOnDeath(1),
             body: RigidBody::Dynamic,
             velocity: Velocity::zero(),
             collider: Collider::default(),
@@ -56,7 +60,8 @@ impl MonsterBundle {
     pub fn new(assets: &MonsterAssets, params: &MonsterSpawnParams) -> Self {
         let size = params.size();
         MonsterBundle {
-            life: Life::new(params.life()),
+            skills: params.into(),
+            xp_on_death: params.into(),
             sprite: SpriteBundle {
                 texture: assets.texture.clone(),
                 sprite: Sprite {
@@ -119,12 +124,35 @@ impl MonsterSpawnParams {
             MonsterRarity::Rare => Vec2::new(32.0, 32.0),
         }
     }
+}
 
-    fn life(&self) -> u16 {
-        match self.rarity {
-            MonsterRarity::Normal => 2,
-            MonsterRarity::Rare => 5,
+impl From<&MonsterSpawnParams> for SkillsBundle {
+    fn from(value: &MonsterSpawnParams) -> Self {
+        match value.rarity {
+            MonsterRarity::Normal => SkillsBundle {
+                movement_speed: MovementSpeed::new(80.),
+                life: Life::new(2),
+                ..Default::default()
+            },
+            MonsterRarity::Rare => SkillsBundle {
+                movement_speed: MovementSpeed::new(70.),
+                life: Life::new(5),
+                ..Default::default()
+            },
         }
+    }
+}
+
+#[derive(Component, Deref)]
+pub struct XpOnDeath(pub u32);
+
+impl From<&MonsterSpawnParams> for XpOnDeath {
+    fn from(value: &MonsterSpawnParams) -> Self {
+        let xp = match value.rarity {
+            MonsterRarity::Normal => 1,
+            MonsterRarity::Rare => 3,
+        };
+        XpOnDeath(xp)
     }
 }
 
@@ -206,4 +234,5 @@ impl MonsterHitEvent {
 pub struct MonsterDeathEvent {
     pub entity: Entity,
     pub pos: Vec3,
+    pub xp: u32,
 }

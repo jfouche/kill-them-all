@@ -93,7 +93,12 @@ fn spawn_round(mut commands: Commands) {
         TextBundle::from_sections([
             TextSection::new("Round: ", text_style.clone()),
             TextSection::from_style(text_style),
-        ]),
+        ])
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            right: Val::Px(100.),
+            ..Default::default()
+        }),
     ));
 }
 
@@ -109,7 +114,12 @@ fn spawn_score(mut commands: Commands) {
         TextBundle::from_sections([
             TextSection::new("Score: ", text_style.clone()),
             TextSection::from_style(text_style),
-        ]),
+        ])
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            left: Val::Px(100.),
+            ..Default::default()
+        }),
     ));
 }
 
