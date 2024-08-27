@@ -1,5 +1,5 @@
-use super::back_to_game;
 use crate::components::*;
+use crate::in_game::back_to_game;
 use crate::schedule::*;
 use crate::ui::{spawn_button, spawn_popup};
 use bevy::prelude::*;

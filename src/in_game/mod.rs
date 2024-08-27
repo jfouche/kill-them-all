@@ -1,10 +1,8 @@
 mod bonus_plugin;
 mod collisions_plugin;
-mod hud;
-mod level_up_menu;
+mod hud_plugin;
+mod menu;
 mod monster_plugin;
-mod pause_menu;
-mod player_died_menu;
 mod player_plugin;
 mod round_plugin;
 mod world_map_plugin;
@@ -23,16 +21,14 @@ pub struct InGamePluginsGroup;
 impl PluginGroup for InGamePluginsGroup {
     fn build(self) -> PluginGroupBuilder {
         PluginGroupBuilder::start::<Self>()
-            .add(hud::TopMenuPlugin)
+            .add(hud_plugin::TopMenuPlugin)
             .add(bonus_plugin::BonusPlugin)
             .add(collisions_plugin::CollisionsPlugin)
             .add(monster_plugin::MonsterPlugin)
             .add(player_plugin::PlayerPlugin)
             .add(round_plugin::RoundPlugin)
             .add(world_map_plugin::WorldMapPlugin)
-            .add(pause_menu::PausePlugin)
-            .add(level_up_menu::LevelUpMenuPlugin)
-            .add(player_died_menu::PlayerDiedPlugin)
+            .add_group(menu::InGameMenuPluginsGroup)
             .add(in_game_schedule_plugin)
     }
 }
