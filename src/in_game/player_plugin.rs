@@ -119,11 +119,11 @@ fn player_fires(
             let nearest_monster = q_monsters
                 .iter()
                 .map(|transform| transform.translation)
-                .reduce(|current, other| {
-                    if player.distance(other) < player.distance(current) {
-                        other
+                .reduce(|nearest, other| {
+                    if player.distance(other) < player.distance(nearest) {
+                        other // new nearest
                     } else {
-                        current
+                        nearest
                     }
                 });
             if let Some(nearest) = nearest_monster {
@@ -217,10 +217,10 @@ fn increment_player_experience(
     mut level_up_sender: EventWriter<LevelUpEvent>,
 ) {
     if let Ok(mut experience) = q_player.get_single_mut() {
-        for _ in monster_death_reader.read() {
+        for monster_death_ev in monster_death_reader.read() {
             warn!("increment_player_experience");
             let level_before = experience.level();
-            experience.add(1);
+            experience.add(monster_death_ev.xp);
             if experience.level() > level_before {
                 // LEVEL UP !
                 level_up_sender.send(LevelUpEvent);

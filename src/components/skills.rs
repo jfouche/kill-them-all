@@ -2,7 +2,18 @@ use bevy::prelude::*;
 use rand::{rngs::ThreadRng, seq::IteratorRandom, Rng};
 use std::collections::HashMap;
 
-#[derive(Component)]
+#[derive(Bundle, Default)]
+
+pub struct SkillsBundle {
+    pub movement_speed: MovementSpeed,
+    pub life: Life,
+    pub attack_speed: AttackSpeed,
+}
+
+// ==================================================================
+// MovementSpeed
+
+#[derive(Component, Default)]
 pub struct MovementSpeed {
     speed: f32,
     increases: f32,
@@ -33,7 +44,7 @@ impl std::fmt::Display for MovementSpeed {
 // ==================================================================
 // Life
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct Life {
     life: u16,
     max_life: u16,
