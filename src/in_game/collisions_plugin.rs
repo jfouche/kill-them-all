@@ -27,7 +27,7 @@ fn monster_hit_by_bullet(
     mut commands: Commands,
     mut collisions: EventReader<CollisionEvent>,
     q_monsters: Query<Entity, With<Monster>>,
-    q_bullets: Query<(Entity, &Damage), With<Bullet>>,
+    mut q_bullets: Query<(Entity, &Damage, &mut PierceChance), With<Bullet>>,
     mut monster_hit_events: EventWriter<MonsterHitEvent>,
 ) {
     let mut monster_hit = HashMap::new();
@@ -40,7 +40,7 @@ fn monster_hit_by_bullet(
         })
         .for_each(|(&e1, &e2)| {
             for monster in q_monsters.iter() {
-                for (bullet, damage) in q_bullets.iter() {
+                for (bullet, damage, _) in &q_bullets {
                     if (e1 == monster && e2 == bullet) || (e1 == bullet && e2 == monster) {
                         *monster_hit.entry(monster).or_insert(0) += damage.0;
                         bullet_hit.insert(bullet);
@@ -50,7 +50,12 @@ fn monster_hit_by_bullet(
         });
 
     for bullet in bullet_hit {
-        commands.entity(bullet).despawn();
+        if let Ok((_, _, mut pierce)) = q_bullets.get_mut(bullet) {
+            if !pierce.try_pierce() {
+                // Didn't pierce => despawn bullet
+                commands.entity(bullet).despawn();
+            }
+        }
     }
 
     for (entity, damage) in monster_hit.iter() {

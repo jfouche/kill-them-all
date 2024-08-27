@@ -2,6 +2,7 @@ mod bonus;
 mod monster;
 mod player;
 mod skills;
+mod upgrade;
 mod weapon;
 mod world_map;
 
@@ -9,6 +10,7 @@ pub use bonus::*;
 pub use monster::*;
 pub use player::*;
 pub use skills::*;
+pub use upgrade::*;
 pub use weapon::*;
 pub use world_map::*;
 
@@ -43,7 +45,7 @@ impl std::fmt::Display for Money {
 // ==================================================================
 // Experience
 
-#[derive(Component, Default)]
+#[derive(Component, Default, Reflect)]
 pub struct Experience(u32);
 
 impl Experience {

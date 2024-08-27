@@ -6,12 +6,12 @@ use std::{f32::consts::SQRT_2, time::Duration};
 
 pub enum WeaponType {
     Gun,
-    Shuriken,
+    _Shuriken,
 }
 
 #[derive(Component)]
 pub struct Weapon {
-    weapon_type: WeaponType,
+    _weapon_type: WeaponType,
     /// Attack per second
     attack_speed: f32,
     damage_min: u16,
@@ -24,7 +24,7 @@ impl From<WeaponType> for Weapon {
     fn from(value: WeaponType) -> Self {
         match value {
             WeaponType::Gun => Weapon::new(WeaponType::Gun, 1., 1, 2),
-            WeaponType::Shuriken => Weapon::new(WeaponType::Shuriken, 0.4, 2, 6),
+            WeaponType::_Shuriken => Weapon::new(WeaponType::_Shuriken, 0.4, 2, 6),
         }
     }
 }
@@ -37,7 +37,7 @@ impl Weapon {
         damage_max: u16,
     ) -> Self {
         Weapon {
-            weapon_type,
+            _weapon_type: weapon_type,
             attack_speed: attack_per_second,
             damage_min,
             damage_max,
@@ -80,11 +80,13 @@ pub struct BulletBundle {
     tag: Bullet,
     name: Name,
     damage: Damage,
+    pierce: PierceChance,
     lifetime: LifeTime,
     sprite: SpriteBundle,
     body: RigidBody,
     velocity: Velocity,
     collider: Collider,
+    sensor: Sensor,
     collision_groups: CollisionGroups,
     locked_axes: LockedAxes,
     active_events: ActiveEvents,
@@ -96,11 +98,13 @@ impl Default for BulletBundle {
             tag: Bullet,
             name: Name::new("Bullet"),
             damage: Damage::default(),
+            pierce: PierceChance::default(),
             lifetime: LifeTime::new(3.),
             sprite: SpriteBundle::default(),
             body: RigidBody::Dynamic,
             velocity: Velocity::zero(),
             collider: Collider::default(),
+            sensor: Sensor,
             collision_groups: CollisionGroups::new(GROUP_BULLET, Group::ALL & !GROUP_BONUS),
             locked_axes: LockedAxes::ROTATION_LOCKED,
             active_events: ActiveEvents::COLLISION_EVENTS,
@@ -116,6 +120,7 @@ impl BulletBundle {
         let size = 5.;
         BulletBundle {
             damage: Damage(options.damage),
+            pierce: PierceChance(options.pierce),
             sprite: SpriteBundle {
                 sprite: Sprite {
                     color: YELLOW.into(),
@@ -135,16 +140,24 @@ impl BulletBundle {
 pub struct BulletOptions {
     pos: Vec3,
     damage: u16,
+    pierce: f32,
     direction: Vect,
     size: Vec2,
 }
 
 impl BulletOptions {
-    pub fn new(player_pos: Vec3, damage: u16, player_size: Vec2, target: Vec3) -> Self {
+    pub fn new(
+        player_pos: Vec3,
+        damage: u16,
+        pierce: f32,
+        player_size: Vec2,
+        target: Vec3,
+    ) -> Self {
         let dir = target - player_pos;
         BulletOptions {
             pos: player_pos,
             damage,
+            pierce,
             direction: Vect::new(dir.x, dir.y),
             size: player_size,
         }
