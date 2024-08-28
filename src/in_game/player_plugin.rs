@@ -1,7 +1,7 @@
 use crate::components::*;
 use crate::schedule::*;
+use crate::utils::blink::Blink;
 use crate::utils::invulnerable::Invulnerable;
-use crate::utils::Blink;
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 use std::ops::Mul;

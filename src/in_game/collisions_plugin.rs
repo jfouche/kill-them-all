@@ -1,5 +1,6 @@
 use crate::components::*;
 use crate::schedule::*;
+use crate::utils::collision::*;
 use bevy::prelude::*;
 use bevy::utils::{HashMap, HashSet};
 use bevy_rapier2d::prelude::*;
@@ -34,10 +35,7 @@ fn monster_hit_by_bullet(
     let mut bullet_hit = HashSet::new();
     collisions
         .read()
-        .filter_map(|e| match e {
-            CollisionEvent::Started(e1, e2, _) => Some((e1, e2)),
-            _ => None,
-        })
+        .filter_map(start_event_filter)
         .for_each(|(&e1, &e2)| {
             for monster in q_monsters.iter() {
                 for (bullet, damage, _) in &q_bullets {
@@ -68,25 +66,18 @@ fn monster_hit_by_bullet(
 ///
 fn player_touched_by_monster(
     mut collisions: EventReader<CollisionEvent>,
-    q_monsters: Query<Entity, With<Monster>>,
-    q_player: Query<Entity, With<Player>>,
+    q_monsters: Query<(), With<Monster>>,
+    q_player: Query<(), With<Player>>,
     mut player_hit_events: EventWriter<PlayerHitEvent>,
 ) {
     collisions
         .read()
-        .filter_map(|e| match e {
-            CollisionEvent::Started(e1, e2, _) => Some((e1, e2)),
-            _ => None,
-        })
-        .for_each(|(&e1, &e2)| {
-            if let Ok(player) = q_player.get_single() {
-                for monster in q_monsters.iter() {
-                    if (e1 == player && e2 == monster) || (e1 == monster && e2 == player) {
-                        warn!("player_touched_by_monster");
-                        player_hit_events.send(PlayerHitEvent::new(player));
-                    }
-                }
-            }
+        .filter_map(start_event_filter)
+        .filter_map(|(&e1, &e2)| q_player.get_either(e1, e2))
+        .filter_map(|(_, player, other)| q_monsters.get(other).map(|_| player).ok())
+        .for_each(|player| {
+            warn!("player_touched_by_monster");
+            player_hit_events.send(PlayerHitEvent::new(player));
         });
 }
 
@@ -96,23 +87,17 @@ fn player_touched_by_monster(
 fn player_hits_bonus(
     mut commands: Commands,
     mut collisions: EventReader<CollisionEvent>,
-    mut q_player: Query<(Entity, &mut Money), With<Player>>,
-    q_bonus: Query<Entity, With<Bonus>>,
+    mut q_player: Query<&mut Money, With<Player>>,
+    q_bonus: Query<(), With<Bonus>>,
 ) {
-    if let Ok((player, mut money)) = q_player.get_single_mut() {
-        collisions
-            .read()
-            .filter_map(|e| match e {
-                CollisionEvent::Started(e1, e2, _) => Some((e1, e2)),
-                _ => None,
-            })
-            .for_each(|(&e1, &e2)| {
-                for bonus in q_bonus.iter() {
-                    if (e1 == bonus && e2 == player) || (e1 == player && e2 == bonus) {
-                        money.0 += 1;
-                        commands.entity(bonus).despawn();
-                    }
-                }
-            });
-    }
+    collisions
+        .read()
+        .filter_map(start_event_filter)
+        .filter_map(|(&e1, &e2)| q_bonus.get_either(e1, e2))
+        .for_each(|(_, bonus, other)| {
+            if let Ok(mut money) = q_player.get_mut(other) {
+                **money += 1;
+                commands.entity(bonus).despawn();
+            }
+        });
 }

@@ -10,8 +10,8 @@ mod world_map_plugin;
 use crate::components::{LifeTime, PlayerDeathEvent};
 use crate::cursor::*;
 use crate::schedule::*;
+use crate::utils::blink::Blink;
 use crate::utils::invulnerable::Invulnerable;
-use crate::utils::Blink;
 use bevy::app::PluginGroupBuilder;
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
@@ -39,8 +39,6 @@ fn in_game_schedule_plugin(app: &mut App) {
         .add_systems(OnExit(GameState::InGame), (ungrab_cursor, reset_physics))
         .add_systems(OnEnter(InGameState::Running), (grab_cursor, start_physics))
         .add_systems(OnExit(InGameState::Running), (ungrab_cursor, stop_physics))
-        .add_systems(OnEnter(InGameState::Pause), pause)
-        .add_systems(OnExit(InGameState::Pause), unpause)
         .add_systems(Update, switch_to_pause.in_set(GameRunningSet::UserInput))
         .add_systems(Update, on_player_death.in_set(GameRunningSet::EntityUpdate))
         .add_systems(
