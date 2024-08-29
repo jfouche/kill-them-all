@@ -25,6 +25,7 @@ pub struct MonsterBundle {
     // skills
     skills: SkillsBundle,
     xp_on_death: XpOnDeath,
+    damage: Damage,
     // physics
     body: RigidBody,
     velocity: Velocity,
@@ -47,6 +48,7 @@ impl Default for MonsterBundle {
                 ..Default::default()
             },
             xp_on_death: XpOnDeath(1),
+            damage: Damage::default(),
             body: RigidBody::Dynamic,
             velocity: Velocity::zero(),
             collider: Collider::default(),
@@ -62,6 +64,7 @@ impl MonsterBundle {
         MonsterBundle {
             skills: params.into(),
             xp_on_death: params.into(),
+            damage: params.into(),
             sprite: SpriteBundle {
                 texture: assets.texture.clone(),
                 sprite: Sprite {
@@ -153,6 +156,16 @@ impl From<&MonsterSpawnParams> for XpOnDeath {
             MonsterRarity::Rare => 3,
         };
         XpOnDeath(xp)
+    }
+}
+
+impl From<&MonsterSpawnParams> for Damage {
+    fn from(value: &MonsterSpawnParams) -> Self {
+        let xp = match value.rarity {
+            MonsterRarity::Normal => 1,
+            MonsterRarity::Rare => 3,
+        };
+        Damage(xp)
     }
 }
 

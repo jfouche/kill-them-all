@@ -11,6 +11,7 @@ use std::time::Duration;
 
 #[derive(Component, Default, Deref)]
 pub struct Damage(pub u16);
+
 pub enum WeaponType {
     Gun,
     _Shuriken,

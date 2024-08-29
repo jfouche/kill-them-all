@@ -27,26 +27,30 @@ impl Plugin for CollisionsPlugin {
 fn monster_hit_by_bullet(
     mut commands: Commands,
     mut collisions: EventReader<CollisionEvent>,
-    q_monsters: Query<Entity, With<Monster>>,
+    q_monsters: Query<(), With<Monster>>,
     mut q_bullets: Query<(Entity, &Damage, &mut PierceChance), With<Bullet>>,
     mut monster_hit_events: EventWriter<MonsterHitEvent>,
 ) {
     let mut monster_hit = HashMap::new();
     let mut bullet_hit = HashSet::new();
+
+    // apply damage
     collisions
         .read()
         .filter_map(start_event_filter)
-        .for_each(|(&e1, &e2)| {
-            for monster in q_monsters.iter() {
-                for (bullet, damage, _) in &q_bullets {
-                    if (e1 == monster && e2 == bullet) || (e1 == bullet && e2 == monster) {
-                        *monster_hit.entry(monster).or_insert(0) += damage.0;
-                        bullet_hit.insert(bullet);
-                    }
-                }
-            }
+        .filter_map(|(&e1, &e2)| q_monsters.get_either(e1, e2))
+        .filter_map(|(_, monster, other)| {
+            q_bullets
+                .get(other)
+                .map(|(bullet, damage, _)| (monster, bullet, damage))
+                .ok()
+        })
+        .for_each(|(monster, bullet, damage)| {
+            *monster_hit.entry(monster).or_insert(0) += damage.0;
+            bullet_hit.insert(bullet);
         });
 
+    // try to pierce
     for bullet in bullet_hit {
         if let Ok((_, _, mut pierce)) = q_bullets.get_mut(bullet) {
             if !pierce.try_pierce() {
@@ -66,7 +70,7 @@ fn monster_hit_by_bullet(
 ///
 fn player_touched_by_monster(
     mut collisions: EventReader<CollisionEvent>,
-    q_monsters: Query<(), With<Monster>>,
+    q_monsters: Query<&Damage, With<Monster>>,
     q_player: Query<(), With<Player>>,
     mut player_hit_events: EventWriter<PlayerHitEvent>,
 ) {
@@ -74,10 +78,10 @@ fn player_touched_by_monster(
         .read()
         .filter_map(start_event_filter)
         .filter_map(|(&e1, &e2)| q_player.get_either(e1, e2))
-        .filter_map(|(_, player, other)| q_monsters.get(other).map(|_| player).ok())
-        .for_each(|player| {
-            warn!("player_touched_by_monster");
-            player_hit_events.send(PlayerHitEvent::new(player));
+        .filter_map(|(_, player, other)| q_monsters.get(other).map(|damage| (player, damage)).ok())
+        .for_each(|(player, damage)| {
+            info!("player_touched_by_monster");
+            player_hit_events.send(PlayerHitEvent::new(player, **damage));
         });
 }
 

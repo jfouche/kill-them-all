@@ -155,8 +155,8 @@ fn on_player_hit(
 ) {
     if let Ok((mut life, mut collision_groups)) = q_player.get_single_mut() {
         for event in player_hit_events.read() {
-            warn!("on_player_hit");
-            life.hit(1);
+            info!("on_player_hit");
+            life.hit(event.damage);
             if life.is_dead() {
                 commands.entity(event.entity).despawn();
                 send_death.send(PlayerDeathEvent);
@@ -224,7 +224,7 @@ fn increment_player_experience(
 ) {
     if let Ok(mut experience) = q_player.get_single_mut() {
         for monster_death_ev in monster_death_reader.read() {
-            warn!("increment_player_experience");
+            info!("increment_player_experience");
             let level_before = experience.level();
             experience.add(monster_death_ev.xp);
             if experience.level() > level_before {
@@ -241,7 +241,7 @@ fn level_up(
 ) {
     if let Ok(mut life) = q_player.get_single_mut() {
         for _ in level_up_rcv.read() {
-            warn!("level_up");
+            info!("level_up");
             // Regen life
             let max_life = life.max_life();
             life.regenerate(max_life);

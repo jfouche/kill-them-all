@@ -137,7 +137,7 @@ fn on_monster_hit(
     mut monster_death_events: EventWriter<MonsterDeathEvent>,
 ) {
     for event in monster_hit_events.read() {
-        warn!("on_monster_hit");
+        info!("on_monster_hit");
         if let Ok((mut life, transform, xp)) = q_monsters.get_mut(event.entity) {
             life.hit(event.damage);
             if life.is_dead() {
@@ -160,7 +160,6 @@ fn increment_score(
     mut score: ResMut<ScoreResource>,
 ) {
     for event in monster_hit_events.read() {
-        warn!("increment_score");
         // TODO: ("split in 2 systems");
         commands.entity(event.entity).despawn();
         score.0 += 1;

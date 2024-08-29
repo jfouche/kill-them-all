@@ -86,11 +86,12 @@ pub struct PlayerAssets {
 #[derive(Event)]
 pub struct PlayerHitEvent {
     pub entity: Entity,
+    pub damage: u16,
 }
 
 impl PlayerHitEvent {
-    pub fn new(entity: Entity) -> Self {
-        PlayerHitEvent { entity }
+    pub fn new(entity: Entity, damage: u16) -> Self {
+        PlayerHitEvent { entity, damage }
     }
 }
 

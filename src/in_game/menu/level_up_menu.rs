@@ -34,7 +34,6 @@ fn enter_level_up_state(
     mut next_state: ResMut<NextState<InGameState>>,
 ) {
     if level_up_rcv.read().next().is_some() {
-        warn!("enter_level_up_state");
         next_state.set(InGameState::LevelUp);
     }
 }

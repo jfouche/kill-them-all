@@ -123,12 +123,6 @@ impl WorldMapBuilder {
             }
         };
         // add an offset to match the map images in the atlas
-        warn!(
-            "map_type: {}, idx : {idx}, final idx : {}",
-            self.map_type,
-            idx + 7 * 11 * 2 * (self.map_type / 2) + (self.map_type % 2) * 11
-        );
-
         idx + 7 * 11 * 2 * (self.map_type / 2) + (self.map_type % 2) * 11
     }
 
