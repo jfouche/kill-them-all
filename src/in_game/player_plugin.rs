@@ -156,7 +156,7 @@ fn on_player_hit(
     if let Ok((mut life, mut collision_groups)) = q_player.get_single_mut() {
         for event in player_hit_events.read() {
             info!("on_player_hit");
-            life.hit(event.damage);
+            life.hit(*event.damage as f32);
             if life.is_dead() {
                 commands.entity(event.entity).despawn();
                 send_death.send(PlayerDeathEvent);

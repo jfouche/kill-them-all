@@ -139,7 +139,7 @@ fn on_monster_hit(
     for event in monster_hit_events.read() {
         info!("on_monster_hit");
         if let Ok((mut life, transform, xp)) = q_monsters.get_mut(event.entity) {
-            life.hit(event.damage);
+            life.hit(*event.damage as f32);
             if life.is_dead() {
                 monster_death_events.send(MonsterDeathEvent {
                     entity: event.entity,

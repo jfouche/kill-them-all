@@ -10,6 +10,11 @@ pub struct SkillsBundle {
     pub pierce: PierceChance,
 }
 
+pub trait Increase {
+    /// Increase Self, by `percent` (1.0 is 1%)
+    fn increase(&mut self, percent: f32);
+}
+
 // ==================================================================
 // MovementSpeed
 
@@ -29,8 +34,10 @@ impl MovementSpeed {
     pub fn value(&self) -> f32 {
         self.speed * (100.0 + self.increases) / 100.0
     }
+}
 
-    pub fn increases(&mut self, percent: f32) {
+impl Increase for MovementSpeed {
+    fn increase(&mut self, percent: f32) {
         self.increases += percent;
     }
 }
@@ -46,13 +53,13 @@ impl std::fmt::Display for MovementSpeed {
 
 #[derive(Component, Default, Reflect)]
 pub struct Life {
-    life: u16,
-    max_life: u16,
+    life: f32,
+    max_life: f32,
     increases: f32,
 }
 
 impl Life {
-    pub fn new(life: u16) -> Self {
+    pub fn new(life: f32) -> Self {
         Life {
             life,
             max_life: life,
@@ -60,32 +67,34 @@ impl Life {
         }
     }
 
-    pub fn hit(&mut self, damage: u16) {
+    pub fn hit(&mut self, damage: f32) {
         if damage > self.life {
-            self.life = 0;
+            self.life = 0.;
         } else {
             self.life -= damage;
         }
     }
 
     pub fn is_dead(&self) -> bool {
-        self.life == 0
+        self.life == 0.0
     }
 
-    pub fn life(&self) -> u16 {
+    pub fn life(&self) -> f32 {
         self.life
     }
 
-    pub fn max_life(&self) -> u16 {
-        (self.max_life as f32 * (100.0 + self.increases) / 100.0) as u16
+    pub fn max_life(&self) -> f32 {
+        self.max_life * (100.0 + self.increases) / 100.0
     }
 
-    pub fn increases(&mut self, percent: f32) {
+    pub fn regenerate(&mut self, life: f32) {
+        self.life = self.max_life().min(self.life + life);
+    }
+}
+
+impl Increase for Life {
+    fn increase(&mut self, percent: f32) {
         self.increases += percent;
-    }
-
-    pub fn regenerate(&mut self, life: u16) {
-        self.life = std::cmp::min(self.max_life(), self.life + life);
     }
 }
 
@@ -94,8 +103,8 @@ impl std::fmt::Display for Life {
         write!(
             f,
             "{}/{}  (+{}%)",
-            self.life(),
-            self.max_life(),
+            self.life().round(),
+            self.max_life().round(),
             self.increases
         )
     }
@@ -119,8 +128,10 @@ impl AttackSpeed {
     pub fn value(&self) -> f32 {
         self.increases
     }
+}
 
-    pub fn increases(&mut self, percent: f32) {
+impl Increase for AttackSpeed {
+    fn increase(&mut self, percent: f32) {
         self.increases += percent;
     }
 }
@@ -138,10 +149,6 @@ impl std::fmt::Display for AttackSpeed {
 pub struct PierceChance(pub f32);
 
 impl PierceChance {
-    pub fn increases(&mut self, percent: f32) {
-        **self += percent;
-    }
-
     pub fn try_pierce(&mut self) -> bool {
         if rand::thread_rng().gen_range(0. ..100.) < **self {
             **self -= 100.;
@@ -149,6 +156,12 @@ impl PierceChance {
         } else {
             false
         }
+    }
+}
+
+impl Increase for PierceChance {
+    fn increase(&mut self, percent: f32) {
+        **self += percent;
     }
 }
 

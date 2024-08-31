@@ -46,7 +46,7 @@ fn monster_hit_by_bullet(
                 .ok()
         })
         .for_each(|(monster, bullet, damage)| {
-            *monster_hit.entry(monster).or_insert(0) += damage.0;
+            *monster_hit.entry(monster).or_insert(0) += **damage;
             bullet_hit.insert(bullet);
         });
 
@@ -61,7 +61,7 @@ fn monster_hit_by_bullet(
     }
 
     for (entity, damage) in monster_hit.iter() {
-        monster_hit_events.send(MonsterHitEvent::new(*entity, *damage));
+        monster_hit_events.send(MonsterHitEvent::new(*entity, Damage(*damage)));
     }
 }
 
@@ -81,7 +81,7 @@ fn player_touched_by_monster(
         .filter_map(|(_, player, other)| q_monsters.get(other).map(|damage| (player, damage)).ok())
         .for_each(|(player, damage)| {
             info!("player_touched_by_monster");
-            player_hit_events.send(PlayerHitEvent::new(player, **damage));
+            player_hit_events.send(PlayerHitEvent::new(player, *damage));
         });
 }
 

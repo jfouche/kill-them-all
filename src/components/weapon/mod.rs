@@ -9,8 +9,8 @@ use bevy::prelude::*;
 use rand::Rng;
 use std::time::Duration;
 
-#[derive(Component, Default, Deref)]
-pub struct Damage(pub u16);
+#[derive(Clone, Copy, Component, Default, Deref)]
+pub struct Damage(pub u16); // TODO: f32
 
 pub enum WeaponType {
     Gun,

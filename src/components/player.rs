@@ -38,7 +38,7 @@ impl Default for PlayerBundle {
             texture_atlas: TextureAtlas::default(),
             animation_timer: AnimationTimer::default(),
             skills: SkillsBundle {
-                life: Life::new(10),
+                life: Life::new(10.),
                 movement_speed: MovementSpeed::new(130.),
                 ..Default::default()
             },
@@ -86,11 +86,11 @@ pub struct PlayerAssets {
 #[derive(Event)]
 pub struct PlayerHitEvent {
     pub entity: Entity,
-    pub damage: u16,
+    pub damage: Damage,
 }
 
 impl PlayerHitEvent {
-    pub fn new(entity: Entity, damage: u16) -> Self {
+    pub fn new(entity: Entity, damage: Damage) -> Self {
         PlayerHitEvent { entity, damage }
     }
 }

@@ -3,6 +3,7 @@ use crate::in_game::back_to_game;
 use crate::schedule::*;
 use crate::ui::{spawn_button, spawn_popup};
 use bevy::prelude::*;
+use std::marker::PhantomData;
 
 pub struct LevelUpMenuPlugin;
 
@@ -60,10 +61,33 @@ trait UpgradeSkillButton {
     fn label(&self) -> String;
 }
 
+/// Generic button to increase a skill
 #[derive(Component)]
-struct MaxLifeButton {
+struct IncreaseButton<T> {
     increase: f32,
+    _skill: PhantomData<T>,
 }
+
+impl<T> IncreaseButton<T> {
+    fn new(increase: f32) -> Self {
+        IncreaseButton {
+            increase,
+            _skill: PhantomData::<T>,
+        }
+    }
+}
+
+impl<T> UpgradeSkill for IncreaseButton<T>
+where
+    T: Component + Increase,
+{
+    type SkillComponent = T;
+    fn upgrade(&self, component: &mut Self::SkillComponent) {
+        component.increase(self.increase);
+    }
+}
+
+type MaxLifeButton = IncreaseButton<Life>;
 
 impl UpgradeSkillButton for MaxLifeButton {
     fn label(&self) -> String {
@@ -71,17 +95,7 @@ impl UpgradeSkillButton for MaxLifeButton {
     }
 }
 
-impl UpgradeSkill for MaxLifeButton {
-    type SkillComponent = Life;
-    fn upgrade(&self, component: &mut Self::SkillComponent) {
-        component.increases(self.increase);
-    }
-}
-
-#[derive(Component)]
-struct AttackSpeedButton {
-    increase: f32,
-}
+type AttackSpeedButton = IncreaseButton<AttackSpeed>;
 
 impl UpgradeSkillButton for AttackSpeedButton {
     fn label(&self) -> String {
@@ -89,17 +103,7 @@ impl UpgradeSkillButton for AttackSpeedButton {
     }
 }
 
-impl UpgradeSkill for AttackSpeedButton {
-    type SkillComponent = AttackSpeed;
-    fn upgrade(&self, component: &mut Self::SkillComponent) {
-        component.increases(self.increase);
-    }
-}
-
-#[derive(Component)]
-struct MovementSpeedButton {
-    increase: f32,
-}
+type MovementSpeedButton = IncreaseButton<MovementSpeed>;
 
 impl UpgradeSkillButton for MovementSpeedButton {
     fn label(&self) -> String {
@@ -107,28 +111,11 @@ impl UpgradeSkillButton for MovementSpeedButton {
     }
 }
 
-impl UpgradeSkill for MovementSpeedButton {
-    type SkillComponent = MovementSpeed;
-    fn upgrade(&self, component: &mut Self::SkillComponent) {
-        component.increases(self.increase);
-    }
-}
-
-#[derive(Component)]
-struct PierceChanceButton {
-    increase: f32,
-}
+type PierceChanceButton = IncreaseButton<PierceChance>;
 
 impl UpgradeSkillButton for PierceChanceButton {
     fn label(&self) -> String {
         format!("Increase pierce chance : +{:.0}%", self.increase)
-    }
-}
-
-impl UpgradeSkill for PierceChanceButton {
-    type SkillComponent = PierceChance;
-    fn upgrade(&self, component: &mut Self::SkillComponent) {
-        component.increases(self.increase);
     }
 }
 
@@ -139,16 +126,16 @@ fn spawn_level_up_menu(commands: Commands) {
             if let Some(upgrade) = upgrade_provider.gen() {
                 match upgrade {
                     Upgrade::IncreaseAttackSpeed(increase) => {
-                        spawn_upgrade_button(window, AttackSpeedButton { increase });
+                        spawn_upgrade_button(window, AttackSpeedButton::new(increase));
                     }
                     Upgrade::IncreaseMaxLife(increase) => {
-                        spawn_upgrade_button(window, MaxLifeButton { increase });
+                        spawn_upgrade_button(window, MaxLifeButton::new(increase));
                     }
                     Upgrade::IncreasemovementSpeed(increase) => {
-                        spawn_upgrade_button(window, MovementSpeedButton { increase });
+                        spawn_upgrade_button(window, MovementSpeedButton::new(increase));
                     }
                     Upgrade::Pierce(increase) => {
-                        spawn_upgrade_button(window, PierceChanceButton { increase });
+                        spawn_upgrade_button(window, PierceChanceButton::new(increase));
                     }
                 }
             }

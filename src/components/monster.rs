@@ -42,11 +42,7 @@ impl Default for MonsterBundle {
             sprite: SpriteBundle::default(),
             texture_atlas: TextureAtlas::default(),
             animation_timer: AnimationTimer::default(),
-            skills: SkillsBundle {
-                life: Life::new(20),
-                movement_speed: MovementSpeed::new(80.),
-                ..Default::default()
-            },
+            skills: SkillsBundle::default(),
             xp_on_death: XpOnDeath(1),
             damage: Damage::default(),
             body: RigidBody::Dynamic,
@@ -134,12 +130,12 @@ impl From<&MonsterSpawnParams> for SkillsBundle {
         match value.rarity {
             MonsterRarity::Normal => SkillsBundle {
                 movement_speed: MovementSpeed::new(80.),
-                life: Life::new(2),
+                life: Life::new(2.),
                 ..Default::default()
             },
             MonsterRarity::Rare => SkillsBundle {
                 movement_speed: MovementSpeed::new(70.),
-                life: Life::new(5),
+                life: Life::new(5.),
                 ..Default::default()
             },
         }
@@ -233,11 +229,11 @@ impl MonsterFuturePosBundle {
 #[derive(Event)]
 pub struct MonsterHitEvent {
     pub entity: Entity,
-    pub damage: u16,
+    pub damage: Damage,
 }
 
 impl MonsterHitEvent {
-    pub fn new(entity: Entity, damage: u16) -> Self {
+    pub fn new(entity: Entity, damage: Damage) -> Self {
         MonsterHitEvent { entity, damage }
     }
 }

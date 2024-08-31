@@ -141,8 +141,8 @@ fn update_life_bar(
 ) {
     if let Ok(mut progressbar) = q_bar.get_single_mut() {
         if let Ok(life) = q_player.get_single() {
-            progressbar.set_range(0.0, life.max_life() as f32);
-            progressbar.set_value(life.life() as f32);
+            progressbar.set_range(0.0, life.max_life());
+            progressbar.set_value(life.life());
         }
     }
 }
