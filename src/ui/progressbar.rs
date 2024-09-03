@@ -7,6 +7,7 @@ pub fn progressbar_plugin(app: &mut App) {
 }
 
 /// The [ProgressBar] component should be nested with a [bevy::ui::node_bundles::NodeBundle]
+// TODO: use bundle
 #[derive(Debug, Clone, Component)]
 pub struct ProgressBar {
     pub foreground: Color,
@@ -75,11 +76,15 @@ impl ProgressBarForeground {
 
 fn create_progress_bars(
     mut commands: Commands,
-    mut query: Query<(Entity, &mut BackgroundColor, &ProgressBar), Added<ProgressBar>>,
+    mut query: Query<
+        (Entity, &mut BackgroundColor, &mut BorderColor, &ProgressBar),
+        Added<ProgressBar>,
+    >,
 ) {
-    for (entity, mut bkcolor, data) in query.iter_mut() {
+    for (entity, mut background, mut border, data) in query.iter_mut() {
         // Set background
-        *bkcolor = data.background.into();
+        *background = data.background.into();
+        *border = data.background.into();
 
         // add foreground
         commands.entity(entity).with_children(|parent| {
