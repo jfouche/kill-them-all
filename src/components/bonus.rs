@@ -1,3 +1,5 @@
+use crate::utils::despawn_after::DespawnAfter;
+
 use super::*;
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
@@ -13,6 +15,7 @@ pub struct BonusBundle {
     body: RigidBody,
     collider: Collider,
     collision_groups: CollisionGroups,
+    despawn_after: DespawnAfter,
 }
 
 impl BonusBundle {
@@ -32,6 +35,8 @@ impl BonusBundle {
             body: RigidBody::Fixed,
             collider: Collider::cuboid(BONUS_SIZE.x / 2.0, BONUS_SIZE.y / 2.0),
             collision_groups: CollisionGroups::new(GROUP_BONUS, Group::ALL),
+            despawn_after: DespawnAfter::new(Duration::from_secs(8))
+                .with_blink(Duration::from_secs(3)),
         }
     }
 }

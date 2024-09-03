@@ -11,6 +11,7 @@ use crate::components::{LifeTime, PlayerDeathEvent};
 use crate::cursor::*;
 use crate::schedule::*;
 use crate::utils::blink::Blink;
+use crate::utils::despawn_after::DespawnAfter;
 use crate::utils::invulnerable::Invulnerable;
 use bevy::app::PluginGroupBuilder;
 use bevy::prelude::*;
@@ -63,21 +64,35 @@ fn switch_to_pause(mut state: ResMut<NextState<InGameState>>, keys: Res<ButtonIn
     }
 }
 
-fn pause(mut blinks: Query<&mut Blink>, mut invulnerables: Query<&mut Invulnerable>) {
+fn pause(
+    mut blinks: Query<&mut Blink>,
+    mut invulnerables: Query<&mut Invulnerable>,
+    mut despawnables: Query<&mut DespawnAfter>,
+) {
     for mut blink in &mut blinks {
         blink.pause(true);
     }
     for mut invulnerable in &mut invulnerables {
         invulnerable.pause(true);
     }
+    for mut despawnable in &mut despawnables {
+        despawnable.pause(true);
+    }
 }
 
-fn unpause(mut blinks: Query<&mut Blink>, mut invulnerables: Query<&mut Invulnerable>) {
+fn unpause(
+    mut blinks: Query<&mut Blink>,
+    mut invulnerables: Query<&mut Invulnerable>,
+    mut despawnables: Query<&mut DespawnAfter>,
+) {
     for mut blink in &mut blinks {
         blink.pause(false);
     }
     for mut invulnerable in &mut invulnerables {
         invulnerable.pause(false);
+    }
+    for mut despawnable in &mut despawnables {
+        despawnable.pause(false);
     }
 }
 
