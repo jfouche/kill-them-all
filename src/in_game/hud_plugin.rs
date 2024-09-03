@@ -91,14 +91,21 @@ fn spawn_round(mut commands: Commands) {
         (Hud, RoundText),
         Name::new("HUD - Round"),
         TextBundle::from_sections([
-            TextSection::new("Round: ", text_style.clone()),
-            TextSection::from_style(text_style),
+            TextSection::new("Round ", text_style.clone()),
+            TextSection::from_style(text_style.clone()),
+            TextSection::new(" : ", text_style.clone()),
+            TextSection::from_style(text_style.clone()),
+            TextSection::new("s", text_style),
         ])
+        .with_text_justify(JustifyText::Center)
+        .with_background_color(Color::Srgba(Srgba::new(0.25, 0.25, 0.25, 0.7)))
         .with_style(Style {
             position_type: PositionType::Absolute,
-            right: Val::Px(100.),
+            margin: UiRect::horizontal(Val::Auto).with_top(Val::Px(10.)),
+            width: Val::Px(180.),
             ..Default::default()
         }),
+        BorderRadius::all(Val::Px(10.)),
     ));
 }
 
@@ -131,7 +138,8 @@ fn update_score(score: Res<ScoreResource>, mut q_text: Query<&mut Text, With<Sco
 
 fn update_round(round: Res<Round>, mut q_text: Query<&mut Text, With<RoundText>>) {
     if let Ok(mut text) = q_text.get_single_mut() {
-        text.sections[1].value = format!("{}", round.level());
+        text.sections[1].value = format!("{}", round.level);
+        text.sections[3].value = format!("{}", round.timer.remaining().as_secs());
     }
 }
 

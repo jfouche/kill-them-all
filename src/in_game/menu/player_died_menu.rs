@@ -3,9 +3,9 @@ use crate::schedule::*;
 use crate::ui::{spawn_button, spawn_popup};
 use bevy::prelude::*;
 
-pub struct PlayerDiedPlugin;
+pub struct PlayerDiedMenuPlugin;
 
-impl Plugin for PlayerDiedPlugin {
+impl Plugin for PlayerDiedMenuPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(InGameState::PlayerDied), spawn_player_died_menu)
             .add_systems(

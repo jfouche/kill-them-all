@@ -1,6 +1,7 @@
 pub mod level_up_menu;
 pub mod pause_menu;
 pub mod player_died_menu;
+pub mod round_end_menu;
 
 use super::{pause, unpause, InGameState};
 use bevy::{app::PluginGroupBuilder, prelude::*};
@@ -12,7 +13,8 @@ impl PluginGroup for InGameMenuPluginsGroup {
         PluginGroupBuilder::start::<Self>()
             .add(pause_menu::PausePlugin)
             .add(level_up_menu::LevelUpMenuPlugin)
-            .add(player_died_menu::PlayerDiedPlugin)
+            .add(player_died_menu::PlayerDiedMenuPlugin)
+            .add(round_end_menu::RoundEndMenuPlugin)
             .add(menu_plugin)
     }
 }
@@ -21,5 +23,7 @@ fn menu_plugin(app: &mut App) {
     app.add_systems(OnEnter(InGameState::Pause), pause)
         .add_systems(OnExit(InGameState::Pause), unpause)
         .add_systems(OnEnter(InGameState::LevelUp), pause)
-        .add_systems(OnExit(InGameState::LevelUp), unpause);
+        .add_systems(OnExit(InGameState::LevelUp), unpause)
+        .add_systems(OnEnter(InGameState::RoundEnd), pause)
+        .add_systems(OnExit(InGameState::RoundEnd), unpause);
 }
