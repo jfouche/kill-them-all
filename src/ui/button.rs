@@ -59,18 +59,37 @@ pub fn spawn_button(commands: &mut ChildBuilder, label: impl Into<String>, bundl
 pub struct SelectedOption;
 
 // This system handles changing all buttons color based on mouse interaction
-pub fn button_system(
-    mut interaction_query: Query<
+pub fn button_interractions(
+    mut query: Query<
         (&Interaction, &mut BackgroundColor, Option<&SelectedOption>),
         (Changed<Interaction>, With<Button>),
     >,
 ) {
-    for (interaction, mut color, selected) in &mut interaction_query {
+    for (interaction, mut color, selected) in &mut query {
         *color = match (*interaction, selected) {
             (Interaction::Pressed, _) | (Interaction::None, Some(_)) => PRESSED_BUTTON.into(),
             (Interaction::Hovered, Some(_)) => HOVERED_PRESSED_BUTTON.into(),
             (Interaction::Hovered, None) => HOVERED_BUTTON.into(),
             (Interaction::None, None) => NORMAL_BUTTON.into(),
+        }
+    }
+}
+
+pub fn button_selected(
+    mut query: Query<&mut BackgroundColor, (With<Button>, Added<SelectedOption>)>,
+) {
+    for mut color in &mut query {
+        *color = PRESSED_BUTTON.into();
+    }
+}
+
+pub fn button_deselected(
+    mut buttons: Query<&mut BackgroundColor, With<Button>>,
+    mut removed: RemovedComponents<SelectedOption>,
+) {
+    for entity in removed.read() {
+        if let Ok(mut color) = buttons.get_mut(entity) {
+            *color = NORMAL_BUTTON.into();
         }
     }
 }
@@ -96,5 +115,8 @@ pub fn button_system(
 // }
 
 pub fn button_plugin(app: &mut App) {
-    app.add_systems(Update, button_system);
+    app.add_systems(
+        Update,
+        (button_interractions, button_selected, button_deselected),
+    );
 }

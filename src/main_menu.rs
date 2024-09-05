@@ -4,10 +4,7 @@ use bevy::{app::AppExit, color::palettes::css::GRAY, prelude::*};
 pub fn main_menu_plugin(app: &mut App) {
     app.add_systems(OnEnter(GameState::Menu), (set_background, spawn_menu))
         .add_systems(OnExit(GameState::Menu), despawn_all::<MainMenu>)
-        .add_systems(
-            Update,
-            (button_system, menu_action).run_if(in_state(GameState::Menu)),
-        );
+        .add_systems(Update, menu_action.run_if(in_state(GameState::Menu)));
 }
 
 #[derive(Component)]
@@ -32,7 +29,11 @@ fn set_background(mut commands: Commands) {
 
 fn spawn_menu(commands: Commands) {
     spawn_popup(commands, "Kill'em all", MainMenu, |menu| {
-        spawn_button(menu, "New game", MenuButtonAction::PlayGame);
+        spawn_button(
+            menu,
+            "New game",
+            (MenuButtonAction::PlayGame, SelectedOption),
+        );
         spawn_button(menu, "Exit", MenuButtonAction::ExitApplication);
     });
 }

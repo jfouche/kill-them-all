@@ -6,6 +6,7 @@ use rand::Rng;
 pub struct SkillsBundle {
     pub movement_speed: MovementSpeed,
     pub life: Life,
+    pub life_regen: LifeRegen,
     pub attack_speed: AttackSpeed,
     pub pierce: PierceChance,
 }
@@ -111,6 +112,26 @@ impl std::fmt::Display for Life {
 }
 
 // ==================================================================
+// LifeRegen
+
+#[derive(Component, Default, Reflect)]
+pub struct LifeRegen {
+    pub increases: f32,
+}
+
+impl Increase for LifeRegen {
+    fn increase(&mut self, percent: f32) {
+        self.increases += percent;
+    }
+}
+
+impl std::fmt::Display for LifeRegen {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}% per sec", self.increases)
+    }
+}
+
+// ==================================================================
 // AttackSpeed
 
 #[derive(Component, Reflect)]
@@ -170,3 +191,13 @@ impl std::fmt::Display for PierceChance {
         write!(f, "+{:.0}%", **self)
     }
 }
+
+// ==================================================================
+// HitEvent
+
+// /// Event to notify a monster was hit
+// #[derive(Event)]
+// pub struct HitEvent {
+//     pub entity: Entity,
+//     pub damage: Damage,
+// }

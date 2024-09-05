@@ -16,6 +16,7 @@ impl Plugin for PausePlugin {
                 (
                     back_to_game,
                     update_skill::<LifeText>,
+                    update_skill::<LifeRegenText>,
                     update_skill::<MovementSpeedText>,
                     update_skill::<AttackSpeedText>,
                     update_skill::<PierceChanceText>,
@@ -51,6 +52,12 @@ struct LifeText;
 
 impl Skill for LifeText {
     type SkillComponent = Life;
+}
+#[derive(Component)]
+struct LifeRegenText;
+
+impl Skill for LifeRegenText {
+    type SkillComponent = LifeRegen;
 }
 
 #[derive(Component)]
@@ -108,6 +115,7 @@ fn spawn_pause_menu(commands: Commands) {
             })
             .with_children(|flex| {
                 spawn_skill(flex, "Life :", LifeText);
+                spawn_skill(flex, "Life regen :", LifeRegenText);
                 spawn_skill(flex, "Movement speed :", MovementSpeedText);
                 spawn_skill(flex, "Attack speed :", AttackSpeedText);
                 spawn_skill(flex, "Pierce chance :", PierceChanceText);
@@ -144,9 +152,6 @@ fn spawn_skill(panel: &mut ChildBuilder, label: impl Into<String>, component: im
                     .with_text_justify(JustifyText::Right)
                     .with_style(Style {
                         width: Val::Percent(50.0),
-                        // height: Val::Auto,
-                        // margin: UiRect::all(Val::Px(5.)),
-                        // padding: UiRect::all(Val::Px(5.)),
                         ..default()
                     }),
             );
@@ -155,9 +160,7 @@ fn spawn_skill(panel: &mut ChildBuilder, label: impl Into<String>, component: im
                 component,
                 TextBundle::from_section("", text_style).with_style(Style {
                     width: Val::Percent(50.0),
-                    // height: Val::Auto,
-                    // margin: UiRect::all(Val::Px(5.)),
-                    // padding: UiRect::all(Val::Px(5.)),
+
                     ..default()
                 }),
             ));

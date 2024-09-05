@@ -3,11 +3,9 @@ use std::collections::HashMap;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 enum UpgradeType {
-    /// Increase max life percentage, 1.0 is 1%
     IncreaseMaxLife,
-    /// Increase attack speed percentage, 1.0 is 1%
+    IncreaseLifeRegen,
     IncreaseAttackSpeed,
-    /// Increase movement speed percentage, 1.0 is 1%
     IncreasemovementSpeed,
     Pierce,
 }
@@ -16,6 +14,9 @@ impl UpgradeType {
     fn gen(&self, rng: &mut ThreadRng) -> Upgrade {
         match self {
             UpgradeType::IncreaseMaxLife => Upgrade::IncreaseMaxLife(rng.gen_range(2..10) as f32),
+            UpgradeType::IncreaseLifeRegen => {
+                Upgrade::IncreaseLifeRegen(rng.gen_range(2..10) as f32)
+            }
             UpgradeType::IncreaseAttackSpeed => {
                 Upgrade::IncreaseAttackSpeed(rng.gen_range(2..20) as f32)
             }
@@ -31,6 +32,8 @@ impl UpgradeType {
 pub enum Upgrade {
     /// Increase max life percentage, 1.0 is 100%
     IncreaseMaxLife(f32),
+    /// Increase life regen percentage, 1.0 is 100%
+    IncreaseLifeRegen(f32),
     /// Increase attack speed percentage, 1.0 is 100%
     IncreaseAttackSpeed(f32),
     /// Increase movement speed percentage, 1.0 is 100%
@@ -51,6 +54,7 @@ impl UpgradeProvider {
             filters: vec![],
         };
         provider.add(UpgradeType::IncreaseMaxLife, 40);
+        provider.add(UpgradeType::IncreaseLifeRegen, 40);
         provider.add(UpgradeType::IncreaseAttackSpeed, 20);
         provider.add(UpgradeType::IncreasemovementSpeed, 40);
         provider.add(UpgradeType::Pierce, 20);

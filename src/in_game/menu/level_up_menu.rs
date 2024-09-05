@@ -21,6 +21,7 @@ impl Plugin for LevelUpMenuPlugin {
                 (
                     back_to_game,
                     upgrade_skill::<MaxLifeButton>,
+                    upgrade_skill::<LifeRegenButton>,
                     upgrade_skill::<MovementSpeedButton>,
                     upgrade_skill::<AttackSpeedButton>,
                     upgrade_skill::<PierceChanceButton>,
@@ -94,6 +95,13 @@ impl UpgradeSkillButton for MaxLifeButton {
         format!("Increase max life : +{:.0}%", self.increase)
     }
 }
+type LifeRegenButton = IncreaseButton<LifeRegen>;
+
+impl UpgradeSkillButton for LifeRegenButton {
+    fn label(&self) -> String {
+        format!("Increase life regen : +{:.0}%", self.increase)
+    }
+}
 
 type AttackSpeedButton = IncreaseButton<AttackSpeed>;
 
@@ -130,6 +138,9 @@ fn spawn_level_up_menu(commands: Commands) {
                     }
                     Upgrade::IncreaseMaxLife(increase) => {
                         spawn_upgrade_button(window, MaxLifeButton::new(increase));
+                    }
+                    Upgrade::IncreaseLifeRegen(increase) => {
+                        spawn_upgrade_button(window, LifeRegenButton::new(increase));
                     }
                     Upgrade::IncreasemovementSpeed(increase) => {
                         spawn_upgrade_button(window, MovementSpeedButton::new(increase));

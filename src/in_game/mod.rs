@@ -1,4 +1,5 @@
 mod bonus_plugin;
+mod character_plugin;
 mod collisions_plugin;
 mod hud_plugin;
 mod menu;
@@ -25,6 +26,7 @@ impl PluginGroup for InGamePluginsGroup {
             .add(hud_plugin::TopMenuPlugin)
             .add(bonus_plugin::BonusPlugin)
             .add(collisions_plugin::CollisionsPlugin)
+            .add(character_plugin::CharacterPlugin)
             .add(monster_plugin::MonsterPlugin)
             .add(player_plugin::PlayerPlugin)
             .add(round_plugin::RoundPlugin)
