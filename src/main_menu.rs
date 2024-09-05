@@ -2,16 +2,24 @@ use crate::{components::despawn_all, schedule::*, ui::*};
 use bevy::{app::AppExit, color::palettes::css::GRAY, prelude::*};
 
 pub fn main_menu_plugin(app: &mut App) {
-    app.add_systems(OnEnter(GameState::Menu), (set_background, spawn_menu))
+    app.init_resource::<MainMenuButtonNav>()
+        .add_systems(OnEnter(GameState::Menu), (set_background, spawn_menu))
         .add_systems(OnExit(GameState::Menu), despawn_all::<MainMenu>)
-        .add_systems(Update, menu_action.run_if(in_state(GameState::Menu)));
+        .add_systems(
+            Update,
+            (
+                button_keyboard_nav::<MenuButtonAction, MainMenuButtonNav>,
+                menu_action,
+            )
+                .run_if(in_state(GameState::Menu)),
+        );
 }
 
 #[derive(Component)]
 struct MainMenu;
 
 // All actions that can be triggered from a button click
-#[derive(Component, PartialEq)]
+#[derive(Component, Clone, Copy, PartialEq)]
 enum MenuButtonAction {
     PlayGame,
     // Settings,
@@ -21,6 +29,28 @@ enum MenuButtonAction {
     // BackToSettings,
     ExitApplication,
     // QuitGame,
+}
+
+#[derive(Resource, Deref)]
+struct MainMenuButtonNav([MenuButtonAction; 2]);
+
+impl Default for MainMenuButtonNav {
+    fn default() -> Self {
+        MainMenuButtonNav([
+            MenuButtonAction::PlayGame,
+            MenuButtonAction::ExitApplication,
+        ])
+    }
+}
+
+impl ButtonNav<MenuButtonAction> for MainMenuButtonNav {
+    fn up(&self, current: MenuButtonAction) -> Option<MenuButtonAction> {
+        (**self).up(current)
+    }
+
+    fn down(&self, current: MenuButtonAction) -> Option<MenuButtonAction> {
+        (**self).down(current)
+    }
 }
 
 fn set_background(mut commands: Commands) {

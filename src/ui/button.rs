@@ -53,13 +53,55 @@ pub fn spawn_button(commands: &mut ChildBuilder, label: impl Into<String>, bundl
         });
 }
 
+pub trait ButtonNav<T> {
+    fn up(&self, current: T) -> Option<T>;
+    fn down(&self, current: T) -> Option<T>;
+}
+
+impl<T> ButtonNav<T> for [T]
+where
+    T: PartialEq + Copy,
+{
+    fn up(&self, current: T) -> Option<T> {
+        let i = self.iter().position(|v| *v == current)?;
+        self.get(i.saturating_sub(1)).cloned()
+    }
+
+    fn down(&self, current: T) -> Option<T> {
+        let i = self.iter().position(|v| *v == current)?;
+        self.get(i + 1).cloned()
+    }
+}
+
+// TODO:
+// impl<S, T, N> ButtonNav<T> for S
+// where
+//     S: Deref<Target = N>,
+//     N: ButtonNav<T>,
+// {
+//     fn up(&self, current: T) -> Option<T> {
+//         (**self).up(current)
+//     }
+
+//     fn down(&self, current: T) -> Option<T> {
+//         (**self).down(current)
+//     }
+// }
+
 /// Tag component used to mark which setting is currently selected
 #[derive(Component)]
 #[component(storage = "SparseSet")]
 pub struct SelectedOption;
 
+pub fn button_plugin(app: &mut App) {
+    app.add_systems(
+        Update,
+        (button_interractions, button_selected, button_deselected),
+    );
+}
+
 // This system handles changing all buttons color based on mouse interaction
-pub fn button_interractions(
+fn button_interractions(
     mut query: Query<
         (&Interaction, &mut BackgroundColor, Option<&SelectedOption>),
         (Changed<Interaction>, With<Button>),
@@ -75,15 +117,46 @@ pub fn button_interractions(
     }
 }
 
-pub fn button_selected(
-    mut query: Query<&mut BackgroundColor, (With<Button>, Added<SelectedOption>)>,
-) {
+pub fn button_keyboard_nav<T, N>(
+    mut commands: Commands,
+    keys: Res<ButtonInput<KeyCode>>,
+    sel_buttons: Query<(Entity, &T), With<SelectedOption>>,
+    buttons: Query<(Entity, &T), With<Button>>,
+    nav: Res<N>,
+) where
+    T: Component + PartialEq + Copy,
+    N: ButtonNav<T> + Resource,
+{
+    for (sel_entity, sel_btn) in &sel_buttons {
+        if keys.just_pressed(KeyCode::Enter) {
+            commands.entity(sel_entity).insert(Interaction::Pressed);
+        }
+        if keys.just_pressed(KeyCode::ArrowUp) {
+            if let Some(top) = nav.up(*sel_btn) {
+                if let Some((e, _v)) = buttons.iter().find(|(_e, v)| **v == top) {
+                    commands.entity(sel_entity).remove::<SelectedOption>();
+                    commands.entity(e).insert(SelectedOption);
+                }
+            }
+        }
+        if keys.just_pressed(KeyCode::ArrowDown) {
+            if let Some(top) = nav.down(*sel_btn) {
+                if let Some((e, _v)) = buttons.iter().find(|(_e, v)| **v == top) {
+                    commands.entity(sel_entity).remove::<SelectedOption>();
+                    commands.entity(e).insert(SelectedOption);
+                }
+            }
+        }
+    }
+}
+
+fn button_selected(mut query: Query<&mut BackgroundColor, (With<Button>, Added<SelectedOption>)>) {
     for mut color in &mut query {
         *color = PRESSED_BUTTON.into();
     }
 }
 
-pub fn button_deselected(
+fn button_deselected(
     mut buttons: Query<&mut BackgroundColor, With<Button>>,
     mut removed: RemovedComponents<SelectedOption>,
 ) {
@@ -94,8 +167,8 @@ pub fn button_deselected(
     }
 }
 
-/// This system updates the settings when a new value for a setting is selected, and marks
-/// the button as the one currently selected
+// /// This system updates the settings when a new value for a setting is selected, and marks
+// /// the button as the one currently selected
 // pub fn setting_button<T: Resource + Component + PartialEq + Copy>(
 //     interaction_query: Query<(&Interaction, &T, Entity), (Changed<Interaction>, With<Button>)>,
 //     mut selected_query: Query<(Entity, &mut BackgroundColor), (With<SelectedOption>, With<T>)>,
@@ -113,10 +186,3 @@ pub fn button_deselected(
 //         }
 //     }
 // }
-
-pub fn button_plugin(app: &mut App) {
-    app.add_systems(
-        Update,
-        (button_interractions, button_selected, button_deselected),
-    );
-}
