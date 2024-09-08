@@ -11,6 +11,7 @@ pub fn main_menu_plugin(app: &mut App) {
                 button_keyboard_nav::<MenuButtonAction, MainMenuButtonNav>,
                 menu_action,
             )
+                .chain()
                 .run_if(in_state(GameState::Menu)),
         );
 }
@@ -31,7 +32,7 @@ enum MenuButtonAction {
     // QuitGame,
 }
 
-#[derive(Resource, Deref)]
+#[derive(Resource)]
 struct MainMenuButtonNav([MenuButtonAction; 2]);
 
 impl Default for MainMenuButtonNav {
@@ -43,15 +44,22 @@ impl Default for MainMenuButtonNav {
     }
 }
 
-impl ButtonNav<MenuButtonAction> for MainMenuButtonNav {
-    fn up(&self, current: MenuButtonAction) -> Option<MenuButtonAction> {
-        (**self).up(current)
-    }
-
-    fn down(&self, current: MenuButtonAction) -> Option<MenuButtonAction> {
-        (**self).down(current)
+impl std::ops::Deref for MainMenuButtonNav {
+    type Target = [MenuButtonAction];
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }
+
+// impl ButtonNav<MenuButtonAction> for MainMenuButtonNav {
+//     fn up(&self, current: MenuButtonAction) -> Option<MenuButtonAction> {
+//         (**self).up(current)
+//     }
+
+//     fn down(&self, current: MenuButtonAction) -> Option<MenuButtonAction> {
+//         (**self).down(current)
+//     }
+// }
 
 fn set_background(mut commands: Commands) {
     commands.insert_resource(ClearColor(GRAY.into()));

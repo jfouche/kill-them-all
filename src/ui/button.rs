@@ -73,20 +73,19 @@ where
     }
 }
 
-// TODO:
-// impl<S, T, N> ButtonNav<T> for S
-// where
-//     S: Deref<Target = N>,
-//     N: ButtonNav<T>,
-// {
-//     fn up(&self, current: T) -> Option<T> {
-//         (**self).up(current)
-//     }
+impl<S, T, N> ButtonNav<T> for S
+where
+    S: std::ops::Deref<Target = N>,
+    N: ButtonNav<T> + ?Sized,
+{
+    fn up(&self, current: T) -> Option<T> {
+        (**self).up(current)
+    }
 
-//     fn down(&self, current: T) -> Option<T> {
-//         (**self).down(current)
-//     }
-// }
+    fn down(&self, current: T) -> Option<T> {
+        (**self).down(current)
+    }
+}
 
 /// Tag component used to mark which setting is currently selected
 #[derive(Component)]
@@ -101,7 +100,7 @@ pub fn button_plugin(app: &mut App) {
 }
 
 // This system handles changing all buttons color based on mouse interaction
-fn button_interractions(
+pub fn button_interractions(
     mut query: Query<
         (&Interaction, &mut BackgroundColor, Option<&SelectedOption>),
         (Changed<Interaction>, With<Button>),
@@ -117,6 +116,10 @@ fn button_interractions(
     }
 }
 
+/// System to handle keyboard on a menu
+///
+/// This system should be run before the system that handle the action,
+/// because it uses [Interaction::Pressed] to inform the action key is pressed
 pub fn button_keyboard_nav<T, N>(
     mut commands: Commands,
     keys: Res<ButtonInput<KeyCode>>,
