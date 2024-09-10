@@ -51,16 +51,6 @@ impl std::ops::Deref for MainMenuButtonNav {
     }
 }
 
-// impl ButtonNav<MenuButtonAction> for MainMenuButtonNav {
-//     fn up(&self, current: MenuButtonAction) -> Option<MenuButtonAction> {
-//         (**self).up(current)
-//     }
-
-//     fn down(&self, current: MenuButtonAction) -> Option<MenuButtonAction> {
-//         (**self).down(current)
-//     }
-// }
-
 fn set_background(mut commands: Commands) {
     commands.insert_resource(ClearColor(GRAY.into()));
 }

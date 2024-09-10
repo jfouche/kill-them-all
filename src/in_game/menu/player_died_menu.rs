@@ -27,7 +27,7 @@ struct BackToMenu;
 
 fn spawn_player_died_menu(mut commands: Commands) {
     commands
-        .spawn_popup("Player died!", PlayerDiedMenu)
+        .spawn_popup("Player died!", (PlayerDiedMenu, SelectedOption))
         .with_children(|popup| {
             popup.spawn_button("Back to menu", BackToMenu);
         });
@@ -37,7 +37,12 @@ fn back_to_menu(
     mut q_btn: Query<&Interaction, (Changed<Interaction>, With<BackToMenu>)>,
     mut game_state: ResMut<NextState<GameState>>,
     mut in_game_state: ResMut<NextState<InGameState>>,
+    keys: Res<ButtonInput<KeyCode>>,
 ) {
+    if keys.just_pressed(KeyCode::Enter) {
+        game_state.set(GameState::Menu);
+        in_game_state.set(InGameState::Disabled);
+    }
     for interaction in &mut q_btn {
         if *interaction == Interaction::Pressed {
             game_state.set(GameState::Menu);
