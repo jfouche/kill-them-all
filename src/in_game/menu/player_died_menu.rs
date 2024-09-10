@@ -1,6 +1,6 @@
 use crate::components::*;
 use crate::schedule::*;
-use crate::ui::{spawn_button, spawn_popup};
+use crate::ui::*;
 use bevy::prelude::*;
 
 pub struct PlayerDiedMenuPlugin;
@@ -25,10 +25,12 @@ struct PlayerDiedMenu;
 #[derive(Component)]
 struct BackToMenu;
 
-fn spawn_player_died_menu(commands: Commands) {
-    spawn_popup(commands, "Player died!", PlayerDiedMenu, |popup| {
-        spawn_button(popup, "Back to menu", BackToMenu);
-    });
+fn spawn_player_died_menu(mut commands: Commands) {
+    commands
+        .spawn_popup("Player died!", PlayerDiedMenu)
+        .with_children(|popup| {
+            popup.spawn_button("Back to menu", BackToMenu);
+        });
 }
 
 fn back_to_menu(

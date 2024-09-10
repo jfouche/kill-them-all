@@ -1,7 +1,7 @@
 use crate::components::*;
 use crate::in_game::run_game;
 use crate::schedule::*;
-use crate::ui::{spawn_button, spawn_popup};
+use crate::ui::*;
 use bevy::prelude::*;
 
 pub struct RoundEndMenuPlugin;
@@ -20,10 +20,12 @@ struct RoundEndMenu;
 #[derive(Component)]
 struct BackToMenu;
 
-fn spawn_round_end_menu(commands: Commands) {
-    spawn_popup(commands, "End of round", RoundEndMenu, |popup| {
-        spawn_button(popup, "Back to game", BackToMenu);
-    });
+fn spawn_round_end_menu(mut commands: Commands) {
+    commands
+        .spawn_popup("End of round", RoundEndMenu)
+        .with_children(|popup| {
+            popup.spawn_button("Back to game", BackToMenu);
+        });
 }
 
 pub fn back_to_game(state: ResMut<NextState<InGameState>>, keys: Res<ButtonInput<KeyCode>>) {

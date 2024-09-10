@@ -1,7 +1,7 @@
 use crate::components::*;
 use crate::in_game::back_to_game;
 use crate::schedule::*;
-use crate::ui::spawn_popup;
+use crate::ui::*;
 use bevy::prelude::*;
 use std::fmt::Display;
 
@@ -101,29 +101,31 @@ impl Skill for ExperienceText {
     type SkillComponent = Experience;
 }
 
-fn spawn_pause_menu(commands: Commands) {
-    spawn_popup(commands, "Pause", PauseMenu, |popup| {
-        popup
-            .spawn(NodeBundle {
-                style: Style {
-                    display: bevy::ui::Display::Flex,
-                    flex_direction: FlexDirection::Column,
-                    width: Val::Percent(95.),
+fn spawn_pause_menu(mut commands: Commands) {
+    commands
+        .spawn_popup("Pause", PauseMenu)
+        .with_children(|popup| {
+            popup
+                .spawn(NodeBundle {
+                    style: Style {
+                        display: bevy::ui::Display::Flex,
+                        flex_direction: FlexDirection::Column,
+                        width: Val::Percent(95.),
+                        ..Default::default()
+                    },
                     ..Default::default()
-                },
-                ..Default::default()
-            })
-            .with_children(|flex| {
-                spawn_skill(flex, "Life :", LifeText);
-                spawn_skill(flex, "Life regen :", LifeRegenText);
-                spawn_skill(flex, "Movement speed :", MovementSpeedText);
-                spawn_skill(flex, "Attack speed :", AttackSpeedText);
-                spawn_skill(flex, "Pierce chance :", PierceChanceText);
-                spawn_skill(flex, "Weapon :", WeaponText);
-                spawn_skill(flex, "Experience :", ExperienceText);
-                spawn_skill(flex, "Money :", MoneyText);
-            });
-    });
+                })
+                .with_children(|flex| {
+                    spawn_skill(flex, "Life :", LifeText);
+                    spawn_skill(flex, "Life regen :", LifeRegenText);
+                    spawn_skill(flex, "Movement speed :", MovementSpeedText);
+                    spawn_skill(flex, "Attack speed :", AttackSpeedText);
+                    spawn_skill(flex, "Pierce chance :", PierceChanceText);
+                    spawn_skill(flex, "Weapon :", WeaponText);
+                    spawn_skill(flex, "Experience :", ExperienceText);
+                    spawn_skill(flex, "Money :", MoneyText);
+                });
+        });
 }
 
 fn spawn_skill(panel: &mut ChildBuilder, label: impl Into<String>, component: impl Bundle) {

@@ -65,15 +65,13 @@ fn set_background(mut commands: Commands) {
     commands.insert_resource(ClearColor(GRAY.into()));
 }
 
-fn spawn_menu(commands: Commands) {
-    spawn_popup(commands, "Kill'em all", MainMenu, |menu| {
-        spawn_button(
-            menu,
-            "New game",
-            (MenuButtonAction::PlayGame, SelectedOption),
-        );
-        spawn_button(menu, "Exit", MenuButtonAction::ExitApplication);
-    });
+fn spawn_menu(mut commands: Commands) {
+    commands
+        .spawn_popup("Kill'em all", MainMenu)
+        .with_children(|menu| {
+            menu.spawn_button("New game", (MenuButtonAction::PlayGame, SelectedOption));
+            menu.spawn_button("Exit", MenuButtonAction::ExitApplication);
+        });
 }
 
 fn menu_action(

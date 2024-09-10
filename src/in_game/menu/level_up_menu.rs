@@ -1,7 +1,7 @@
 use crate::components::*;
 use crate::in_game::back_to_game;
 use crate::schedule::*;
-use crate::ui::{spawn_button, spawn_popup};
+use crate::ui::*;
 use bevy::prelude::*;
 use std::marker::PhantomData;
 
@@ -127,38 +127,40 @@ impl UpgradeSkillButton for PierceChanceButton {
     }
 }
 
-fn spawn_level_up_menu(commands: Commands) {
-    spawn_popup(commands, "Level up!", LevelUpMenu, |window| {
-        let mut upgrade_provider = UpgradeProvider::new();
-        for _ in 0..3 {
-            if let Some(upgrade) = upgrade_provider.gen() {
-                match upgrade {
-                    Upgrade::IncreaseAttackSpeed(increase) => {
-                        spawn_upgrade_button(window, AttackSpeedButton::new(increase));
-                    }
-                    Upgrade::IncreaseMaxLife(increase) => {
-                        spawn_upgrade_button(window, MaxLifeButton::new(increase));
-                    }
-                    Upgrade::IncreaseLifeRegen(increase) => {
-                        spawn_upgrade_button(window, LifeRegenButton::new(increase));
-                    }
-                    Upgrade::IncreasemovementSpeed(increase) => {
-                        spawn_upgrade_button(window, MovementSpeedButton::new(increase));
-                    }
-                    Upgrade::Pierce(increase) => {
-                        spawn_upgrade_button(window, PierceChanceButton::new(increase));
+fn spawn_level_up_menu(mut commands: Commands) {
+    commands
+        .spawn_popup("Level up!", LevelUpMenu)
+        .with_children(|window| {
+            let mut upgrade_provider = UpgradeProvider::new();
+            for _ in 0..3 {
+                if let Some(upgrade) = upgrade_provider.gen() {
+                    match upgrade {
+                        Upgrade::IncreaseAttackSpeed(increase) => {
+                            spawn_upgrade_button(window, AttackSpeedButton::new(increase));
+                        }
+                        Upgrade::IncreaseMaxLife(increase) => {
+                            spawn_upgrade_button(window, MaxLifeButton::new(increase));
+                        }
+                        Upgrade::IncreaseLifeRegen(increase) => {
+                            spawn_upgrade_button(window, LifeRegenButton::new(increase));
+                        }
+                        Upgrade::IncreasemovementSpeed(increase) => {
+                            spawn_upgrade_button(window, MovementSpeedButton::new(increase));
+                        }
+                        Upgrade::Pierce(increase) => {
+                            spawn_upgrade_button(window, PierceChanceButton::new(increase));
+                        }
                     }
                 }
             }
-        }
-    });
+        });
 }
 
 fn spawn_upgrade_button<B>(parent: &mut ChildBuilder, button: B)
 where
     B: Component + UpgradeSkillButton,
 {
-    spawn_button(parent, button.label(), button);
+    parent.spawn_button(button.label(), button);
 }
 
 ///

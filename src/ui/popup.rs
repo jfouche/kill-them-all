@@ -1,5 +1,33 @@
 use super::vsizer;
-use bevy::prelude::*;
+use bevy::{ecs::system::EntityCommands, prelude::*};
+
+pub trait SpawnPopup {
+    fn spawn_popup(&mut self, title: impl Into<String>, bundle: impl Bundle) -> EntityCommands;
+
+    fn spawn_title(commands: &mut EntityCommands, title: impl Into<String>) {
+        commands.with_children(|menu| {
+            menu.spawn(popup_title_bar()).with_children(|title_bar| {
+                title_bar.spawn(popup_title(title));
+            });
+        });
+    }
+}
+
+impl SpawnPopup for Commands<'_, '_> {
+    fn spawn_popup(&mut self, title: impl Into<String>, bundle: impl Bundle) -> EntityCommands {
+        let mut e = self.spawn((popup(), bundle));
+        Self::spawn_title(&mut e, title);
+        e
+    }
+}
+
+impl SpawnPopup for ChildBuilder<'_> {
+    fn spawn_popup(&mut self, title: impl Into<String>, bundle: impl Bundle) -> EntityCommands {
+        let mut e = self.spawn((popup(), bundle));
+        Self::spawn_title(&mut e, title);
+        e
+    }
+}
 
 #[inline]
 fn popup() -> NodeBundle {
@@ -58,20 +86,3 @@ fn popup_title(title: impl Into<String>) -> TextBundle {
 //         ..Default::default()
 //     })
 // }
-
-pub fn spawn_popup(
-    mut commands: Commands,
-    title: impl Into<String>,
-    bundle: impl Bundle,
-    spawn_content: impl FnOnce(&mut ChildBuilder),
-) -> Entity {
-    commands
-        .spawn((popup(), bundle))
-        .with_children(|menu| {
-            menu.spawn(popup_title_bar()).with_children(|title_bar| {
-                title_bar.spawn(popup_title(title));
-            });
-            spawn_content(menu);
-        })
-        .id()
-}

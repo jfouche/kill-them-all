@@ -7,6 +7,30 @@ const PRESSED_BUTTON: Color = Color::srgb(0.35, 0.75, 0.35);
 
 const BUTTON_TEXT_COLOR: Color = Color::srgb(0.9, 0.9, 0.9);
 
+pub trait SpawnButton {
+    fn spawn_button(&mut self, label: impl Into<String>, bundle: impl Bundle) -> &mut Self;
+}
+
+impl SpawnButton for Commands<'_, '_> {
+    fn spawn_button(&mut self, label: impl Into<String>, bundle: impl Bundle) -> &mut Self {
+        self.spawn((button_bundle(), bundle))
+            .with_children(|parent| {
+                parent.spawn(button_text(label));
+            });
+        self
+    }
+}
+
+impl SpawnButton for ChildBuilder<'_> {
+    fn spawn_button(&mut self, label: impl Into<String>, bundle: impl Bundle) -> &mut Self {
+        self.spawn((button_bundle(), bundle))
+            .with_children(|parent| {
+                parent.spawn(button_text(label));
+            });
+        self
+    }
+}
+
 #[inline]
 pub fn button_bundle() -> ButtonBundle {
     ButtonBundle {
@@ -43,14 +67,6 @@ pub fn button_text_style() -> TextStyle {
 #[inline]
 pub fn button_text(text: impl Into<String>) -> TextBundle {
     TextBundle::from_section(text, button_text_style()).with_text_justify(JustifyText::Center)
-}
-
-pub fn spawn_button(commands: &mut ChildBuilder, label: impl Into<String>, bundle: impl Bundle) {
-    commands
-        .spawn((button_bundle(), bundle))
-        .with_children(|parent| {
-            parent.spawn(button_text(label));
-        });
 }
 
 pub trait ButtonNav<T> {
