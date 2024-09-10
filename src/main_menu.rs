@@ -7,10 +7,7 @@ pub fn main_menu_plugin(app: &mut App) {
         .add_systems(OnExit(GameState::Menu), despawn_all::<MainMenu>)
         .add_systems(
             Update,
-            (
-                button_keyboard_nav::<MenuButtonAction, MainMenuButtonNav>,
-                menu_action,
-            )
+            (button_keyboard_nav::<MainMenuButtonNav>, menu_action)
                 .chain()
                 .run_if(in_state(GameState::Menu)),
         );
@@ -23,29 +20,14 @@ struct MainMenu;
 #[derive(Component, Clone, Copy, PartialEq)]
 enum MenuButtonAction {
     PlayGame,
-    // Settings,
-    // SettingsSound,
-    // SettingsDisplay,
-    // BackToMainMenu,
-    // BackToSettings,
     ExitApplication,
-    // QuitGame,
 }
 
-#[derive(Resource)]
-struct MainMenuButtonNav([MenuButtonAction; 2]);
-
-impl Default for MainMenuButtonNav {
-    fn default() -> Self {
-        MainMenuButtonNav([
-            MenuButtonAction::PlayGame,
-            MenuButtonAction::ExitApplication,
-        ])
-    }
-}
+#[derive(Resource, Default)]
+struct MainMenuButtonNav(Vec<Entity>);
 
 impl std::ops::Deref for MainMenuButtonNav {
-    type Target = [MenuButtonAction];
+    type Target = [Entity];
     fn deref(&self) -> &Self::Target {
         &self.0
     }
@@ -56,12 +38,17 @@ fn set_background(mut commands: Commands) {
 }
 
 fn spawn_menu(mut commands: Commands) {
+    let new_game_btn =
+        commands.spawn_button("New game", (MenuButtonAction::PlayGame, SelectedOption));
+    let exit_btn = commands.spawn_button("Exit", MenuButtonAction::ExitApplication);
+
+    let menu_nav = MainMenuButtonNav(vec![new_game_btn, exit_btn]);
+
     commands
         .spawn_popup("Kill'em all", MainMenu)
-        .with_children(|menu| {
-            menu.spawn_button("New game", (MenuButtonAction::PlayGame, SelectedOption));
-            menu.spawn_button("Exit", MenuButtonAction::ExitApplication);
-        });
+        .push_children(&menu_nav);
+
+    commands.insert_resource(menu_nav);
 }
 
 fn menu_action(

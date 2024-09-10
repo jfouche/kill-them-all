@@ -9,19 +9,19 @@ const PRESSED_BUTTON: Color = Color::srgb(0.35, 0.75, 0.35);
 const BUTTON_TEXT_COLOR: Color = Color::srgb(0.9, 0.9, 0.9);
 
 pub trait SpawnButton {
-    fn spawn_button(&mut self, label: impl Into<String>, bundle: impl Bundle) -> &mut Self;
+    fn spawn_button(&mut self, label: impl Into<String>, bundle: impl Bundle) -> Entity;
 }
 
 impl<T> SpawnButton for T
 where
     T: SpawnImpl,
 {
-    fn spawn_button(&mut self, label: impl Into<String>, bundle: impl Bundle) -> &mut Self {
+    fn spawn_button(&mut self, label: impl Into<String>, bundle: impl Bundle) -> Entity {
         self.spawn_impl((button_bundle(), bundle))
             .with_children(|parent| {
                 parent.spawn(button_text(label));
-            });
-        self
+            })
+            .id()
     }
 }
 
@@ -130,34 +130,28 @@ pub fn button_interractions(
 ///
 /// This system should be run before the system that handle the action,
 /// because it uses [Interaction::Pressed] to inform the action key is pressed
-pub fn button_keyboard_nav<T, N>(
+pub fn button_keyboard_nav<N>(
     mut commands: Commands,
     keys: Res<ButtonInput<KeyCode>>,
-    sel_buttons: Query<(Entity, &T), With<SelectedOption>>,
-    buttons: Query<(Entity, &T), With<Button>>,
+    sel_buttons: Query<Entity, With<SelectedOption>>,
     nav: Res<N>,
 ) where
-    T: Component + PartialEq + Copy,
-    N: ButtonNav<T> + Resource,
+    N: ButtonNav<Entity> + Resource,
 {
-    for (sel_entity, sel_btn) in &sel_buttons {
-        if keys.just_pressed(KeyCode::Enter) {
+    for sel_entity in &sel_buttons {
+        if keys.any_just_pressed([KeyCode::Space, KeyCode::Enter]) {
             commands.entity(sel_entity).insert(Interaction::Pressed);
         }
         if keys.just_pressed(KeyCode::ArrowUp) {
-            if let Some(top) = nav.up(*sel_btn) {
-                if let Some((e, _v)) = buttons.iter().find(|(_e, v)| **v == top) {
-                    commands.entity(sel_entity).remove::<SelectedOption>();
-                    commands.entity(e).insert(SelectedOption);
-                }
+            if let Some(up) = nav.up(sel_entity) {
+                commands.entity(sel_entity).remove::<SelectedOption>();
+                commands.entity(up).insert(SelectedOption);
             }
         }
         if keys.just_pressed(KeyCode::ArrowDown) {
-            if let Some(top) = nav.down(*sel_btn) {
-                if let Some((e, _v)) = buttons.iter().find(|(_e, v)| **v == top) {
-                    commands.entity(sel_entity).remove::<SelectedOption>();
-                    commands.entity(e).insert(SelectedOption);
-                }
+            if let Some(down) = nav.down(sel_entity) {
+                commands.entity(sel_entity).remove::<SelectedOption>();
+                commands.entity(down).insert(SelectedOption);
             }
         }
     }

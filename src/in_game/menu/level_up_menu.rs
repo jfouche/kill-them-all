@@ -9,7 +9,8 @@ pub struct LevelUpMenuPlugin;
 
 impl Plugin for LevelUpMenuPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<LevelUpEvent>()
+        app.init_resource::<LevelUpMenuNav>()
+            .add_event::<LevelUpEvent>()
             .add_systems(
                 Update,
                 enter_level_up_state.in_set(GameRunningSet::EntityUpdate),
@@ -19,13 +20,17 @@ impl Plugin for LevelUpMenuPlugin {
             .add_systems(
                 Update,
                 (
-                    back_to_game,
-                    upgrade_skill::<MaxLifeButton>,
-                    upgrade_skill::<LifeRegenButton>,
-                    upgrade_skill::<MovementSpeedButton>,
-                    upgrade_skill::<AttackSpeedButton>,
-                    upgrade_skill::<PierceChanceButton>,
+                    button_keyboard_nav::<LevelUpMenuNav>,
+                    (
+                        back_to_game,
+                        upgrade_skill::<MaxLifeButton>,
+                        upgrade_skill::<LifeRegenButton>,
+                        upgrade_skill::<MovementSpeedButton>,
+                        upgrade_skill::<AttackSpeedButton>,
+                        upgrade_skill::<PierceChanceButton>,
+                    ),
                 )
+                    .chain()
                     .run_if(in_state(InGameState::LevelUp)),
             );
     }
@@ -127,40 +132,60 @@ impl UpgradeSkillButton for PierceChanceButton {
     }
 }
 
-fn spawn_level_up_menu(mut commands: Commands) {
-    commands
-        .spawn_popup("Level up!", LevelUpMenu)
-        .with_children(|window| {
-            let mut upgrade_provider = UpgradeProvider::new();
-            for _ in 0..3 {
-                if let Some(upgrade) = upgrade_provider.gen() {
-                    match upgrade {
-                        Upgrade::IncreaseAttackSpeed(increase) => {
-                            spawn_upgrade_button(window, AttackSpeedButton::new(increase));
-                        }
-                        Upgrade::IncreaseMaxLife(increase) => {
-                            spawn_upgrade_button(window, MaxLifeButton::new(increase));
-                        }
-                        Upgrade::IncreaseLifeRegen(increase) => {
-                            spawn_upgrade_button(window, LifeRegenButton::new(increase));
-                        }
-                        Upgrade::IncreasemovementSpeed(increase) => {
-                            spawn_upgrade_button(window, MovementSpeedButton::new(increase));
-                        }
-                        Upgrade::Pierce(increase) => {
-                            spawn_upgrade_button(window, PierceChanceButton::new(increase));
-                        }
-                    }
-                }
-            }
-        });
+#[derive(Resource, Default)]
+struct LevelUpMenuNav(Vec<Entity>);
+
+impl std::ops::Deref for LevelUpMenuNav {
+    type Target = [Entity];
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
 
-fn spawn_upgrade_button<B>(parent: &mut ChildBuilder, button: B)
+fn spawn_level_up_menu(mut commands: Commands) {
+    let mut level_up_nav = LevelUpMenuNav::default();
+    let mut upgrade_provider = UpgradeProvider::new();
+
+    for _ in 0..3 {
+        if let Some(upgrade) = upgrade_provider.gen() {
+            let entity = match upgrade {
+                Upgrade::IncreaseAttackSpeed(increase) => {
+                    spawn_upgrade_button(&mut commands, AttackSpeedButton::new(increase))
+                }
+                Upgrade::IncreaseMaxLife(increase) => {
+                    spawn_upgrade_button(&mut commands, MaxLifeButton::new(increase))
+                }
+                Upgrade::IncreaseLifeRegen(increase) => {
+                    spawn_upgrade_button(&mut commands, LifeRegenButton::new(increase))
+                }
+                Upgrade::IncreasemovementSpeed(increase) => {
+                    spawn_upgrade_button(&mut commands, MovementSpeedButton::new(increase))
+                }
+                Upgrade::Pierce(increase) => {
+                    spawn_upgrade_button(&mut commands, PierceChanceButton::new(increase))
+                }
+            };
+            level_up_nav.0.push(entity);
+        }
+    }
+
+    // Select the first upgrade
+    if let Some(entity) = &level_up_nav.first() {
+        commands.entity(**entity).insert(SelectedOption);
+    }
+
+    commands
+        .spawn_popup("Level up!", LevelUpMenu)
+        .push_children(&level_up_nav);
+
+    commands.insert_resource(level_up_nav);
+}
+
+fn spawn_upgrade_button<B>(parent: &mut Commands, button: B) -> Entity
 where
     B: Component + UpgradeSkillButton,
 {
-    parent.spawn_button(button.label(), button);
+    parent.spawn_button(button.label(), button)
 }
 
 ///
