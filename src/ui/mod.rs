@@ -7,6 +7,7 @@ pub use popup::*;
 pub use progressbar::*;
 
 use bevy::app::PluginGroupBuilder;
+use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 
 pub struct UiPlugins;
@@ -16,6 +17,22 @@ impl PluginGroup for UiPlugins {
         PluginGroupBuilder::start::<Self>()
             .add(progressbar_plugin)
             .add(button_plugin)
+    }
+}
+
+pub trait SpawnImpl {
+    fn spawn_impl(&mut self, bundle: impl Bundle) -> EntityCommands;
+}
+
+impl SpawnImpl for Commands<'_, '_> {
+    fn spawn_impl(&mut self, bundle: impl Bundle) -> EntityCommands {
+        self.spawn(bundle)
+    }
+}
+
+impl SpawnImpl for ChildBuilder<'_> {
+    fn spawn_impl(&mut self, bundle: impl Bundle) -> EntityCommands {
+        self.spawn(bundle)
     }
 }
 

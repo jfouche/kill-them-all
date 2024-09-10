@@ -1,3 +1,4 @@
+use super::SpawnImpl;
 use bevy::prelude::*;
 
 const NORMAL_BUTTON: Color = Color::srgb(0.15, 0.35, 0.15);
@@ -11,19 +12,12 @@ pub trait SpawnButton {
     fn spawn_button(&mut self, label: impl Into<String>, bundle: impl Bundle) -> &mut Self;
 }
 
-impl SpawnButton for Commands<'_, '_> {
+impl<T> SpawnButton for T
+where
+    T: SpawnImpl,
+{
     fn spawn_button(&mut self, label: impl Into<String>, bundle: impl Bundle) -> &mut Self {
-        self.spawn((button_bundle(), bundle))
-            .with_children(|parent| {
-                parent.spawn(button_text(label));
-            });
-        self
-    }
-}
-
-impl SpawnButton for ChildBuilder<'_> {
-    fn spawn_button(&mut self, label: impl Into<String>, bundle: impl Bundle) -> &mut Self {
-        self.spawn((button_bundle(), bundle))
+        self.spawn_impl((button_bundle(), bundle))
             .with_children(|parent| {
                 parent.spawn(button_text(label));
             });

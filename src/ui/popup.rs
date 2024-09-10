@@ -1,30 +1,21 @@
-use super::vsizer;
+use super::{vsizer, SpawnImpl};
 use bevy::{ecs::system::EntityCommands, prelude::*};
 
 pub trait SpawnPopup {
     fn spawn_popup(&mut self, title: impl Into<String>, bundle: impl Bundle) -> EntityCommands;
+}
 
-    fn spawn_title(commands: &mut EntityCommands, title: impl Into<String>) {
-        commands.with_children(|menu| {
+impl<T> SpawnPopup for T
+where
+    T: SpawnImpl,
+{
+    fn spawn_popup(&mut self, title: impl Into<String>, bundle: impl Bundle) -> EntityCommands {
+        let mut e = self.spawn_impl((popup(), bundle));
+        e.with_children(|menu| {
             menu.spawn(popup_title_bar()).with_children(|title_bar| {
                 title_bar.spawn(popup_title(title));
             });
         });
-    }
-}
-
-impl SpawnPopup for Commands<'_, '_> {
-    fn spawn_popup(&mut self, title: impl Into<String>, bundle: impl Bundle) -> EntityCommands {
-        let mut e = self.spawn((popup(), bundle));
-        Self::spawn_title(&mut e, title);
-        e
-    }
-}
-
-impl SpawnPopup for ChildBuilder<'_> {
-    fn spawn_popup(&mut self, title: impl Into<String>, bundle: impl Bundle) -> EntityCommands {
-        let mut e = self.spawn((popup(), bundle));
-        Self::spawn_title(&mut e, title);
         e
     }
 }
