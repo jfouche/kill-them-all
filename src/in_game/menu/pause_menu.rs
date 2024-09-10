@@ -1,3 +1,4 @@
+use super::inventory_panel::InventoryPanel;
 use crate::components::*;
 use crate::in_game::back_to_game;
 use crate::schedule::*;
@@ -116,6 +117,7 @@ fn spawn_pause_menu(mut commands: Commands) {
                     ..Default::default()
                 })
                 .with_children(|flex| {
+                    flex.spawn(InventoryPanel);
                     spawn_skill(flex, "Life :", LifeText);
                     spawn_skill(flex, "Life regen :", LifeRegenText);
                     spawn_skill(flex, "Movement speed :", MovementSpeedText);

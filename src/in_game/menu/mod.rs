@@ -1,3 +1,4 @@
+mod inventory_panel;
 pub mod level_up_menu;
 pub mod pause_menu;
 pub mod player_died_menu;
@@ -15,6 +16,7 @@ impl PluginGroup for InGameMenuPluginsGroup {
             .add(level_up_menu::LevelUpMenuPlugin)
             .add(player_died_menu::PlayerDiedMenuPlugin)
             .add(round_end_menu::RoundEndMenuPlugin)
+            .add(inventory_panel::inventory_panel_plugin)
             .add(menu_plugin)
     }
 }
