@@ -1,5 +1,6 @@
 mod bonus;
 mod character;
+mod equipment;
 mod monster;
 mod player;
 mod upgrade;
@@ -8,6 +9,7 @@ mod world_map;
 
 pub use bonus::*;
 pub use character::*;
+pub use equipment::*;
 pub use monster::*;
 pub use player::*;
 pub use upgrade::*;

@@ -1,3 +1,4 @@
+use crate::components::*;
 use bevy::prelude::*;
 
 #[derive(Component)]
@@ -19,11 +20,6 @@ impl InventoryAssets {
             },
         )
     }
-}
-
-pub fn inventory_panel_plugin(app: &mut App) {
-    app.add_systems(Startup, load_assets)
-        .add_systems(Update, add_inventory_panel);
 }
 
 fn load_assets(
@@ -51,17 +47,30 @@ fn load_assets(
 
 fn add_inventory_panel(
     mut commands: Commands,
-    query: Query<Entity, Added<InventoryPanel>>,
+    panels: Query<Entity, Added<InventoryPanel>>,
+    players: Query<&Helmet, With<Player>>,
     assets: Res<InventoryAssets>,
 ) {
-    for entity in &query {
+    let Ok(helmet) = players.get_single() else {
+        return;
+    };
+    for entity in &panels {
         commands
             .entity(entity)
             .insert(main_panel_bundle())
             .with_children(|panel| {
                 panel.spawn(items_panel_bundle()).with_children(|p| {
-                    let helmet = assets.helmet();
-                    p.spawn(inventory_box(Vec2::new(74., 7.), helmet.0, helmet.1));
+                    // helmet
+                    let pos = Vec2::new(74., 7.);
+                    match *helmet {
+                        Helmet::None => {
+                            p.spawn(empty_inventory_box(pos));
+                        }
+                        Helmet::Helmet => {
+                            let helmet = assets.helmet();
+                            p.spawn(inventory_box(pos, helmet.0, helmet.1));
+                        }
+                    }
                     p.spawn(empty_inventory_box(Vec2::new(142., 7.)));
                     p.spawn(empty_inventory_box(Vec2::new(7., 74.)));
                     p.spawn(empty_inventory_box(Vec2::new(74., 74.)));
@@ -142,4 +151,9 @@ fn inventory_box(pos: Vec2, texture: Handle<Image>, atlas: TextureAtlas) -> impl
         },
         atlas,
     )
+}
+
+pub fn inventory_panel_plugin(app: &mut App) {
+    app.add_systems(Startup, load_assets)
+        .add_systems(Update, add_inventory_panel);
 }

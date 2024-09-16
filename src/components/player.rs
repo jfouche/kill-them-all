@@ -9,6 +9,9 @@ pub struct Player;
 pub struct PlayerBundle {
     tag: Player,
     name: Name,
+    // Equipment
+    helmet: Helmet,
+    //
     money: Money,
     xp: Experience,
     // bevy view
@@ -32,6 +35,7 @@ impl Default for PlayerBundle {
         PlayerBundle {
             tag: Player,
             name: Name::new("Player"),
+            helmet: Helmet::None,
             money: Money(0),
             xp: Experience::default(),
             sprite: SpriteBundle::default(),
