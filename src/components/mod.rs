@@ -3,6 +3,7 @@ mod character;
 mod equipment;
 mod monster;
 mod player;
+mod rng_provider;
 mod upgrade;
 mod weapon;
 mod world_map;

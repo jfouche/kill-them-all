@@ -28,10 +28,7 @@ struct RoundEndMenu;
 #[derive(Component)]
 struct BackToMenu;
 
-#[derive(Component)]
-struct EquipmentButton;
-
-#[derive(Resource, Default)]
+#[derive(Resource, Default, DerefMut)]
 struct RoundEndMenuNav(Vec<Entity>);
 
 impl std::ops::Deref for RoundEndMenuNav {
@@ -41,14 +38,39 @@ impl std::ops::Deref for RoundEndMenuNav {
     }
 }
 
+trait EquipmentLabel {
+    fn label(&self) -> String;
+}
+
+impl EquipmentLabel for Equipment {
+    fn label(&self) -> String {
+        match self {
+            Equipment::Helmet(helmet) => format!("Helmet +{} armour", helmet.armor() as u16),
+            Equipment::BodyArmour(body_armour) => {
+                format!("Body armour +{} armour", body_armour.armor() as u16)
+            }
+        }
+    }
+}
+
 fn spawn_round_end_menu(mut commands: Commands) {
     let mut round_end_nav = RoundEndMenuNav::default();
+    let mut equipment_provider = EquipmentProvider::new();
 
-    let id = commands.spawn_button("HELMET", (EquipmentButton, SelectedOption));
-    round_end_nav.0.push(id);
+    for _ in 0..3 {
+        if let Some(equipment) = equipment_provider.gen() {
+            let entity = commands.spawn_button(equipment.label(), equipment);
+            round_end_nav.0.push(entity);
+        }
+    }
 
     let id = commands.spawn_button("Back to game", BackToMenu);
     round_end_nav.0.push(id);
+
+    // Select the first upgrade
+    if let Some(entity) = &round_end_nav.first() {
+        commands.entity(**entity).insert(SelectedOption);
+    }
 
     commands
         .spawn_popup("End of round", (RoundEndMenu, Name::new("RoundEndMenu")))
@@ -59,16 +81,19 @@ fn spawn_round_end_menu(mut commands: Commands) {
 
 /// Handle the selection of an [Equipment], to add to the [Player]
 fn select_equipment(
-    mut players: Query<&mut Helmet, With<Player>>,
+    mut players: Query<(&mut Helmet, &mut BodyArmour), With<Player>>,
     mut state: ResMut<NextState<InGameState>>,
-    interactions: Query<(&EquipmentButton, &Interaction)>,
+    interactions: Query<(&Equipment, &Interaction), With<Button>>,
 ) {
-    let Ok(mut helmet) = players.get_single_mut() else {
+    let Ok((mut helmet, mut body_armour)) = players.get_single_mut() else {
         return;
     };
-    for (_btn, interaction) in &interactions {
+    for (equipment, interaction) in &interactions {
         if *interaction == Interaction::Pressed {
-            *helmet = Helmet::NormalHelmet(NormalHelmet { armor: 1. });
+            match equipment {
+                Equipment::Helmet(new_helmet) => *helmet = new_helmet.clone(),
+                Equipment::BodyArmour(new_body_armour) => *body_armour = new_body_armour.clone(),
+            }
             state.set(InGameState::Running);
         }
     }
