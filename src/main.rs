@@ -44,7 +44,7 @@ fn main() {
             in_game::InGamePluginsGroup,
         ))
         // resources
-        .init_resource::<components::ScoreResource>() // TODO: Move to plugin
+        .init_resource::<components::Score>() // TODO: Move to plugin
         // startup
         .add_systems(Startup, init_rapier)
         // systems

@@ -132,7 +132,7 @@ fn spawn_score(mut commands: Commands) {
     ));
 }
 
-fn update_score(score: Res<ScoreResource>, mut q_text: Query<&mut Text, With<ScoreText>>) {
+fn update_score(score: Res<Score>, mut q_text: Query<&mut Text, With<ScoreText>>) {
     if let Ok(mut text) = q_text.get_single_mut() {
         text.sections[1].value = format!("{}", score.0);
     }

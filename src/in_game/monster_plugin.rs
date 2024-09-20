@@ -157,7 +157,7 @@ fn on_monster_hit(
 fn increment_score(
     mut commands: Commands,
     mut monster_hit_events: EventReader<MonsterDeathEvent>,
-    mut score: ResMut<ScoreResource>,
+    mut score: ResMut<Score>,
 ) {
     for event in monster_hit_events.read() {
         // TODO: ("split in 2 systems");

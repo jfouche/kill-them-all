@@ -72,8 +72,8 @@ impl LifeTime {
 // ==================================================================
 // ScoreResource
 
-#[derive(Default, Resource)]
-pub struct ScoreResource(pub u16);
+#[derive(Default, Resource, Reflect)]
+pub struct Score(pub u16);
 
 // ==================================================================
 // Round
