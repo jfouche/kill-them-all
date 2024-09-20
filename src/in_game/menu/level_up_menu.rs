@@ -175,7 +175,7 @@ fn spawn_level_up_menu(mut commands: Commands) {
     }
 
     commands
-        .spawn_popup("Level up!", LevelUpMenu)
+        .spawn_popup("Level up!", (LevelUpMenu, Name::new("LevelUpMenu")))
         .push_children(&level_up_nav);
 
     commands.insert_resource(level_up_nav);

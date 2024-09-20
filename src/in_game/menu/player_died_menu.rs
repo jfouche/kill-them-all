@@ -27,9 +27,12 @@ struct BackToMenu;
 
 fn spawn_player_died_menu(mut commands: Commands) {
     commands
-        .spawn_popup("Player died!", (PlayerDiedMenu, SelectedOption))
+        .spawn_popup(
+            "Player died!",
+            (PlayerDiedMenu, Name::new("PlayerDiedMenu")),
+        )
         .with_children(|popup| {
-            popup.spawn_button("Back to menu", BackToMenu);
+            popup.spawn_button("Back to menu", (BackToMenu, SelectedOption));
         });
 }
 

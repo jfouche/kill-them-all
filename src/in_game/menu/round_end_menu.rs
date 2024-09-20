@@ -51,8 +51,10 @@ fn spawn_round_end_menu(mut commands: Commands) {
     round_end_nav.0.push(id);
 
     commands
-        .spawn_popup("End of round", RoundEndMenu)
+        .spawn_popup("End of round", (RoundEndMenu, Name::new("RoundEndMenu")))
         .push_children(&round_end_nav);
+
+    commands.insert_resource(round_end_nav);
 }
 
 /// Handle the selection of an [Equipment], to add to the [Player]
@@ -66,7 +68,7 @@ fn select_equipment(
     };
     for (_btn, interaction) in &interactions {
         if *interaction == Interaction::Pressed {
-            *helmet = Helmet::Helmet;
+            *helmet = Helmet::NormalHelmet(NormalHelmet { armor: 1. });
             state.set(InGameState::Running);
         }
     }

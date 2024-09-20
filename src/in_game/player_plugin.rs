@@ -150,27 +150,30 @@ fn player_fires(
 fn on_player_hit(
     mut commands: Commands,
     mut player_hit_events: EventReader<PlayerHitEvent>,
-    mut q_player: Query<(&mut Life, &mut CollisionGroups), With<Player>>,
+    mut q_player: Query<(&Helmet, &mut Life, &mut CollisionGroups), With<Player>>,
     mut send_death: EventWriter<PlayerDeathEvent>,
 ) {
-    if let Ok((mut life, mut collision_groups)) = q_player.get_single_mut() {
+    if let Ok((helmet, mut life, mut collision_groups)) = q_player.get_single_mut() {
         for event in player_hit_events.read() {
             info!("on_player_hit");
-            life.hit(*event.damage as f32);
-            if life.is_dead() {
-                commands.entity(event.entity).despawn();
-                send_death.send(PlayerDeathEvent);
-                // break to ensure we don't try to despawn player if already dead
-                break;
-            } else {
-                // Set player invulnerable
-                commands
-                    .entity(event.entity)
-                    .insert(Invulnerable::new(Duration::from_secs_f32(2.0), GROUP_ENEMY))
-                    .insert(Blink::new(Duration::from_secs_f32(0.15)));
+            let damage = (*event.damage as f32) - helmet.armor();
+            if damage > 0. {
+                life.hit(damage);
+                if life.is_dead() {
+                    commands.entity(event.entity).despawn();
+                    send_death.send(PlayerDeathEvent);
+                    // break to ensure we don't try to despawn player if already dead
+                    break;
+                } else {
+                    // Set player invulnerable
+                    commands
+                        .entity(event.entity)
+                        .insert(Invulnerable::new(Duration::from_secs_f32(2.0), GROUP_ENEMY))
+                        .insert(Blink::new(Duration::from_secs_f32(0.15)));
 
-                // To allow player to not collide with enemies
-                collision_groups.filters &= !GROUP_ENEMY;
+                    // To allow player to not collide with enemies
+                    collision_groups.filters &= !GROUP_ENEMY;
+                }
             }
         }
     }

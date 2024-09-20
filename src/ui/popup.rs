@@ -38,16 +38,19 @@ fn popup() -> NodeBundle {
 }
 
 #[inline]
-fn popup_title_bar() -> NodeBundle {
-    NodeBundle {
-        background_color: Color::srgb(0.1, 0.1, 0.1).into(),
-        style: Style {
-            width: Val::Percent(100.0),
-            justify_content: JustifyContent::Center,
+fn popup_title_bar() -> impl Bundle {
+    (
+        Name::new("Title"),
+        NodeBundle {
+            background_color: Color::srgb(0.1, 0.1, 0.1).into(),
+            style: Style {
+                width: Val::Percent(100.0),
+                justify_content: JustifyContent::Center,
+                ..Default::default()
+            },
             ..Default::default()
         },
-        ..Default::default()
-    }
+    )
 }
 
 #[inline]

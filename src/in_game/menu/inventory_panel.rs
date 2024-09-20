@@ -62,11 +62,11 @@ fn add_inventory_panel(
                 panel.spawn(items_panel_bundle()).with_children(|p| {
                     // helmet
                     let pos = Vec2::new(74., 7.);
-                    match *helmet {
+                    match helmet {
                         Helmet::None => {
                             p.spawn(empty_inventory_box(pos));
                         }
-                        Helmet::Helmet => {
+                        Helmet::NormalHelmet(_helmet) => {
                             let helmet = assets.helmet();
                             p.spawn(inventory_box(pos, helmet.0, helmet.1));
                         }
@@ -91,7 +91,7 @@ fn main_panel_bundle() -> impl Bundle {
             height: Val::Px(350.),
             ..Default::default()
         },
-        background_color: Color::linear_rgba(0.5, 0.1, 0.1, 1.).into(),
+        // background_color: Color::srgb_u8(0.5, 0.1, 0.1, 1.).into(),
         ..Default::default()
     }
 }
@@ -103,7 +103,7 @@ fn items_panel_bundle() -> impl Bundle {
             height: Val::Px(280.),
             ..Default::default()
         },
-        background_color: Color::linear_rgba(0.1, 0.5, 0.1, 1.).into(),
+        background_color: Srgba::rgb_u8(40, 40, 40).into(),
         ..Default::default()
     }
 }
@@ -115,7 +115,7 @@ fn item_affixes_panel() -> impl Bundle {
             height: Val::Auto,
             ..Default::default()
         },
-        background_color: Color::linear_rgba(0.1, 0.1, 0.5, 1.).into(),
+        background_color: Color::srgb(0.1, 0.1, 0.5).into(),
         ..Default::default()
     }
 }
@@ -130,7 +130,7 @@ fn empty_inventory_box(pos: Vec2) -> impl Bundle {
             height: Val::Px(48.),
             ..Default::default()
         },
-        background_color: LinearRgba::rgb(0.3, 0.3, 0.3).into(),
+        background_color: Srgba::rgb_u8(70, 70, 70).into(),
         ..Default::default()
     }
 }
@@ -138,6 +138,7 @@ fn empty_inventory_box(pos: Vec2) -> impl Bundle {
 fn inventory_box(pos: Vec2, texture: Handle<Image>, atlas: TextureAtlas) -> impl Bundle {
     (
         ImageBundle {
+            image: UiImage::new(texture),
             style: Style {
                 position_type: PositionType::Absolute,
                 left: Val::Px(pos.x),
@@ -146,7 +147,7 @@ fn inventory_box(pos: Vec2, texture: Handle<Image>, atlas: TextureAtlas) -> impl
                 height: Val::Px(48.),
                 ..Default::default()
             },
-            image: UiImage::new(texture),
+            background_color: Srgba::rgb_u8(70, 70, 70).into(),
             ..Default::default()
         },
         atlas,

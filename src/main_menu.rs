@@ -45,7 +45,7 @@ fn spawn_menu(mut commands: Commands) {
     let menu_nav = MainMenuButtonNav(vec![new_game_btn, exit_btn]);
 
     commands
-        .spawn_popup("Kill'em all", MainMenu)
+        .spawn_popup("Kill'em all", (MainMenu, Name::new("MainMenu")))
         .push_children(&menu_nav);
 
     commands.insert_resource(menu_nav);

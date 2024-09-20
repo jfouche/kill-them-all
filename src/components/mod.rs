@@ -87,7 +87,7 @@ impl Default for Round {
     fn default() -> Self {
         Round {
             level: 0,
-            timer: Timer::from_seconds(60., TimerMode::Repeating),
+            timer: Timer::from_seconds(15., TimerMode::Repeating),
         }
     }
 }

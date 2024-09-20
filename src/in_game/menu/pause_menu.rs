@@ -104,7 +104,7 @@ impl Skill for ExperienceText {
 
 fn spawn_pause_menu(mut commands: Commands) {
     commands
-        .spawn_popup("Pause", PauseMenu)
+        .spawn_popup("Pause", (PauseMenu, Name::new("PauseMenu")))
         .with_children(|popup| {
             popup
                 .spawn(NodeBundle {
