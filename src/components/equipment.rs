@@ -88,6 +88,9 @@ impl EquipmentAssets {
     }
 }
 
+// ==================================================================
+// Affixes traits
+
 pub trait Armor {
     fn armor(&self) -> f32;
 }
@@ -272,7 +275,7 @@ impl Generator<Equipment> for EquipmentKind {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Reflect)]
 pub enum Equipment {
     Helmet(Helmet),
     BodyArmour(BodyArmour),

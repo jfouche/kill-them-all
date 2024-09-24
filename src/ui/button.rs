@@ -150,12 +150,16 @@ pub struct SelectedOption;
 pub fn button_plugin(app: &mut App) {
     app.add_systems(
         Update,
-        (button_interractions, button_selected, button_deselected),
+        (
+            color_buttons,
+            color_selected_buttons,
+            color_deselected_buttons,
+        ),
     );
 }
 
 // This system handles changing all buttons color based on mouse interaction
-pub fn button_interractions(
+fn color_buttons(
     mut query: Query<
         (&Interaction, &mut BackgroundColor, Option<&SelectedOption>),
         (Changed<Interaction>, With<Button>),
@@ -167,6 +171,25 @@ pub fn button_interractions(
             (Interaction::Hovered, Some(_)) => HOVERED_PRESSED_BUTTON.into(),
             (Interaction::Hovered, None) => HOVERED_BUTTON.into(),
             (Interaction::None, None) => NORMAL_BUTTON.into(),
+        }
+    }
+}
+
+fn color_selected_buttons(
+    mut query: Query<&mut BackgroundColor, (With<Button>, Added<SelectedOption>)>,
+) {
+    for mut color in &mut query {
+        *color = PRESSED_BUTTON.into();
+    }
+}
+
+fn color_deselected_buttons(
+    mut buttons: Query<&mut BackgroundColor, With<Button>>,
+    mut removed: RemovedComponents<SelectedOption>,
+) {
+    for entity in removed.read() {
+        if let Ok(mut color) = buttons.get_mut(entity) {
+            *color = NORMAL_BUTTON.into();
         }
     }
 }
@@ -198,23 +221,6 @@ pub fn button_keyboard_nav<N>(
                 commands.entity(sel_entity).remove::<SelectedOption>();
                 commands.entity(down).insert(SelectedOption);
             }
-        }
-    }
-}
-
-fn button_selected(mut query: Query<&mut BackgroundColor, (With<Button>, Added<SelectedOption>)>) {
-    for mut color in &mut query {
-        *color = PRESSED_BUTTON.into();
-    }
-}
-
-fn button_deselected(
-    mut buttons: Query<&mut BackgroundColor, With<Button>>,
-    mut removed: RemovedComponents<SelectedOption>,
-) {
-    for entity in removed.read() {
-        if let Ok(mut color) = buttons.get_mut(entity) {
-            *color = NORMAL_BUTTON.into();
         }
     }
 }
