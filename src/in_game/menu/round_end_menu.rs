@@ -25,9 +25,6 @@ impl Plugin for RoundEndMenuPlugin {
 #[derive(Component)]
 struct RoundEndMenu;
 
-#[derive(Component)]
-struct BackToMenu;
-
 #[derive(Resource, Default, DerefMut)]
 struct RoundEndMenuNav(Vec<Entity>);
 
@@ -49,23 +46,23 @@ impl EquipmentLabel for Equipment {
             Equipment::BodyArmour(body_armour) => {
                 format!("Body armour +{} armour", body_armour.armor() as u16)
             }
+            Equipment::Boots(boots) => format!("Boots +{} armour", boots.armor() as u16),
         }
     }
 }
 
-fn spawn_round_end_menu(mut commands: Commands) {
+fn spawn_round_end_menu(mut commands: Commands, assets: Res<EquipmentAssets>) {
     let mut round_end_nav = RoundEndMenuNav::default();
     let mut equipment_provider = EquipmentProvider::new();
 
     for _ in 0..3 {
         if let Some(equipment) = equipment_provider.gen() {
-            let entity = commands.spawn_button(equipment.label(), equipment);
+            let (texture, atlas) = assets.image(&equipment);
+            let img = ButtonImage::ImageAtlas(texture, atlas);
+            let entity = commands.spawn_img_text_button(img, equipment.label(), equipment);
             round_end_nav.0.push(entity);
         }
     }
-
-    let id = commands.spawn_button("Back to game", BackToMenu);
-    round_end_nav.0.push(id);
 
     // Select the first upgrade
     if let Some(entity) = &round_end_nav.first() {
@@ -81,11 +78,11 @@ fn spawn_round_end_menu(mut commands: Commands) {
 
 /// Handle the selection of an [Equipment], to add to the [Player]
 fn select_equipment(
-    mut players: Query<(&mut Helmet, &mut BodyArmour), With<Player>>,
+    mut players: Query<(&mut Helmet, &mut BodyArmour, &mut Boots), With<Player>>,
     mut state: ResMut<NextState<InGameState>>,
     interactions: Query<(&Equipment, &Interaction), With<Button>>,
 ) {
-    let Ok((mut helmet, mut body_armour)) = players.get_single_mut() else {
+    let Ok((mut helmet, mut body_armour, mut boots)) = players.get_single_mut() else {
         return;
     };
     for (equipment, interaction) in &interactions {
@@ -93,6 +90,7 @@ fn select_equipment(
             match equipment {
                 Equipment::Helmet(new_helmet) => *helmet = new_helmet.clone(),
                 Equipment::BodyArmour(new_body_armour) => *body_armour = new_body_armour.clone(),
+                Equipment::Boots(new_boots) => *boots = new_boots.clone(),
             }
             state.set(InGameState::Running);
         }

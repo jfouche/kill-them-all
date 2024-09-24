@@ -7,6 +7,7 @@ impl Plugin for CharacterPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Helmet>()
             .register_type::<BodyArmour>()
+            .register_type::<Boots>()
             .add_systems(Update, regen_life.in_set(GameRunningSet::EntityUpdate));
     }
 }

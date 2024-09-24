@@ -5,6 +5,7 @@ pub mod player_died_menu;
 pub mod round_end_menu;
 
 use super::{pause, unpause, InGameState};
+use crate::components::EquipmentAssets;
 use bevy::{app::PluginGroupBuilder, prelude::*};
 
 pub struct InGameMenuPluginsGroup;
@@ -27,5 +28,15 @@ fn menu_plugin(app: &mut App) {
         .add_systems(OnEnter(InGameState::LevelUp), pause)
         .add_systems(OnExit(InGameState::LevelUp), unpause)
         .add_systems(OnEnter(InGameState::RoundEnd), pause)
-        .add_systems(OnExit(InGameState::RoundEnd), unpause);
+        .add_systems(OnExit(InGameState::RoundEnd), unpause)
+        .add_systems(Startup, load_assets);
+}
+
+fn load_assets(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
+) {
+    let assets = EquipmentAssets::load(&asset_server, texture_atlases);
+    commands.insert_resource(assets);
 }

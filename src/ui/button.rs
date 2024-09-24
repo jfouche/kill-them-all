@@ -8,17 +8,61 @@ const PRESSED_BUTTON: Color = Color::srgb(0.35, 0.75, 0.35);
 
 const BUTTON_TEXT_COLOR: Color = Color::srgb(0.9, 0.9, 0.9);
 
+pub enum ButtonImage {
+    _Image(Handle<Image>),
+    ImageAtlas(Handle<Image>, TextureAtlas),
+}
+
 pub trait SpawnButton {
-    fn spawn_button(&mut self, label: impl Into<String>, bundle: impl Bundle) -> Entity;
+    fn spawn_text_button(&mut self, label: impl Into<String>, bundle: impl Bundle) -> Entity;
+
+    fn spawn_img_text_button(
+        &mut self,
+        image: ButtonImage,
+        label: impl Into<String>,
+        bundle: impl Bundle,
+    ) -> Entity;
 }
 
 impl<T> SpawnButton for T
 where
     T: SpawnImpl,
 {
-    fn spawn_button(&mut self, label: impl Into<String>, bundle: impl Bundle) -> Entity {
+    fn spawn_text_button(&mut self, label: impl Into<String>, bundle: impl Bundle) -> Entity {
         self.spawn_impl((button_bundle(), bundle))
             .with_children(|parent| {
+                parent.spawn(button_text(label));
+            })
+            .id()
+    }
+
+    fn spawn_img_text_button(
+        &mut self,
+        image: ButtonImage,
+        label: impl Into<String>,
+        bundle: impl Bundle,
+    ) -> Entity {
+        let mut button_bundle = button_bundle();
+        button_bundle.style.height = Val::Auto;
+        self.spawn_impl((button_bundle, bundle))
+            .with_children(|parent| {
+                match image {
+                    ButtonImage::_Image(texture) => {
+                        parent.spawn(ImageBundle {
+                            image: UiImage::new(texture),
+                            ..Default::default()
+                        });
+                    }
+                    ButtonImage::ImageAtlas(texture, atlas) => {
+                        parent.spawn((
+                            ImageBundle {
+                                image: UiImage::new(texture),
+                                ..Default::default()
+                            },
+                            atlas,
+                        ));
+                    }
+                }
                 parent.spawn(button_text(label));
             })
             .id()
@@ -42,6 +86,7 @@ pub fn button_style() -> Style {
         height: Val::Px(50.0),
         margin: UiRect::all(Val::Px(10.0)),
         padding: UiRect::all(Val::Px(2.0)),
+        flex_direction: FlexDirection::Column,
         justify_content: JustifyContent::Center,
         align_items: AlignItems::Center,
         border: UiRect::all(Val::Px(1.0)),

@@ -4,64 +4,13 @@ use bevy::prelude::*;
 #[derive(Component)]
 pub struct InventoryPanel;
 
-#[derive(Resource)]
-struct InventoryAssets {
-    texture: Handle<Image>,
-    texture_atlas_layout: Handle<TextureAtlasLayout>,
-}
-
-impl InventoryAssets {
-    fn helmet(&self) -> (Handle<Image>, TextureAtlas) {
-        (
-            self.texture.clone(),
-            TextureAtlas {
-                layout: self.texture_atlas_layout.clone(),
-                index: 182,
-            },
-        )
-    }
-
-    fn body_armour(&self) -> (Handle<Image>, TextureAtlas) {
-        (
-            self.texture.clone(),
-            TextureAtlas {
-                layout: self.texture_atlas_layout.clone(),
-                index: 0,
-            },
-        )
-    }
-}
-
-fn load_assets(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
-) {
-    let texture_atlas_layout = texture_atlases.add(TextureAtlasLayout::from_grid(
-        UVec2::new(48, 48),
-        16,
-        22,
-        None,
-        None,
-    ));
-
-    let texture = asset_server
-        .load("items/Kyrise's 16x16 RPG Icon Pack - V1.3/spritesheet/spritesheet_48x48.png");
-
-    let assets = InventoryAssets {
-        texture,
-        texture_atlas_layout,
-    };
-    commands.insert_resource(assets);
-}
-
 fn add_inventory_panel(
     mut commands: Commands,
     panels: Query<Entity, Added<InventoryPanel>>,
-    players: Query<(&Helmet, &BodyArmour), With<Player>>,
-    assets: Res<InventoryAssets>,
+    players: Query<(&Helmet, &BodyArmour, &Boots), With<Player>>,
+    assets: Res<EquipmentAssets>,
 ) {
-    let Ok((helmet, body_armour)) = players.get_single() else {
+    let Ok((helmet, body_armour, boots)) = players.get_single() else {
         return;
     };
     for entity in &panels {
@@ -76,7 +25,11 @@ fn add_inventory_panel(
                         Helmet::None => {
                             p.spawn(empty_inventory_box(pos));
                         }
-                        Helmet::NormalHelmet(_helmet) => {
+                        Helmet::Normal(_helmet) => {
+                            let (texture, atlas) = assets.helmet();
+                            p.spawn(inventory_box(pos, texture, atlas));
+                        }
+                        Helmet::Magic(_helmet) => {
                             let (texture, atlas) = assets.helmet();
                             p.spawn(inventory_box(pos, texture, atlas));
                         }
@@ -91,7 +44,11 @@ fn add_inventory_panel(
                         BodyArmour::None => {
                             p.spawn(empty_inventory_box(pos));
                         }
-                        BodyArmour::NormalBodyArmour(_body_armour) => {
+                        BodyArmour::Normal(_body_armour) => {
+                            let (texture, atlas) = assets.body_armour();
+                            p.spawn(inventory_box(pos, texture, atlas));
+                        }
+                        BodyArmour::Magic(_body_armour) => {
                             let (texture, atlas) = assets.body_armour();
                             p.spawn(inventory_box(pos, texture, atlas));
                         }
@@ -99,7 +56,21 @@ fn add_inventory_panel(
                     //
                     p.spawn(empty_inventory_box(Vec2::new(142., 74.)));
                     p.spawn(empty_inventory_box(Vec2::new(7., 142.)));
-                    p.spawn(empty_inventory_box(Vec2::new(74., 142.)));
+                    // Boots
+                    let pos = Vec2::new(74., 142.);
+                    match boots {
+                        Boots::None => {
+                            p.spawn(empty_inventory_box(pos));
+                        }
+                        Boots::Normal(_boots) => {
+                            let (texture, atlas) = assets.boots();
+                            p.spawn(inventory_box(pos, texture, atlas));
+                        }
+                        Boots::Magic(_boots) => {
+                            let (texture, atlas) = assets.boots();
+                            p.spawn(inventory_box(pos, texture, atlas));
+                        }
+                    }
                 });
                 panel.spawn(item_affixes_panel());
             });
@@ -178,6 +149,5 @@ fn inventory_box(pos: Vec2, texture: Handle<Image>, atlas: TextureAtlas) -> impl
 }
 
 pub fn inventory_panel_plugin(app: &mut App) {
-    app.add_systems(Startup, load_assets)
-        .add_systems(Update, add_inventory_panel);
+    app.add_systems(Update, add_inventory_panel);
 }

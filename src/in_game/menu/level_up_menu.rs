@@ -185,7 +185,7 @@ fn spawn_upgrade_button<B>(parent: &mut Commands, button: B) -> Entity
 where
     B: Component + UpgradeSkillButton,
 {
-    parent.spawn_button(button.label(), button)
+    parent.spawn_text_button(button.label(), button)
 }
 
 ///
