@@ -7,85 +7,6 @@ pub struct InventoryPanel;
 #[derive(Component)]
 struct AffixesText;
 
-trait BaseAndAffixesLabels {
-    fn base_label(&self) -> String;
-    fn affixes_labels(&self) -> Vec<String>;
-}
-
-impl BaseAndAffixesLabels for Equipment {
-    fn base_label(&self) -> String {
-        match self {
-            Equipment::Helmet(helmet) => helmet.base_label(),
-            Equipment::BodyArmour(body_armour) => body_armour.base_label(),
-            Equipment::Boots(boots) => boots.base_label(),
-        }
-    }
-
-    fn affixes_labels(&self) -> Vec<String> {
-        match self {
-            Equipment::Helmet(helmet) => helmet.affixes_labels(),
-            Equipment::BodyArmour(body_armour) => body_armour.affixes_labels(),
-            Equipment::Boots(boots) => boots.affixes_labels(),
-        }
-    }
-}
-
-impl BaseAndAffixesLabels for Helmet {
-    fn base_label(&self) -> String {
-        match self {
-            Helmet::None => "".into(),
-            Helmet::Normal(helmet) => format!("Helmet +{} armour", helmet.armor),
-            Helmet::Magic(helmet) => format!("Helmet +{} armour", helmet.base.armor),
-        }
-    }
-
-    fn affixes_labels(&self) -> Vec<String> {
-        match *self {
-            Helmet::None => Vec::new(),
-            Helmet::Normal(_helmet) => Vec::new(),
-            Helmet::Magic(helmet) => vec![format!("Item adds +{} life", helmet.life)],
-        }
-    }
-}
-
-impl BaseAndAffixesLabels for BodyArmour {
-    fn base_label(&self) -> String {
-        match self {
-            BodyArmour::None => "".into(),
-            BodyArmour::Normal(body_armour) => format!("Body armour +{} armour", body_armour.armor),
-            BodyArmour::Magic(body_armour) => {
-                format!("Body armour +{} armour", body_armour.base.armor)
-            }
-        }
-    }
-
-    fn affixes_labels(&self) -> Vec<String> {
-        match *self {
-            BodyArmour::None => Vec::new(),
-            BodyArmour::Normal(_body_armour) => Vec::new(),
-            BodyArmour::Magic(body_armour) => vec![format!("Item adds +{} life", body_armour.life)],
-        }
-    }
-}
-
-impl BaseAndAffixesLabels for Boots {
-    fn base_label(&self) -> String {
-        match self {
-            Boots::None => "".into(),
-            Boots::Normal(boots) => format!("Boots +{} armour", boots.armor),
-            Boots::Magic(boots) => format!("Boots +{} armour", boots.base.armor),
-        }
-    }
-
-    fn affixes_labels(&self) -> Vec<String> {
-        match *self {
-            Boots::None => Vec::new(),
-            Boots::Normal(_boots) => Vec::new(),
-            Boots::Magic(boots) => vec![format!("Item adds +{} life", boots.life)],
-        }
-    }
-}
-
 fn add_inventory_panel(
     mut commands: Commands,
     panels: Query<Entity, Added<InventoryPanel>>,
@@ -139,13 +60,7 @@ fn hover_equipment(
     text.sections[0].value = "".into();
     for (equipment, interaction) in &equipments {
         if interaction == &Interaction::Hovered {
-            let mut infos = String::new();
-            infos.push_str(&equipment.base_label());
-            for affix in equipment.affixes_labels() {
-                infos.push('\n');
-                infos.push_str(&affix);
-            }
-            text.sections[0].value = infos;
+            text.sections[0].value = equipment.to_string();
         }
     }
 }

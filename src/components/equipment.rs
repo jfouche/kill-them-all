@@ -118,18 +118,76 @@ impl NormalHelmet {
     }
 }
 
-#[derive(Copy, Clone, Reflect)]
+#[derive(Clone, Reflect)]
 pub struct MagicHelmet {
     pub base: NormalHelmet,
-    pub life: f32,
+    pub affix: HelmetAffix,
 }
 
 impl MagicHelmet {
     fn generate(rng: &mut ThreadRng) -> Self {
+        let mut affix_provider = HelmetAffixProvider::new();
         MagicHelmet {
             base: NormalHelmet::generate(rng),
-            life: rng.gen_range(5..=10) as f32,
+            affix: affix_provider
+                .gen()
+                .expect("HelmetAffixProvider should provide at least 1 affix"),
         }
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+pub enum HelmetAffixKind {
+    AddLife,
+    AddArmour,
+}
+
+#[derive(Clone, Reflect)]
+pub enum HelmetAffix {
+    AddLife(f32),
+    AddArmour(f32),
+}
+
+impl std::fmt::Display for Helmet {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Helmet::None => Ok(()),
+            Helmet::Normal(helmet) => write!(f, "Helmet : +{} armour", helmet.armor as u16),
+            Helmet::Magic(helmet) => write!(
+                f,
+                "Helmet : +{} armour\n{}",
+                helmet.base.armor as u16, helmet.affix
+            ),
+        }
+    }
+}
+impl std::fmt::Display for HelmetAffix {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            HelmetAffix::AddArmour(val) => write!(f, "Item add +{} armour", *val as u16),
+            HelmetAffix::AddLife(val) => write!(f, "Item add +{} life", *val as u16),
+        }
+    }
+}
+
+impl Generator<HelmetAffix> for HelmetAffixKind {
+    fn generate(&self, rng: &mut ThreadRng) -> HelmetAffix {
+        match self {
+            HelmetAffixKind::AddArmour => HelmetAffix::AddArmour(rng.gen_range(2..=5) as f32),
+            HelmetAffixKind::AddLife => HelmetAffix::AddLife(rng.gen_range(5..=20) as f32),
+        }
+    }
+}
+
+#[derive(Deref, DerefMut)]
+pub struct HelmetAffixProvider(RngKindProvider<HelmetAffixKind, HelmetAffix>);
+
+impl HelmetAffixProvider {
+    pub fn new() -> Self {
+        let mut provider = RngKindProvider::default();
+        provider.add(HelmetAffixKind::AddArmour, 20);
+        provider.add(HelmetAffixKind::AddLife, 20);
+        HelmetAffixProvider(provider)
     }
 }
 
@@ -166,18 +224,81 @@ impl NormalBodyArmour {
     }
 }
 
-#[derive(Copy, Clone, Reflect)]
+#[derive(Clone, Reflect)]
 pub struct MagicBodyArmour {
     pub base: NormalBodyArmour,
-    pub life: f32,
+    pub affix: BodyArmourAffix,
 }
 
 impl MagicBodyArmour {
     fn generate(rng: &mut ThreadRng) -> Self {
+        let mut affix_provider = BodyArmourAffixProvider::new();
         MagicBodyArmour {
             base: NormalBodyArmour::generate(rng),
-            life: rng.gen_range(5..=10) as f32,
+            affix: affix_provider
+                .gen()
+                .expect("BodyArmourAffixProvider should provide at least 1 affix"),
         }
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+pub enum BodyArmourAffixKind {
+    AddLife,
+    AddArmour,
+}
+
+#[derive(Clone, Reflect)]
+pub enum BodyArmourAffix {
+    AddLife(f32),
+    AddArmour(f32),
+}
+
+impl std::fmt::Display for BodyArmour {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            BodyArmour::None => Ok(()),
+            BodyArmour::Normal(body_armour) => {
+                write!(f, "Body armour : +{} armour", body_armour.armor as u16)
+            }
+            BodyArmour::Magic(body_armour) => write!(
+                f,
+                "Body armour : +{} armour\n{}",
+                body_armour.base.armor as u16, body_armour.affix
+            ),
+        }
+    }
+}
+
+impl std::fmt::Display for BodyArmourAffix {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            BodyArmourAffix::AddArmour(val) => write!(f, "Item add +{} armour", *val as u16),
+            BodyArmourAffix::AddLife(val) => write!(f, "Item add +{} life", *val as u16),
+        }
+    }
+}
+
+impl Generator<BodyArmourAffix> for BodyArmourAffixKind {
+    fn generate(&self, rng: &mut ThreadRng) -> BodyArmourAffix {
+        match self {
+            BodyArmourAffixKind::AddArmour => {
+                BodyArmourAffix::AddArmour(rng.gen_range(2..=5) as f32)
+            }
+            BodyArmourAffixKind::AddLife => BodyArmourAffix::AddLife(rng.gen_range(5..=20) as f32),
+        }
+    }
+}
+
+#[derive(Deref, DerefMut)]
+pub struct BodyArmourAffixProvider(RngKindProvider<BodyArmourAffixKind, BodyArmourAffix>);
+
+impl BodyArmourAffixProvider {
+    pub fn new() -> Self {
+        let mut provider = RngKindProvider::default();
+        provider.add(BodyArmourAffixKind::AddArmour, 20);
+        provider.add(BodyArmourAffixKind::AddLife, 20);
+        BodyArmourAffixProvider(provider)
     }
 }
 
@@ -214,18 +335,79 @@ impl NormalBoots {
     }
 }
 
-#[derive(Copy, Clone, Reflect)]
+#[derive(Clone, Reflect)]
 pub struct MagicBoots {
     pub base: NormalBoots,
-    pub life: f32,
+    pub affix: BootsAffix,
 }
 
 impl MagicBoots {
     fn generate(rng: &mut ThreadRng) -> Self {
+        let mut affix_provider = BootsAffixProvider::new();
         MagicBoots {
             base: NormalBoots::generate(rng),
-            life: rng.gen_range(5..=10) as f32,
+            affix: affix_provider
+                .gen()
+                .expect("BootsAffixProvider should provide at least 1 affix"),
         }
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+pub enum BootsAffixKind {
+    AddLife,
+    AddArmour,
+}
+
+#[derive(Clone, Reflect)]
+pub enum BootsAffix {
+    AddLife(f32),
+    AddArmour(f32),
+}
+
+impl std::fmt::Display for Boots {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Boots::None => Ok(()),
+            Boots::Normal(boots) => {
+                write!(f, "Boots : +{} armour", boots.armor as u16)
+            }
+            Boots::Magic(boots) => write!(
+                f,
+                "Boots : +{} armour\n{}",
+                boots.base.armor as u16, boots.affix
+            ),
+        }
+    }
+}
+
+impl std::fmt::Display for BootsAffix {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            BootsAffix::AddArmour(val) => write!(f, "Item add +{} armour", *val as u16),
+            BootsAffix::AddLife(val) => write!(f, "Item add +{} life", *val as u16),
+        }
+    }
+}
+
+impl Generator<BootsAffix> for BootsAffixKind {
+    fn generate(&self, rng: &mut ThreadRng) -> BootsAffix {
+        match self {
+            BootsAffixKind::AddArmour => BootsAffix::AddArmour(rng.gen_range(2..=5) as f32),
+            BootsAffixKind::AddLife => BootsAffix::AddLife(rng.gen_range(5..=20) as f32),
+        }
+    }
+}
+
+#[derive(Deref, DerefMut)]
+pub struct BootsAffixProvider(RngKindProvider<BootsAffixKind, BootsAffix>);
+
+impl BootsAffixProvider {
+    pub fn new() -> Self {
+        let mut provider = RngKindProvider::default();
+        provider.add(BootsAffixKind::AddArmour, 20);
+        provider.add(BootsAffixKind::AddLife, 20);
+        BootsAffixProvider(provider)
     }
 }
 
@@ -280,6 +462,16 @@ pub enum Equipment {
     Helmet(Helmet),
     BodyArmour(BodyArmour),
     Boots(Boots),
+}
+
+impl std::fmt::Display for Equipment {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Equipment::Helmet(helmet) => helmet.fmt(f),
+            Equipment::BodyArmour(body_armour) => body_armour.fmt(f),
+            Equipment::Boots(boots) => boots.fmt(f),
+        }
+    }
 }
 
 #[derive(Deref, DerefMut)]
