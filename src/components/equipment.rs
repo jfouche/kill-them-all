@@ -36,38 +36,53 @@ impl EquipmentAssets {
 
     pub fn image(&self, equipment: &Equipment) -> (Handle<Image>, TextureAtlas) {
         match equipment {
-            Equipment::Helmet(_) => self.helmet(),
-            Equipment::BodyArmour(_) => self.body_armour(),
-            Equipment::Boots(_) => self.boots(),
+            Equipment::Helmet(helmet) => self.helmet(helmet),
+            Equipment::BodyArmour(body_armour) => self.body_armour(body_armour),
+            Equipment::Boots(boots) => self.boots(boots),
         }
     }
 
-    pub fn helmet(&self) -> (Handle<Image>, TextureAtlas) {
+    pub fn helmet(&self, helmet: &Helmet) -> (Handle<Image>, TextureAtlas) {
+        let index = match helmet {
+            Helmet::None => 351,
+            Helmet::Normal(_) => 182,
+            Helmet::Magic(_) => 184,
+        };
         (
             self.texture.clone(),
             TextureAtlas {
                 layout: self.texture_atlas_layout.clone(),
-                index: 182,
+                index,
             },
         )
     }
 
-    pub fn body_armour(&self) -> (Handle<Image>, TextureAtlas) {
+    pub fn body_armour(&self, body_armour: &BodyArmour) -> (Handle<Image>, TextureAtlas) {
+        let index = match body_armour {
+            BodyArmour::None => 351,
+            BodyArmour::Normal(_) => 0,
+            BodyArmour::Magic(_) => 2,
+        };
         (
             self.texture.clone(),
             TextureAtlas {
                 layout: self.texture_atlas_layout.clone(),
-                index: 0,
+                index,
             },
         )
     }
 
-    pub fn boots(&self) -> (Handle<Image>, TextureAtlas) {
+    pub fn boots(&self, boots: &Boots) -> (Handle<Image>, TextureAtlas) {
+        let index = match boots {
+            Boots::None => 351,
+            Boots::Normal(_) => 63,
+            Boots::Magic(_) => 65,
+        };
         (
             self.texture.clone(),
             TextureAtlas {
                 layout: self.texture_atlas_layout.clone(),
-                index: 63,
+                index,
             },
         )
     }

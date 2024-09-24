@@ -21,56 +21,23 @@ fn add_inventory_panel(
                 panel.spawn(items_panel_bundle()).with_children(|p| {
                     // helmet
                     let pos = Vec2::new(74., 7.);
-                    match helmet {
-                        Helmet::None => {
-                            p.spawn(empty_inventory_box(pos));
-                        }
-                        Helmet::Normal(_helmet) => {
-                            let (texture, atlas) = assets.helmet();
-                            p.spawn(inventory_box(pos, texture, atlas));
-                        }
-                        Helmet::Magic(_helmet) => {
-                            let (texture, atlas) = assets.helmet();
-                            p.spawn(inventory_box(pos, texture, atlas));
-                        }
-                    }
+                    let (texture, atlas) = assets.helmet(helmet);
+                    p.spawn(inventory_box(pos, texture, atlas));
                     // amulet
                     p.spawn(empty_inventory_box(Vec2::new(142., 7.)));
                     // weapon
                     p.spawn(empty_inventory_box(Vec2::new(7., 74.)));
                     // body armour
                     let pos = Vec2::new(74., 74.);
-                    match body_armour {
-                        BodyArmour::None => {
-                            p.spawn(empty_inventory_box(pos));
-                        }
-                        BodyArmour::Normal(_body_armour) => {
-                            let (texture, atlas) = assets.body_armour();
-                            p.spawn(inventory_box(pos, texture, atlas));
-                        }
-                        BodyArmour::Magic(_body_armour) => {
-                            let (texture, atlas) = assets.body_armour();
-                            p.spawn(inventory_box(pos, texture, atlas));
-                        }
-                    }
+                    let (texture, atlas) = assets.body_armour(body_armour);
+                    p.spawn(inventory_box(pos, texture, atlas));
                     //
                     p.spawn(empty_inventory_box(Vec2::new(142., 74.)));
                     p.spawn(empty_inventory_box(Vec2::new(7., 142.)));
                     // Boots
                     let pos = Vec2::new(74., 142.);
-                    match boots {
-                        Boots::None => {
-                            p.spawn(empty_inventory_box(pos));
-                        }
-                        Boots::Normal(_boots) => {
-                            let (texture, atlas) = assets.boots();
-                            p.spawn(inventory_box(pos, texture, atlas));
-                        }
-                        Boots::Magic(_boots) => {
-                            let (texture, atlas) = assets.boots();
-                            p.spawn(inventory_box(pos, texture, atlas));
-                        }
-                    }
+                    let (texture, atlas) = assets.boots(boots);
+                    p.spawn(inventory_box(pos, texture, atlas));
                 });
                 panel.spawn(item_affixes_panel());
             });
