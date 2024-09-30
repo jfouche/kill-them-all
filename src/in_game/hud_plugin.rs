@@ -146,7 +146,7 @@ fn update_round(round: Res<Round>, mut q_text: Query<&mut Text, With<RoundText>>
 }
 
 fn update_life_bar(
-    q_player: Query<&Life, (With<Player>, Changed<Life>)>,
+    q_player: Query<(&Life, &Helmet, &BodyArmour, &Boots), With<Player>>,
     mut q_bar: Query<&mut ProgressBar, With<LifeBar>>,
 ) {
     if let Ok(mut progressbar) = q_bar.get_single_mut() {

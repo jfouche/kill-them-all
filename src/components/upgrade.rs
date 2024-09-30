@@ -2,6 +2,9 @@ use super::rng_provider::{Generator, RngKindProvider};
 use bevy::prelude::*;
 use rand::{rngs::ThreadRng, Rng};
 
+#[derive(Component, Default, Deref, DerefMut)]
+pub struct Upgrades(pub Vec<Upgrade>);
+
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub enum UpgradeKind {
     IncreaseMaxLife,

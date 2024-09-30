@@ -4,7 +4,7 @@ use rand::{rngs::ThreadRng, Rng};
 use super::rng_provider::{Generator, RngKindProvider};
 
 // ==================================================================
-// InventoryAssets
+// EquipmentAssets
 
 #[derive(Resource)]
 pub struct EquipmentAssets {
@@ -93,6 +93,14 @@ impl EquipmentAssets {
 
 pub trait Armor {
     fn armor(&self) -> f32;
+}
+
+pub trait AddLife {
+    fn more_life(&self) -> f32;
+}
+
+pub trait AddMovementSpeed {
+    fn more_movement_speed(&self) -> f32;
 }
 
 // ==================================================================

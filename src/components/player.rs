@@ -46,6 +46,7 @@ impl Default for PlayerBundle {
             texture_atlas: TextureAtlas::default(),
             animation_timer: AnimationTimer::default(),
             skills: SkillsBundle {
+                base_life: BaseLife(10.),
                 life: Life::new(10.),
                 movement_speed: MovementSpeed::new(130.),
                 ..Default::default()
