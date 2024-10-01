@@ -9,12 +9,12 @@ impl Plugin for CharacterPlugin {
             .register_type::<Helmet>()
             .register_type::<BodyArmour>()
             .register_type::<Boots>()
-            .add_systems(PreUpdate, update_life)
+            .add_systems(PreUpdate, update_skills)
             .add_systems(Update, regen_life.in_set(GameRunningSet::EntityUpdate));
     }
 }
 
-fn update_life(mut query: Query<(&mut Life, &BaseLife, &Helmet, &BodyArmour, &Boots)>) {
+fn update_skills(mut query: Query<(&mut Life, &BaseLife, &Helmet, &BodyArmour, &Boots)>) {
     for (mut life, base_life, helmet, body_armour, boots) in &mut query {
         let more_life = helmet.more_life() + body_armour.more_life() + boots.more_life();
         let max_life = **base_life + more_life;

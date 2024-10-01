@@ -1,4 +1,3 @@
-use super::*;
 use bevy::prelude::*;
 use rand::Rng;
 
@@ -213,45 +212,6 @@ impl std::fmt::Display for PierceChance {
 //     pub damage: Damage,
 // }
 // }
-
-impl MoreLife for Helmet {
-    fn more_life(&self) -> f32 {
-        match self {
-            Helmet::None => 0.,
-            Helmet::Normal(_) => 0.,
-            Helmet::Magic(helmet) => match helmet.affix {
-                HelmetAffix::AddLife(life) => life,
-                _ => 0.,
-            },
-        }
-    }
-}
-
-impl MoreLife for BodyArmour {
-    fn more_life(&self) -> f32 {
-        match self {
-            BodyArmour::None => 0.,
-            BodyArmour::Normal(_) => 0.,
-            BodyArmour::Magic(body_armour) => match body_armour.affix {
-                BodyArmourAffix::AddLife(life) => life,
-                _ => 0.,
-            },
-        }
-    }
-}
-
-impl MoreLife for Boots {
-    fn more_life(&self) -> f32 {
-        match self {
-            Boots::None => 0.,
-            Boots::Normal(_) => 0.,
-            Boots::Magic(boots) => match boots.affix {
-                BootsAffix::AddLife(life) => life,
-                _ => 0.,
-            },
-        }
-    }
-}
 
 pub trait IncreaseLife {
     fn increase_life(&self) -> f32;
