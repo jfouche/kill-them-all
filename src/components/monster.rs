@@ -129,13 +129,13 @@ impl From<&MonsterSpawnParams> for SkillsBundle {
     fn from(value: &MonsterSpawnParams) -> Self {
         match value.rarity {
             MonsterRarity::Normal => SkillsBundle {
-                movement_speed: MovementSpeed::new(80.),
-                life: Life::new(2.),
+                movement_speed: MovementSpeedBundle::new(80.),
+                life: LifeBundle::new(2.),
                 ..Default::default()
             },
             MonsterRarity::Rare => SkillsBundle {
-                movement_speed: MovementSpeed::new(70.),
-                life: Life::new(5.),
+                movement_speed: MovementSpeedBundle::new(70.),
+                life: LifeBundle::new(5.),
                 ..Default::default()
             },
         }

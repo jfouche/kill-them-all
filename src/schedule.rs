@@ -54,7 +54,7 @@ pub fn schedule_plugin(app: &mut App) {
         .add_systems(OnExit(GameState::InGame), end_game);
 }
 
-fn game_is_running(
+pub fn game_is_running(
     game_state: Res<State<GameState>>,
     in_game_state: Res<State<InGameState>>,
 ) -> bool {

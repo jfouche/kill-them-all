@@ -14,10 +14,6 @@ impl Plugin for PlayerPlugin {
         app.add_event::<PlayerHitEvent>()
             .add_event::<PlayerDeathEvent>()
             .register_type::<Experience>()
-            .register_type::<MovementSpeed>()
-            .register_type::<Life>()
-            .register_type::<AttackSpeed>()
-            .register_type::<PierceChance>()
             .add_systems(Startup, load_player_assets)
             .add_systems(OnEnter(GameState::InGame), spawn_player)
             .add_systems(OnExit(GameState::InGame), despawn_all::<Player>)
@@ -91,19 +87,19 @@ fn player_movement(
 ) {
     if let Ok((speed, mut velocity)) = players.get_single_mut() {
         let mut linvel = Vec2::default();
-        if keys.any_pressed([KeyCode::ArrowLeft, KeyCode::Numpad4]) {
+        if keys.any_pressed([KeyCode::ArrowLeft, KeyCode::Numpad4, KeyCode::KeyA]) {
             linvel.x = -1.0;
         }
-        if keys.any_pressed([KeyCode::ArrowRight, KeyCode::Numpad6]) {
+        if keys.any_pressed([KeyCode::ArrowRight, KeyCode::Numpad6, KeyCode::KeyD]) {
             linvel.x = 1.0;
         }
-        if keys.any_pressed([KeyCode::ArrowUp, KeyCode::Numpad8]) {
+        if keys.any_pressed([KeyCode::ArrowUp, KeyCode::Numpad8, KeyCode::KeyW]) {
             linvel.y = 1.0;
         }
-        if keys.any_pressed([KeyCode::ArrowDown, KeyCode::Numpad2]) {
+        if keys.any_pressed([KeyCode::ArrowDown, KeyCode::Numpad2, KeyCode::KeyS]) {
             linvel.y = -1.0;
         }
-        velocity.linvel = linvel.normalize_or_zero().mul(speed.value());
+        velocity.linvel = linvel.normalize_or_zero().mul(**speed);
     }
 }
 
@@ -239,15 +235,14 @@ fn increment_player_experience(
 }
 
 fn level_up(
-    mut q_player: Query<&mut Life, With<Player>>,
+    mut q_player: Query<(&mut Life, &MaxLife), With<Player>>,
     mut level_up_rcv: EventReader<LevelUpEvent>,
 ) {
-    if let Ok(mut life) = q_player.get_single_mut() {
+    if let Ok((mut life, max_life)) = q_player.get_single_mut() {
         for _ in level_up_rcv.read() {
             info!("level_up");
             // Regen life
-            let max_life = life.max_life();
-            life.regenerate(max_life);
+            life.regenerate(**max_life);
         }
     }
 }

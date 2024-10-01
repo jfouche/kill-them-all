@@ -146,13 +146,13 @@ fn update_round(round: Res<Round>, mut q_text: Query<&mut Text, With<RoundText>>
 }
 
 fn update_life_bar(
-    q_player: Query<&Life, With<Player>>,
+    q_player: Query<(&Life, &MaxLife), With<Player>>,
     mut q_bar: Query<&mut ProgressBar, With<LifeBar>>,
 ) {
     if let Ok(mut progressbar) = q_bar.get_single_mut() {
-        if let Ok(life) = q_player.get_single() {
-            progressbar.set_range(0.0, life.max_life());
-            progressbar.set_value(life.life());
+        if let Ok((life, max_life)) = q_player.get_single() {
+            progressbar.set_range(0.0, **max_life);
+            progressbar.set_value(**life);
         }
     }
 }

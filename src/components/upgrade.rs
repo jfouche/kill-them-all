@@ -32,7 +32,7 @@ impl Generator<Upgrade> for UpgradeKind {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Component)]
 pub enum Upgrade {
     /// Increase max life percentage, 1.0 is 100%
     IncreaseMaxLife(f32),

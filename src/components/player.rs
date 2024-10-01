@@ -23,6 +23,7 @@ pub struct PlayerBundle {
     // skills
     skills: SkillsBundle,
     weapon: Weapon,
+    upgrades: Upgrades,
     // physics
     body: RigidBody,
     velocity: Velocity,
@@ -46,12 +47,12 @@ impl Default for PlayerBundle {
             texture_atlas: TextureAtlas::default(),
             animation_timer: AnimationTimer::default(),
             skills: SkillsBundle {
-                base_life: BaseLife(10.),
-                life: Life::new(10.),
-                movement_speed: MovementSpeed::new(130.),
+                life: LifeBundle::new(10.),
+                movement_speed: MovementSpeedBundle::new(130.),
                 ..Default::default()
             },
             weapon: WeaponType::Gun.into(),
+            upgrades: Upgrades::default(),
             body: RigidBody::Dynamic,
             velocity: Velocity::zero(),
             collider: Collider::cuboid(PLAYER_SIZE.x / 2., PLAYER_SIZE.y / 2.),
