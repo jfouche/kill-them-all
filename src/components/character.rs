@@ -72,6 +72,13 @@ impl Life {
         }
     }
 
+    pub fn set_max(&mut self, max: f32) {
+        self.max_life = max;
+        if self.life > self.max_life {
+            self.life = self.max_life
+        }
+    }
+
     pub fn hit(&mut self, damage: f32) {
         if damage > self.life {
             self.life = 0.;
@@ -206,10 +213,6 @@ impl std::fmt::Display for PierceChance {
 //     pub damage: Damage,
 // }
 // }
-
-pub trait MoreLife {
-    fn more_life(&self) -> f32;
-}
 
 impl MoreLife for Helmet {
     fn more_life(&self) -> f32 {

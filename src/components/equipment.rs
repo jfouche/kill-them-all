@@ -95,7 +95,7 @@ pub trait Armor {
     fn armor(&self) -> f32;
 }
 
-pub trait AddLife {
+pub trait MoreLife {
     fn more_life(&self) -> f32;
 }
 

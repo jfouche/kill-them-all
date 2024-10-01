@@ -14,9 +14,11 @@ impl Plugin for CharacterPlugin {
     }
 }
 
-fn update_life(mut query: Query<(&mut Life, &Helmet, &BodyArmour, &Boots)>) {
-    for (mut life, helmet, body_armour, boots) in &mut query {
-        let mut more_life = helmet.more_life() + body_armour.more_life() + boots.more_life();
+fn update_life(mut query: Query<(&mut Life, &BaseLife, &Helmet, &BodyArmour, &Boots)>) {
+    for (mut life, base_life, helmet, body_armour, boots) in &mut query {
+        let more_life = helmet.more_life() + body_armour.more_life() + boots.more_life();
+        let max_life = **base_life + more_life;
+        life.set_max(max_life);
     }
 }
 
