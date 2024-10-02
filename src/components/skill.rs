@@ -37,7 +37,7 @@ impl MovementSpeedBundle {
 pub struct BaseMovementSpeed(f32);
 
 #[derive(Component, Default, Deref, Reflect)]
-pub struct MovementSpeed(f32);
+pub struct MovementSpeed(pub f32);
 
 impl std::fmt::Display for MovementSpeed {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -67,7 +67,7 @@ impl LifeBundle {
 
 /// Represent the initial life of a character
 #[derive(Component, Default, Deref, Clone, Copy, Reflect)]
-pub struct BaseLife(pub f32);
+pub struct BaseLife(f32);
 
 /// Represent current life of a character
 #[derive(Component, Default, Deref, Clone, Copy, Reflect)]
@@ -98,10 +98,6 @@ impl Life {
         self.0 == 0.0
     }
 
-    // pub fn max_life(&self) -> f32 {
-    //     self.max_life * (100.0 + self.increases) / 100.0
-    // }
-
     pub fn regenerate(&mut self, life: f32) {
         self.0 += life;
     }
@@ -128,10 +124,8 @@ impl Life {
 // ==================================================================
 // LifeRegen
 
-#[derive(Component, Default, Reflect)]
-pub struct LifeRegen {
-    pub increases: f32,
-}
+#[derive(Component, Default, Deref, Reflect)]
+pub struct LifeRegen(f32);
 
 // impl Increase for LifeRegen {
 //     fn increase(&mut self, percent: f32) {
@@ -141,7 +135,7 @@ pub struct LifeRegen {
 
 impl std::fmt::Display for LifeRegen {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}% per sec", self.increases)
+        write!(f, "{}% per sec", self.0)
     }
 }
 
@@ -216,7 +210,3 @@ impl std::fmt::Display for PierceChance {
 //     pub damage: Damage,
 // }
 // }
-
-pub trait IncreaseLife {
-    fn increase_life(&self) -> f32;
-}

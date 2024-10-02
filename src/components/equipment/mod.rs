@@ -105,6 +105,9 @@ pub trait Armor {
 pub trait MoreLife {
     fn more_life(&self) -> f32;
 }
+pub trait IncreaseMaxLife {
+    fn increase_max_life(&self) -> f32;
+}
 
 pub trait IncreaseMovementSpeed {
     fn increase_movement_speed(&self) -> f32;

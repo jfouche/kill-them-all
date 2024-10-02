@@ -1,9 +1,40 @@
-use super::rng_provider::{Generator, RngKindProvider};
+use super::{
+    rng_provider::{Generator, RngKindProvider},
+    IncreaseMaxLife, IncreaseMovementSpeed, MoreLife,
+};
 use bevy::prelude::*;
 use rand::{rngs::ThreadRng, Rng};
 
 #[derive(Component, Default, Deref, DerefMut)]
 pub struct Upgrades(pub Vec<Upgrade>);
+
+impl MoreLife for Upgrades {
+    fn more_life(&self) -> f32 {
+        0.
+    }
+}
+
+impl IncreaseMaxLife for Upgrades {
+    fn increase_max_life(&self) -> f32 {
+        self.0.iter().fold(0., |acc, u| {
+            acc + match *u {
+                Upgrade::IncreaseMaxLife(v) => v,
+                _ => 0.,
+            }
+        })
+    }
+}
+
+impl IncreaseMovementSpeed for Upgrades {
+    fn increase_movement_speed(&self) -> f32 {
+        self.0.iter().fold(0., |acc, u| {
+            acc + match *u {
+                Upgrade::IncreasemovementSpeed(v) => v,
+                _ => 0.,
+            }
+        })
+    }
+}
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub enum UpgradeKind {
