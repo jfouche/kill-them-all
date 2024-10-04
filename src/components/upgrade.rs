@@ -1,6 +1,6 @@
 use super::{
     rng_provider::{Generator, RngKindProvider},
-    IncreaseMaxLife, IncreaseMovementSpeed, MoreLife,
+    *,
 };
 use bevy::prelude::*;
 use rand::{rngs::ThreadRng, Rng};
@@ -30,6 +30,17 @@ impl IncreaseMovementSpeed for Upgrades {
         self.0.iter().fold(0., |acc, u| {
             acc + match *u {
                 Upgrade::IncreasemovementSpeed(v) => v,
+                _ => 0.,
+            }
+        })
+    }
+}
+
+impl IncreaseAttackSpeed for Upgrades {
+    fn increase_attack_speed(&self) -> f32 {
+        self.0.iter().fold(0., |acc, u| {
+            acc + match *u {
+                Upgrade::IncreaseAttackSpeed(v) => v,
                 _ => 0.,
             }
         })

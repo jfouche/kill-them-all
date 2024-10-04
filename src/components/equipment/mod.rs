@@ -113,6 +113,10 @@ pub trait IncreaseMovementSpeed {
     fn increase_movement_speed(&self) -> f32;
 }
 
+pub trait IncreaseAttackSpeed {
+    fn increase_attack_speed(&self) -> f32;
+}
+
 // ==================================================================
 // EquipmentProvider
 

@@ -24,27 +24,19 @@ impl Plugin for CharacterPlugin {
 
 fn update_skills(
     mut query: Query<(
-        &mut Life,
-        &mut MaxLife,
-        &BaseLife,
-        &mut MovementSpeed,
-        &BaseMovementSpeed,
+        (&mut Life, &mut MaxLife, &BaseLife),
+        (&mut MovementSpeed, &BaseMovementSpeed),
+        &mut AttackSpeed,
         &Upgrades,
-        &Helmet,
-        &BodyArmour,
-        &Boots,
+        (&Helmet, &BodyArmour, &Boots),
     )>,
 ) {
     for (
-        mut life,
-        mut max_life,
-        base_life,
-        mut movement_speed,
-        base_movement_speed,
+        (mut life, mut max_life, base_life),
+        (mut movement_speed, base_movement_speed),
+        mut attack_speed,
         upgrades,
-        helmet,
-        body_armour,
-        boots,
+        (helmet, body_armour, boots),
     ) in &mut query
     {
         let more_life =
@@ -55,6 +47,8 @@ fn update_skills(
 
         let inc_move_speed = boots.increase_movement_speed() + upgrades.increase_movement_speed();
         movement_speed.0 = **base_movement_speed * (1. + inc_move_speed / 100.);
+
+        attack_speed.increases = upgrades.increase_attack_speed();
     }
 }
 

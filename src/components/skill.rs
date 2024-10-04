@@ -144,7 +144,7 @@ impl std::fmt::Display for LifeRegen {
 
 #[derive(Component, Reflect)]
 pub struct AttackSpeed {
-    increases: f32,
+    pub increases: f32,
 }
 
 impl Default for AttackSpeed {
@@ -158,12 +158,6 @@ impl AttackSpeed {
         self.increases
     }
 }
-
-// impl Increase for AttackSpeed {
-//     fn increase(&mut self, percent: f32) {
-//         self.increases += percent;
-//     }
-// }
 
 impl std::fmt::Display for AttackSpeed {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
