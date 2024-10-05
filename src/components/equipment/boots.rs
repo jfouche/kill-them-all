@@ -60,12 +60,12 @@ impl std::fmt::Display for Boots {
         match self {
             Boots::None => Ok(()),
             Boots::Normal(boots) => {
-                write!(f, "Boots : +{} armour", boots.armor as u16)
+                write!(f, "Boots : +{:.0} armour", boots.armor)
             }
             Boots::Magic(boots) => write!(
                 f,
-                "Boots : +{} armour\n{}",
-                boots.base.armor as u16, boots.affix
+                "Boots : +{:.0} armour\n{}",
+                boots.base.armor, boots.affix
             ),
         }
     }
@@ -74,10 +74,10 @@ impl std::fmt::Display for Boots {
 impl std::fmt::Display for BootsAffix {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            BootsAffix::AddArmour(val) => write!(f, "Item add +{} armour", *val as u16),
-            BootsAffix::AddLife(val) => write!(f, "Item add +{} life", *val as u16),
+            BootsAffix::AddArmour(val) => write!(f, "Item add +{:.0} armour", *val),
+            BootsAffix::AddLife(val) => write!(f, "Item add +{:.0} life", *val),
             BootsAffix::IncreaseMovementSpeed(val) => {
-                write!(f, "Item increase +{}% movement speed", *val as u16)
+                write!(f, "Item increase +{:.0}% movement speed", *val)
             }
         }
     }
@@ -108,7 +108,7 @@ impl BootsAffixProvider {
     }
 }
 
-impl Armor for Boots {
+impl ProvideArmor for Boots {
     fn armor(&self) -> f32 {
         match self {
             Boots::None => 0.,
@@ -118,7 +118,7 @@ impl Armor for Boots {
     }
 }
 
-impl MoreLife for Boots {
+impl ProvideMoreLife for Boots {
     fn more_life(&self) -> f32 {
         match self {
             Boots::None => 0.,
@@ -131,7 +131,7 @@ impl MoreLife for Boots {
     }
 }
 
-impl IncreaseMovementSpeed for Boots {
+impl ProvideIncreaseMovementSpeed for Boots {
     fn increase_movement_speed(&self) -> f32 {
         match self {
             Boots::None => 0.,

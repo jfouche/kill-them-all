@@ -6,14 +6,9 @@ pub struct SkillsBundle {
     pub movement_speed: MovementSpeedBundle,
     pub life: LifeBundle,
     pub life_regen: LifeRegen,
-    pub attack_speed: AttackSpeed,
+    pub attack_speed: IncreaseAttackSpeed,
     pub pierce: PierceChance,
 }
-
-// pub trait Increase {
-//     /// Increase Self, by `percent` (1.0 is 1%)
-//     fn increase(&mut self, percent: f32);
-// }
 
 // ==================================================================
 // MovementSpeed
@@ -103,35 +98,11 @@ impl Life {
     }
 }
 
-// impl Increase for Life {
-//     fn increase(&mut self, percent: f32) {
-//         self.increases += percent;
-//     }
-// }
-
-// impl std::fmt::Display for Life {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         write!(
-//             f,
-//             "{}/{}  (+{}%)",
-//             self.life().round(),
-//             self.max_life().round(),
-//             self.increases
-//         )
-//     }
-// }
-
 // ==================================================================
 // LifeRegen
 
 #[derive(Component, Default, Deref, Reflect)]
 pub struct LifeRegen(f32);
-
-// impl Increase for LifeRegen {
-//     fn increase(&mut self, percent: f32) {
-//         self.increases += percent;
-//     }
-// }
 
 impl std::fmt::Display for LifeRegen {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -142,51 +113,31 @@ impl std::fmt::Display for LifeRegen {
 // ==================================================================
 // AttackSpeed
 
-#[derive(Component, Reflect)]
-pub struct AttackSpeed {
-    pub increases: f32,
-}
+#[derive(Component, Default, Clone, Copy, Reflect, Deref)]
+pub struct IncreaseAttackSpeed(pub f32);
 
-impl Default for AttackSpeed {
-    fn default() -> Self {
-        AttackSpeed { increases: 0.0 }
-    }
-}
-
-impl AttackSpeed {
-    pub fn value(&self) -> f32 {
-        self.increases
-    }
-}
-
-impl std::fmt::Display for AttackSpeed {
+impl std::fmt::Display for IncreaseAttackSpeed {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "+{:.0}%", self.increases)
+        write!(f, "+{:.0}%", self.0)
     }
 }
 
 // ==================================================================
 // Pierce
 
-#[derive(Component, Default, Deref, DerefMut, Reflect)]
+#[derive(Component, Default, Clone, Copy, Deref, Reflect)]
 pub struct PierceChance(pub f32);
 
 impl PierceChance {
     pub fn try_pierce(&mut self) -> bool {
         if rand::thread_rng().gen_range(0. ..100.) < **self {
-            **self -= 100.;
+            self.0 -= 100.;
             true
         } else {
             false
         }
     }
 }
-
-// impl Increase for PierceChance {
-//     fn increase(&mut self, percent: f32) {
-//         **self += percent;
-//     }
-// }
 
 impl std::fmt::Display for PierceChance {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

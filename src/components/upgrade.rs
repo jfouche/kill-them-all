@@ -8,13 +8,13 @@ use rand::{rngs::ThreadRng, Rng};
 #[derive(Component, Default, Deref, DerefMut)]
 pub struct Upgrades(pub Vec<Upgrade>);
 
-impl MoreLife for Upgrades {
+impl ProvideMoreLife for Upgrades {
     fn more_life(&self) -> f32 {
         0.
     }
 }
 
-impl IncreaseMaxLife for Upgrades {
+impl ProvideIncreaseMaxLife for Upgrades {
     fn increase_max_life(&self) -> f32 {
         self.0.iter().fold(0., |acc, u| {
             acc + match *u {
@@ -25,7 +25,7 @@ impl IncreaseMaxLife for Upgrades {
     }
 }
 
-impl IncreaseMovementSpeed for Upgrades {
+impl ProvideIncreaseMovementSpeed for Upgrades {
     fn increase_movement_speed(&self) -> f32 {
         self.0.iter().fold(0., |acc, u| {
             acc + match *u {
@@ -36,7 +36,7 @@ impl IncreaseMovementSpeed for Upgrades {
     }
 }
 
-impl IncreaseAttackSpeed for Upgrades {
+impl ProvideIncreaseAttackSpeed for Upgrades {
     fn increase_attack_speed(&self) -> f32 {
         self.0.iter().fold(0., |acc, u| {
             acc + match *u {

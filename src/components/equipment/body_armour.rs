@@ -58,12 +58,12 @@ impl std::fmt::Display for BodyArmour {
         match self {
             BodyArmour::None => Ok(()),
             BodyArmour::Normal(body_armour) => {
-                write!(f, "Body armour : +{} armour", body_armour.armor as u16)
+                write!(f, "Body armour : +{:.0} armour", body_armour.armor)
             }
             BodyArmour::Magic(body_armour) => write!(
                 f,
-                "Body armour : +{} armour\n{}",
-                body_armour.base.armor as u16, body_armour.affix
+                "Body armour : +{:.0} armour\n{}",
+                body_armour.base.armor, body_armour.affix
             ),
         }
     }
@@ -72,8 +72,8 @@ impl std::fmt::Display for BodyArmour {
 impl std::fmt::Display for BodyArmourAffix {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            BodyArmourAffix::AddArmour(val) => write!(f, "Item add +{} armour", *val as u16),
-            BodyArmourAffix::AddLife(val) => write!(f, "Item add +{} life", *val as u16),
+            BodyArmourAffix::AddArmour(val) => write!(f, "Item add +{:.0} armour", *val),
+            BodyArmourAffix::AddLife(val) => write!(f, "Item add +{:.0} life", *val),
         }
     }
 }
@@ -101,7 +101,7 @@ impl BodyArmourAffixProvider {
     }
 }
 
-impl Armor for BodyArmour {
+impl ProvideArmor for BodyArmour {
     fn armor(&self) -> f32 {
         match self {
             BodyArmour::None => 0.,
@@ -111,7 +111,7 @@ impl Armor for BodyArmour {
     }
 }
 
-impl MoreLife for BodyArmour {
+impl ProvideMoreLife for BodyArmour {
     fn more_life(&self) -> f32 {
         match self {
             BodyArmour::None => 0.,

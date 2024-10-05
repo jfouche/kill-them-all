@@ -109,11 +109,14 @@ fn player_movement(
 fn player_fires(
     mut commands: Commands,
     time: Res<Time>,
-    mut q_player: Query<(&Transform, &mut Weapon, &AttackSpeed, &PierceChance), With<Player>>,
+    mut q_player: Query<
+        (&Transform, &mut Weapon, &IncreaseAttackSpeed, &PierceChance),
+        With<Player>,
+    >,
     q_monsters: Query<&Transform, With<Monster>>,
 ) {
     if let Ok((player, mut weapon, attack_speed, pierce)) = q_player.get_single_mut() {
-        weapon.tick(time.delta(), attack_speed.value());
+        weapon.tick(time.delta(), **attack_speed);
         if weapon.ready() {
             let player = player.translation;
             // Get the nearest monster

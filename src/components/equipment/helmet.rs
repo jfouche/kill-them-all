@@ -57,11 +57,11 @@ impl std::fmt::Display for Helmet {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Helmet::None => Ok(()),
-            Helmet::Normal(helmet) => write!(f, "Helmet : +{} armour", helmet.armor as u16),
+            Helmet::Normal(helmet) => write!(f, "Helmet : +{:.0} armour", helmet.armor),
             Helmet::Magic(helmet) => write!(
                 f,
-                "Helmet : +{} armour\n{}",
-                helmet.base.armor as u16, helmet.affix
+                "Helmet : +{:.0} armour\n{}",
+                helmet.base.armor, helmet.affix
             ),
         }
     }
@@ -69,8 +69,8 @@ impl std::fmt::Display for Helmet {
 impl std::fmt::Display for HelmetAffix {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            HelmetAffix::AddArmour(val) => write!(f, "Item add +{} armour", *val as u16),
-            HelmetAffix::AddLife(val) => write!(f, "Item add +{} life", *val as u16),
+            HelmetAffix::AddArmour(val) => write!(f, "Item add +{:.0} armour", *val),
+            HelmetAffix::AddLife(val) => write!(f, "Item add +{:.0} life", *val),
         }
     }
 }
@@ -96,7 +96,7 @@ impl HelmetAffixProvider {
     }
 }
 
-impl Armor for Helmet {
+impl ProvideArmor for Helmet {
     fn armor(&self) -> f32 {
         match self {
             Helmet::None => 0.,
@@ -106,7 +106,7 @@ impl Armor for Helmet {
     }
 }
 
-impl MoreLife for Helmet {
+impl ProvideMoreLife for Helmet {
     fn more_life(&self) -> f32 {
         match self {
             Helmet::None => 0.,

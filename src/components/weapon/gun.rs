@@ -47,9 +47,10 @@ impl Default for BulletBundle {
     }
 }
 
+const BULLET_SPEED: f32 = 300.0;
+
 impl BulletBundle {
     pub fn new(options: BulletOptions) -> Self {
-        const BULLET_SPEED: f32 = 300.0;
         let velocity = options.direction.normalize() * BULLET_SPEED;
         let pos = options.ellipse_pos();
         let size = 5.;
@@ -73,11 +74,11 @@ impl BulletBundle {
 }
 
 pub struct BulletOptions {
-    pos: Vec3,
+    player_pos: Vec3,
+    player_size: Vec2,
     damage: u16,
     pierce: f32,
     direction: Vect,
-    size: Vec2,
 }
 
 impl BulletOptions {
@@ -90,19 +91,19 @@ impl BulletOptions {
     ) -> Self {
         let dir = target - player_pos;
         BulletOptions {
-            pos: player_pos,
+            player_pos,
+            player_size,
             damage,
             pierce,
             direction: Vect::new(dir.x, dir.y),
-            size: player_size,
         }
     }
 
     ///  Retrieve the pos of the bullet, according to an Ellipse around the player
     fn ellipse_pos(&self) -> Vec3 {
         let angle = Vec2::X.angle_between(self.direction);
-        let x = angle.cos() * SQRT_2 * self.size.x / 2.0 + self.pos.x;
-        let y = angle.sin() * SQRT_2 * self.size.y / 2.0 + self.pos.y;
+        let x = angle.cos() * SQRT_2 * self.player_size.x / 2.0 + self.player_pos.x;
+        let y = angle.sin() * SQRT_2 * self.player_size.y / 2.0 + self.player_pos.y;
         Vec3::new(x, y, 20.)
     }
 }

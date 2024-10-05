@@ -73,7 +73,7 @@ impl Skill for MovementSpeedText {
 struct AttackSpeedText;
 
 impl Skill for AttackSpeedText {
-    type SkillComponent = AttackSpeed;
+    type SkillComponent = IncreaseAttackSpeed;
 }
 #[derive(Component)]
 struct PierceChanceText;

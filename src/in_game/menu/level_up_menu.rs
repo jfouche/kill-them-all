@@ -51,11 +51,11 @@ trait ButtonLabel {
 impl ButtonLabel for Upgrade {
     fn label(&self) -> String {
         match self {
-            Upgrade::IncreaseMaxLife(val) => format!("+{}% max life", val),
-            Upgrade::IncreasemovementSpeed(val) => format!("+{}% movement speed", val),
-            Upgrade::IncreaseLifeRegen(val) => format!("+{}% life regen", val),
-            Upgrade::IncreaseAttackSpeed(val) => format!("+{}% attack speed", val),
-            Upgrade::Pierce(val) => format!("+{}% chance to pierce", val),
+            Upgrade::IncreaseMaxLife(val) => format!("+{:.0}% max life", val),
+            Upgrade::IncreasemovementSpeed(val) => format!("+{:.0}% movement speed", val),
+            Upgrade::IncreaseLifeRegen(val) => format!("+{:.0}% life regen", val),
+            Upgrade::IncreaseAttackSpeed(val) => format!("+{:.0}% attack speed", val),
+            Upgrade::Pierce(val) => format!("+{:.0}% chance to pierce", val),
         }
     }
 }

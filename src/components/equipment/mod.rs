@@ -98,22 +98,22 @@ impl EquipmentAssets {
 // ==================================================================
 // Affixes traits
 
-pub trait Armor {
+pub trait ProvideArmor {
     fn armor(&self) -> f32;
 }
 
-pub trait MoreLife {
+pub trait ProvideMoreLife {
     fn more_life(&self) -> f32;
 }
-pub trait IncreaseMaxLife {
+pub trait ProvideIncreaseMaxLife {
     fn increase_max_life(&self) -> f32;
 }
 
-pub trait IncreaseMovementSpeed {
+pub trait ProvideIncreaseMovementSpeed {
     fn increase_movement_speed(&self) -> f32;
 }
 
-pub trait IncreaseAttackSpeed {
+pub trait ProvideIncreaseAttackSpeed {
     fn increase_attack_speed(&self) -> f32;
 }
 
