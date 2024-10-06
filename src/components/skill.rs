@@ -70,7 +70,8 @@ pub struct Life(pub f32);
 
 /// Represent the max life of a character
 ///
-/// It's calculated with the [BaseLife] and all [Upgrades] and [Equipments]
+/// It's calculated with the [BaseLife] and all [crate::components::Upgrades]
+/// and [crate::components::Equipment]s
 #[derive(Component, Default, Deref, Clone, Copy, Reflect)]
 pub struct MaxLife(pub f32);
 
