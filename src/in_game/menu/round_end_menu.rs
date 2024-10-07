@@ -42,11 +42,9 @@ trait EquipmentLabel {
 impl EquipmentLabel for Equipment {
     fn label(&self) -> String {
         match self {
-            Equipment::Helmet(helmet) => format!("Helmet +{} armour", helmet.armor() as u16),
-            Equipment::BodyArmour(body_armour) => {
-                format!("Body armour +{} armour", body_armour.armor() as u16)
-            }
-            Equipment::Boots(boots) => format!("Boots +{} armour", boots.armor() as u16),
+            Equipment::Helmet(helmet) => helmet.to_string(),
+            Equipment::BodyArmour(body_armour) => body_armour.to_string(),
+            Equipment::Boots(boots) => boots.to_string(),
         }
     }
 }
