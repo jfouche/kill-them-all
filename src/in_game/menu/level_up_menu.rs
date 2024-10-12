@@ -55,7 +55,7 @@ impl ButtonLabel for Upgrade {
             Upgrade::IncreasemovementSpeed(val) => format!("+{:.0}% movement speed", val),
             Upgrade::IncreaseLifeRegen(val) => format!("+{:.0}% life regen", val),
             Upgrade::IncreaseAttackSpeed(val) => format!("+{:.0}% attack speed", val),
-            Upgrade::Pierce(val) => format!("+{:.0}% chance to pierce", val),
+            Upgrade::PierceChance(val) => format!("+{:.0}% chance to pierce", val),
         }
     }
 }

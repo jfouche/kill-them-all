@@ -117,6 +117,10 @@ pub trait ProvideIncreaseAttackSpeed {
     fn increase_attack_speed(&self) -> f32;
 }
 
+pub trait ProvidePierceChance {
+    fn pierce_chance(&self) -> f32;
+}
+
 // ==================================================================
 // EquipmentProvider
 

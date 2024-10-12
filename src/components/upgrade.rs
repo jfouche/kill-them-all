@@ -5,7 +5,7 @@ use super::{
 use bevy::prelude::*;
 use rand::{rngs::ThreadRng, Rng};
 
-#[derive(Component, Default, Deref, DerefMut)]
+#[derive(Component, Default, Deref, DerefMut, Reflect)]
 pub struct Upgrades(pub Vec<Upgrade>);
 
 impl ProvideMoreLife for Upgrades {
@@ -47,6 +47,17 @@ impl ProvideIncreaseAttackSpeed for Upgrades {
     }
 }
 
+impl ProvidePierceChance for Upgrades {
+    fn pierce_chance(&self) -> f32 {
+        self.0.iter().fold(0., |acc, u| {
+            acc + match *u {
+                Upgrade::PierceChance(v) => v,
+                _ => 0.,
+            }
+        })
+    }
+}
+
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub enum UpgradeKind {
     IncreaseMaxLife,
@@ -69,12 +80,12 @@ impl Generator<Upgrade> for UpgradeKind {
             UpgradeKind::IncreasemovementSpeed => {
                 Upgrade::IncreasemovementSpeed(rng.gen_range(2..20) as f32)
             }
-            UpgradeKind::Pierce => Upgrade::Pierce(rng.gen_range(2..20) as f32),
+            UpgradeKind::Pierce => Upgrade::PierceChance(rng.gen_range(2..20) as f32),
         }
     }
 }
 
-#[derive(Clone, Copy, Component)]
+#[derive(Clone, Copy, Component, Reflect)]
 pub enum Upgrade {
     /// Increase max life percentage, 1.0 is 100%
     IncreaseMaxLife(f32),
@@ -85,7 +96,7 @@ pub enum Upgrade {
     /// Increase movement speed percentage, 1.0 is 100%
     IncreasemovementSpeed(f32),
     // Pierce allow to not despawn when hitting
-    Pierce(f32),
+    PierceChance(f32),
 }
 
 #[derive(Deref, DerefMut)]

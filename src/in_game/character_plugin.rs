@@ -13,6 +13,7 @@ impl Plugin for CharacterPlugin {
             .register_type::<BaseMovementSpeed>()
             .register_type::<IncreaseAttackSpeed>()
             .register_type::<PierceChance>()
+            .register_type::<Upgrades>()
             .register_type::<Equipment>()
             .register_type::<Helmet>()
             .register_type::<BodyArmour>()
@@ -27,6 +28,7 @@ fn update_skills(
         (&mut Life, &mut MaxLife, &BaseLife),
         (&mut MovementSpeed, &BaseMovementSpeed),
         &mut IncreaseAttackSpeed,
+        &mut PierceChance,
         &Upgrades,
         (&Helmet, &BodyArmour, &Boots),
     )>,
@@ -35,20 +37,27 @@ fn update_skills(
         (mut life, mut max_life, base_life),
         (mut movement_speed, base_movement_speed),
         mut attack_speed,
+        mut pierce_chance,
         upgrades,
         (helmet, body_armour, boots),
     ) in &mut query
     {
+        // Life
         let more_life =
             helmet.more_life() + body_armour.more_life() + boots.more_life() + upgrades.more_life();
         let inc_life = upgrades.increase_max_life();
         max_life.0 = (**base_life + more_life) * (1. + inc_life / 100.);
         life.check(*max_life);
 
+        // Movement Speed
         let inc_move_speed = boots.increase_movement_speed() + upgrades.increase_movement_speed();
         movement_speed.0 = **base_movement_speed * (1. + inc_move_speed / 100.);
 
+        // Attack speed
         attack_speed.0 = upgrades.increase_attack_speed();
+
+        // Pierce chance
+        pierce_chance.0 = upgrades.pierce_chance();
     }
 }
 
