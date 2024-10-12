@@ -84,9 +84,9 @@ pub struct BulletOptions {
 impl BulletOptions {
     pub fn new(
         player_pos: Vec3,
+        player_size: Vec2,
         damage: u16,
         pierce: f32,
-        player_size: Vec2,
         target: Vec3,
     ) -> Self {
         let dir = target - player_pos;

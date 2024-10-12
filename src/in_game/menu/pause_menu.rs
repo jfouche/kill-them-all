@@ -16,7 +16,7 @@ impl Plugin for PausePlugin {
                 Update,
                 (
                     back_to_game,
-                    // update_skill::<LifeText>,
+                    update_skill::<LifeText>,
                     update_skill::<LifeRegenText>,
                     update_skill::<MovementSpeedText>,
                     update_skill::<AttackSpeedText>,
@@ -48,12 +48,12 @@ trait Skill {
     }
 }
 
-// #[derive(Component)]
-// struct LifeText;
+#[derive(Component)]
+struct LifeText;
 
-// impl Skill for LifeText {
-//     type SkillComponent = Life;
-// }
+impl Skill for LifeText {
+    type SkillComponent = Life;
+}
 
 #[derive(Component)]
 struct LifeRegenText;
@@ -119,7 +119,7 @@ fn spawn_pause_menu(mut commands: Commands) {
                 })
                 .with_children(|flex| {
                     flex.spawn(InventoryPanel);
-                    // spawn_skill(flex, "Life :", LifeText);
+                    spawn_skill(flex, "Life :", LifeText);
                     spawn_skill(flex, "Life regen :", LifeRegenText);
                     spawn_skill(flex, "Movement speed :", MovementSpeedText);
                     spawn_skill(flex, "Attack speed :", AttackSpeedText);

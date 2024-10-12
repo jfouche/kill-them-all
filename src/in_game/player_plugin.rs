@@ -133,9 +133,9 @@ fn player_fires(
             if let Some(nearest) = nearest_monster {
                 commands.spawn(BulletBundle::new(BulletOptions::new(
                     player,
+                    PLAYER_SIZE,
                     weapon.attack(),
                     **pierce,
-                    PLAYER_SIZE,
                     nearest,
                 )));
             }
