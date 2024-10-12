@@ -66,50 +66,49 @@ fn hover_equipment(
 }
 
 fn main_panel_bundle() -> impl Bundle {
-    NodeBundle {
-        style: Style {
-            flex_direction: FlexDirection::Column,
-            width: Val::Px(214.),
-            height: Val::Px(350.),
+    (
+        Name::new("InventoryPanel"),
+        NodeBundle {
+            style: Style {
+                flex_direction: FlexDirection::Row,
+                padding: UiRect::all(Val::Px(5.)),
+                ..Default::default()
+            },
             ..Default::default()
         },
-        // background_color: Color::srgb_u8(0.5, 0.1, 0.1, 1.).into(),
-        ..Default::default()
-    }
+    )
 }
 
 fn items_panel_bundle() -> impl Bundle {
-    NodeBundle {
-        style: Style {
-            width: Val::Percent(100.),
-            height: Val::Px(280.),
+    (
+        Name::new("Items"),
+        NodeBundle {
+            style: Style {
+                width: Val::Px(200.),
+                height: Val::Px(200.),
+                ..Default::default()
+            },
+            background_color: Srgba::rgb_u8(40, 40, 40).into(),
             ..Default::default()
         },
-        background_color: Srgba::rgb_u8(40, 40, 40).into(),
-        ..Default::default()
-    }
+    )
 }
 
 fn item_affixes_panel() -> impl Bundle {
-    let _ = NodeBundle {
-        style: Style {
-            width: Val::Percent(100.),
-            height: Val::Auto,
-            ..Default::default()
-        },
-        background_color: Color::srgb(0.1, 0.1, 0.5).into(),
-        ..Default::default()
-    };
-
     (
         AffixesText,
+        Name::new("Affixes"),
         TextBundle::from_section(
             "",
             TextStyle {
                 font_size: 16.,
                 ..Default::default()
             },
-        ),
+        )
+        .with_style(Style {
+            margin: UiRect::all(Val::Px(5.)),
+            ..Default::default()
+        }),
     )
 }
 
