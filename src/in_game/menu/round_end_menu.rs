@@ -76,19 +76,21 @@ fn spawn_round_end_menu(mut commands: Commands, assets: Res<EquipmentAssets>) {
 
 /// Handle the selection of an [Equipment], to add to the [Player]
 fn select_equipment(
-    mut players: Query<(&mut Helmet, &mut BodyArmour, &mut Boots), With<Player>>,
+    mut players: Query<&mut Equipments, With<Player>>,
     mut state: ResMut<NextState<InGameState>>,
     interactions: Query<(&Equipment, &Interaction), With<Button>>,
 ) {
-    let Ok((mut helmet, mut body_armour, mut boots)) = players.get_single_mut() else {
+    let Ok(mut equipments) = players.get_single_mut() else {
         return;
     };
     for (equipment, interaction) in &interactions {
         if *interaction == Interaction::Pressed {
             match equipment {
-                Equipment::Helmet(new_helmet) => *helmet = new_helmet.clone(),
-                Equipment::BodyArmour(new_body_armour) => *body_armour = new_body_armour.clone(),
-                Equipment::Boots(new_boots) => *boots = new_boots.clone(),
+                Equipment::Helmet(new_helmet) => equipments.helmet = new_helmet.clone(),
+                Equipment::BodyArmour(new_body_armour) => {
+                    equipments.body_armour = new_body_armour.clone()
+                }
+                Equipment::Boots(new_boots) => equipments.boots = new_boots.clone(),
             }
             state.set(InGameState::Running);
         }

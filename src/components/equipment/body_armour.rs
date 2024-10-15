@@ -3,8 +3,9 @@ use crate::components::rng_provider::*;
 use bevy::prelude::*;
 use rand::{rngs::ThreadRng, Rng};
 
-#[derive(Component, Clone, Reflect)]
+#[derive(Component, Default, Clone, Reflect)]
 pub enum BodyArmour {
+    #[default]
     None,
     Normal(NormalBodyArmour),
     Magic(MagicBodyArmour),
@@ -12,13 +13,13 @@ pub enum BodyArmour {
 
 #[derive(Copy, Clone, Reflect)]
 pub struct NormalBodyArmour {
-    pub armor: f32,
+    pub armour: f32,
 }
 
 impl NormalBodyArmour {
     pub fn generate(rng: &mut ThreadRng) -> Self {
         NormalBodyArmour {
-            armor: rng.gen_range(1..=2) as f32,
+            armour: rng.gen_range(1..=2) as f32,
         }
     }
 }
@@ -58,12 +59,12 @@ impl std::fmt::Display for BodyArmour {
         match self {
             BodyArmour::None => Ok(()),
             BodyArmour::Normal(body_armour) => {
-                write!(f, "Body armour : +{:.0} armour", body_armour.armor)
+                write!(f, "Body armour : +{:.0} armour", body_armour.armour)
             }
             BodyArmour::Magic(body_armour) => write!(
                 f,
                 "Body armour : +{:.0} armour\n{}",
-                body_armour.base.armor, body_armour.affix
+                body_armour.base.armour, body_armour.affix
             ),
         }
     }
@@ -101,12 +102,12 @@ impl BodyArmourAffixProvider {
     }
 }
 
-impl ProvideArmor for BodyArmour {
-    fn armor(&self) -> f32 {
+impl ProvideArmour for BodyArmour {
+    fn armour(&self) -> f32 {
         match self {
             BodyArmour::None => 0.,
-            BodyArmour::Normal(body_armour) => body_armour.armor,
-            BodyArmour::Magic(body_armour) => body_armour.base.armor,
+            BodyArmour::Normal(body_armour) => body_armour.armour,
+            BodyArmour::Magic(body_armour) => body_armour.base.armour,
         }
     }
 }
@@ -121,5 +122,34 @@ impl ProvideMoreLife for BodyArmour {
                 _ => 0.,
             },
         }
+    }
+}
+
+impl ProvideIncreaseMaxLife for BodyArmour {
+    fn increase_max_life(&self) -> f32 {
+        0.
+    }
+}
+impl ProvideLifeRegen for BodyArmour {
+    fn life_regen(&self) -> f32 {
+        0.
+    }
+}
+
+impl ProvideIncreaseMovementSpeed for BodyArmour {
+    fn increase_movement_speed(&self) -> f32 {
+        0.
+    }
+}
+
+impl ProvideIncreaseAttackSpeed for BodyArmour {
+    fn increase_attack_speed(&self) -> f32 {
+        0.
+    }
+}
+
+impl ProvidePierceChance for BodyArmour {
+    fn pierce_chance(&self) -> f32 {
+        0.
     }
 }

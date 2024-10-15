@@ -25,6 +25,17 @@ impl ProvideIncreaseMaxLife for Upgrades {
     }
 }
 
+impl ProvideLifeRegen for Upgrades {
+    fn life_regen(&self) -> f32 {
+        self.0.iter().fold(0., |acc, u| {
+            acc + match *u {
+                Upgrade::IncreaseLifeRegen(v) => v,
+                _ => 0.,
+            }
+        })
+    }
+}
+
 impl ProvideIncreaseMovementSpeed for Upgrades {
     fn increase_movement_speed(&self) -> f32 {
         self.0.iter().fold(0., |acc, u| {
@@ -55,6 +66,12 @@ impl ProvidePierceChance for Upgrades {
                 _ => 0.,
             }
         })
+    }
+}
+
+impl ProvideArmour for Upgrades {
+    fn armour(&self) -> f32 {
+        0.
     }
 }
 

@@ -3,8 +3,9 @@ use crate::components::rng_provider::*;
 use bevy::prelude::*;
 use rand::{rngs::ThreadRng, Rng};
 
-#[derive(Component, Clone, Reflect)]
+#[derive(Component, Default, Clone, Reflect)]
 pub enum Boots {
+    #[default]
     None,
     Normal(NormalBoots),
     Magic(MagicBoots),
@@ -12,13 +13,13 @@ pub enum Boots {
 
 #[derive(Copy, Clone, Reflect)]
 pub struct NormalBoots {
-    pub armor: f32,
+    pub armour: f32,
 }
 
 impl NormalBoots {
     pub fn generate(rng: &mut ThreadRng) -> Self {
         NormalBoots {
-            armor: rng.gen_range(1..=2) as f32,
+            armour: rng.gen_range(1..=2) as f32,
         }
     }
 }
@@ -60,12 +61,12 @@ impl std::fmt::Display for Boots {
         match self {
             Boots::None => Ok(()),
             Boots::Normal(boots) => {
-                write!(f, "Boots : +{:.0} armour", boots.armor)
+                write!(f, "Boots : +{:.0} armour", boots.armour)
             }
             Boots::Magic(boots) => write!(
                 f,
                 "Boots : +{:.0} armour\n{}",
-                boots.base.armor, boots.affix
+                boots.base.armour, boots.affix
             ),
         }
     }
@@ -108,12 +109,12 @@ impl BootsAffixProvider {
     }
 }
 
-impl ProvideArmor for Boots {
-    fn armor(&self) -> f32 {
+impl ProvideArmour for Boots {
+    fn armour(&self) -> f32 {
         match self {
             Boots::None => 0.,
-            Boots::Normal(boot) => boot.armor,
-            Boots::Magic(boot) => boot.base.armor,
+            Boots::Normal(boot) => boot.armour,
+            Boots::Magic(boot) => boot.base.armour,
         }
     }
 }
@@ -131,6 +132,17 @@ impl ProvideMoreLife for Boots {
     }
 }
 
+impl ProvideIncreaseMaxLife for Boots {
+    fn increase_max_life(&self) -> f32 {
+        0.
+    }
+}
+impl ProvideLifeRegen for Boots {
+    fn life_regen(&self) -> f32 {
+        0.
+    }
+}
+
 impl ProvideIncreaseMovementSpeed for Boots {
     fn increase_movement_speed(&self) -> f32 {
         match self {
@@ -141,5 +153,16 @@ impl ProvideIncreaseMovementSpeed for Boots {
                 _ => 0.,
             },
         }
+    }
+}
+
+impl ProvideIncreaseAttackSpeed for Boots {
+    fn increase_attack_speed(&self) -> f32 {
+        0.
+    }
+}
+impl ProvidePierceChance for Boots {
+    fn pierce_chance(&self) -> f32 {
+        0.
     }
 }

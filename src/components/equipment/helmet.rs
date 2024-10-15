@@ -3,8 +3,9 @@ use crate::components::rng_provider::*;
 use bevy::prelude::*;
 use rand::{rngs::ThreadRng, Rng};
 
-#[derive(Component, Clone, Reflect)]
+#[derive(Default, Clone, Reflect)]
 pub enum Helmet {
+    #[default]
     None,
     Normal(NormalHelmet),
     Magic(MagicHelmet),
@@ -12,13 +13,13 @@ pub enum Helmet {
 
 #[derive(Copy, Clone, Reflect)]
 pub struct NormalHelmet {
-    pub armor: f32,
+    pub armour: f32,
 }
 
 impl NormalHelmet {
     pub fn generate(rng: &mut ThreadRng) -> Self {
         NormalHelmet {
-            armor: rng.gen_range(1..=2) as f32,
+            armour: rng.gen_range(1..=2) as f32,
         }
     }
 }
@@ -57,11 +58,11 @@ impl std::fmt::Display for Helmet {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Helmet::None => Ok(()),
-            Helmet::Normal(helmet) => write!(f, "Helmet : +{:.0} armour", helmet.armor),
+            Helmet::Normal(helmet) => write!(f, "Helmet : +{:.0} armour", helmet.armour),
             Helmet::Magic(helmet) => write!(
                 f,
                 "Helmet : +{:.0} armour\n{}",
-                helmet.base.armor, helmet.affix
+                helmet.base.armour, helmet.affix
             ),
         }
     }
@@ -96,12 +97,12 @@ impl HelmetAffixProvider {
     }
 }
 
-impl ProvideArmor for Helmet {
-    fn armor(&self) -> f32 {
+impl ProvideArmour for Helmet {
+    fn armour(&self) -> f32 {
         match self {
             Helmet::None => 0.,
-            Helmet::Normal(helmet) => helmet.armor,
-            Helmet::Magic(helmet) => helmet.base.armor,
+            Helmet::Normal(helmet) => helmet.armour,
+            Helmet::Magic(helmet) => helmet.base.armour,
         }
     }
 }
@@ -116,5 +117,35 @@ impl ProvideMoreLife for Helmet {
                 _ => 0.,
             },
         }
+    }
+}
+
+impl ProvideIncreaseMaxLife for Helmet {
+    fn increase_max_life(&self) -> f32 {
+        0.
+    }
+}
+
+impl ProvideLifeRegen for Helmet {
+    fn life_regen(&self) -> f32 {
+        0.
+    }
+}
+
+impl ProvideIncreaseMovementSpeed for Helmet {
+    fn increase_movement_speed(&self) -> f32 {
+        0.
+    }
+}
+
+impl ProvideIncreaseAttackSpeed for Helmet {
+    fn increase_attack_speed(&self) -> f32 {
+        0.
+    }
+}
+
+impl ProvidePierceChance for Helmet {
+    fn pierce_chance(&self) -> f32 {
+        0.
     }
 }

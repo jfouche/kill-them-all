@@ -9,10 +9,8 @@ pub struct Player;
 pub struct PlayerBundle {
     tag: Player,
     name: Name,
-    // Equipment
-    helmet: Helmet,
-    body_armour: BodyArmour,
-    boots: Boots,
+    // Equipments
+    equipments: Equipments,
     //
     money: Money,
     xp: Experience,
@@ -38,9 +36,7 @@ impl Default for PlayerBundle {
         PlayerBundle {
             tag: Player,
             name: Name::new("Player"),
-            helmet: Helmet::None,
-            body_armour: BodyArmour::None,
-            boots: Boots::None,
+            equipments: Equipments::default(),
             money: Money(0),
             xp: Experience::default(),
             sprite: SpriteBundle::default(),

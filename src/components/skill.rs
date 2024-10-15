@@ -10,6 +10,9 @@ pub struct SkillsBundle {
     pub pierce: PierceChance,
 }
 
+#[derive(Component, Clone, Copy, Default, Deref, Reflect)]
+pub struct Armour(pub f32);
+
 // ==================================================================
 // MovementSpeed
 
@@ -109,7 +112,7 @@ impl std::fmt::Display for Life {
 // LifeRegen
 
 #[derive(Component, Default, Deref, Reflect)]
-pub struct LifeRegen(f32);
+pub struct LifeRegen(pub f32);
 
 impl std::fmt::Display for LifeRegen {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

@@ -10,10 +10,10 @@ struct AffixesText;
 fn add_inventory_panel(
     mut commands: Commands,
     panels: Query<Entity, Added<InventoryPanel>>,
-    players: Query<(&Helmet, &BodyArmour, &Boots), With<Player>>,
+    players: Query<&Equipments, With<Player>>,
     assets: Res<EquipmentAssets>,
 ) {
-    let Ok((helmet, body_armour, boots)) = players.get_single() else {
+    let Ok(equipments) = players.get_single() else {
         return;
     };
     for entity in &panels {
@@ -24,26 +24,26 @@ fn add_inventory_panel(
                 panel.spawn(items_panel_bundle()).with_children(|p| {
                     // helmet
                     let pos = Vec2::new(74., 7.);
-                    let (texture, atlas) = assets.helmet(helmet);
+                    let (texture, atlas) = assets.helmet(&equipments.helmet);
                     p.spawn(inventory_box(pos, texture, atlas))
-                        .insert(Equipment::Helmet(helmet.clone()));
+                        .insert(Equipment::Helmet(equipments.helmet.clone()));
                     // amulet
                     p.spawn(empty_inventory_box(Vec2::new(142., 7.)));
                     // weapon
                     p.spawn(empty_inventory_box(Vec2::new(7., 74.)));
                     // body armour
                     let pos = Vec2::new(74., 74.);
-                    let (texture, atlas) = assets.body_armour(body_armour);
+                    let (texture, atlas) = assets.body_armour(&equipments.body_armour);
                     p.spawn(inventory_box(pos, texture, atlas))
-                        .insert(Equipment::BodyArmour(body_armour.clone()));
+                        .insert(Equipment::BodyArmour(equipments.body_armour.clone()));
                     //
                     p.spawn(empty_inventory_box(Vec2::new(142., 74.)));
                     p.spawn(empty_inventory_box(Vec2::new(7., 142.)));
                     // Boots
                     let pos = Vec2::new(74., 142.);
-                    let (texture, atlas) = assets.boots(boots);
+                    let (texture, atlas) = assets.boots(&equipments.boots);
                     p.spawn(inventory_box(pos, texture, atlas))
-                        .insert(Equipment::Boots(boots.clone()));
+                        .insert(Equipment::Boots(equipments.boots.clone()));
                 });
                 panel.spawn(item_affixes_panel());
             });

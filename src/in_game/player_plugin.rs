@@ -149,13 +149,13 @@ fn player_fires(
 fn on_player_hit(
     mut commands: Commands,
     mut player_hit_events: EventReader<PlayerHitEvent>,
-    mut q_player: Query<(&Helmet, &mut Life, &mut CollisionGroups), With<Player>>,
+    mut q_player: Query<(&Equipments, &mut Life, &mut CollisionGroups), With<Player>>,
     mut send_death: EventWriter<PlayerDeathEvent>,
 ) {
-    if let Ok((helmet, mut life, mut collision_groups)) = q_player.get_single_mut() {
+    if let Ok((equipments, mut life, mut collision_groups)) = q_player.get_single_mut() {
         for event in player_hit_events.read() {
             info!("on_player_hit");
-            let damage = (*event.damage as f32) - helmet.armor();
+            let damage = (*event.damage as f32) - equipments.armour();
             if damage > 0. {
                 life.hit(damage);
                 if life.is_dead() {
