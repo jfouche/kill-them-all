@@ -3,6 +3,7 @@ use rand::Rng;
 
 #[derive(Bundle, Default)]
 pub struct SkillsBundle {
+    pub armour: Armour,
     pub movement_speed: MovementSpeedBundle,
     pub life: LifeBundle,
     pub life_regen: LifeRegen,
