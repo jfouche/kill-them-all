@@ -16,6 +16,7 @@ impl Plugin for PausePlugin {
                 Update,
                 (
                     back_to_game,
+                    update_skill::<ArmourText>,
                     update_skill::<LifeText>,
                     update_skill::<LifeRegenText>,
                     update_skill::<MovementSpeedText>,
@@ -46,6 +47,13 @@ trait Skill {
     fn format(component: &Self::SkillComponent) -> String {
         format!("{}", component)
     }
+}
+
+#[derive(Component)]
+struct ArmourText;
+
+impl Skill for ArmourText {
+    type SkillComponent = Armour;
 }
 
 #[derive(Component)]
@@ -119,6 +127,7 @@ fn spawn_pause_menu(mut commands: Commands) {
                 })
                 .with_children(|flex| {
                     flex.spawn(InventoryPanel);
+                    spawn_skill(flex, "Armour :", ArmourText);
                     spawn_skill(flex, "Life :", LifeText);
                     spawn_skill(flex, "Life regen :", LifeRegenText);
                     spawn_skill(flex, "Movement speed :", MovementSpeedText);
@@ -134,7 +143,7 @@ fn spawn_pause_menu(mut commands: Commands) {
 fn spawn_skill(panel: &mut ChildBuilder, label: impl Into<String>, component: impl Bundle) {
     const MARGIN: Val = Val::Px(12.);
     let text_style = TextStyle {
-        font_size: 16.0,
+        font_size: 12.0,
         color: Color::WHITE,
         ..Default::default()
     };
@@ -144,7 +153,7 @@ fn spawn_skill(panel: &mut ChildBuilder, label: impl Into<String>, component: im
                 width: Val::Percent(100.),
                 height: Val::Percent(100.),
                 flex_direction: FlexDirection::Row,
-                padding: UiRect::all(Val::Px(4.0)),
+                padding: UiRect::all(Val::Px(2.0)),
                 column_gap: MARGIN,
                 ..Default::default()
             },

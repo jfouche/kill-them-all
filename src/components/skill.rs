@@ -11,8 +11,17 @@ pub struct SkillsBundle {
     pub pierce: PierceChance,
 }
 
+// ==================================================================
+// Armour
+
 #[derive(Component, Clone, Copy, Default, Deref, Reflect)]
 pub struct Armour(pub f32);
+
+impl std::fmt::Display for Armour {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
 
 // ==================================================================
 // MovementSpeed
