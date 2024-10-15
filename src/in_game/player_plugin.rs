@@ -154,8 +154,8 @@ fn on_player_hit(
 ) {
     if let Ok((equipments, mut life, mut collision_groups)) = q_player.get_single_mut() {
         for event in player_hit_events.read() {
-            info!("on_player_hit");
             let damage = (*event.damage as f32) - equipments.armour();
+            info!("on_player_hit: damage: {damage:.0}");
             if damage > 0. {
                 life.hit(damage);
                 if life.is_dead() {
