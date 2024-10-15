@@ -102,7 +102,7 @@ impl BodyArmourAffixProvider {
     }
 }
 
-impl ProvideArmour for BodyArmour {
+impl ProvideUpgrades for BodyArmour {
     fn armour(&self) -> f32 {
         match self {
             BodyArmour::None => 0.,
@@ -110,9 +110,7 @@ impl ProvideArmour for BodyArmour {
             BodyArmour::Magic(body_armour) => body_armour.base.armour,
         }
     }
-}
 
-impl ProvideMoreLife for BodyArmour {
     fn more_life(&self) -> f32 {
         match self {
             BodyArmour::None => 0.,
@@ -123,32 +121,23 @@ impl ProvideMoreLife for BodyArmour {
             },
         }
     }
-}
 
-impl ProvideIncreaseMaxLife for BodyArmour {
     fn increase_max_life(&self) -> f32 {
         0.
     }
-}
-impl ProvideLifeRegen for BodyArmour {
+
     fn life_regen(&self) -> f32 {
         0.
     }
-}
 
-impl ProvideIncreaseMovementSpeed for BodyArmour {
     fn increase_movement_speed(&self) -> f32 {
         0.
     }
-}
 
-impl ProvideIncreaseAttackSpeed for BodyArmour {
     fn increase_attack_speed(&self) -> f32 {
         0.
     }
-}
 
-impl ProvidePierceChance for BodyArmour {
     fn pierce_chance(&self) -> f32 {
         0.
     }

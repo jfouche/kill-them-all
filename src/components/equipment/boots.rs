@@ -109,7 +109,7 @@ impl BootsAffixProvider {
     }
 }
 
-impl ProvideArmour for Boots {
+impl ProvideUpgrades for Boots {
     fn armour(&self) -> f32 {
         match self {
             Boots::None => 0.,
@@ -117,9 +117,7 @@ impl ProvideArmour for Boots {
             Boots::Magic(boot) => boot.base.armour,
         }
     }
-}
 
-impl ProvideMoreLife for Boots {
     fn more_life(&self) -> f32 {
         match self {
             Boots::None => 0.,
@@ -130,20 +128,15 @@ impl ProvideMoreLife for Boots {
             },
         }
     }
-}
 
-impl ProvideIncreaseMaxLife for Boots {
     fn increase_max_life(&self) -> f32 {
         0.
     }
-}
-impl ProvideLifeRegen for Boots {
+
     fn life_regen(&self) -> f32 {
         0.
     }
-}
 
-impl ProvideIncreaseMovementSpeed for Boots {
     fn increase_movement_speed(&self) -> f32 {
         match self {
             Boots::None => 0.,
@@ -154,14 +147,11 @@ impl ProvideIncreaseMovementSpeed for Boots {
             },
         }
     }
-}
 
-impl ProvideIncreaseAttackSpeed for Boots {
     fn increase_attack_speed(&self) -> f32 {
         0.
     }
-}
-impl ProvidePierceChance for Boots {
+
     fn pierce_chance(&self) -> f32 {
         0.
     }

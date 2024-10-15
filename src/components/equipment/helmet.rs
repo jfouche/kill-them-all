@@ -97,7 +97,7 @@ impl HelmetAffixProvider {
     }
 }
 
-impl ProvideArmour for Helmet {
+impl ProvideUpgrades for Helmet {
     fn armour(&self) -> f32 {
         match self {
             Helmet::None => 0.,
@@ -105,9 +105,7 @@ impl ProvideArmour for Helmet {
             Helmet::Magic(helmet) => helmet.base.armour,
         }
     }
-}
 
-impl ProvideMoreLife for Helmet {
     fn more_life(&self) -> f32 {
         match self {
             Helmet::None => 0.,
@@ -118,33 +116,23 @@ impl ProvideMoreLife for Helmet {
             },
         }
     }
-}
 
-impl ProvideIncreaseMaxLife for Helmet {
     fn increase_max_life(&self) -> f32 {
         0.
     }
-}
 
-impl ProvideLifeRegen for Helmet {
     fn life_regen(&self) -> f32 {
         0.
     }
-}
 
-impl ProvideIncreaseMovementSpeed for Helmet {
     fn increase_movement_speed(&self) -> f32 {
         0.
     }
-}
 
-impl ProvideIncreaseAttackSpeed for Helmet {
     fn increase_attack_speed(&self) -> f32 {
         0.
     }
-}
 
-impl ProvidePierceChance for Helmet {
     fn pierce_chance(&self) -> f32 {
         0.
     }

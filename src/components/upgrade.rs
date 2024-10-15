@@ -1,20 +1,29 @@
-use super::{
-    rng_provider::{Generator, RngKindProvider},
-    *,
-};
+use super::rng_provider::{Generator, RngKindProvider};
 use bevy::prelude::*;
 use rand::{rngs::ThreadRng, Rng};
 
 #[derive(Component, Default, Deref, DerefMut, Reflect)]
 pub struct Upgrades(pub Vec<Upgrade>);
 
-impl ProvideMoreLife for Upgrades {
+pub trait ProvideUpgrades {
+    fn armour(&self) -> f32;
+    fn more_life(&self) -> f32;
+    fn increase_max_life(&self) -> f32;
+    fn life_regen(&self) -> f32;
+    fn increase_movement_speed(&self) -> f32;
+    fn increase_attack_speed(&self) -> f32;
+    fn pierce_chance(&self) -> f32;
+}
+
+impl ProvideUpgrades for Upgrades {
+    fn armour(&self) -> f32 {
+        0.
+    }
+
     fn more_life(&self) -> f32 {
         0.
     }
-}
 
-impl ProvideIncreaseMaxLife for Upgrades {
     fn increase_max_life(&self) -> f32 {
         self.0.iter().fold(0., |acc, u| {
             acc + match *u {
@@ -23,9 +32,7 @@ impl ProvideIncreaseMaxLife for Upgrades {
             }
         })
     }
-}
 
-impl ProvideLifeRegen for Upgrades {
     fn life_regen(&self) -> f32 {
         self.0.iter().fold(0., |acc, u| {
             acc + match *u {
@@ -34,9 +41,7 @@ impl ProvideLifeRegen for Upgrades {
             }
         })
     }
-}
 
-impl ProvideIncreaseMovementSpeed for Upgrades {
     fn increase_movement_speed(&self) -> f32 {
         self.0.iter().fold(0., |acc, u| {
             acc + match *u {
@@ -45,9 +50,7 @@ impl ProvideIncreaseMovementSpeed for Upgrades {
             }
         })
     }
-}
 
-impl ProvideIncreaseAttackSpeed for Upgrades {
     fn increase_attack_speed(&self) -> f32 {
         self.0.iter().fold(0., |acc, u| {
             acc + match *u {
@@ -56,9 +59,7 @@ impl ProvideIncreaseAttackSpeed for Upgrades {
             }
         })
     }
-}
 
-impl ProvidePierceChance for Upgrades {
     fn pierce_chance(&self) -> f32 {
         self.0.iter().fold(0., |acc, u| {
             acc + match *u {
@@ -66,12 +67,6 @@ impl ProvidePierceChance for Upgrades {
                 _ => 0.,
             }
         })
-    }
-}
-
-impl ProvideArmour for Upgrades {
-    fn armour(&self) -> f32 {
-        0.
     }
 }
 

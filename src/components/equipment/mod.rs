@@ -6,7 +6,10 @@ pub use body_armour::*;
 pub use boots::*;
 pub use helmet::*;
 
-use super::rng_provider::{Generator, RngKindProvider};
+use super::{
+    rng_provider::{Generator, RngKindProvider},
+    ProvideUpgrades,
+};
 use bevy::prelude::*;
 use rand::rngs::ThreadRng;
 
@@ -96,35 +99,6 @@ impl EquipmentAssets {
 }
 
 // ==================================================================
-// Affixes traits
-
-pub trait ProvideArmour {
-    fn armour(&self) -> f32;
-}
-
-pub trait ProvideMoreLife {
-    fn more_life(&self) -> f32;
-}
-pub trait ProvideIncreaseMaxLife {
-    fn increase_max_life(&self) -> f32;
-}
-
-pub trait ProvideLifeRegen {
-    fn life_regen(&self) -> f32;
-}
-pub trait ProvideIncreaseMovementSpeed {
-    fn increase_movement_speed(&self) -> f32;
-}
-
-pub trait ProvideIncreaseAttackSpeed {
-    fn increase_attack_speed(&self) -> f32;
-}
-
-pub trait ProvidePierceChance {
-    fn pierce_chance(&self) -> f32;
-}
-
-// ==================================================================
 // Equipments
 
 #[derive(Component, Default, Reflect)]
@@ -134,49 +108,37 @@ pub struct Equipments {
     pub boots: Boots,
 }
 
-impl ProvideArmour for Equipments {
+impl ProvideUpgrades for Equipments {
     fn armour(&self) -> f32 {
         self.helmet.armour() + self.body_armour.armour() + self.boots.armour()
     }
-}
 
-impl ProvideMoreLife for Equipments {
     fn more_life(&self) -> f32 {
         self.helmet.more_life() + self.body_armour.more_life() + self.boots.more_life()
     }
-}
 
-impl ProvideIncreaseMaxLife for Equipments {
     fn increase_max_life(&self) -> f32 {
         self.helmet.increase_max_life()
             + self.body_armour.increase_max_life()
             + self.boots.increase_max_life()
     }
-}
 
-impl ProvideLifeRegen for Equipments {
     fn life_regen(&self) -> f32 {
         self.helmet.life_regen() + self.body_armour.life_regen() + self.boots.life_regen()
     }
-}
 
-impl ProvideIncreaseMovementSpeed for Equipments {
     fn increase_movement_speed(&self) -> f32 {
         self.helmet.increase_movement_speed()
             + self.body_armour.increase_movement_speed()
             + self.boots.increase_movement_speed()
     }
-}
 
-impl ProvideIncreaseAttackSpeed for Equipments {
     fn increase_attack_speed(&self) -> f32 {
         self.helmet.increase_attack_speed()
             + self.body_armour.increase_attack_speed()
             + self.boots.increase_attack_speed()
     }
-}
 
-impl ProvidePierceChance for Equipments {
     fn pierce_chance(&self) -> f32 {
         self.helmet.pierce_chance() + self.body_armour.pierce_chance() + self.boots.pierce_chance()
     }
