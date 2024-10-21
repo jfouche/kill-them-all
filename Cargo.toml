@@ -32,6 +32,7 @@ bevy = { version = "0.14", default-features = false, features = [
     "bevy_winit",
     "multi_threaded",
     "default_font",
+    "png"
 ] }
 bevy_rapier2d = "0.27"
 bevy-inspector-egui = { version = "0.27", default-features = false, features = [
