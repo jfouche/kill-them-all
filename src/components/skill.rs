@@ -19,7 +19,7 @@ pub struct Armour(pub f32);
 
 impl std::fmt::Display for Armour {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
+        write!(f, "{:.0}", self.0)
     }
 }
 
@@ -49,7 +49,7 @@ pub struct MovementSpeed(pub f32);
 
 impl std::fmt::Display for MovementSpeed {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
+        write!(f, "{:.0}", self.0)
     }
 }
 
@@ -114,7 +114,7 @@ impl Life {
 
 impl std::fmt::Display for Life {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:0}", self.0)
+        write!(f, "{:.0}", self.0)
     }
 }
 
@@ -126,7 +126,7 @@ pub struct LifeRegen(pub f32);
 
 impl std::fmt::Display for LifeRegen {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}% per sec", self.0)
+        write!(f, "{:.0}% per sec", self.0)
     }
 }
 
