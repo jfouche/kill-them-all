@@ -1,3 +1,4 @@
+use super::Damage;
 use bevy::prelude::*;
 use rand::Rng;
 
@@ -95,11 +96,11 @@ impl Life {
         }
     }
 
-    pub fn hit(&mut self, damage: f32) {
-        if damage > self.0 {
+    pub fn hit(&mut self, damage: Damage) {
+        if damage.0 > self.0 {
             self.0 = 0.;
         } else {
-            self.0 -= damage;
+            self.0 -= damage.0;
         }
     }
 
@@ -168,10 +169,8 @@ impl std::fmt::Display for PierceChance {
 // ==================================================================
 // HitEvent
 
-// /// Event to notify a monster was hit
-// #[derive(Event)]
-// pub struct HitEvent {
-//     pub entity: Entity,
-//     pub damage: Damage,
-// }
-// }
+/// Event to notify a monster was hit
+#[derive(Event)]
+pub struct HitEvent {
+    pub damage: Damage,
+}

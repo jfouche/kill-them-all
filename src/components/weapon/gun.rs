@@ -4,7 +4,7 @@ use bevy_rapier2d::prelude::*;
 use std::f32::consts::SQRT_2;
 
 pub fn gun() -> Weapon {
-    Weapon::new(WeaponType::Gun, 1., 1, 2)
+    Weapon::new(WeaponType::Gun, 1., 1., 2.)
 }
 
 #[derive(Component)]
@@ -55,7 +55,7 @@ impl BulletBundle {
         let pos = options.ellipse_pos();
         let size = 5.;
         BulletBundle {
-            damage: Damage(options.damage),
+            damage: options.damage,
             pierce: PierceChance(options.pierce),
             sprite: SpriteBundle {
                 sprite: Sprite {
@@ -76,7 +76,7 @@ impl BulletBundle {
 pub struct BulletOptions {
     player_pos: Vec3,
     player_size: Vec2,
-    damage: u16,
+    damage: Damage,
     pierce: f32,
     direction: Vect,
 }
@@ -85,7 +85,7 @@ impl BulletOptions {
     pub fn new(
         player_pos: Vec3,
         player_size: Vec2,
-        damage: u16,
+        damage: Damage,
         pierce: f32,
         target: Vec3,
     ) -> Self {

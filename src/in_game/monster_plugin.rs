@@ -7,8 +7,7 @@ pub struct MonsterPlugin;
 
 impl Plugin for MonsterPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<MonsterHitEvent>()
-            .add_event::<MonsterDeathEvent>()
+        app.add_event::<MonsterDeathEvent>()
             .add_systems(Startup, (load_assets, init_monster_spawning))
             .add_systems(OnExit(GameState::InGame), despawn_all::<Monster>)
             .add_systems(
@@ -19,7 +18,6 @@ impl Plugin for MonsterPlugin {
                     monsters_moves,
                     animate_sprite,
                     increment_score,
-                    on_monster_hit,
                 )
                     .in_set(GameRunningSet::EntityUpdate),
             );
@@ -104,7 +102,9 @@ fn spawn_monsters(
                 .get(config.params.kind)
                 .expect("Monster type out of range !");
 
-            commands.spawn(MonsterBundle::new(monster_assets, &config.params));
+            commands
+                .spawn(MonsterBundle::new(monster_assets, &config.params))
+                .observe(trigger_monster_hit);
         }
     }
 }
@@ -131,22 +131,21 @@ fn monsters_moves(
 ///
 /// monster hit
 ///
-fn on_monster_hit(
-    mut monster_hit_events: EventReader<MonsterHitEvent>,
+fn trigger_monster_hit(
+    hit_event: Trigger<HitEvent>,
     mut q_monsters: Query<(&mut Life, &Transform, &XpOnDeath), With<Monster>>,
     mut monster_death_events: EventWriter<MonsterDeathEvent>,
 ) {
-    for event in monster_hit_events.read() {
-        info!("on_monster_hit");
-        if let Ok((mut life, transform, xp)) = q_monsters.get_mut(event.entity) {
-            life.hit(*event.damage as f32);
-            if life.is_dead() {
-                monster_death_events.send(MonsterDeathEvent {
-                    entity: event.entity,
-                    pos: transform.translation,
-                    xp: **xp,
-                });
-            }
+    info!("on_monster_hit");
+    let entity = hit_event.entity();
+    if let Ok((mut life, transform, xp)) = q_monsters.get_mut(entity) {
+        life.hit(hit_event.event().damage);
+        if life.is_dead() {
+            monster_death_events.send(MonsterDeathEvent {
+                entity,
+                pos: transform.translation,
+                xp: **xp,
+            });
         }
     }
 }

@@ -158,8 +158,8 @@ impl From<&MonsterSpawnParams> for XpOnDeath {
 impl From<&MonsterSpawnParams> for Damage {
     fn from(value: &MonsterSpawnParams) -> Self {
         let xp = match value.rarity {
-            MonsterRarity::Normal => 1,
-            MonsterRarity::Rare => 3,
+            MonsterRarity::Normal => 1.,
+            MonsterRarity::Rare => 3.,
         };
         Damage(xp)
     }
@@ -222,19 +222,6 @@ impl MonsterFuturePosBundle {
             },
             config: MonsterSpawnConfig::new(params),
         }
-    }
-}
-
-/// Event to notify a monster was hit
-#[derive(Event)]
-pub struct MonsterHitEvent {
-    pub entity: Entity,
-    pub damage: Damage,
-}
-
-impl MonsterHitEvent {
-    pub fn new(entity: Entity, damage: Damage) -> Self {
-        MonsterHitEvent { entity, damage }
     }
 }
 

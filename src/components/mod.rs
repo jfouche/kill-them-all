@@ -33,9 +33,9 @@ pub fn despawn_all<T: Component>(to_despawn: Query<Entity, With<T>>, mut command
     }
 }
 
-// ==================================================================
-// Money
-
+///
+/// [Money]
+///
 #[derive(Component, Deref, DerefMut, Reflect)]
 pub struct Money(pub u16);
 
@@ -45,9 +45,10 @@ impl std::fmt::Display for Money {
     }
 }
 
-// ==================================================================
-// AnimationTimer
-
+///
+/// The animation [AnimationTimer] component indicates that the entity should
+/// be animated
+///
 #[derive(Component, Deref, DerefMut)]
 pub struct AnimationTimer(Timer);
 
@@ -57,8 +58,10 @@ impl Default for AnimationTimer {
     }
 }
 
-// ==================================================================
-// LifeTime
+///
+/// The [LifeTime] component indicates that the entity should be depawn
+/// after a certain duration
+///
 
 #[derive(Component, Deref, DerefMut)]
 pub struct LifeTime(Timer);
@@ -69,15 +72,15 @@ impl LifeTime {
     }
 }
 
-// ==================================================================
-// ScoreResource
-
+///
+/// Resource to store the score
+///
 #[derive(Default, Resource, Reflect)]
 pub struct Score(pub u16);
 
-// ==================================================================
-// Round
-
+///
+/// A [Round] is fixed time period when monster spawn
+///
 #[derive(Resource)]
 pub struct Round {
     pub level: u16,

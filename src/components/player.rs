@@ -88,19 +88,6 @@ pub struct PlayerAssets {
     pub texture_atlas_layout: Handle<TextureAtlasLayout>,
 }
 
-/// Event to notify the player was hit
-#[derive(Event)]
-pub struct PlayerHitEvent {
-    pub entity: Entity,
-    pub damage: Damage,
-}
-
-impl PlayerHitEvent {
-    pub fn new(entity: Entity, damage: Damage) -> Self {
-        PlayerHitEvent { entity, damage }
-    }
-}
-
 /// Event to notify the player died
 #[derive(Event)]
 pub struct PlayerDeathEvent;

@@ -29,7 +29,6 @@ fn monster_hit_by_bullet(
     mut collisions: EventReader<CollisionEvent>,
     q_monsters: Query<(), With<Monster>>,
     mut q_bullets: Query<(Entity, &Damage, &mut PierceChance), With<Bullet>>,
-    mut monster_hit_events: EventWriter<MonsterHitEvent>,
 ) {
     let mut monster_hit = HashMap::new();
     let mut bullet_hit = HashSet::new();
@@ -46,7 +45,7 @@ fn monster_hit_by_bullet(
                 .ok()
         })
         .for_each(|(monster, bullet, damage)| {
-            *monster_hit.entry(monster).or_insert(0) += **damage;
+            *monster_hit.entry(monster).or_insert(0.) += **damage;
             bullet_hit.insert(bullet);
         });
 
@@ -61,7 +60,12 @@ fn monster_hit_by_bullet(
     }
 
     for (entity, damage) in monster_hit.iter() {
-        monster_hit_events.send(MonsterHitEvent::new(*entity, Damage(*damage)));
+        commands.trigger_targets(
+            HitEvent {
+                damage: Damage(*damage),
+            },
+            *entity,
+        );
     }
 }
 
@@ -69,10 +73,10 @@ fn monster_hit_by_bullet(
 /// Player touched by monster
 ///
 fn player_touched_by_monster(
+    mut commands: Commands,
     mut collisions: EventReader<CollisionEvent>,
     q_monsters: Query<&Damage, With<Monster>>,
     q_player: Query<(), With<Player>>,
-    mut player_hit_events: EventWriter<PlayerHitEvent>,
 ) {
     collisions
         .read()
@@ -81,7 +85,7 @@ fn player_touched_by_monster(
         .filter_map(|(_, player, other)| q_monsters.get(other).map(|damage| (player, damage)).ok())
         .for_each(|(player, damage)| {
             info!("player_touched_by_monster");
-            player_hit_events.send(PlayerHitEvent::new(player, *damage));
+            commands.trigger_targets(HitEvent { damage: *damage }, player);
         });
 }
 

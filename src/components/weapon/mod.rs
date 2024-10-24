@@ -10,7 +10,15 @@ use rand::Rng;
 use std::time::Duration;
 
 #[derive(Clone, Copy, Component, Default, Deref)]
-pub struct Damage(pub u16); // TODO: f32
+pub struct Damage(pub f32);
+
+impl std::ops::Sub<f32> for Damage {
+    type Output = Self;
+    fn sub(self, rhs: f32) -> Self::Output {
+        let damage = (self.0 - rhs).max(0.);
+        Damage(damage)
+    }
+}
 
 pub enum WeaponType {
     Gun,
@@ -22,8 +30,8 @@ pub struct Weapon {
     _weapon_type: WeaponType,
     /// Attack per second
     attack_speed: f32,
-    damage_min: u16,
-    damage_max: u16,
+    damage_min: f32,
+    damage_max: f32,
     timer: Timer,
     ready: bool,
 }
@@ -41,8 +49,8 @@ impl Weapon {
     fn new(
         weapon_type: WeaponType,
         attack_per_second: f32,
-        damage_min: u16,
-        damage_max: u16,
+        damage_min: f32,
+        damage_max: f32,
     ) -> Self {
         Weapon {
             _weapon_type: weapon_type,
@@ -54,9 +62,10 @@ impl Weapon {
         }
     }
 
-    pub fn attack(&mut self) -> u16 {
+    pub fn attack(&mut self) -> Damage {
         self.ready = false;
-        rand::thread_rng().gen_range(self.damage_min..=self.damage_max)
+        let damage = rand::thread_rng().gen_range(self.damage_min..=self.damage_max);
+        Damage(damage)
     }
 
     pub fn tick(&mut self, delta: Duration, player_attack_speed_increases: f32) -> &Timer {
@@ -76,6 +85,6 @@ impl Weapon {
 
 impl std::fmt::Display for Weapon {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}-{}", self.damage_min, self.damage_max)
+        write!(f, "{:.0}-{:.0}", self.damage_min, self.damage_max)
     }
 }

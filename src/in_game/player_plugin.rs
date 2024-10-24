@@ -11,8 +11,7 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<PlayerHitEvent>()
-            .add_event::<PlayerDeathEvent>()
+        app.add_event::<PlayerDeathEvent>()
             .register_type::<Experience>()
             .add_systems(Startup, load_player_assets)
             .add_systems(OnEnter(GameState::InGame), spawn_player)
@@ -28,7 +27,7 @@ impl Plugin for PlayerPlugin {
                     player_invulnerability_finished,
                     increment_player_experience,
                     level_up,
-                    on_player_hit,
+                    // on_player_hit,
                 )
                     .in_set(GameRunningSet::EntityUpdate),
             );
@@ -61,7 +60,9 @@ fn load_player_assets(
 }
 
 fn spawn_player(mut commands: Commands, assets: Res<PlayerAssets>) {
-    commands.spawn(PlayerBundle::from_assets(&assets));
+    commands
+        .spawn(PlayerBundle::from_assets(&assets))
+        .observe(trigger_player_hit);
 }
 
 fn pause(mut query: Query<(&mut Invulnerable, &mut Blink), With<Player>>) {
@@ -146,33 +147,30 @@ fn player_fires(
 ///
 /// player hit
 ///
-fn on_player_hit(
+fn trigger_player_hit(
+    hit_event: Trigger<HitEvent>,
     mut commands: Commands,
-    mut player_hit_events: EventReader<PlayerHitEvent>,
     mut q_player: Query<(&Equipments, &mut Life, &mut CollisionGroups), With<Player>>,
     mut send_death: EventWriter<PlayerDeathEvent>,
 ) {
-    if let Ok((equipments, mut life, mut collision_groups)) = q_player.get_single_mut() {
-        for event in player_hit_events.read() {
-            let damage = (*event.damage as f32) - equipments.armour();
-            info!("on_player_hit: damage: {damage:.0}");
-            if damage > 0. {
-                life.hit(damage);
-                if life.is_dead() {
-                    commands.entity(event.entity).despawn();
-                    send_death.send(PlayerDeathEvent);
-                    // break to ensure we don't try to despawn player if already dead
-                    break;
-                } else {
-                    // Set player invulnerable
-                    commands
-                        .entity(event.entity)
-                        .insert(Invulnerable::new(Duration::from_secs_f32(2.0), GROUP_ENEMY))
-                        .insert(Blink::new(Duration::from_secs_f32(0.15)));
+    let player_entity = hit_event.entity();
+    if let Ok((equipments, mut life, mut collision_groups)) = q_player.get_mut(player_entity) {
+        let damage = hit_event.event().damage - equipments.armour();
+        info!("on_player_hit: damage: {:.0}", *damage);
+        if *damage > 0. {
+            life.hit(damage);
+            if life.is_dead() {
+                commands.entity(player_entity).despawn();
+                send_death.send(PlayerDeathEvent);
+            } else {
+                // Set player invulnerable
+                commands
+                    .entity(player_entity)
+                    .insert(Invulnerable::new(Duration::from_secs_f32(2.0), GROUP_ENEMY))
+                    .insert(Blink::new(Duration::from_secs_f32(0.15)));
 
-                    // To allow player to not collide with enemies
-                    collision_groups.filters &= !GROUP_ENEMY;
-                }
+                // To allow player to not collide with enemies
+                collision_groups.filters &= !GROUP_ENEMY;
             }
         }
     }

@@ -5,7 +5,8 @@ pub struct CharacterPlugin;
 
 impl Plugin for CharacterPlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<MovementSpeed>()
+        app.add_event::<HitEvent>()
+            .register_type::<MovementSpeed>()
             .register_type::<Life>()
             .register_type::<MaxLife>()
             .register_type::<BaseLife>()
