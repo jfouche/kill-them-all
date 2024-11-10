@@ -1,10 +1,25 @@
-use super::*;
+use crate::{components::*, in_game::GameRunningSet};
 use bevy::{color::palettes::css::YELLOW, prelude::*};
 use bevy_rapier2d::prelude::*;
 use std::f32::consts::SQRT_2;
 
-pub fn gun() -> Weapon {
-    Weapon::new(WeaponType::Gun, 1., 1., 2.)
+#[derive(Component)]
+pub struct Gun;
+
+const BASE_ATTACK_SPEED: f32 = 1.2;
+
+pub fn gun() -> impl Bundle {
+    (
+        Gun,
+        Weapon,
+        Name::new("Gun"),
+        DamageRange(1. ..=2.),
+        BaseAttackSpeed(BASE_ATTACK_SPEED),
+        AttackTimer(Timer::from_seconds(
+            1. / BASE_ATTACK_SPEED,
+            TimerMode::Repeating,
+        )),
+    )
 }
 
 #[derive(Component)]
@@ -105,5 +120,49 @@ impl BulletOptions {
         let x = angle.cos() * SQRT_2 * self.player_size.x / 2.0 + self.player_pos.x;
         let y = angle.sin() * SQRT_2 * self.player_size.y / 2.0 + self.player_pos.y;
         Vec3::new(x, y, 20.)
+    }
+}
+
+pub struct GunPlugin;
+
+impl Plugin for GunPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(Update, gun_fires.in_set(GameRunningSet::EntityUpdate));
+    }
+}
+
+fn gun_fires(
+    mut commands: Commands,
+    q_player: Query<(&Transform, &PierceChance), With<Player>>,
+    weapons: Query<(&AttackTimer, &DamageRange, &Parent), With<Gun>>,
+    q_monsters: Query<&Transform, With<Monster>>,
+) {
+    let mut rng = rand::thread_rng();
+    for (timer, damage_range, parent) in &weapons {
+        if timer.just_finished() {
+            if let Ok((player, pierce)) = q_player.get(**parent) {
+                let player = player.translation;
+                // Get the nearest monster
+                let nearest_monster = q_monsters
+                    .iter()
+                    .map(|transform| transform.translation)
+                    .reduce(|nearest, other| {
+                        if player.distance(other) < player.distance(nearest) {
+                            other // new nearest
+                        } else {
+                            nearest
+                        }
+                    });
+                if let Some(nearest) = nearest_monster {
+                    commands.spawn(BulletBundle::new(BulletOptions::new(
+                        player,
+                        PLAYER_SIZE,
+                        damage_range.gen(&mut rng),
+                        **pierce,
+                        nearest,
+                    )));
+                }
+            }
+        }
     }
 }

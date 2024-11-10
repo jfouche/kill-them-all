@@ -1,3 +1,4 @@
+use super::weapons::Bullet;
 use crate::components::*;
 use crate::schedule::*;
 use crate::utils::collision::*;

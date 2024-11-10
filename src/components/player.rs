@@ -20,7 +20,6 @@ pub struct PlayerBundle {
     animation_timer: AnimationTimer,
     // skills
     skills: SkillsBundle,
-    weapon: Weapon,
     upgrades: Upgrades,
     // physics
     body: RigidBody,
@@ -47,7 +46,6 @@ impl Default for PlayerBundle {
                 movement_speed: MovementSpeedBundle::new(130.),
                 ..Default::default()
             },
-            weapon: WeaponType::Gun.into(),
             upgrades: Upgrades::default(),
             body: RigidBody::Dynamic,
             velocity: Velocity::zero(),

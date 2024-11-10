@@ -22,7 +22,7 @@ impl Plugin for PausePlugin {
                     update_skill::<MovementSpeedText>,
                     update_skill::<AttackSpeedText>,
                     update_skill::<PierceChanceText>,
-                    update_skill::<WeaponText>,
+                    // update_skill::<WeaponText>,
                     update_skill::<MoneyText>,
                     update_skill::<ExperienceText>,
                 )
@@ -90,12 +90,12 @@ impl Skill for PierceChanceText {
     type SkillComponent = PierceChance;
 }
 
-#[derive(Component)]
-struct WeaponText;
+// #[derive(Component)]
+// struct WeaponText;
 
-impl Skill for WeaponText {
-    type SkillComponent = Weapon;
-}
+// impl Skill for WeaponText {
+//     type SkillComponent = Weapon;
+// }
 
 #[derive(Component)]
 struct MoneyText;
@@ -133,7 +133,7 @@ fn spawn_pause_menu(mut commands: Commands) {
                     spawn_skill(flex, "Movement speed :", MovementSpeedText);
                     spawn_skill(flex, "Attack speed :", AttackSpeedText);
                     spawn_skill(flex, "Pierce chance :", PierceChanceText);
-                    spawn_skill(flex, "Weapon :", WeaponText);
+                    // spawn_skill(flex, "Weapon :", WeaponText);
                     spawn_skill(flex, "Experience :", ExperienceText);
                     spawn_skill(flex, "Money :", MoneyText);
                 });

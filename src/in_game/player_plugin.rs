@@ -1,3 +1,4 @@
+use super::weapons::gun;
 use crate::components::*;
 use crate::schedule::*;
 use crate::utils::blink::Blink;
@@ -23,7 +24,6 @@ impl Plugin for PlayerPlugin {
                 (
                     player_movement,
                     animate_player_sprite,
-                    player_fires,
                     player_invulnerability_finished,
                     increment_player_experience,
                     level_up,
@@ -62,6 +62,9 @@ fn load_player_assets(
 fn spawn_player(mut commands: Commands, assets: Res<PlayerAssets>) {
     commands
         .spawn(PlayerBundle::from_assets(&assets))
+        .with_children(|player| {
+            player.spawn(gun());
+        })
         .observe(trigger_player_hit);
 }
 
@@ -101,46 +104,6 @@ fn player_movement(
             linvel.y = -1.0;
         }
         velocity.linvel = linvel.normalize_or_zero().mul(**speed);
-    }
-}
-
-///
-/// Player fires
-///
-fn player_fires(
-    mut commands: Commands,
-    time: Res<Time>,
-    mut q_player: Query<
-        (&Transform, &mut Weapon, &IncreaseAttackSpeed, &PierceChance),
-        With<Player>,
-    >,
-    q_monsters: Query<&Transform, With<Monster>>,
-) {
-    if let Ok((player, mut weapon, attack_speed, pierce)) = q_player.get_single_mut() {
-        weapon.tick(time.delta(), **attack_speed);
-        if weapon.ready() {
-            let player = player.translation;
-            // Get the nearest monster
-            let nearest_monster = q_monsters
-                .iter()
-                .map(|transform| transform.translation)
-                .reduce(|nearest, other| {
-                    if player.distance(other) < player.distance(nearest) {
-                        other // new nearest
-                    } else {
-                        nearest
-                    }
-                });
-            if let Some(nearest) = nearest_monster {
-                commands.spawn(BulletBundle::new(BulletOptions::new(
-                    player,
-                    PLAYER_SIZE,
-                    weapon.attack(),
-                    **pierce,
-                    nearest,
-                )));
-            }
-        }
     }
 }
 
