@@ -7,6 +7,24 @@ pub struct InventoryPanel;
 #[derive(Component)]
 struct AffixesText;
 
+#[derive(Component)]
+struct EquipmentsPanel;
+
+trait EquipmentView {
+    fn pos() -> Vec2;
+    fn tile_index() -> usize;
+}
+
+impl EquipmentView for Amulet {
+    fn pos() -> Vec2 {
+        Vec2::new(142., 7.)
+    }
+
+    fn tile_index() -> usize {
+        208
+    }
+}
+
 fn add_inventory_panel(
     mut commands: Commands,
     panels: Query<Entity, Added<InventoryPanel>>,
@@ -50,6 +68,32 @@ fn add_inventory_panel(
     }
 }
 
+fn show_equipment<T>(
+    mut commands: Commands,
+    panels: Query<Entity, Added<EquipmentsPanel>>,
+    equipments: Query<(Entity, &Parent), With<T>>,
+    players: Query<Entity, With<Player>>,
+    assets: Res<EquipmentAssets>,
+) where
+    T: Component + EquipmentView,
+{
+    let Ok(player) = players.get_single() else {
+        return;
+    };
+    for panel in &panels {
+        for (equipment, parent) in &equipments {
+            if **parent == player {
+                commands.entity(panel).with_children(|p| {
+                    let pos = T::pos();
+                    let texture = assets.texture();
+                    let atlas = assets.atlas(T::tile_index());
+                    p.spawn(inventory_box(pos, texture, atlas));
+                });
+            }
+        }
+    }
+}
+
 fn hover_equipment(
     equipments: Query<(&Equipment, &Interaction)>,
     mut texts: Query<&mut Text, With<AffixesText>>,
@@ -81,7 +125,8 @@ fn main_panel_bundle() -> impl Bundle {
 
 fn items_panel_bundle() -> impl Bundle {
     (
-        Name::new("Items"),
+        EquipmentsPanel,
+        Name::new("Equipments Panel"),
         NodeBundle {
             style: Style {
                 width: Val::Px(200.),
@@ -148,5 +193,12 @@ fn inventory_box(pos: Vec2, texture: Handle<Image>, atlas: TextureAtlas) -> impl
 }
 
 pub fn inventory_panel_plugin(app: &mut App) {
-    app.add_systems(Update, (add_inventory_panel, hover_equipment));
+    app.add_systems(
+        Update,
+        (
+            add_inventory_panel,
+            show_equipment::<Amulet>,
+            hover_equipment,
+        ),
+    );
 }

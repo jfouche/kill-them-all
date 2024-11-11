@@ -1,7 +1,9 @@
+mod amulet;
 mod body_armour;
 mod boots;
 mod helmet;
 
+pub use amulet::*;
 pub use body_armour::*;
 pub use boots::*;
 pub use helmet::*;
@@ -18,8 +20,8 @@ use rand::rngs::ThreadRng;
 
 #[derive(Resource)]
 pub struct EquipmentAssets {
-    texture: Handle<Image>,
-    texture_atlas_layout: Handle<TextureAtlasLayout>,
+    pub texture: Handle<Image>,
+    pub texture_atlas_layout: Handle<TextureAtlasLayout>,
 }
 
 impl EquipmentAssets {
@@ -41,6 +43,17 @@ impl EquipmentAssets {
         EquipmentAssets {
             texture,
             texture_atlas_layout,
+        }
+    }
+
+    pub fn texture(&self) -> Handle<Image> {
+        self.texture.clone()
+    }
+
+    pub fn atlas(&self, index: usize) -> TextureAtlas {
+        TextureAtlas {
+            layout: self.texture_atlas_layout.clone(),
+            index,
         }
     }
 

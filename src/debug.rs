@@ -1,4 +1,4 @@
-use crate::{cursor::set_grab_cursor, schedule::*};
+use crate::{schedule::*, utils::cursor::set_grab_cursor};
 use bevy::{prelude::*, window::PrimaryWindow};
 use bevy_rapier2d::prelude::*;
 

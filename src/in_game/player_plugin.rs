@@ -64,6 +64,7 @@ fn spawn_player(mut commands: Commands, assets: Res<PlayerAssets>) {
         .spawn(PlayerBundle::from_assets(&assets))
         .with_children(|player| {
             player.spawn(gun());
+            player.spawn(Amulet);
         })
         .observe(trigger_player_hit);
 }
