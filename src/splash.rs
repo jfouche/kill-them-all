@@ -1,6 +1,6 @@
 use crate::components::*;
-use crate::cursor::*;
 use crate::schedule::*;
+use crate::utils::cursor::*;
 use bevy::prelude::*;
 
 pub fn splash_plugin(app: &mut App) {

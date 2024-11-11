@@ -10,9 +10,9 @@ mod weapons;
 mod world_map_plugin;
 
 use crate::components::{LifeTime, PlayerDeathEvent};
-use crate::cursor::*;
 use crate::schedule::*;
 use crate::utils::blink::Blink;
+use crate::utils::cursor::*;
 use crate::utils::despawn_after::DespawnAfter;
 use crate::utils::invulnerable::Invulnerable;
 use bevy::app::PluginGroupBuilder;

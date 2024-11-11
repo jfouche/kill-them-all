@@ -1,6 +1,5 @@
 mod camera;
 mod components;
-mod cursor;
 mod in_game;
 mod main_menu;
 mod schedule;
