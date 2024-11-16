@@ -10,7 +10,7 @@ mod utils;
 #[cfg(feature = "debug")]
 mod debug;
 
-use bevy::prelude::*;
+use bevy::{prelude::*, window::WindowResolution};
 use bevy_rapier2d::prelude::*;
 
 fn main() {
@@ -20,6 +20,8 @@ fn main() {
                 .set(WindowPlugin {
                     primary_window: Some(Window {
                         title: "Kill'em All".to_string(),
+                        position: WindowPosition::At(IVec2::new(0, 0)),
+                        resolution: WindowResolution::new(1500., 600.),
                         ..Default::default()
                     }),
                     ..default()
