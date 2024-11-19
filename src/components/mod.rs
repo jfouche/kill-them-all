@@ -1,3 +1,4 @@
+mod affix;
 mod bonus;
 mod equipment;
 mod monster;
@@ -8,6 +9,7 @@ mod upgrade;
 mod weapon;
 mod world_map;
 
+pub use affix::*;
 pub use bonus::*;
 pub use equipment::*;
 pub use monster::*;

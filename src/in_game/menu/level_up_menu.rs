@@ -4,6 +4,25 @@ use crate::schedule::*;
 use crate::ui::*;
 use bevy::prelude::*;
 
+#[derive(Component)]
+struct LevelUpMenu;
+
+#[derive(Resource, Default)]
+struct LevelUpMenuNav(Vec<Entity>);
+
+impl std::ops::Deref for LevelUpMenuNav {
+    type Target = [Entity];
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+#[derive(Component)]
+struct UpgradesContainer;
+
+#[derive(Component, Deref)]
+struct UpgradeEntity(Entity);
+
 pub struct LevelUpMenuPlugin;
 
 impl Plugin for LevelUpMenuPlugin {
@@ -14,8 +33,14 @@ impl Plugin for LevelUpMenuPlugin {
                 Update,
                 enter_level_up_state.in_set(GameRunningSet::EntityUpdate),
             )
-            .add_systems(OnEnter(InGameState::LevelUp), spawn_level_up_menu)
-            .add_systems(OnExit(InGameState::LevelUp), despawn_all::<LevelUpMenu>)
+            .add_systems(
+                OnEnter(InGameState::LevelUp),
+                (spawn_upgrades_container, spawn_level_up_menu).chain(),
+            )
+            .add_systems(
+                OnExit(InGameState::LevelUp),
+                (despawn_all::<LevelUpMenu>, despawn_all::<UpgradesContainer>),
+            )
             .add_systems(
                 Update,
                 (
@@ -37,48 +62,26 @@ fn enter_level_up_state(
     }
 }
 
-#[derive(Component)]
-struct LevelUpMenu;
-
-///
-/// Trait to print a player skill label on a button
-///
-trait ButtonLabel {
-    /// label to display
-    fn label(&self) -> String;
+fn spawn_upgrades_container(mut commands: Commands) {
+    commands.spawn((UpgradesContainer, Name::new("UpgradesContainer")));
 }
 
-impl ButtonLabel for Upgrade {
-    fn label(&self) -> String {
-        match self {
-            Upgrade::IncreaseMaxLife(val) => format!("+{:.0}% max life", val),
-            Upgrade::IncreasemovementSpeed(val) => format!("+{:.0}% movement speed", val),
-            Upgrade::IncreaseLifeRegen(val) => format!("+{:.0}% life regen", val),
-            Upgrade::IncreaseAttackSpeed(val) => format!("+{:.0}% attack speed", val),
-            Upgrade::PierceChance(val) => format!("+{:.0}% chance to pierce", val),
-        }
-    }
-}
+fn spawn_level_up_menu(mut commands: Commands, upgrades: Query<Entity, With<UpgradesContainer>>) {
+    let upgrades_container = upgrades
+        .get_single()
+        .expect("UpgradesContainer is not spawned");
 
-#[derive(Resource, Default)]
-struct LevelUpMenuNav(Vec<Entity>);
-
-impl std::ops::Deref for LevelUpMenuNav {
-    type Target = [Entity];
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-fn spawn_level_up_menu(mut commands: Commands) {
     let mut level_up_nav = LevelUpMenuNav::default();
     let mut upgrade_provider = UpgradeProvider::new();
-
+    let mut rng = rand::thread_rng();
     for _ in 0..3 {
-        if let Some(upgrade) = upgrade_provider.gen() {
-            let label = upgrade.label();
-            let entity = commands.spawn_text_button(label, upgrade);
-            level_up_nav.0.push(entity);
+        if let Some(upgrade) = upgrade_provider.gen(&mut rng) {
+            let (upgrade_entity, label) = upgrade.generate(&mut commands, &mut rng);
+            let btn_entity = commands.spawn_text_button(label, UpgradeEntity(upgrade_entity));
+            level_up_nav.0.push(btn_entity);
+            commands
+                .entity(upgrades_container)
+                .add_child(upgrade_entity);
         }
     }
 
@@ -98,14 +101,17 @@ fn spawn_level_up_menu(mut commands: Commands) {
 /// Upgrade a skill of the player, returning back to game
 ///
 fn upgrade_skill(
-    mut q_btn: Query<(&Interaction, &Upgrade), Changed<Interaction>>,
-    mut q_player: Query<&mut Upgrades, With<Player>>,
+    mut commands: Commands,
+    players: Query<Entity, With<Player>>,
+    interactions: Query<(Entity, &Interaction, &UpgradeEntity), Changed<Interaction>>,
     mut state: ResMut<NextState<InGameState>>,
 ) {
-    if let Ok(mut upgrades) = q_player.get_single_mut() {
-        for (interaction, ugrade) in &mut q_btn {
+    if let Ok(player) = players.get_single() {
+        for (btn, interaction, upgrade_entity) in &interactions {
             if *interaction == Interaction::Pressed {
-                upgrades.push(*ugrade);
+                // move upgrades to player
+                commands.entity(btn).remove_children(&[**upgrade_entity]);
+                commands.entity(player).add_child(**upgrade_entity);
                 state.set(InGameState::Running);
             }
         }

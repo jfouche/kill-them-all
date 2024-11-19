@@ -10,59 +10,57 @@ struct AffixesText;
 #[derive(Component)]
 struct EquipmentsPanel;
 
-trait EquipmentView {
+trait EquipmentPos {
     fn pos() -> Vec2;
-    fn tile_index() -> usize;
+    fn tile_index(rarity: EquipmentRarityKind) -> usize;
 }
 
-impl EquipmentView for Amulet {
+impl EquipmentPos for Amulet {
     fn pos() -> Vec2 {
         Vec2::new(142., 7.)
     }
 
-    fn tile_index() -> usize {
-        208
+    fn tile_index(rarity: EquipmentRarityKind) -> usize {
+        match rarity {
+            EquipmentRarityKind::Normal => 213,
+            EquipmentRarityKind::Magic => 215,
+            EquipmentRarityKind::Rare => 216,
+        }
     }
 }
 
-fn add_inventory_panel(
-    mut commands: Commands,
-    panels: Query<Entity, Added<InventoryPanel>>,
-    players: Query<&Equipments, With<Player>>,
-    assets: Res<EquipmentAssets>,
-) {
-    let Ok(equipments) = players.get_single() else {
-        return;
-    };
+fn add_inventory_panel(mut commands: Commands, panels: Query<Entity, Added<InventoryPanel>>) {
     for entity in &panels {
         commands
             .entity(entity)
             .insert(main_panel_bundle())
             .with_children(|panel| {
-                panel.spawn(items_panel_bundle()).with_children(|p| {
-                    // helmet
-                    let pos = Vec2::new(74., 7.);
-                    let (texture, atlas) = assets.helmet(&equipments.helmet);
-                    p.spawn(inventory_box(pos, texture, atlas))
-                        .insert(Equipment::Helmet(equipments.helmet.clone()));
-                    // amulet
-                    p.spawn(empty_inventory_box(Vec2::new(142., 7.)));
-                    // weapon
-                    p.spawn(empty_inventory_box(Vec2::new(7., 74.)));
-                    // body armour
-                    let pos = Vec2::new(74., 74.);
-                    let (texture, atlas) = assets.body_armour(&equipments.body_armour);
-                    p.spawn(inventory_box(pos, texture, atlas))
-                        .insert(Equipment::BodyArmour(equipments.body_armour.clone()));
-                    //
-                    p.spawn(empty_inventory_box(Vec2::new(142., 74.)));
-                    p.spawn(empty_inventory_box(Vec2::new(7., 142.)));
-                    // Boots
-                    let pos = Vec2::new(74., 142.);
-                    let (texture, atlas) = assets.boots(&equipments.boots);
-                    p.spawn(inventory_box(pos, texture, atlas))
-                        .insert(Equipment::Boots(equipments.boots.clone()));
-                });
+                panel.spawn(items_panel_bundle())
+                // .with_children(|p| {
+                //     // helmet
+                //     let pos = Vec2::new(74., 7.);
+                //     let (texture, atlas) = assets.helmet(&equipments.helmet);
+                //     p.spawn(inventory_box(pos, texture, atlas))
+                //         .insert(Equipment::Helmet(equipments.helmet.clone()));
+                //     // amulet
+                //     p.spawn(empty_inventory_box(Vec2::new(142., 7.)));
+                //     // weapon
+                //     p.spawn(empty_inventory_box(Vec2::new(7., 74.)));
+                //     // body armour
+                //     let pos = Vec2::new(74., 74.);
+                //     let (texture, atlas) = assets.body_armour(&equipments.body_armour);
+                //     p.spawn(inventory_box(pos, texture, atlas))
+                //         .insert(Equipment::BodyArmour(equipments.body_armour.clone()));
+                //     //
+                //     p.spawn(empty_inventory_box(Vec2::new(142., 74.)));
+                //     p.spawn(empty_inventory_box(Vec2::new(7., 142.)));
+                //     // Boots
+                //     let pos = Vec2::new(74., 142.);
+                //     let (texture, atlas) = assets.boots(&equipments.boots);
+                //     p.spawn(inventory_box(pos, texture, atlas))
+                //         .insert(Equipment::Boots(equipments.boots.clone()));
+                // })
+                ;
                 panel.spawn(item_affixes_panel());
             });
     }
@@ -71,22 +69,22 @@ fn add_inventory_panel(
 fn show_equipment<T>(
     mut commands: Commands,
     panels: Query<Entity, Added<EquipmentsPanel>>,
-    equipments: Query<(Entity, &Parent), With<T>>,
+    equipments: Query<(Entity, &EquipmentRarityKind, &Parent), With<T>>,
     players: Query<Entity, With<Player>>,
     assets: Res<EquipmentAssets>,
 ) where
-    T: Component + EquipmentView,
+    T: Component + EquipmentPos,
 {
     let Ok(player) = players.get_single() else {
         return;
     };
     for panel in &panels {
-        for (equipment, parent) in &equipments {
+        for (_equipment, rarity, parent) in &equipments {
             if **parent == player {
                 commands.entity(panel).with_children(|p| {
                     let pos = T::pos();
                     let texture = assets.texture();
-                    let atlas = assets.atlas(T::tile_index());
+                    let atlas = assets.atlas(T::tile_index(*rarity));
                     p.spawn(inventory_box(pos, texture, atlas));
                 });
             }
@@ -94,20 +92,20 @@ fn show_equipment<T>(
     }
 }
 
-fn hover_equipment(
-    equipments: Query<(&Equipment, &Interaction)>,
-    mut texts: Query<&mut Text, With<AffixesText>>,
-) {
-    let Ok(mut text) = texts.get_single_mut() else {
-        return;
-    };
-    text.sections[0].value = "".into();
-    for (equipment, interaction) in &equipments {
-        if interaction == &Interaction::Hovered {
-            text.sections[0].value = equipment.to_string();
-        }
-    }
-}
+// fn hover_equipment(
+//     equipments: Query<(&Equipment, &Interaction)>,
+//     mut texts: Query<&mut Text, With<AffixesText>>,
+// ) {
+//     let Ok(mut text) = texts.get_single_mut() else {
+//         return;
+//     };
+//     text.sections[0].value = "".into();
+//     for (equipment, interaction) in &equipments {
+//         if interaction == &Interaction::Hovered {
+//             text.sections[0].value = equipment.to_string();
+//         }
+//     }
+// }
 
 fn main_panel_bundle() -> impl Bundle {
     (
@@ -157,20 +155,20 @@ fn item_affixes_panel() -> impl Bundle {
     )
 }
 
-fn empty_inventory_box(pos: Vec2) -> impl Bundle {
-    NodeBundle {
-        style: Style {
-            position_type: PositionType::Absolute,
-            left: Val::Px(pos.x),
-            top: Val::Px(pos.y),
-            width: Val::Px(48.),
-            height: Val::Px(48.),
-            ..Default::default()
-        },
-        background_color: Srgba::rgb_u8(70, 70, 70).into(),
-        ..Default::default()
-    }
-}
+// fn empty_inventory_box(pos: Vec2) -> impl Bundle {
+//     NodeBundle {
+//         style: Style {
+//             position_type: PositionType::Absolute,
+//             left: Val::Px(pos.x),
+//             top: Val::Px(pos.y),
+//             width: Val::Px(48.),
+//             height: Val::Px(48.),
+//             ..Default::default()
+//         },
+//         background_color: Srgba::rgb_u8(70, 70, 70).into(),
+//         ..Default::default()
+//     }
+// }
 
 fn inventory_box(pos: Vec2, texture: Handle<Image>, atlas: TextureAtlas) -> impl Bundle {
     (
@@ -198,7 +196,7 @@ pub fn inventory_panel_plugin(app: &mut App) {
         (
             add_inventory_panel,
             show_equipment::<Amulet>,
-            hover_equipment,
+            // hover_equipment,
         ),
     );
 }

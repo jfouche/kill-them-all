@@ -1,17 +1,14 @@
 mod amulet;
-mod body_armour;
-mod boots;
-mod helmet;
+// mod body_armour;
+// mod boots;
+// mod helmet;
 
 pub use amulet::*;
-pub use body_armour::*;
-pub use boots::*;
-pub use helmet::*;
+// pub use body_armour::*;
+// pub use boots::*;
+// pub use helmet::*;
 
-use super::{
-    rng_provider::{Generator, RngKindProvider},
-    ProvideUpgrades,
-};
+use super::rng_provider::RngKindProvider;
 use bevy::prelude::*;
 use rand::rngs::ThreadRng;
 
@@ -20,8 +17,8 @@ use rand::rngs::ThreadRng;
 
 #[derive(Resource)]
 pub struct EquipmentAssets {
-    pub texture: Handle<Image>,
-    pub texture_atlas_layout: Handle<TextureAtlasLayout>,
+    texture: Handle<Image>,
+    texture_atlas_layout: Handle<TextureAtlasLayout>,
 }
 
 impl EquipmentAssets {
@@ -57,172 +54,212 @@ impl EquipmentAssets {
         }
     }
 
-    pub fn image(&self, equipment: &Equipment) -> (Handle<Image>, TextureAtlas) {
-        match equipment {
-            Equipment::Helmet(helmet) => self.helmet(helmet),
-            Equipment::BodyArmour(body_armour) => self.body_armour(body_armour),
-            Equipment::Boots(boots) => self.boots(boots),
-        }
-    }
+    // pub fn image(&self, equipment: &Equipment) -> (Handle<Image>, TextureAtlas) {
+    //     match equipment {
+    //         Equipment::Helmet(helmet) => self.helmet(helmet),
+    //         Equipment::BodyArmour(body_armour) => self.body_armour(body_armour),
+    //         Equipment::Boots(boots) => self.boots(boots),
+    //     }
+    // }
 
-    pub fn helmet(&self, helmet: &Helmet) -> (Handle<Image>, TextureAtlas) {
-        let index = match helmet {
-            Helmet::None => 351,
-            Helmet::Normal(_) => 182,
-            Helmet::Magic(_) => 184,
-        };
-        (
-            self.texture.clone(),
-            TextureAtlas {
-                layout: self.texture_atlas_layout.clone(),
-                index,
-            },
-        )
-    }
+    // pub fn helmet(&self, helmet: &Helmet) -> (Handle<Image>, TextureAtlas) {
+    //     let index = match helmet {
+    //         Helmet::None => 351,
+    //         Helmet::Normal(_) => 182,
+    //         Helmet::Magic(_) => 184,
+    //     };
+    //     (
+    //         self.texture.clone(),
+    //         TextureAtlas {
+    //             layout: self.texture_atlas_layout.clone(),
+    //             index,
+    //         },
+    //     )
+    // }
 
-    pub fn body_armour(&self, body_armour: &BodyArmour) -> (Handle<Image>, TextureAtlas) {
-        let index = match body_armour {
-            BodyArmour::None => 351,
-            BodyArmour::Normal(_) => 0,
-            BodyArmour::Magic(_) => 2,
-        };
-        (
-            self.texture.clone(),
-            TextureAtlas {
-                layout: self.texture_atlas_layout.clone(),
-                index,
-            },
-        )
-    }
+    // pub fn body_armour(&self, body_armour: &BodyArmour) -> (Handle<Image>, TextureAtlas) {
+    //     let index = match body_armour {
+    //         BodyArmour::None => 351,
+    //         BodyArmour::Normal(_) => 0,
+    //         BodyArmour::Magic(_) => 2,
+    //     };
+    //     (
+    //         self.texture.clone(),
+    //         TextureAtlas {
+    //             layout: self.texture_atlas_layout.clone(),
+    //             index,
+    //         },
+    //     )
+    // }
 
-    pub fn boots(&self, boots: &Boots) -> (Handle<Image>, TextureAtlas) {
-        let index = match boots {
-            Boots::None => 351,
-            Boots::Normal(_) => 63,
-            Boots::Magic(_) => 65,
-        };
-        (
-            self.texture.clone(),
-            TextureAtlas {
-                layout: self.texture_atlas_layout.clone(),
-                index,
-            },
-        )
-    }
+    // pub fn boots(&self, boots: &Boots) -> (Handle<Image>, TextureAtlas) {
+    //     let index = match boots {
+    //         Boots::None => 351,
+    //         Boots::Normal(_) => 63,
+    //         Boots::Magic(_) => 65,
+    //     };
+    //     (
+    //         self.texture.clone(),
+    //         TextureAtlas {
+    //             layout: self.texture_atlas_layout.clone(),
+    //             index,
+    //         },
+    //     )
+    // }
 }
 
-// ==================================================================
-// Equipments
+#[derive(Component, Clone, Copy, Deref, Reflect)]
+pub struct TileIndex(usize);
 
-#[derive(Component, Default, Reflect)]
-pub struct Equipments {
-    pub helmet: Helmet,
-    pub body_armour: BodyArmour,
-    pub boots: Boots,
+//
+// Equipment Rarity
+//
+
+#[derive(Component, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum EquipmentRarityKind {
+    Normal,
+    Magic,
+    Rare,
 }
 
-impl ProvideUpgrades for Equipments {
-    fn armour(&self) -> f32 {
-        self.helmet.armour() + self.body_armour.armour() + self.boots.armour()
-    }
-
-    fn more_life(&self) -> f32 {
-        self.helmet.more_life() + self.body_armour.more_life() + self.boots.more_life()
-    }
-
-    fn increase_max_life(&self) -> f32 {
-        self.helmet.increase_max_life()
-            + self.body_armour.increase_max_life()
-            + self.boots.increase_max_life()
-    }
-
-    fn life_regen(&self) -> f32 {
-        self.helmet.life_regen() + self.body_armour.life_regen() + self.boots.life_regen()
-    }
-
-    fn increase_movement_speed(&self) -> f32 {
-        self.helmet.increase_movement_speed()
-            + self.body_armour.increase_movement_speed()
-            + self.boots.increase_movement_speed()
-    }
-
-    fn increase_attack_speed(&self) -> f32 {
-        self.helmet.increase_attack_speed()
-            + self.body_armour.increase_attack_speed()
-            + self.boots.increase_attack_speed()
-    }
-
-    fn pierce_chance(&self) -> f32 {
-        self.helmet.pierce_chance() + self.body_armour.pierce_chance() + self.boots.pierce_chance()
-    }
-}
-
-// ==================================================================
-// EquipmentProvider
-
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
-pub enum EquipmentKind {
-    NormalHelmet,
-    MagicHelmet,
-    NormalBodyArmour,
-    MagicBodyArmour,
-    NormalBoots,
-    MagicBoots,
-}
-
-impl Generator<Equipment> for EquipmentKind {
-    fn generate(&self, rng: &mut ThreadRng) -> Equipment {
+impl EquipmentRarityKind {
+    pub fn n_affix(&self) -> u16 {
         match self {
-            EquipmentKind::NormalHelmet => {
-                Equipment::Helmet(Helmet::Normal(NormalHelmet::generate(rng)))
-            }
-            EquipmentKind::MagicHelmet => {
-                Equipment::Helmet(Helmet::Magic(MagicHelmet::generate(rng)))
-            }
-            EquipmentKind::NormalBodyArmour => {
-                Equipment::BodyArmour(BodyArmour::Normal(NormalBodyArmour::generate(rng)))
-            }
-            EquipmentKind::MagicBodyArmour => {
-                Equipment::BodyArmour(BodyArmour::Magic(MagicBodyArmour::generate(rng)))
-            }
-            EquipmentKind::NormalBoots => {
-                Equipment::Boots(Boots::Normal(NormalBoots::generate(rng)))
-            }
-            EquipmentKind::MagicBoots => Equipment::Boots(Boots::Magic(MagicBoots::generate(rng))),
-        }
-    }
-}
-
-#[derive(Component, Reflect)]
-pub enum Equipment {
-    Helmet(Helmet),
-    BodyArmour(BodyArmour),
-    Boots(Boots),
-}
-
-impl std::fmt::Display for Equipment {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Equipment::Helmet(helmet) => helmet.fmt(f),
-            Equipment::BodyArmour(body_armour) => body_armour.fmt(f),
-            Equipment::Boots(boots) => boots.fmt(f),
+            EquipmentRarityKind::Normal => 0,
+            EquipmentRarityKind::Magic => 1,
+            EquipmentRarityKind::Rare => 2,
         }
     }
 }
 
 #[derive(Deref, DerefMut)]
-pub struct EquipmentProvider(RngKindProvider<EquipmentKind, Equipment>);
+pub struct EquipmentRarityProvider(RngKindProvider<EquipmentRarityKind>);
+
+impl EquipmentRarityProvider {
+    pub fn new() -> Self {
+        let mut provider = RngKindProvider::default();
+        provider.add(EquipmentRarityKind::Normal, 10);
+        provider.add(EquipmentRarityKind::Magic, 8);
+        provider.add(EquipmentRarityKind::Rare, 5);
+        EquipmentRarityProvider(provider)
+    }
+}
+
+// // ==================================================================
+// // Equipments
+
+// #[derive(Component, Default, Reflect)]
+// pub struct Equipments {
+//     pub helmet: Helmet,
+//     pub body_armour: BodyArmour,
+//     pub boots: Boots,
+// }
+
+// impl ProvideUpgrades for Equipments {
+//     fn armour(&self) -> f32 {
+//         self.helmet.armour() + self.body_armour.armour() + self.boots.armour()
+//     }
+
+//     fn more_life(&self) -> f32 {
+//         self.helmet.more_life() + self.body_armour.more_life() + self.boots.more_life()
+//     }
+
+//     fn increase_max_life(&self) -> f32 {
+//         self.helmet.increase_max_life()
+//             + self.body_armour.increase_max_life()
+//             + self.boots.increase_max_life()
+//     }
+
+//     fn life_regen(&self) -> f32 {
+//         self.helmet.life_regen() + self.body_armour.life_regen() + self.boots.life_regen()
+//     }
+
+//     fn increase_movement_speed(&self) -> f32 {
+//         self.helmet.increase_movement_speed()
+//             + self.body_armour.increase_movement_speed()
+//             + self.boots.increase_movement_speed()
+//     }
+
+//     fn increase_attack_speed(&self) -> f32 {
+//         self.helmet.increase_attack_speed()
+//             + self.body_armour.increase_attack_speed()
+//             + self.boots.increase_attack_speed()
+//     }
+
+//     fn pierce_chance(&self) -> f32 {
+//         self.helmet.pierce_chance() + self.body_armour.pierce_chance() + self.boots.pierce_chance()
+//     }
+// }
+
+// // ==================================================================
+// // EquipmentProvider
+
+pub struct EquipmentEntity {
+    pub entity: Entity,
+    pub tile_index: usize,
+    pub label: String,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+pub enum EquipmentKind {
+    Amulet,
+}
+
+impl EquipmentKind {
+    pub fn spawn(&self, commands: &mut Commands, rng: &mut ThreadRng) -> EquipmentEntity {
+        match self {
+            EquipmentKind::Amulet => Amulet::spawn(commands, rng),
+        }
+    }
+}
+
+// impl Generator<Equipment> for EquipmentKind {
+//     fn generate(&self, rng: &mut ThreadRng) -> Equipment {
+//         match self {
+//             EquipmentKind::NormalHelmet => {
+//                 Equipment::Helmet(Helmet::Normal(NormalHelmet::generate(rng)))
+//             }
+//             EquipmentKind::MagicHelmet => {
+//                 Equipment::Helmet(Helmet::Magic(MagicHelmet::generate(rng)))
+//             }
+//             EquipmentKind::NormalBodyArmour => {
+//                 Equipment::BodyArmour(BodyArmour::Normal(NormalBodyArmour::generate(rng)))
+//             }
+//             EquipmentKind::MagicBodyArmour => {
+//                 Equipment::BodyArmour(BodyArmour::Magic(MagicBodyArmour::generate(rng)))
+//             }
+//             EquipmentKind::NormalBoots => {
+//                 Equipment::Boots(Boots::Normal(NormalBoots::generate(rng)))
+//             }
+//             EquipmentKind::MagicBoots => Equipment::Boots(Boots::Magic(MagicBoots::generate(rng))),
+//         }
+//     }
+// }
+
+// #[derive(Component, Reflect)]
+// pub enum Equipment {
+//     Helmet(Helmet),
+//     BodyArmour(BodyArmour),
+//     Boots(Boots),
+// }
+
+// impl std::fmt::Display for Equipment {
+//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+//         match self {
+//             Equipment::Helmet(helmet) => helmet.fmt(f),
+//             Equipment::BodyArmour(body_armour) => body_armour.fmt(f),
+//             Equipment::Boots(boots) => boots.fmt(f),
+//         }
+//     }
+// }
+
+#[derive(Deref, DerefMut)]
+pub struct EquipmentProvider(RngKindProvider<EquipmentKind>);
 
 impl EquipmentProvider {
     pub fn new() -> Self {
-        let mut provider = RngKindProvider::<EquipmentKind, Equipment>::default();
-        provider.add(EquipmentKind::NormalHelmet, 40);
-        provider.add(EquipmentKind::MagicHelmet, 20);
-        provider.add(EquipmentKind::NormalBodyArmour, 40);
-        provider.add(EquipmentKind::MagicBodyArmour, 20);
-        provider.add(EquipmentKind::NormalBoots, 40);
-        provider.add(EquipmentKind::MagicBoots, 20);
-
+        let mut provider = RngKindProvider::default();
+        provider.add(EquipmentKind::Amulet, 40);
         EquipmentProvider(provider)
     }
 }

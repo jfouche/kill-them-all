@@ -1,26 +1,36 @@
-use super::Damage;
+use super::*;
 use bevy::prelude::*;
 use rand::Rng;
 
+// TODO: move to character module ?
+#[derive(Component, Default)]
+pub struct Character;
+
 #[derive(Bundle, Default)]
 pub struct SkillsBundle {
+    pub character: Character,
     pub armour: Armour,
     pub movement_speed: MovementSpeedBundle,
     pub life: LifeBundle,
+    pub more_life: MoreLife,
+    pub incr_life: IncreaseMaxLife,
     pub life_regen: LifeRegen,
     pub attack_speed: IncreaseAttackSpeed,
     pub pierce: PierceChance,
 }
 
+#[derive(Component, Deref)]
+pub struct AffixesLabels(pub String);
+
 // ==================================================================
 // Armour
 
-#[derive(Component, Clone, Copy, Default, Deref, Reflect)]
+#[derive(Component, Clone, Copy, Default, Deref, DerefMut, Reflect)]
 pub struct Armour(pub f32);
 
 impl std::fmt::Display for Armour {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:.0}", self.0)
+        write!(f, "{:.0} Armour", self.0)
     }
 }
 
@@ -31,6 +41,7 @@ impl std::fmt::Display for Armour {
 pub struct MovementSpeedBundle {
     base: BaseMovementSpeed,
     current: MovementSpeed,
+    incr: IncreaseMovementSpeed,
 }
 
 impl MovementSpeedBundle {
@@ -38,6 +49,7 @@ impl MovementSpeedBundle {
         MovementSpeedBundle {
             base: BaseMovementSpeed(base),
             current: MovementSpeed(base),
+            incr: IncreaseMovementSpeed(0.),
         }
     }
 }
@@ -45,12 +57,12 @@ impl MovementSpeedBundle {
 #[derive(Component, Default, Deref, Reflect)]
 pub struct BaseMovementSpeed(f32);
 
-#[derive(Component, Default, Deref, Reflect)]
+#[derive(Component, Default, Deref, DerefMut, Reflect)]
 pub struct MovementSpeed(pub f32);
 
 impl std::fmt::Display for MovementSpeed {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:.0}", self.0)
+        write!(f, "Add {:.0}% movement speed", self.0)
     }
 }
 
@@ -76,17 +88,17 @@ impl LifeBundle {
 
 /// Represent the initial life of a character
 #[derive(Component, Default, Deref, Clone, Copy, Reflect)]
-pub struct BaseLife(f32);
+pub struct BaseLife(pub f32);
 
 /// Represent current life of a character
-#[derive(Component, Default, Deref, Clone, Copy, Reflect)]
+#[derive(Component, Default, Deref, DerefMut, Clone, Copy, Reflect)]
 pub struct Life(pub f32);
 
 /// Represent the max life of a character
 ///
 /// It's calculated with the [BaseLife] and all [crate::components::Upgrades]
-/// and [crate::components::Equipment]s
-#[derive(Component, Default, Deref, Clone, Copy, Reflect)]
+/// and [crate::components::MoreLife]s and [crate::components::IncreaseMaxLife]s
+#[derive(Component, Default, Deref, DerefMut, Clone, Copy, Reflect)]
 pub struct MaxLife(pub f32);
 
 impl Life {
@@ -115,19 +127,19 @@ impl Life {
 
 impl std::fmt::Display for Life {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:.0}", self.0)
+        write!(f, "{:.0} life", self.0)
     }
 }
 
 // ==================================================================
 // LifeRegen
 
-#[derive(Component, Default, Deref, Reflect)]
+#[derive(Component, Default, Clone, Copy, Deref, DerefMut, Reflect)]
 pub struct LifeRegen(pub f32);
 
 impl std::fmt::Display for LifeRegen {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:.0}% per sec", self.0)
+        write!(f, "Regenerate {:.0} lifes per sec", self.0)
     }
 }
 
@@ -139,7 +151,7 @@ pub struct IncreaseAttackSpeed(pub f32);
 
 impl std::fmt::Display for IncreaseAttackSpeed {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "+{:.0}%", self.0)
+        write!(f, "Add +{:.0}% attack speed", self.0)
     }
 }
 
@@ -162,7 +174,7 @@ impl PierceChance {
 
 impl std::fmt::Display for PierceChance {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "+{:.0}%", **self)
+        write!(f, "+{:.0}% pierce chance", **self)
     }
 }
 

@@ -1,54 +1,57 @@
-use rand::{rngs::ThreadRng, seq::IteratorRandom};
+use rand::{rngs::ThreadRng, Rng};
 use std::collections::HashMap;
 
-pub trait Generator<T> {
-    fn generate(&self, rng: &mut ThreadRng) -> T;
+pub struct RngKindProvider<T> {
+    weights: HashMap<T, usize>,
+    filters: Vec<T>,
 }
 
-pub struct RngKindProvider<K, T>
-where
-    K: Generator<T>,
-{
-    weights: HashMap<K, Vec<K>>,
-    filters: Vec<K>,
-    _phantom: std::marker::PhantomData<T>,
-}
-
-impl<K, T> Default for RngKindProvider<K, T>
-where
-    K: Generator<T>,
-{
+impl<T> Default for RngKindProvider<T> {
     fn default() -> Self {
         Self {
             weights: HashMap::default(),
             filters: Vec::default(),
-            _phantom: std::marker::PhantomData,
         }
     }
 }
 
-impl<K, T> RngKindProvider<K, T>
+impl<T> RngKindProvider<T>
 where
-    K: Copy + Eq + std::hash::Hash + Generator<T>,
+    T: Copy + Eq + std::hash::Hash,
 {
-    pub fn add(&mut self, kind: K, weight: usize) -> &mut Self {
-        self.weights.insert(kind, vec![kind; weight]);
+    pub fn add(&mut self, kind: T, weight: usize) -> &mut Self {
+        self.weights.insert(kind, weight);
         self
     }
 
-    /// generate a rand upgrade, removing the option the select it next time
-    pub fn gen(&mut self) -> Option<T> {
-        let mut rng = rand::thread_rng();
-
-        let kind = self
+    /// generate a rand upgrade, removing the option to select it next time
+    pub fn gen(&mut self, rng: &mut ThreadRng) -> Option<T> {
+        let mut remaing = self
             .weights
             .iter()
-            .filter(|(kind, _v)| !self.filters.contains(kind))
-            .flat_map(|(_kind, v)| v)
-            .choose(&mut rng)?;
+            .filter(|(v, _n)| !self.filters.contains(v));
 
-        self.filters.push(*kind);
-        let upgrade = kind.generate(&mut rng);
-        Some(upgrade)
+        // Get random value
+        let sum = remaing.clone().map(|(_k, n)| n).sum();
+        if sum == 0 {
+            // No more value possible
+            return None;
+        }
+        let sel = rng.gen_range(0..sum);
+
+        // find where is the value in the weights
+        let mut i = 0;
+        let value = remaing
+            .find(|(_v, n)| {
+                i += *n;
+                i > sel
+            })
+            .map(|(v, _n)| *v);
+
+        if let Some(v) = value {
+            // Remove the found value for the next time
+            self.filters.push(v);
+        }
+        value
     }
 }

@@ -10,7 +10,7 @@ pub struct PlayerBundle {
     tag: Player,
     name: Name,
     // Equipments
-    equipments: Equipments,
+    // equipments: Equipments,
     //
     money: Money,
     xp: Experience,
@@ -20,7 +20,6 @@ pub struct PlayerBundle {
     animation_timer: AnimationTimer,
     // skills
     skills: SkillsBundle,
-    upgrades: Upgrades,
     // physics
     body: RigidBody,
     velocity: Velocity,
@@ -35,7 +34,7 @@ impl Default for PlayerBundle {
         PlayerBundle {
             tag: Player,
             name: Name::new("Player"),
-            equipments: Equipments::default(),
+            // equipments: Equipments::default(),
             money: Money(0),
             xp: Experience::default(),
             sprite: SpriteBundle::default(),
@@ -46,7 +45,6 @@ impl Default for PlayerBundle {
                 movement_speed: MovementSpeedBundle::new(130.),
                 ..Default::default()
             },
-            upgrades: Upgrades::default(),
             body: RigidBody::Dynamic,
             velocity: Velocity::zero(),
             collider: Collider::cuboid(PLAYER_SIZE.x / 2., PLAYER_SIZE.y / 2.),

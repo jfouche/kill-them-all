@@ -64,7 +64,7 @@ fn spawn_player(mut commands: Commands, assets: Res<PlayerAssets>) {
         .spawn(PlayerBundle::from_assets(&assets))
         .with_children(|player| {
             player.spawn(gun());
-            player.spawn(Amulet);
+            // player.spawn(Amulet);
         })
         .observe(trigger_player_hit);
 }
@@ -114,12 +114,12 @@ fn player_movement(
 fn trigger_player_hit(
     hit_event: Trigger<HitEvent>,
     mut commands: Commands,
-    mut q_player: Query<(&Equipments, &mut Life, &mut CollisionGroups), With<Player>>,
+    mut q_player: Query<(&Armour, &mut Life, &mut CollisionGroups), With<Player>>,
     mut send_death: EventWriter<PlayerDeathEvent>,
 ) {
     let player_entity = hit_event.entity();
-    if let Ok((equipments, mut life, mut collision_groups)) = q_player.get_mut(player_entity) {
-        let damage = hit_event.event().damage - equipments.armour();
+    if let Ok((armour, mut life, mut collision_groups)) = q_player.get_mut(player_entity) {
+        let damage = hit_event.event().damage - **armour;
         info!("on_player_hit: damage: {:.0}", *damage);
         if *damage > 0. {
             life.hit(damage);

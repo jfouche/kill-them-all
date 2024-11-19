@@ -35,29 +35,45 @@ impl std::ops::Deref for RoundEndMenuNav {
     }
 }
 
-trait EquipmentLabel {
-    fn label(&self) -> String;
-}
+#[derive(Resource, Default, Deref, DerefMut)]
+struct EquipmentList(Vec<Entity>);
 
-impl EquipmentLabel for Equipment {
-    fn label(&self) -> String {
-        match self {
-            Equipment::Helmet(helmet) => helmet.to_string(),
-            Equipment::BodyArmour(body_armour) => body_armour.to_string(),
-            Equipment::Boots(boots) => boots.to_string(),
-        }
-    }
-}
+#[derive(Component, Deref)]
+struct EquipmentEntity(Entity);
+
+// trait EquipmentLabel {
+//     fn label(&self) -> String;
+// }
+
+// impl EquipmentLabel for Equipment {
+//     fn label(&self) -> String {
+//         match self {
+//             Equipment::Helmet(helmet) => helmet.to_string(),
+//             Equipment::BodyArmour(body_armour) => body_armour.to_string(),
+//             Equipment::Boots(boots) => boots.to_string(),
+//         }
+//     }
+// }
 
 fn spawn_round_end_menu(mut commands: Commands, assets: Res<EquipmentAssets>) {
+    let mut equipment_list = EquipmentList::default();
+
     let mut round_end_nav = RoundEndMenuNav::default();
     let mut equipment_provider = EquipmentProvider::new();
+    let mut rng = rand::thread_rng();
 
     for _ in 0..3 {
-        if let Some(equipment) = equipment_provider.gen() {
-            let (texture, atlas) = assets.image(&equipment);
+        if let Some(equipment) = equipment_provider.gen(&mut rng) {
+            let equipment_entity = equipment.spawn(&mut commands, &mut rng);
+            equipment_list.push(equipment_entity.entity);
+            let texture = assets.texture();
+            let atlas = assets.atlas(equipment_entity.tile_index);
             let img = ButtonImage::ImageAtlas(texture, atlas);
-            let entity = commands.spawn_img_text_button(img, equipment.label(), equipment);
+            let entity = commands.spawn_img_text_button(
+                img,
+                equipment_entity.label,
+                EquipmentEntity(equipment_entity.entity),
+            );
             round_end_nav.0.push(entity);
         }
     }
@@ -72,26 +88,33 @@ fn spawn_round_end_menu(mut commands: Commands, assets: Res<EquipmentAssets>) {
         .push_children(&round_end_nav);
 
     commands.insert_resource(round_end_nav);
+    commands.insert_resource(equipment_list);
 }
 
-/// Handle the selection of an [Equipment], to add to the [Player]
+/// Handle the selection of an equipment, to add to the [Player]
 fn select_equipment(
-    mut players: Query<&mut Equipments, With<Player>>,
+    mut commands: Commands,
+    players: Query<Entity, With<Player>>,
+    interactions: Query<(&EquipmentEntity, &Interaction), With<Button>>,
+    equipment_list: ResMut<EquipmentList>,
     mut state: ResMut<NextState<InGameState>>,
-    interactions: Query<(&Equipment, &Interaction), With<Button>>,
 ) {
-    let Ok(mut equipments) = players.get_single_mut() else {
+    let Ok(player_entity) = players.get_single() else {
         return;
     };
-    for (equipment, interaction) in &interactions {
+    for (equipment_entity, interaction) in &interactions {
         if *interaction == Interaction::Pressed {
-            match equipment {
-                Equipment::Helmet(new_helmet) => equipments.helmet = new_helmet.clone(),
-                Equipment::BodyArmour(new_body_armour) => {
-                    equipments.body_armour = new_body_armour.clone()
+            for &e in equipment_list.iter() {
+                if e == **equipment_entity {
+                    // move equipment to player
+                    commands.entity(player_entity).add_child(e);
+                } else {
+                    // despawn unselected equipment
+                    commands.entity(e).despawn_recursive();
                 }
-                Equipment::Boots(new_boots) => equipments.boots = new_boots.clone(),
             }
+
+            commands.remove_resource::<EquipmentList>();
             state.set(InGameState::Running);
         }
     }

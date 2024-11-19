@@ -1,72 +1,29 @@
-use super::rng_provider::{Generator, RngKindProvider};
+use std::fmt::Display;
+
+use super::{rng_provider::RngKindProvider, *};
 use bevy::prelude::*;
 use rand::{rngs::ThreadRng, Rng};
 
-#[derive(Component, Default, Deref, DerefMut, Reflect)]
-pub struct Upgrades(pub Vec<Upgrade>);
+#[derive(Component, Copy, Clone)]
+pub struct Upgrade;
 
-pub trait ProvideUpgrades {
-    fn armour(&self) -> f32;
-    fn more_life(&self) -> f32;
-    fn increase_max_life(&self) -> f32;
-    fn life_regen(&self) -> f32;
-    fn increase_movement_speed(&self) -> f32;
-    fn increase_attack_speed(&self) -> f32;
-    fn pierce_chance(&self) -> f32;
+#[derive(Bundle)]
+struct UpgradeBundle<U: Component> {
+    tag: Upgrade,
+    upgrade: U,
+    name: Name,
 }
 
-impl ProvideUpgrades for Upgrades {
-    fn armour(&self) -> f32 {
-        0.
-    }
-
-    fn more_life(&self) -> f32 {
-        0.
-    }
-
-    fn increase_max_life(&self) -> f32 {
-        self.0.iter().fold(0., |acc, u| {
-            acc + match *u {
-                Upgrade::IncreaseMaxLife(v) => v,
-                _ => 0.,
-            }
-        })
-    }
-
-    fn life_regen(&self) -> f32 {
-        self.0.iter().fold(0., |acc, u| {
-            acc + match *u {
-                Upgrade::IncreaseLifeRegen(v) => v,
-                _ => 0.,
-            }
-        })
-    }
-
-    fn increase_movement_speed(&self) -> f32 {
-        self.0.iter().fold(0., |acc, u| {
-            acc + match *u {
-                Upgrade::IncreasemovementSpeed(v) => v,
-                _ => 0.,
-            }
-        })
-    }
-
-    fn increase_attack_speed(&self) -> f32 {
-        self.0.iter().fold(0., |acc, u| {
-            acc + match *u {
-                Upgrade::IncreaseAttackSpeed(v) => v,
-                _ => 0.,
-            }
-        })
-    }
-
-    fn pierce_chance(&self) -> f32 {
-        self.0.iter().fold(0., |acc, u| {
-            acc + match *u {
-                Upgrade::PierceChance(v) => v,
-                _ => 0.,
-            }
-        })
+impl<U> UpgradeBundle<U>
+where
+    U: Component + Clone + Display,
+{
+    pub fn new(upgrade: U) -> Self {
+        UpgradeBundle {
+            tag: Upgrade,
+            upgrade: upgrade.clone(),
+            name: upgrade.to_string().into(),
+        }
     }
 }
 
@@ -75,53 +32,58 @@ pub enum UpgradeKind {
     IncreaseMaxLife,
     IncreaseLifeRegen,
     IncreaseAttackSpeed,
-    IncreasemovementSpeed,
-    Pierce,
+    IncreaseMovementSpeed,
+    PierceChance,
 }
 
-impl Generator<Upgrade> for UpgradeKind {
-    fn generate(&self, rng: &mut ThreadRng) -> Upgrade {
+impl UpgradeKind {
+    pub fn generate(&self, commands: &mut Commands, rng: &mut ThreadRng) -> (Entity, String) {
         match self {
-            UpgradeKind::IncreaseMaxLife => Upgrade::IncreaseMaxLife(rng.gen_range(2..10) as f32),
+            UpgradeKind::IncreaseMaxLife => {
+                let upgrade = IncreaseMaxLife(rng.gen_range(2..10) as f32);
+                Self::spawn(commands, upgrade)
+            }
             UpgradeKind::IncreaseLifeRegen => {
-                Upgrade::IncreaseLifeRegen(rng.gen_range(2..10) as f32)
+                let upgrade = LifeRegen(rng.gen_range(2..10) as f32);
+                Self::spawn(commands, upgrade)
             }
             UpgradeKind::IncreaseAttackSpeed => {
-                Upgrade::IncreaseAttackSpeed(rng.gen_range(2..20) as f32)
+                let upgrade = IncreaseAttackSpeed(rng.gen_range(2..20) as f32);
+                Self::spawn(commands, upgrade)
             }
-            UpgradeKind::IncreasemovementSpeed => {
-                Upgrade::IncreasemovementSpeed(rng.gen_range(2..20) as f32)
+            UpgradeKind::IncreaseMovementSpeed => {
+                let upgrade = IncreaseMovementSpeed(rng.gen_range(2..20) as f32);
+                Self::spawn(commands, upgrade)
             }
-            UpgradeKind::Pierce => Upgrade::PierceChance(rng.gen_range(2..20) as f32),
+            UpgradeKind::PierceChance => {
+                let upgrade = PierceChance(rng.gen_range(2..20) as f32);
+                Self::spawn(commands, upgrade)
+            }
         }
+    }
+
+    fn spawn<U>(commands: &mut Commands, upgrade: U) -> (Entity, String)
+    where
+        U: Component + Clone + Display,
+    {
+        let bundle = UpgradeBundle::new(upgrade);
+        let label = bundle.name.to_string();
+        let entity = commands.spawn(bundle).id();
+        (entity, label)
     }
 }
 
-#[derive(Clone, Copy, Component, Reflect)]
-pub enum Upgrade {
-    /// Increase max life percentage, 1.0 is 100%
-    IncreaseMaxLife(f32),
-    /// Increase life regen percentage, 1.0 is 100%
-    IncreaseLifeRegen(f32),
-    /// Increase attack speed percentage, 1.0 is 100%
-    IncreaseAttackSpeed(f32),
-    /// Increase movement speed percentage, 1.0 is 100%
-    IncreasemovementSpeed(f32),
-    // Pierce allow to not despawn when hitting
-    PierceChance(f32),
-}
-
 #[derive(Deref, DerefMut)]
-pub struct UpgradeProvider(RngKindProvider<UpgradeKind, Upgrade>);
+pub struct UpgradeProvider(RngKindProvider<UpgradeKind>);
 
 impl UpgradeProvider {
     pub fn new() -> Self {
-        let mut provider = RngKindProvider::<UpgradeKind, Upgrade>::default();
+        let mut provider = RngKindProvider::default();
         provider.add(UpgradeKind::IncreaseMaxLife, 40);
         provider.add(UpgradeKind::IncreaseLifeRegen, 40);
         provider.add(UpgradeKind::IncreaseAttackSpeed, 20);
-        provider.add(UpgradeKind::IncreasemovementSpeed, 40);
-        provider.add(UpgradeKind::Pierce, 20);
+        provider.add(UpgradeKind::IncreaseMovementSpeed, 40);
+        provider.add(UpgradeKind::PierceChance, 20);
 
         UpgradeProvider(provider)
     }
