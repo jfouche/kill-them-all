@@ -19,9 +19,6 @@ impl Plugin for CharacterPlugin {
             .register_type::<PierceChance>()
             .register_type::<Armour>()
             .register_type::<MoreArmour>()
-            // .register_type::<Helmet>()
-            // .register_type::<BodyArmour>()
-            // .register_type::<Boots>()
             .add_systems(
                 PreUpdate,
                 (

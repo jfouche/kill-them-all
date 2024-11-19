@@ -1,12 +1,12 @@
 mod amulet;
-// mod body_armour;
-// mod boots;
-// mod helmet;
+mod body_armour;
+mod boots;
+mod helmet;
 
 pub use amulet::*;
-// pub use body_armour::*;
-// pub use boots::*;
-// pub use helmet::*;
+pub use body_armour::*;
+pub use boots::*;
+pub use helmet::*;
 
 use super::rng_provider::RngKindProvider;
 use bevy::prelude::*;
@@ -53,68 +53,12 @@ impl EquipmentAssets {
             index,
         }
     }
-
-    // pub fn image(&self, equipment: &Equipment) -> (Handle<Image>, TextureAtlas) {
-    //     match equipment {
-    //         Equipment::Helmet(helmet) => self.helmet(helmet),
-    //         Equipment::BodyArmour(body_armour) => self.body_armour(body_armour),
-    //         Equipment::Boots(boots) => self.boots(boots),
-    //     }
-    // }
-
-    // pub fn helmet(&self, helmet: &Helmet) -> (Handle<Image>, TextureAtlas) {
-    //     let index = match helmet {
-    //         Helmet::None => 351,
-    //         Helmet::Normal(_) => 182,
-    //         Helmet::Magic(_) => 184,
-    //     };
-    //     (
-    //         self.texture.clone(),
-    //         TextureAtlas {
-    //             layout: self.texture_atlas_layout.clone(),
-    //             index,
-    //         },
-    //     )
-    // }
-
-    // pub fn body_armour(&self, body_armour: &BodyArmour) -> (Handle<Image>, TextureAtlas) {
-    //     let index = match body_armour {
-    //         BodyArmour::None => 351,
-    //         BodyArmour::Normal(_) => 0,
-    //         BodyArmour::Magic(_) => 2,
-    //     };
-    //     (
-    //         self.texture.clone(),
-    //         TextureAtlas {
-    //             layout: self.texture_atlas_layout.clone(),
-    //             index,
-    //         },
-    //     )
-    // }
-
-    // pub fn boots(&self, boots: &Boots) -> (Handle<Image>, TextureAtlas) {
-    //     let index = match boots {
-    //         Boots::None => 351,
-    //         Boots::Normal(_) => 63,
-    //         Boots::Magic(_) => 65,
-    //     };
-    //     (
-    //         self.texture.clone(),
-    //         TextureAtlas {
-    //             layout: self.texture_atlas_layout.clone(),
-    //             index,
-    //         },
-    //     )
-    // }
 }
 
 #[derive(Component, Clone, Copy, Deref, Reflect)]
 pub struct TileIndex(usize);
 
-//
-// Equipment Rarity
-//
-
+/// Equipment Rarity
 #[derive(Component, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum EquipmentRarityKind {
     Normal,
@@ -145,55 +89,6 @@ impl EquipmentRarityProvider {
     }
 }
 
-// // ==================================================================
-// // Equipments
-
-// #[derive(Component, Default, Reflect)]
-// pub struct Equipments {
-//     pub helmet: Helmet,
-//     pub body_armour: BodyArmour,
-//     pub boots: Boots,
-// }
-
-// impl ProvideUpgrades for Equipments {
-//     fn armour(&self) -> f32 {
-//         self.helmet.armour() + self.body_armour.armour() + self.boots.armour()
-//     }
-
-//     fn more_life(&self) -> f32 {
-//         self.helmet.more_life() + self.body_armour.more_life() + self.boots.more_life()
-//     }
-
-//     fn increase_max_life(&self) -> f32 {
-//         self.helmet.increase_max_life()
-//             + self.body_armour.increase_max_life()
-//             + self.boots.increase_max_life()
-//     }
-
-//     fn life_regen(&self) -> f32 {
-//         self.helmet.life_regen() + self.body_armour.life_regen() + self.boots.life_regen()
-//     }
-
-//     fn increase_movement_speed(&self) -> f32 {
-//         self.helmet.increase_movement_speed()
-//             + self.body_armour.increase_movement_speed()
-//             + self.boots.increase_movement_speed()
-//     }
-
-//     fn increase_attack_speed(&self) -> f32 {
-//         self.helmet.increase_attack_speed()
-//             + self.body_armour.increase_attack_speed()
-//             + self.boots.increase_attack_speed()
-//     }
-
-//     fn pierce_chance(&self) -> f32 {
-//         self.helmet.pierce_chance() + self.body_armour.pierce_chance() + self.boots.pierce_chance()
-//     }
-// }
-
-// // ==================================================================
-// // EquipmentProvider
-
 pub struct EquipmentEntity {
     pub entity: Entity,
     pub tile_index: usize,
@@ -203,55 +98,21 @@ pub struct EquipmentEntity {
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub enum EquipmentKind {
     Amulet,
+    BodyArmour,
+    Boots,
+    Helmet,
 }
 
 impl EquipmentKind {
     pub fn spawn(&self, commands: &mut Commands, rng: &mut ThreadRng) -> EquipmentEntity {
         match self {
             EquipmentKind::Amulet => Amulet::spawn(commands, rng),
+            EquipmentKind::BodyArmour => BodyArmour::spawn(commands, rng),
+            EquipmentKind::Boots => Boots::spawn(commands, rng),
+            EquipmentKind::Helmet => Helmet::spawn(commands, rng),
         }
     }
 }
-
-// impl Generator<Equipment> for EquipmentKind {
-//     fn generate(&self, rng: &mut ThreadRng) -> Equipment {
-//         match self {
-//             EquipmentKind::NormalHelmet => {
-//                 Equipment::Helmet(Helmet::Normal(NormalHelmet::generate(rng)))
-//             }
-//             EquipmentKind::MagicHelmet => {
-//                 Equipment::Helmet(Helmet::Magic(MagicHelmet::generate(rng)))
-//             }
-//             EquipmentKind::NormalBodyArmour => {
-//                 Equipment::BodyArmour(BodyArmour::Normal(NormalBodyArmour::generate(rng)))
-//             }
-//             EquipmentKind::MagicBodyArmour => {
-//                 Equipment::BodyArmour(BodyArmour::Magic(MagicBodyArmour::generate(rng)))
-//             }
-//             EquipmentKind::NormalBoots => {
-//                 Equipment::Boots(Boots::Normal(NormalBoots::generate(rng)))
-//             }
-//             EquipmentKind::MagicBoots => Equipment::Boots(Boots::Magic(MagicBoots::generate(rng))),
-//         }
-//     }
-// }
-
-// #[derive(Component, Reflect)]
-// pub enum Equipment {
-//     Helmet(Helmet),
-//     BodyArmour(BodyArmour),
-//     Boots(Boots),
-// }
-
-// impl std::fmt::Display for Equipment {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         match self {
-//             Equipment::Helmet(helmet) => helmet.fmt(f),
-//             Equipment::BodyArmour(body_armour) => body_armour.fmt(f),
-//             Equipment::Boots(boots) => boots.fmt(f),
-//         }
-//     }
-// }
 
 #[derive(Deref, DerefMut)]
 pub struct EquipmentProvider(RngKindProvider<EquipmentKind>);
@@ -260,6 +121,9 @@ impl EquipmentProvider {
     pub fn new() -> Self {
         let mut provider = RngKindProvider::default();
         provider.add(EquipmentKind::Amulet, 40);
+        provider.add(EquipmentKind::BodyArmour, 40);
+        provider.add(EquipmentKind::Boots, 40);
+        provider.add(EquipmentKind::Helmet, 40);
         EquipmentProvider(provider)
     }
 }

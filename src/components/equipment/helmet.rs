@@ -1,84 +1,13 @@
 use super::*;
-use crate::components::rng_provider::*;
+use crate::components::{rng_provider::*, *};
 use bevy::prelude::*;
 use rand::{rngs::ThreadRng, Rng};
-
-#[derive(Default, Clone, Reflect)]
-pub struct Helmet;
-
-// #[derive(Copy, Clone, Reflect)]
-// pub struct NormalHelmet {
-//     pub armour: f32,
-// }
-
-// impl NormalHelmet {
-//     pub fn generate(rng: &mut ThreadRng) -> Self {
-//         NormalHelmet {
-//             armour: rng.gen_range(1..=2) as f32,
-//         }
-//     }
-// }
-
-// #[derive(Clone, Reflect)]
-// pub struct MagicHelmet {
-//     pub base: NormalHelmet,
-//     pub affix: HelmetAffix,
-// }
-
-// impl MagicHelmet {
-//     pub fn generate(rng: &mut ThreadRng) -> Self {
-//         let mut affix_provider = HelmetAffixProvider::new();
-//         MagicHelmet {
-//             base: NormalHelmet::generate(rng),
-//             affix: affix_provider
-//                 .gen()
-//                 .expect("HelmetAffixProvider should provide at least 1 affix"),
-//         }
-//     }
-// }
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub enum HelmetAffixKind {
     AddLife,
     AddArmour,
 }
-
-// #[derive(Clone, Reflect)]
-// pub enum HelmetAffix {
-//     AddLife(f32),
-//     AddArmour(f32),
-// }
-
-// impl std::fmt::Display for Helmet {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         match self {
-//             Helmet::None => Ok(()),
-//             Helmet::Normal(helmet) => write!(f, "Helmet : +{:.0} armour", helmet.armour),
-//             Helmet::Magic(helmet) => write!(
-//                 f,
-//                 "Helmet : +{:.0} armour\n{}",
-//                 helmet.base.armour, helmet.affix
-//             ),
-//         }
-//     }
-// }
-// impl std::fmt::Display for HelmetAffix {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         match self {
-//             HelmetAffix::AddArmour(val) => write!(f, "Item add +{:.0} armour", *val),
-//             HelmetAffix::AddLife(val) => write!(f, "Item add +{:.0} life", *val),
-//         }
-//     }
-// }
-
-// impl Generator<HelmetAffix> for HelmetAffixKind {
-//     fn generate(&self, rng: &mut ThreadRng) -> HelmetAffix {
-//         match self {
-//             HelmetAffixKind::AddArmour => HelmetAffix::AddArmour(rng.gen_range(2..=5) as f32),
-//             HelmetAffixKind::AddLife => HelmetAffix::AddLife(rng.gen_range(5..=20) as f32),
-//         }
-//     }
-// }
 
 #[derive(Deref, DerefMut)]
 pub struct HelmetAffixProvider(RngKindProvider<HelmetAffixKind>);
@@ -92,43 +21,46 @@ impl HelmetAffixProvider {
     }
 }
 
-// impl ProvideUpgrades for Helmet {
-//     fn armour(&self) -> f32 {
-//         match self {
-//             Helmet::None => 0.,
-//             Helmet::Normal(helmet) => helmet.armour,
-//             Helmet::Magic(helmet) => helmet.base.armour,
-//         }
-//     }
+#[derive(Component)]
+pub struct Helmet;
 
-//     fn more_life(&self) -> f32 {
-//         match self {
-//             Helmet::None => 0.,
-//             Helmet::Normal(_) => 0.,
-//             Helmet::Magic(helmet) => match helmet.affix {
-//                 HelmetAffix::AddLife(life) => life,
-//                 _ => 0.,
-//             },
-//         }
-//     }
+impl Helmet {
+    pub fn spawn(commands: &mut Commands, rng: &mut ThreadRng) -> EquipmentEntity {
+        let mut provider = HelmetAffixProvider::new();
+        let rarity = EquipmentRarityProvider::new()
+            .gen(rng)
+            .expect("At least one rarity");
 
-//     fn increase_max_life(&self) -> f32 {
-//         0.
-//     }
+        let mut helmet_commands = commands.spawn((Helmet, Name::new("Helmet")));
 
-//     fn life_regen(&self) -> f32 {
-//         0.
-//     }
+        let mut labels = vec![];
+        for _ in 0..rarity.n_affix() {
+            match provider.gen(rng) {
+                Some(HelmetAffixKind::AddArmour) => {
+                    let affix = Armour(rng.gen_range(1. ..=3.));
+                    labels.push(affix.to_string());
+                    helmet_commands.insert(affix);
+                }
+                Some(HelmetAffixKind::AddLife) => {
+                    let affix = MoreLife(rng.gen_range(5. ..=10.));
+                    labels.push(affix.to_string());
+                    helmet_commands.insert(affix);
+                }
+                None => {}
+            }
+        }
+        helmet_commands.insert(AffixesLabels(labels.join("\n")));
 
-//     fn increase_movement_speed(&self) -> f32 {
-//         0.
-//     }
+        let tile_index = match rarity {
+            EquipmentRarityKind::Normal => 213,
+            EquipmentRarityKind::Magic => 215,
+            EquipmentRarityKind::Rare => 216,
+        };
 
-//     fn increase_attack_speed(&self) -> f32 {
-//         0.
-//     }
-
-//     fn pierce_chance(&self) -> f32 {
-//         0.
-//     }
-// }
+        EquipmentEntity {
+            entity: helmet_commands.id(),
+            tile_index,
+            label: labels.join("\n"),
+        }
+    }
+}
