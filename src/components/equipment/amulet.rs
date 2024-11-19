@@ -6,6 +6,7 @@ use rand::{rngs::ThreadRng, Rng};
 pub enum AmuletAffixKind {
     AddLife,
     AddArmour,
+    PierceChance,
 }
 
 #[derive(Deref, DerefMut)]
@@ -16,6 +17,7 @@ impl AmuletAffixProvider {
         let mut provider = RngKindProvider::default();
         provider.add(AmuletAffixKind::AddArmour, 20);
         provider.add(AmuletAffixKind::AddLife, 20);
+        provider.add(AmuletAffixKind::PierceChance, 10);
         AmuletAffixProvider(provider)
     }
 }
@@ -48,6 +50,11 @@ impl Amulet {
                 }
                 Some(AmuletAffixKind::AddLife) => {
                     let affix = MoreLife(rng.gen_range(5. ..=10.));
+                    labels.push(affix.label());
+                    amulet_commands.insert(affix);
+                }
+                Some(AmuletAffixKind::PierceChance) => {
+                    let affix = PierceChance(rng.gen_range(5. ..=10.));
                     labels.push(affix.label());
                     amulet_commands.insert(affix);
                 }

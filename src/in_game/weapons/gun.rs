@@ -26,7 +26,7 @@ pub fn gun() -> impl Bundle {
 pub struct Bullet;
 
 #[derive(Bundle)]
-pub struct BulletBundle {
+struct BulletBundle {
     tag: Bullet,
     name: Name,
     damage: Damage,
@@ -88,7 +88,7 @@ impl BulletBundle {
     }
 }
 
-pub struct BulletOptions {
+struct BulletOptions {
     player_pos: Vec3,
     player_size: Vec2,
     damage: Damage,
@@ -97,13 +97,7 @@ pub struct BulletOptions {
 }
 
 impl BulletOptions {
-    pub fn new(
-        player_pos: Vec3,
-        player_size: Vec2,
-        damage: Damage,
-        pierce: f32,
-        target: Vec3,
-    ) -> Self {
+    fn new(player_pos: Vec3, player_size: Vec2, damage: Damage, pierce: f32, target: Vec3) -> Self {
         let dir = target - player_pos;
         BulletOptions {
             player_pos,
