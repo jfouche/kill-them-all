@@ -17,8 +17,8 @@ impl std::ops::Deref for LevelUpMenuNav {
     }
 }
 
-#[derive(Component)]
-struct UpgradesContainer;
+#[derive(Resource, Default, Deref, DerefMut)]
+struct UpgradeList(Vec<Entity>);
 
 #[derive(Component, Deref)]
 struct UpgradeEntity(Entity);
@@ -33,13 +33,10 @@ impl Plugin for LevelUpMenuPlugin {
                 Update,
                 enter_level_up_state.in_set(GameRunningSet::EntityUpdate),
             )
-            .add_systems(
-                OnEnter(InGameState::LevelUp),
-                (spawn_upgrades_container, spawn_level_up_menu).chain(),
-            )
+            .add_systems(OnEnter(InGameState::LevelUp), spawn_level_up_menu)
             .add_systems(
                 OnExit(InGameState::LevelUp),
-                (despawn_all::<LevelUpMenu>, despawn_all::<UpgradesContainer>),
+                (despawn_all::<LevelUpMenu>, despawn_remaining_upgrades),
             )
             .add_systems(
                 Update,
@@ -62,27 +59,20 @@ fn enter_level_up_state(
     }
 }
 
-fn spawn_upgrades_container(mut commands: Commands) {
-    commands.spawn((UpgradesContainer, Name::new("UpgradesContainer")));
-}
-
-fn spawn_level_up_menu(mut commands: Commands, upgrades: Query<Entity, With<UpgradesContainer>>) {
-    let upgrades_container = upgrades
-        .get_single()
-        .expect("UpgradesContainer is not spawned");
+fn spawn_level_up_menu(mut commands: Commands) {
+    let mut upgrade_list = UpgradeList::default();
 
     let mut level_up_nav = LevelUpMenuNav::default();
     let mut upgrade_provider = UpgradeProvider::new();
     let mut rng = rand::thread_rng();
+
     for _ in 0..3 {
         if let Some(upgrade) = upgrade_provider.gen(&mut rng) {
             let upgrade_view = upgrade.generate(&mut commands, &mut rng);
             let btn_entity =
                 commands.spawn_text_button(upgrade_view.label, UpgradeEntity(upgrade_view.entity));
             level_up_nav.0.push(btn_entity);
-            commands
-                .entity(upgrades_container)
-                .add_child(upgrade_view.entity);
+            upgrade_list.push(upgrade_view.entity);
         }
     }
 
@@ -96,6 +86,15 @@ fn spawn_level_up_menu(mut commands: Commands, upgrades: Query<Entity, With<Upgr
         .push_children(&level_up_nav);
 
     commands.insert_resource(level_up_nav);
+    commands.insert_resource(upgrade_list);
+}
+
+/// Despawn all remaining upgrades
+fn despawn_remaining_upgrades(mut commands: Commands, upgrade_list: Res<UpgradeList>) {
+    for &entity in upgrade_list.iter() {
+        commands.entity(entity).despawn_recursive();
+    }
+    commands.remove_resource::<UpgradeList>();
 }
 
 ///
@@ -104,16 +103,21 @@ fn spawn_level_up_menu(mut commands: Commands, upgrades: Query<Entity, With<Upgr
 fn upgrade_skill(
     mut commands: Commands,
     players: Query<Entity, With<Player>>,
-    interactions: Query<(Entity, &Interaction, &UpgradeEntity), Changed<Interaction>>,
+    interactions: Query<(&Interaction, &UpgradeEntity), Changed<Interaction>>,
+    mut upgrade_list: ResMut<UpgradeList>,
     mut state: ResMut<NextState<InGameState>>,
 ) {
     if let Ok(player) = players.get_single() {
-        for (btn, interaction, upgrade_entity) in &interactions {
+        for (interaction, upgrade_entity) in &interactions {
             if *interaction == Interaction::Pressed {
-                // move upgrades to player
-                commands.entity(btn).remove_children(&[**upgrade_entity]);
-                commands.entity(player).add_child(**upgrade_entity);
-                state.set(InGameState::Running);
+                if let Some(i) = upgrade_list.iter().position(|&e| e == **upgrade_entity) {
+                    // move equipment to player
+                    commands.entity(player).add_child(**upgrade_entity);
+                    // Remove it from the list of entity to despawn
+                    upgrade_list.swap_remove(i);
+                    // leave the menu and go back to game
+                    state.set(InGameState::Running);
+                }
             }
         }
     }

@@ -9,7 +9,10 @@ pub struct RoundEndMenuPlugin;
 impl Plugin for RoundEndMenuPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(InGameState::RoundEnd), spawn_round_end_menu)
-            .add_systems(OnExit(InGameState::RoundEnd), despawn_all::<RoundEndMenu>)
+            .add_systems(
+                OnExit(InGameState::RoundEnd),
+                (despawn_all::<RoundEndMenu>, despawn_remaining_equipments),
+            )
             .add_systems(
                 Update,
                 (
@@ -40,20 +43,6 @@ struct EquipmentList(Vec<Entity>);
 
 #[derive(Component, Deref)]
 struct EquipmentEntity(Entity);
-
-// trait EquipmentLabel {
-//     fn label(&self) -> String;
-// }
-
-// impl EquipmentLabel for Equipment {
-//     fn label(&self) -> String {
-//         match self {
-//             Equipment::Helmet(helmet) => helmet.to_string(),
-//             Equipment::BodyArmour(body_armour) => body_armour.to_string(),
-//             Equipment::Boots(boots) => boots.to_string(),
-//         }
-//     }
-// }
 
 fn spawn_round_end_menu(mut commands: Commands, assets: Res<EquipmentAssets>) {
     let mut equipment_list = EquipmentList::default();
@@ -91,12 +80,20 @@ fn spawn_round_end_menu(mut commands: Commands, assets: Res<EquipmentAssets>) {
     commands.insert_resource(equipment_list);
 }
 
+/// Despawn all remaining equipments
+fn despawn_remaining_equipments(mut commands: Commands, equipment_list: Res<EquipmentList>) {
+    for &entity in equipment_list.iter() {
+        commands.entity(entity).despawn_recursive();
+    }
+    commands.remove_resource::<EquipmentList>();
+}
+
 /// Handle the selection of an equipment, to add to the [Player]
 fn select_equipment(
     mut commands: Commands,
     players: Query<Entity, With<Player>>,
     interactions: Query<(&EquipmentEntity, &Interaction), With<Button>>,
-    equipment_list: ResMut<EquipmentList>,
+    mut equipment_list: ResMut<EquipmentList>,
     mut state: ResMut<NextState<InGameState>>,
 ) {
     let Ok(player_entity) = players.get_single() else {
@@ -104,18 +101,14 @@ fn select_equipment(
     };
     for (equipment_entity, interaction) in &interactions {
         if *interaction == Interaction::Pressed {
-            for &e in equipment_list.iter() {
-                if e == **equipment_entity {
-                    // move equipment to player
-                    commands.entity(player_entity).add_child(e);
-                } else {
-                    // despawn unselected equipment
-                    commands.entity(e).despawn_recursive();
-                }
+            if let Some(i) = equipment_list.iter().position(|&e| e == **equipment_entity) {
+                // move equipment to player
+                commands.entity(player_entity).add_child(**equipment_entity);
+                // Remove it from the list of entity to despawn
+                equipment_list.swap_remove(i);
+                // leave the menu and go back to game
+                state.set(InGameState::Running);
             }
-
-            commands.remove_resource::<EquipmentList>();
-            state.set(InGameState::Running);
         }
     }
 }

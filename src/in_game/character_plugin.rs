@@ -19,6 +19,7 @@ impl Plugin for CharacterPlugin {
             .register_type::<PierceChance>()
             .register_type::<Armour>()
             .register_type::<MoreArmour>()
+            .register_type::<AffixesLabels>()
             .add_systems(
                 PreUpdate,
                 (
