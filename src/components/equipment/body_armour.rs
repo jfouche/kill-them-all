@@ -52,9 +52,9 @@ impl BodyArmour {
         body_armour_commands.insert(AffixesLabels(labels.join("\n")));
 
         let tile_index = match rarity {
-            EquipmentRarityKind::Normal => 213,
-            EquipmentRarityKind::Magic => 215,
-            EquipmentRarityKind::Rare => 216,
+            EquipmentRarity::Normal => 0,
+            EquipmentRarity::Magic => 2,
+            EquipmentRarity::Rare => 3,
         };
 
         EquipmentEntity {

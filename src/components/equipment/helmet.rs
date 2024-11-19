@@ -52,9 +52,9 @@ impl Helmet {
         helmet_commands.insert(AffixesLabels(labels.join("\n")));
 
         let tile_index = match rarity {
-            EquipmentRarityKind::Normal => 213,
-            EquipmentRarityKind::Magic => 215,
-            EquipmentRarityKind::Rare => 216,
+            EquipmentRarity::Normal => 182,
+            EquipmentRarity::Magic => 184,
+            EquipmentRarity::Rare => 185,
         };
 
         EquipmentEntity {

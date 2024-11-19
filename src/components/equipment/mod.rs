@@ -60,31 +60,31 @@ pub struct TileIndex(usize);
 
 /// Equipment Rarity
 #[derive(Component, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum EquipmentRarityKind {
+pub enum EquipmentRarity {
     Normal,
     Magic,
     Rare,
 }
 
-impl EquipmentRarityKind {
+impl EquipmentRarity {
     pub fn n_affix(&self) -> u16 {
         match self {
-            EquipmentRarityKind::Normal => 0,
-            EquipmentRarityKind::Magic => 1,
-            EquipmentRarityKind::Rare => 2,
+            EquipmentRarity::Normal => 1,
+            EquipmentRarity::Magic => 2,
+            EquipmentRarity::Rare => 3,
         }
     }
 }
 
 #[derive(Deref, DerefMut)]
-pub struct EquipmentRarityProvider(RngKindProvider<EquipmentRarityKind>);
+pub struct EquipmentRarityProvider(RngKindProvider<EquipmentRarity>);
 
 impl EquipmentRarityProvider {
     pub fn new() -> Self {
         let mut provider = RngKindProvider::default();
-        provider.add(EquipmentRarityKind::Normal, 10);
-        provider.add(EquipmentRarityKind::Magic, 8);
-        provider.add(EquipmentRarityKind::Rare, 5);
+        provider.add(EquipmentRarity::Normal, 10);
+        provider.add(EquipmentRarity::Magic, 8);
+        provider.add(EquipmentRarity::Rare, 5);
         EquipmentRarityProvider(provider)
     }
 }

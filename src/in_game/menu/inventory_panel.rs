@@ -12,7 +12,7 @@ struct EquipmentsPanel;
 
 trait EquipmentPos {
     fn pos() -> Vec2;
-    fn tile_index(rarity: EquipmentRarityKind) -> usize;
+    fn tile_index(rarity: EquipmentRarity) -> usize;
 }
 
 impl EquipmentPos for Amulet {
@@ -20,11 +20,11 @@ impl EquipmentPos for Amulet {
         Vec2::new(142., 7.)
     }
 
-    fn tile_index(rarity: EquipmentRarityKind) -> usize {
+    fn tile_index(rarity: EquipmentRarity) -> usize {
         match rarity {
-            EquipmentRarityKind::Normal => 213,
-            EquipmentRarityKind::Magic => 215,
-            EquipmentRarityKind::Rare => 216,
+            EquipmentRarity::Normal => 213,
+            EquipmentRarity::Magic => 215,
+            EquipmentRarity::Rare => 216,
         }
     }
 }
@@ -69,7 +69,7 @@ fn add_inventory_panel(mut commands: Commands, panels: Query<Entity, Added<Inven
 fn show_equipment<T>(
     mut commands: Commands,
     panels: Query<Entity, Added<EquipmentsPanel>>,
-    equipments: Query<(Entity, &EquipmentRarityKind, &Parent), With<T>>,
+    equipments: Query<(Entity, &EquipmentRarity, &Parent), With<T>>,
     players: Query<Entity, With<Player>>,
     assets: Res<EquipmentAssets>,
 ) where
