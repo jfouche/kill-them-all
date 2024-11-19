@@ -28,6 +28,10 @@ impl Plugin for PlayerPlugin {
                     increment_player_experience,
                     level_up,
                     // on_player_hit,
+                    remove_old_equipment::<Amulet>,
+                    remove_old_equipment::<BodyArmour>,
+                    remove_old_equipment::<Boots>,
+                    remove_old_equipment::<Helmet>,
                 )
                     .in_set(GameRunningSet::EntityUpdate),
             );
@@ -208,6 +212,38 @@ fn level_up(
             info!("level_up");
             // Regen life
             life.regenerate(**max_life);
+        }
+    }
+}
+
+/// When an equipment is added to the player, the old same one should be removed
+fn remove_old_equipment<E>(
+    mut commands: Commands,
+    players: Query<Entity, With<Player>>,
+    new_equipments: Query<(Entity, &Parent), Added<E>>,
+    equipments: Query<(Entity, &Parent), With<E>>,
+) where
+    E: Component,
+{
+    let Ok(player) = players.get_single() else {
+        return;
+    };
+
+    for (new_equipment, parent) in &new_equipments {
+        if players.get(**parent).is_ok() {
+            // new_equipment has been added to Player, get old ones
+            let old_equipments = equipments
+                .iter()
+                // same parent, but different entity
+                .filter(|(e, p)| parent == *p && *e != new_equipment)
+                .map(|(e, _p)| e)
+                .collect::<Vec<_>>();
+
+            // Despawn old equipments
+            commands.entity(player).remove_children(&old_equipments);
+            for e in old_equipments {
+                commands.entity(e).despawn_recursive();
+            }
         }
     }
 }
