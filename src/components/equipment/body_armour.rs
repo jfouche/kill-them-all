@@ -30,8 +30,13 @@ impl BodyArmour {
         let rarity = EquipmentRarityProvider::new()
             .gen(rng)
             .expect("At least one rarity");
-
-        let mut body_armour_commands = commands.spawn((BodyArmour, Name::new("BodyArmour")));
+        let tile_index = match rarity {
+            EquipmentRarity::Normal => 0,
+            EquipmentRarity::Magic => 2,
+            EquipmentRarity::Rare => 3,
+        };
+        let mut body_armour_commands =
+            commands.spawn((BodyArmour, Name::new("BodyArmour"), TileIndex(tile_index)));
 
         let mut labels = vec![];
         for _ in 0..rarity.n_affix() {
@@ -50,12 +55,6 @@ impl BodyArmour {
             }
         }
         body_armour_commands.insert(AffixesLabels(labels.join("\n")));
-
-        let tile_index = match rarity {
-            EquipmentRarity::Normal => 0,
-            EquipmentRarity::Magic => 2,
-            EquipmentRarity::Rare => 3,
-        };
 
         EquipmentEntity {
             entity: body_armour_commands.id(),

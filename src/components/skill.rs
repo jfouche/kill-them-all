@@ -19,7 +19,7 @@ pub struct SkillsBundle {
     pub pierce: PierceChance,
 }
 
-#[derive(Component, Deref, Reflect)]
+#[derive(Component, Clone, Deref, Reflect)]
 pub struct AffixesLabels(pub String);
 
 // ==================================================================

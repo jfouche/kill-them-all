@@ -56,7 +56,7 @@ impl EquipmentAssets {
 }
 
 #[derive(Component, Clone, Copy, Deref, Reflect)]
-pub struct TileIndex(usize);
+pub struct TileIndex(pub usize);
 
 /// Equipment Rarity
 #[derive(Component, Clone, Copy, PartialEq, Eq, Hash)]

@@ -32,8 +32,12 @@ impl Boots {
         let rarity = EquipmentRarityProvider::new()
             .gen(rng)
             .expect("At least one rarity");
-
-        let mut boots_commands = commands.spawn((Boots, Name::new("Boots")));
+        let tile_index = match rarity {
+            EquipmentRarity::Normal => 63,
+            EquipmentRarity::Magic => 65,
+            EquipmentRarity::Rare => 66,
+        };
+        let mut boots_commands = commands.spawn((Boots, Name::new("Boots"), TileIndex(tile_index)));
 
         let mut labels = vec![];
         for _ in 0..rarity.n_affix() {
@@ -57,12 +61,6 @@ impl Boots {
             }
         }
         boots_commands.insert(AffixesLabels(labels.join("\n")));
-
-        let tile_index = match rarity {
-            EquipmentRarity::Normal => 63,
-            EquipmentRarity::Magic => 65,
-            EquipmentRarity::Rare => 66,
-        };
 
         EquipmentEntity {
             entity: boots_commands.id(),

@@ -29,8 +29,14 @@ impl Amulet {
         let rarity = EquipmentRarityProvider::new()
             .gen(rng)
             .expect("At least one rarity");
+        let tile_index = match rarity {
+            EquipmentRarity::Normal => 213,
+            EquipmentRarity::Magic => 215,
+            EquipmentRarity::Rare => 216,
+        };
 
-        let mut amulet_commands = commands.spawn((Amulet, Name::new("Amulet")));
+        let mut amulet_commands =
+            commands.spawn((Amulet, Name::new("Amulet"), TileIndex(tile_index)));
 
         let mut labels = vec![];
         for _ in 0..rarity.n_affix() {
@@ -49,12 +55,6 @@ impl Amulet {
             }
         }
         amulet_commands.insert(AffixesLabels(labels.join("\n")));
-
-        let tile_index = match rarity {
-            EquipmentRarity::Normal => 213,
-            EquipmentRarity::Magic => 215,
-            EquipmentRarity::Rare => 216,
-        };
 
         EquipmentEntity {
             entity: amulet_commands.id(),
