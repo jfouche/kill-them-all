@@ -29,6 +29,7 @@ fn spawn_camera(mut commands: Commands) {
             projection,
             ..default()
         },
+        IsDefaultUiCamera,
     ));
 }
 

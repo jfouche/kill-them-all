@@ -7,7 +7,7 @@ mod splash;
 mod ui;
 mod utils;
 
-#[cfg(feature = "debug")]
+#[cfg(feature = "dev")]
 mod debug;
 
 use bevy::{prelude::*, window::WindowResolution};
@@ -51,7 +51,7 @@ fn main() {
         // systems
         ;
 
-    #[cfg(feature = "debug")]
+    #[cfg(feature = "dev")]
     app.add_plugins(debug::DebugPlugin);
 
     // RUN

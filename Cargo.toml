@@ -15,8 +15,9 @@ opt-level = 1
 opt-level = 3
 
 [features]
+default = []
 # Enables debug infos and rendering
-debug = ["dep:bevy-inspector-egui"]
+dev = ["dep:bevy-inspector-egui", "bevy/bevy_dev_tools"]
 
 [dependencies]
 rand = "0.8"

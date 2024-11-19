@@ -1,5 +1,10 @@
 use crate::{schedule::*, utils::cursor::set_grab_cursor};
-use bevy::{prelude::*, window::PrimaryWindow};
+use bevy::{
+    dev_tools::{fps_overlay::*, states::log_transitions, ui_debug_overlay::*},
+    input::common_conditions::input_just_pressed,
+    prelude::*,
+    window::PrimaryWindow,
+};
 use bevy_rapier2d::prelude::*;
 
 pub struct DebugPlugin;
@@ -7,6 +12,8 @@ pub struct DebugPlugin;
 impl Plugin for DebugPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
+            DebugUiPlugin,
+            FpsOverlayPlugin::default(),
             bevy_inspector_egui::quick::WorldInspectorPlugin::new(),
             bevy_rapier2d::render::RapierDebugRenderPlugin::default(),
         ))
@@ -14,9 +21,10 @@ impl Plugin for DebugPlugin {
             Update,
             (
                 toggle_grab,
-                state_transition::<GameState>,
-                state_transition::<InGameState>,
+                log_transitions::<GameState>,
+                log_transitions::<InGameState>,
                 display_collision_events.in_set(GameRunningSet::EntityUpdate),
+                toggle_debug_ui.run_if(input_just_pressed(KeyCode::Backquote)),
             ),
         );
     }
@@ -37,13 +45,6 @@ fn toggle_grab(
                 }
             }
         }
-    }
-}
-
-fn state_transition<S: States>(mut events: EventReader<StateTransitionEvent<S>>) {
-    for event in events.read() {
-        let name = std::any::type_name::<S>();
-        info!("{name} : {event:?}");
     }
 }
 
@@ -69,4 +70,8 @@ fn display_collision_events(mut collisions: EventReader<CollisionEvent>, names: 
             }
         }
     }
+}
+
+fn toggle_debug_ui(mut options: ResMut<UiDebugOptions>) {
+    options.toggle();
 }

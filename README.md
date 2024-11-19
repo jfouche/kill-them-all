@@ -9,7 +9,7 @@ cargo run --release
 
 ## run with debug features
 ```shell
-cargo run --features=debug
+cargo run --features=dev
 ```
 
 # WEB
