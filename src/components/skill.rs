@@ -25,12 +25,12 @@ pub struct AffixesLabels(pub String);
 // ==================================================================
 // Armour
 
-#[derive(Component, Clone, Copy, Default, Deref, DerefMut, Reflect)]
+#[derive(Component, Clone, Copy, Default, Deref, DerefMut, Debug, Reflect)]
 pub struct Armour(pub f32);
 
-impl std::fmt::Display for Armour {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:.0} Armour", self.0)
+impl super::Label for Armour {
+    fn label(&self) -> String {
+        format!("{:.0} Armour", self.0)
     }
 }
 
@@ -60,9 +60,9 @@ pub struct BaseMovementSpeed(f32);
 #[derive(Component, Default, Deref, DerefMut, Reflect)]
 pub struct MovementSpeed(pub f32);
 
-impl std::fmt::Display for MovementSpeed {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Add {:.0}% movement speed", self.0)
+impl super::Label for MovementSpeed {
+    fn label(&self) -> String {
+        format!("Add {:.0}% movement speed", self.0)
     }
 }
 
@@ -91,7 +91,7 @@ impl LifeBundle {
 pub struct BaseLife(pub f32);
 
 /// Represent current life of a character
-#[derive(Component, Default, Deref, DerefMut, Clone, Copy, Reflect)]
+#[derive(Component, Default, Deref, DerefMut, Clone, Copy, Debug, Reflect)]
 pub struct Life(pub f32);
 
 /// Represent the max life of a character
@@ -125,40 +125,40 @@ impl Life {
     }
 }
 
-impl std::fmt::Display for Life {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:.0} life", self.0)
+impl super::Label for Life {
+    fn label(&self) -> String {
+        format!("{:.0} life", self.0)
     }
 }
 
 // ==================================================================
 // LifeRegen
 
-#[derive(Component, Default, Clone, Copy, Deref, DerefMut, Reflect)]
+#[derive(Component, Default, Clone, Copy, Deref, DerefMut, Debug, Reflect)]
 pub struct LifeRegen(pub f32);
 
-impl std::fmt::Display for LifeRegen {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Regenerate {:.0} lifes per sec", self.0)
+impl super::Label for LifeRegen {
+    fn label(&self) -> String {
+        format!("Regenerate {:.0} lifes per sec", self.0)
     }
 }
 
 // ==================================================================
 // AttackSpeed
 
-#[derive(Component, Default, Clone, Copy, Reflect, Deref)]
+#[derive(Component, Default, Clone, Copy, Reflect, Debug, Deref)]
 pub struct IncreaseAttackSpeed(pub f32);
 
-impl std::fmt::Display for IncreaseAttackSpeed {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Add +{:.0}% attack speed", self.0)
+impl super::Label for IncreaseAttackSpeed {
+    fn label(&self) -> String {
+        format!("Add +{:.0}% attack speed", self.0)
     }
 }
 
 // ==================================================================
 // Pierce
 
-#[derive(Component, Default, Clone, Copy, Deref, Reflect)]
+#[derive(Component, Default, Clone, Copy, Deref, Debug, Reflect)]
 pub struct PierceChance(pub f32);
 
 impl PierceChance {
@@ -172,9 +172,9 @@ impl PierceChance {
     }
 }
 
-impl std::fmt::Display for PierceChance {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "+{:.0}% pierce chance", **self)
+impl super::Label for PierceChance {
+    fn label(&self) -> String {
+        format!("+{:.0}% pierce chance", **self)
     }
 }
 

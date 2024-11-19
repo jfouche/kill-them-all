@@ -76,12 +76,13 @@ fn spawn_level_up_menu(mut commands: Commands, upgrades: Query<Entity, With<Upgr
     let mut rng = rand::thread_rng();
     for _ in 0..3 {
         if let Some(upgrade) = upgrade_provider.gen(&mut rng) {
-            let (upgrade_entity, label) = upgrade.generate(&mut commands, &mut rng);
-            let btn_entity = commands.spawn_text_button(label, UpgradeEntity(upgrade_entity));
+            let upgrade_view = upgrade.generate(&mut commands, &mut rng);
+            let btn_entity =
+                commands.spawn_text_button(upgrade_view.label, UpgradeEntity(upgrade_view.entity));
             level_up_nav.0.push(btn_entity);
             commands
                 .entity(upgrades_container)
-                .add_child(upgrade_entity);
+                .add_child(upgrade_view.entity);
         }
     }
 

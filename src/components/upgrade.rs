@@ -1,5 +1,3 @@
-use std::fmt::Display;
-
 use super::{rng_provider::RngKindProvider, *};
 use bevy::prelude::*;
 use rand::{rngs::ThreadRng, Rng};
@@ -16,15 +14,21 @@ struct UpgradeBundle<U: Component> {
 
 impl<U> UpgradeBundle<U>
 where
-    U: Component + Clone + Display,
+    U: Component + std::fmt::Debug,
 {
     pub fn new(upgrade: U) -> Self {
+        let name = format!("{upgrade:?}");
         UpgradeBundle {
             tag: Upgrade,
-            upgrade: upgrade.clone(),
-            name: upgrade.to_string().into(),
+            upgrade,
+            name: name.into(),
         }
     }
+}
+
+pub struct UpgradeView {
+    pub entity: Entity,
+    pub label: String,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
@@ -37,7 +41,7 @@ pub enum UpgradeKind {
 }
 
 impl UpgradeKind {
-    pub fn generate(&self, commands: &mut Commands, rng: &mut ThreadRng) -> (Entity, String) {
+    pub fn generate(&self, commands: &mut Commands, rng: &mut ThreadRng) -> UpgradeView {
         match self {
             UpgradeKind::IncreaseMaxLife => {
                 let upgrade = IncreaseMaxLife(rng.gen_range(2..10) as f32);
@@ -62,14 +66,14 @@ impl UpgradeKind {
         }
     }
 
-    fn spawn<U>(commands: &mut Commands, upgrade: U) -> (Entity, String)
+    fn spawn<U>(commands: &mut Commands, upgrade: U) -> UpgradeView
     where
-        U: Component + Clone + Display,
+        U: Component + Clone + super::Label + std::fmt::Debug,
     {
+        let label = upgrade.label();
         let bundle = UpgradeBundle::new(upgrade);
-        let label = bundle.name.to_string();
         let entity = commands.spawn(bundle).id();
-        (entity, label)
+        UpgradeView { entity, label }
     }
 }
 

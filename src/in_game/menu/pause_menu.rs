@@ -4,7 +4,6 @@ use crate::in_game::back_to_game;
 use crate::schedule::*;
 use crate::ui::*;
 use bevy::prelude::*;
-use std::fmt::Display;
 
 pub struct PausePlugin;
 
@@ -39,13 +38,13 @@ struct PauseMenu;
 ///
 trait Skill {
     /// Component of the player skill
-    type SkillComponent: Component + Display;
+    type SkillComponent: Component + crate::components::Label;
 
     /// Format the skill of the player.
     ///
     /// By default, it formats the skill using the Display trait
     fn format(component: &Self::SkillComponent) -> String {
-        format!("{}", component)
+        component.label()
     }
 }
 

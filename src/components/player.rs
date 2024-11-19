@@ -95,7 +95,7 @@ pub struct LevelUpEvent;
 // ==================================================================
 // Experience
 
-#[derive(Component, Default, Reflect)]
+#[derive(Component, Default, Debug, Reflect)]
 pub struct Experience(u32);
 
 impl Experience {
@@ -135,10 +135,9 @@ impl Experience {
     }
 }
 
-impl std::fmt::Display for Experience {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
+impl super::Label for Experience {
+    fn label(&self) -> String {
+        format!(
             "{}/{} (level {})",
             self.0,
             self.get_current_level_min_max_exp().1,
