@@ -158,7 +158,7 @@ impl super::Label for IncreaseAttackSpeed {
 // ==================================================================
 // Pierce
 
-#[derive(Component, Default, Clone, Copy, Deref, Debug, Reflect)]
+#[derive(Component, Default, Clone, Copy, Deref, DerefMut, Debug, Reflect)]
 pub struct PierceChance(pub f32);
 
 impl PierceChance {

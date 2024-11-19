@@ -28,7 +28,7 @@ impl Plugin for CharacterPlugin {
                     update_life_regen,
                     update_movement_speed,
                     // update_attack_speed,
-                    // update_pierce_chance,
+                    update_pierce_chance,
                 )
                     .run_if(game_is_running),
             )
@@ -149,6 +149,7 @@ fn update_movement_speed(
     }
 }
 
+// /// [AttackSpeed] = [BaseAttackSpeed] + sum([AttackSpeed])
 // fn update_attack_speed(mut query: Query<(&mut IncreaseAttackSpeed, &Upgrades, &Equipments)>) {
 //     for (mut attack_speed, upgrades, equipments) in &mut query {
 //         // Attack speed
@@ -156,13 +157,21 @@ fn update_movement_speed(
 //     }
 // }
 
-// /// [PierceChance] = sum([PierceChance])
-// fn update_pierce_chance(mut query: Query<(&mut PierceChance, &Upgrades, &Equipments)>) {
-//     for (mut pierce_chance, upgrades, equipments) in &mut query {
-//         // Pierce chance
-//         pierce_chance.0 = equipments.pierce_chance() + upgrades.pierce_chance();
-//     }
-// }
+/// [PierceChance] = sum([PierceChance])
+fn update_pierce_chance(
+    mut characters: Query<&mut PierceChance, With<Character>>,
+    mut affixes: Query<(&mut PierceChance, &Parent), Without<Character>>,
+) {
+    for mut char_pierce_chance in &mut characters {
+        **char_pierce_chance = 0.;
+    }
+
+    for (pierce_chance, parent) in &mut affixes {
+        if let Ok(mut char_pierce_chance) = characters.get_mut(**parent) {
+            **char_pierce_chance += **pierce_chance;
+        }
+    }
+}
 
 fn regen_life(mut query: Query<(&mut Life, &MaxLife, &LifeRegen)>, time: Res<Time>) {
     for (mut life, max_life, regen) in &mut query {
