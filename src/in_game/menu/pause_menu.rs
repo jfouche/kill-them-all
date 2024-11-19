@@ -73,7 +73,7 @@ impl Skill for LifeRegenText {
 struct MovementSpeedText;
 
 impl Skill for MovementSpeedText {
-    type SkillComponent = MovementSpeed;
+    type SkillComponent = IncreaseMovementSpeed;
 }
 
 #[derive(Component)]

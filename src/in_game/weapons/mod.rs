@@ -1,10 +1,9 @@
 mod gun;
 pub use gun::*;
 
+use super::game_is_running;
 use crate::components::*;
 use bevy::{app::PluginGroupBuilder, prelude::*};
-
-use super::game_is_running;
 
 pub struct WeaponsPluginGroup;
 
