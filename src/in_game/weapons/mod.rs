@@ -1,6 +1,9 @@
 mod gun;
 pub use gun::*;
 
+mod shuriken;
+pub use shuriken::*;
+
 use super::game_is_running;
 use crate::components::*;
 use bevy::{app::PluginGroupBuilder, prelude::*};
@@ -11,6 +14,7 @@ impl PluginGroup for WeaponsPluginGroup {
     fn build(self) -> PluginGroupBuilder {
         PluginGroupBuilder::start::<Self>()
             .add(gun::GunPlugin)
+            .add(shuriken::ShurikenPlugin)
             .add(weapons_plugin)
     }
 }

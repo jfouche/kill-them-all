@@ -1,4 +1,5 @@
 use super::weapons::gun;
+use super::weapons::shuriken_launcher;
 use crate::components::*;
 use crate::schedule::*;
 use crate::utils::blink::Blink;
@@ -68,7 +69,7 @@ fn spawn_player(mut commands: Commands, assets: Res<PlayerAssets>) {
         .spawn(PlayerBundle::from_assets(&assets))
         .with_children(|player| {
             player.spawn(gun());
-            // player.spawn(Amulet);
+            player.spawn(shuriken_launcher());
         })
         .observe(trigger_player_hit);
 }
