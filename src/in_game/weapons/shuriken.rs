@@ -14,22 +14,13 @@ pub struct ShurikenLauncher {
     dir: Dir2,
 }
 
-impl Default for ShurikenLauncher {
-    fn default() -> Self {
-        ShurikenLauncher { dir: Dir2::NORTH }
-    }
-}
-
 const BASE_ATTACK_SPEED: f32 = 1.5;
 
 pub fn shuriken_launcher() -> impl Bundle {
     (
-        ShurikenLauncher::default(),
-        Weapon,
+        ShurikenLauncher { dir: Dir2::NORTH },
         Name::new("ShurikenLauncher"),
-        DamageRange(2. ..=4.),
-        BaseAttackSpeed(BASE_ATTACK_SPEED),
-        AttackTimer::new(BASE_ATTACK_SPEED),
+        WeaponBundle::new(DamageRange(2. ..=4.), BASE_ATTACK_SPEED),
     )
 }
 

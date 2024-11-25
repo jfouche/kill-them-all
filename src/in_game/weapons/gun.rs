@@ -11,11 +11,8 @@ const BASE_ATTACK_SPEED: f32 = 1.2;
 pub fn gun() -> impl Bundle {
     (
         Gun,
-        Weapon,
         Name::new("Gun"),
-        DamageRange(1. ..=2.),
-        BaseAttackSpeed(BASE_ATTACK_SPEED),
-        AttackTimer::new(BASE_ATTACK_SPEED),
+        WeaponBundle::new(DamageRange(1. ..=2.), BASE_ATTACK_SPEED),
     )
 }
 

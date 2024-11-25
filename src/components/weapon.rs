@@ -3,6 +3,28 @@ use bevy::prelude::*;
 use rand::{rngs::ThreadRng, Rng};
 use std::{ops::RangeInclusive, time::Duration};
 
+#[derive(Component)]
+pub struct Weapon;
+
+#[derive(Bundle)]
+pub struct WeaponBundle {
+    tag: Weapon,
+    damage_range: DamageRange,
+    base_attack_speed: BaseAttackSpeed,
+    timer: AttackTimer,
+}
+
+impl WeaponBundle {
+    pub fn new(damage_range: DamageRange, attack_per_sec: f32) -> Self {
+        WeaponBundle {
+            tag: Weapon,
+            damage_range,
+            base_attack_speed: BaseAttackSpeed(attack_per_sec),
+            timer: AttackTimer::new(attack_per_sec),
+        }
+    }
+}
+
 #[derive(Clone, Copy, Component, Default, Deref, Reflect)]
 pub struct Damage(pub f32);
 
@@ -38,9 +60,6 @@ impl DamageRange {
         Damage(damage)
     }
 }
-
-#[derive(Component)]
-pub struct Weapon;
 
 #[derive(Component, Deref, DerefMut, Reflect)]
 pub struct AttackTimer(pub Timer);
