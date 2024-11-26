@@ -13,7 +13,7 @@ impl Plugin for CollisionsPlugin {
         app.add_systems(
             Update,
             (
-                monster_hit_by_bullet,
+                monster_hit_by_ammo,
                 player_touched_by_monster,
                 player_hits_bonus,
             )
@@ -23,44 +23,44 @@ impl Plugin for CollisionsPlugin {
 }
 
 ///
-/// Monster hit by a bullet
+/// Monster hit by an [Ammo]
 ///
-fn monster_hit_by_bullet(
+fn monster_hit_by_ammo(
     mut commands: Commands,
     mut collisions: EventReader<CollisionEvent>,
-    q_monsters: Query<(), With<Monster>>,
-    mut q_bullets: Query<(Entity, &Damage, &mut PierceChance), With<Bullet>>,
+    monsters: Query<(), With<Monster>>,
+    mut ammos: Query<(Entity, &Damage, &mut PierceChance), With<Ammo>>,
 ) {
-    let mut monster_hit = HashMap::new();
-    let mut bullet_hit = HashSet::new();
+    let mut monster_hits = HashMap::new();
+    let mut ammo_hits = HashSet::new();
 
     // apply damage
     collisions
         .read()
         .filter_map(start_event_filter)
-        .filter_map(|(&e1, &e2)| q_monsters.get_either(e1, e2))
+        .filter_map(|(&e1, &e2)| monsters.get_either(e1, e2))
         .filter_map(|(_, monster, other)| {
-            q_bullets
+            ammos
                 .get(other)
-                .map(|(bullet, damage, _)| (monster, bullet, damage))
+                .map(|(ammo, damage, _)| (monster, ammo, damage))
                 .ok()
         })
-        .for_each(|(monster, bullet, damage)| {
-            *monster_hit.entry(monster).or_insert(0.) += **damage;
-            bullet_hit.insert(bullet);
+        .for_each(|(monster, ammo, damage)| {
+            *monster_hits.entry(monster).or_insert(0.) += **damage;
+            ammo_hits.insert(ammo);
         });
 
     // try to pierce
-    for bullet in bullet_hit {
-        if let Ok((_, _, mut pierce)) = q_bullets.get_mut(bullet) {
+    for ammo in ammo_hits {
+        if let Ok((_, _, mut pierce)) = ammos.get_mut(ammo) {
             if !pierce.try_pierce() {
                 // Didn't pierce => despawn bullet
-                commands.entity(bullet).despawn();
+                commands.entity(ammo).despawn();
             }
         }
     }
 
-    for (entity, damage) in monster_hit.iter() {
+    for (entity, damage) in monster_hits.iter() {
         commands.trigger_targets(
             HitEvent {
                 damage: Damage(*damage),
