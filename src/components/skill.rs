@@ -153,7 +153,7 @@ impl super::Label for LifeRegen {
 // ==================================================================
 // AttackSpeed
 
-#[derive(Component, Default, Clone, Copy, Reflect, Debug, Deref)]
+#[derive(Component, Default, Clone, Copy, Debug, Deref, DerefMut, Reflect)]
 pub struct IncreaseAttackSpeed(pub f32);
 
 impl super::Label for IncreaseAttackSpeed {

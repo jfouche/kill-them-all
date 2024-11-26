@@ -29,7 +29,7 @@ impl Plugin for CharacterPlugin {
                     update_life,
                     update_life_regen,
                     update_movement_speed,
-                    // update_attack_speed,
+                    (update_increase_attack_speed, update_weapon_attack_speed).chain(),
                     update_pierce_chance,
                 )
                     .run_if(game_is_running),
@@ -165,13 +165,34 @@ fn update_movement_speed(
     }
 }
 
-// /// [AttackSpeed] = [BaseAttackSpeed] + sum([AttackSpeed])
-// fn update_attack_speed(mut query: Query<(&mut IncreaseAttackSpeed, &Upgrades, &Equipments)>) {
-//     for (mut attack_speed, upgrades, equipments) in &mut query {
-//         // Attack speed
-//         attack_speed.0 = equipments.increase_attack_speed() + upgrades.increase_attack_speed();
-//     }
-// }
+/// [IncreaseAttackSpeed] = sum([IncreaseAttackSpeed])
+fn update_increase_attack_speed(
+    mut characters: Query<&mut IncreaseAttackSpeed, With<Character>>,
+    affixes: Query<(&IncreaseAttackSpeed, &Parent), Without<Character>>,
+) {
+    for mut character_incr_attack_speed in &mut characters {
+        // Attack speed
+        **character_incr_attack_speed = 0.;
+    }
+    for (incr_attack_speed, parent) in &affixes {
+        if let Ok(mut character_incr_attack_speed) = characters.get_mut(**parent) {
+            **character_incr_attack_speed += **incr_attack_speed;
+        }
+    }
+}
+
+/// Weapon [AttackSpeed] = [BaseAttackSpeed] * sum([IncreaseAttackSpeed])
+fn update_weapon_attack_speed(
+    mut weapons: Query<(&mut AttackSpeed, &BaseAttackSpeed, &Parent)>,
+    characters: Query<&IncreaseAttackSpeed, With<Character>>,
+) {
+    for (mut attack_speed, base_attack_speed, parent) in &mut weapons {
+        **attack_speed = **base_attack_speed;
+        if let Ok(incr) = characters.get(**parent) {
+            **attack_speed *= **incr;
+        }
+    }
+}
 
 /// [PierceChance] = sum([PierceChance])
 fn update_pierce_chance(
