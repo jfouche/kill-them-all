@@ -82,7 +82,7 @@ fn update_armour(
     }
 }
 
-/// [MaxLife] = ([BaseLife] + sum([MoreLife])) * sum([IncreaseLife]) %
+/// [MaxLife] = ([BaseLife] + sum([MoreLife])) * sum([IncreaseMaxLife]) %
 fn update_life(
     mut characters: Query<(&BaseLife, &mut MaxLife, &mut IncreaseMaxLife), With<Character>>,
     more_affixes: Query<(&MoreLife, &Parent), Without<Character>>,
