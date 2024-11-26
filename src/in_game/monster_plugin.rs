@@ -3,6 +3,8 @@ use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 use std::ops::Mul;
 
+use super::character_plugin::trigger_take_hit;
+
 pub struct MonsterPlugin;
 
 impl Plugin for MonsterPlugin {
@@ -104,6 +106,7 @@ fn spawn_monsters(
 
             commands
                 .spawn(MonsterBundle::new(monster_assets, &config.params))
+                .observe(trigger_take_hit)
                 .observe(trigger_monster_hit);
         }
     }
@@ -132,14 +135,14 @@ fn monsters_moves(
 /// monster hit
 ///
 fn trigger_monster_hit(
-    hit_event: Trigger<HitEvent>,
-    mut q_monsters: Query<(&mut Life, &Transform, &XpOnDeath), With<Monster>>,
+    loose_life_event: Trigger<LooseLifeEvent>,
+    mut monsters: Query<(&mut Life, &Transform, &XpOnDeath), With<Monster>>,
     mut monster_death_events: EventWriter<MonsterDeathEvent>,
 ) {
     info!("on_monster_hit");
-    let entity = hit_event.entity();
-    if let Ok((mut life, transform, xp)) = q_monsters.get_mut(entity) {
-        life.hit(hit_event.event().damage);
+    let entity = loose_life_event.entity();
+    if let Ok((mut life, transform, xp)) = monsters.get_mut(entity) {
+        life.hit(**loose_life_event.event());
         if life.is_dead() {
             monster_death_events.send(MonsterDeathEvent {
                 entity,

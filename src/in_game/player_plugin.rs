@@ -1,3 +1,4 @@
+use super::character_plugin::trigger_take_hit;
 use super::weapons::gun;
 use super::weapons::shuriken_launcher;
 use crate::components::*;
@@ -71,7 +72,9 @@ fn spawn_player(mut commands: Commands, assets: Res<PlayerAssets>) {
             // player.spawn(gun());
             player.spawn(shuriken_launcher());
         })
-        .observe(trigger_player_hit);
+        .observe(trigger_player_loose_life)
+        .observe(trigger_player_loose_life)
+        .observe(trigger_take_hit);
 }
 
 fn pause(mut query: Query<(&mut Invulnerable, &mut Blink), With<Player>>) {
@@ -116,31 +119,27 @@ fn player_movement(
 ///
 /// player hit
 ///
-fn trigger_player_hit(
-    hit_event: Trigger<HitEvent>,
+fn trigger_player_loose_life(
+    loose_life_event: Trigger<LooseLifeEvent>,
     mut commands: Commands,
-    mut q_player: Query<(&Armour, &mut Life, &mut CollisionGroups), With<Player>>,
+    mut characters: Query<(&mut Life, &mut CollisionGroups), With<Player>>,
     mut send_death: EventWriter<PlayerDeathEvent>,
 ) {
-    let player_entity = hit_event.entity();
-    if let Ok((armour, mut life, mut collision_groups)) = q_player.get_mut(player_entity) {
-        let damage = hit_event.event().damage - **armour;
-        info!("on_player_hit: damage: {:.0}", *damage);
-        if *damage > 0. {
-            life.hit(damage);
-            if life.is_dead() {
-                commands.entity(player_entity).despawn();
-                send_death.send(PlayerDeathEvent);
-            } else {
-                // Set player invulnerable
-                commands
-                    .entity(player_entity)
-                    .insert(Invulnerable::new(Duration::from_secs_f32(2.0), GROUP_ENEMY))
-                    .insert(Blink::new(Duration::from_secs_f32(0.15)));
+    let player_entity = loose_life_event.entity();
+    if let Ok((mut life, mut collision_groups)) = characters.get_mut(player_entity) {
+        life.hit(**loose_life_event.event());
+        if life.is_dead() {
+            commands.entity(player_entity).despawn();
+            send_death.send(PlayerDeathEvent);
+        } else {
+            // Set player invulnerable
+            commands
+                .entity(player_entity)
+                .insert(Invulnerable::new(Duration::from_secs_f32(2.0), GROUP_ENEMY))
+                .insert(Blink::new(Duration::from_secs_f32(0.15)));
 
-                // To allow player to not collide with enemies
-                collision_groups.filters &= !GROUP_ENEMY;
-            }
+            // To allow player to not collide with enemies
+            collision_groups.filters &= !GROUP_ENEMY;
         }
     }
 }

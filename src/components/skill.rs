@@ -34,6 +34,13 @@ impl super::Label for Armour {
     }
 }
 
+impl Armour {
+    pub fn mitigate(&self, damage: Damage) -> Damage {
+        let d = (5. * *damage) / (self.0 + 5. * *damage);
+        Damage(d)
+    }
+}
+
 // ==================================================================
 // MovementSpeed
 
@@ -181,8 +188,12 @@ impl super::Label for PierceChance {
 // ==================================================================
 // HitEvent
 
-/// Event to notify a monster was hit
+/// Event to notify a character was hit
 #[derive(Event)]
 pub struct HitEvent {
     pub damage: Damage,
 }
+
+/// Event to notify a character was hit
+#[derive(Event, Deref)]
+pub struct LooseLifeEvent(pub Damage);

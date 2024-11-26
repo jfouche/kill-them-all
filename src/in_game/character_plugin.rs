@@ -6,6 +6,7 @@ pub struct CharacterPlugin;
 impl Plugin for CharacterPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<HitEvent>()
+            .add_event::<LooseLifeEvent>()
             .register_type::<BaseLife>()
             .register_type::<Life>()
             .register_type::<MaxLife>()
@@ -60,6 +61,20 @@ impl Plugin for CharacterPlugin {
 //         }
 //     }
 // }
+
+pub fn trigger_take_hit(
+    hit_event: Trigger<HitEvent>,
+    mut commands: Commands,
+    mut characters: Query<&Armour, With<Character>>,
+) {
+    if let Ok(armour) = characters.get_mut(hit_event.entity()) {
+        let damage = armour.mitigate(hit_event.event().damage);
+        info!("trigger_take_hit: damage: {:.0}", *damage);
+        if *damage > 0. {
+            commands.trigger_targets(LooseLifeEvent(damage), hit_event.entity());
+        }
+    }
+}
 
 /// [Armour] = sum([Armour]) + sum ([MoreArmour])
 fn update_armour(
