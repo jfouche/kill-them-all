@@ -1,4 +1,3 @@
-use super::character_plugin::trigger_take_hit;
 use super::weapons::gun;
 use super::weapons::shuriken_launcher;
 use crate::components::*;
@@ -72,9 +71,7 @@ fn spawn_player(mut commands: Commands, assets: Res<PlayerAssets>) {
             // player.spawn(gun());
             player.spawn(shuriken_launcher());
         })
-        .observe(trigger_player_loose_life)
-        .observe(trigger_player_loose_life)
-        .observe(trigger_take_hit);
+        .observe(trigger_player_loose_life);
 }
 
 fn pause(mut query: Query<(&mut Invulnerable, &mut Blink), With<Player>>) {
@@ -117,7 +114,7 @@ fn player_movement(
 }
 
 ///
-/// player hit
+/// player loose life
 ///
 fn trigger_player_loose_life(
     loose_life_event: Trigger<LooseLifeEvent>,

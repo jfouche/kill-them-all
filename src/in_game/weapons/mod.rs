@@ -27,20 +27,28 @@ fn weapons_plugin(app: &mut App) {
         .register_type::<AttackTimer>()
         .add_systems(
             PreUpdate,
-            (update_weapon_timer_duration, tick_weapon)
+            (update_weapon_attack_speed, tick_weapon)
                 .chain()
                 .run_if(game_is_running),
         );
 }
 
-fn update_weapon_timer_duration(
-    mut weapons: Query<(&mut AttackTimer, &BaseAttackSpeed, &Parent), With<Weapon>>,
+fn update_weapon_attack_speed(
+    mut weapons: Query<
+        (
+            &mut AttackTimer,
+            &mut AttackSpeed,
+            &BaseAttackSpeed,
+            &Parent,
+        ),
+        With<Weapon>,
+    >,
     characters: Query<&IncreaseAttackSpeed>,
 ) {
-    for (mut timer, base_attack_speed, parent) in &mut weapons {
+    for (mut timer, mut attack_speed, base_attack_speed, parent) in &mut weapons {
         if let Ok(increase) = characters.get(**parent) {
-            let attack_speed = base_attack_speed * increase;
-            timer.set_attack_speed(attack_speed);
+            *attack_speed = base_attack_speed * increase;
+            timer.set_attack_speed(*attack_speed);
         }
     }
 }

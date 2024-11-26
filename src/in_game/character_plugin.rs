@@ -21,6 +21,7 @@ impl Plugin for CharacterPlugin {
             .register_type::<Armour>()
             .register_type::<MoreArmour>()
             .register_type::<AffixesLabels>()
+            .add_systems(Startup, register_hooks)
             .add_systems(
                 PreUpdate,
                 (
@@ -35,6 +36,19 @@ impl Plugin for CharacterPlugin {
             )
             .add_systems(Update, regen_life.in_set(GameRunningSet::EntityUpdate));
     }
+}
+
+fn register_hooks(world: &mut World) {
+    world
+        .register_component_hooks::<Player>()
+        .on_add(|mut world, entity, _component_id| {
+            world.commands().entity(entity).observe(trigger_take_hit);
+        });
+    world
+        .register_component_hooks::<Monster>()
+        .on_add(|mut world, entity, _component_id| {
+            world.commands().entity(entity).observe(trigger_take_hit);
+        });
 }
 
 // fn reset_affix<T>(mut characters: Query<&mut T, With<Character>>)
@@ -62,7 +76,7 @@ impl Plugin for CharacterPlugin {
 //     }
 // }
 
-pub fn trigger_take_hit(
+fn trigger_take_hit(
     hit_event: Trigger<HitEvent>,
     mut commands: Commands,
     mut characters: Query<&Armour, With<Character>>,

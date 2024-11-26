@@ -48,7 +48,7 @@ impl std::ops::Mul<&IncreaseAttackSpeed> for &BaseAttackSpeed {
 }
 
 /// Attack per second
-#[derive(Component, Default, Deref, Reflect)]
+#[derive(Component, Default, Clone, Copy, Deref, Reflect)]
 pub struct AttackSpeed(pub f32);
 
 #[derive(Component, Deref, Reflect)]
