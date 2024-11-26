@@ -17,7 +17,6 @@ impl Plugin for MonsterPlugin {
                     spawn_monsters,
                     monsters_moves,
                     animate_sprite,
-                    increment_score,
                 )
                     .in_set(GameRunningSet::EntityUpdate),
             );
@@ -104,7 +103,8 @@ fn spawn_monsters(
 
             commands
                 .spawn(MonsterBundle::new(monster_assets, &config.params))
-                .observe(trigger_monster_loose_life);
+                .observe(send_death_event)
+                .observe(increment_score);
         }
     }
 }
@@ -128,41 +128,27 @@ fn monsters_moves(
     }
 }
 
-///
-/// monster loose life
-///
-fn trigger_monster_loose_life(
-    loose_life_event: Trigger<LooseLifeEvent>,
-    mut monsters: Query<(&mut Life, &Transform, &XpOnDeath), With<Monster>>,
+fn send_death_event(
+    trigger: Trigger<CharacterDyingEvent>,
+    mut commands: Commands,
+    monsters: Query<(&Transform, &XpOnDeath), With<Monster>>,
     mut monster_death_events: EventWriter<MonsterDeathEvent>,
 ) {
-    info!("trigger_monster_loose_life");
-    let entity = loose_life_event.entity();
-    if let Ok((mut life, transform, xp)) = monsters.get_mut(entity) {
-        life.hit(**loose_life_event.event());
-        if life.is_dead() {
-            monster_death_events.send(MonsterDeathEvent {
-                entity,
-                pos: transform.translation,
-                xp: **xp,
-            });
-        }
+    if let Ok((transform, xp)) = monsters.get(trigger.entity()) {
+        monster_death_events.send(MonsterDeathEvent {
+            pos: transform.translation,
+            xp: **xp,
+        });
+
+        commands.trigger_targets(CharacterDiedEvent, trigger.entity());
     }
 }
 
 ///
 /// Increment score when monster died
 ///
-fn increment_score(
-    mut commands: Commands,
-    mut monster_hit_events: EventReader<MonsterDeathEvent>,
-    mut score: ResMut<Score>,
-) {
-    for event in monster_hit_events.read() {
-        // TODO: ("split in 2 systems");
-        commands.entity(event.entity).despawn();
-        score.0 += 1;
-    }
+fn increment_score(_trigger: Trigger<CharacterDiedEvent>, mut score: ResMut<Score>) {
+    score.0 += 1;
 }
 
 ///

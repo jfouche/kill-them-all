@@ -228,7 +228,6 @@ impl MonsterFuturePosBundle {
 /// Event to notify a monster died
 #[derive(Event)]
 pub struct MonsterDeathEvent {
-    pub entity: Entity,
     pub pos: Vec3,
     pub xp: u32,
 }

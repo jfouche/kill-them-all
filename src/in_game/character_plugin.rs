@@ -40,52 +40,39 @@ impl Plugin for CharacterPlugin {
 
 fn register_hooks(world: &mut World) {
     world
-        .register_component_hooks::<Player>()
+        .register_component_hooks::<Character>()
         .on_add(|mut world, entity, _component_id| {
-            world.commands().entity(entity).observe(trigger_take_hit);
-        });
-    world
-        .register_component_hooks::<Monster>()
-        .on_add(|mut world, entity, _component_id| {
-            world.commands().entity(entity).observe(trigger_take_hit);
+            world
+                .commands()
+                .entity(entity)
+                .observe(mitigate_damage)
+                .observe(loose_life);
         });
 }
 
-// fn reset_affix<T>(mut characters: Query<&mut T, With<Character>>)
-// where
-//     T: Component + Default,
-// {
-//     for mut affix in &mut characters {
-//         *affix = T::default();
-//     }
-// }
-
-// fn update_more_affix<A, T>(
-//     affixes: Query<(&A, &Parent)>,
-//     mut characters: Query<&mut T, With<Character>>,
-// ) where
-//     A: Component + Deref,
-//     T: Component + DerefMut,
-//     <A as Deref>::Target: Copy,
-//     <T as Deref>::Target: std::ops::AddAssign<<A as Deref>::Target>,
-// {
-//     for (more_affix, parent) in &affixes {
-//         if let Ok(mut comp) = characters.get_mut(**parent) {
-//             **comp += **more_affix;
-//         }
-//     }
-// }
-
-fn trigger_take_hit(
-    hit_event: Trigger<HitEvent>,
+fn mitigate_damage(
+    trigger: Trigger<HitEvent>,
     mut commands: Commands,
-    mut characters: Query<&Armour, With<Character>>,
+    characters: Query<&Armour, With<Character>>,
 ) {
-    if let Ok(armour) = characters.get_mut(hit_event.entity()) {
-        let damage = armour.mitigate(hit_event.event().damage);
+    if let Ok(armour) = characters.get(trigger.entity()) {
+        let damage = armour.mitigate(trigger.event().damage);
         info!("trigger_take_hit: damage: {:.0}", *damage);
         if *damage > 0. {
-            commands.trigger_targets(LooseLifeEvent(damage), hit_event.entity());
+            commands.trigger_targets(LooseLifeEvent(damage), trigger.entity());
+        }
+    }
+}
+
+fn loose_life(
+    trigger: Trigger<LooseLifeEvent>,
+    mut commands: Commands,
+    mut characters: Query<&mut Life, With<Character>>,
+) {
+    if let Ok(mut life) = characters.get_mut(trigger.entity()) {
+        life.hit(**trigger.event());
+        if life.is_dead() {
+            commands.trigger_targets(CharacterDyingEvent, trigger.entity());
         }
     }
 }

@@ -194,6 +194,14 @@ pub struct HitEvent {
     pub damage: Damage,
 }
 
-/// Event to notify a character was hit
+/// Event to notify a character loose life
 #[derive(Event, Deref)]
 pub struct LooseLifeEvent(pub Damage);
+
+/// Event to notify a character is dying
+#[derive(Event)]
+pub struct CharacterDyingEvent;
+
+/// Event to notify a character has died
+#[derive(Event)]
+pub struct CharacterDiedEvent;

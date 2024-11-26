@@ -71,7 +71,8 @@ fn spawn_player(mut commands: Commands, assets: Res<PlayerAssets>) {
             // player.spawn(gun());
             player.spawn(shuriken_launcher());
         })
-        .observe(trigger_player_loose_life);
+        .observe(set_invulnerable_on_hit)
+        .observe(send_player_death_event);
 }
 
 fn pause(mut query: Query<(&mut Invulnerable, &mut Blink), With<Player>>) {
@@ -113,32 +114,30 @@ fn player_movement(
     }
 }
 
-///
-/// player loose life
-///
-fn trigger_player_loose_life(
-    loose_life_event: Trigger<LooseLifeEvent>,
+fn set_invulnerable_on_hit(
+    trigger: Trigger<LooseLifeEvent>,
     mut commands: Commands,
-    mut characters: Query<(&mut Life, &mut CollisionGroups), With<Player>>,
+    mut players: Query<&mut CollisionGroups, With<Player>>,
+) {
+    if let Ok(mut collision_groups) = players.get_mut(trigger.entity()) {
+        // Set player invulnerable
+        commands
+            .entity(trigger.entity())
+            .insert(Invulnerable::new(Duration::from_secs_f32(2.0), GROUP_ENEMY))
+            .insert(Blink::new(Duration::from_secs_f32(0.15)));
+
+        // To allow player to not collide with enemies
+        collision_groups.filters &= !GROUP_ENEMY;
+    }
+}
+
+fn send_player_death_event(
+    trigger: Trigger<CharacterDyingEvent>,
+    mut commands: Commands,
     mut send_death: EventWriter<PlayerDeathEvent>,
 ) {
-    let player_entity = loose_life_event.entity();
-    if let Ok((mut life, mut collision_groups)) = characters.get_mut(player_entity) {
-        life.hit(**loose_life_event.event());
-        if life.is_dead() {
-            commands.entity(player_entity).despawn();
-            send_death.send(PlayerDeathEvent);
-        } else {
-            // Set player invulnerable
-            commands
-                .entity(player_entity)
-                .insert(Invulnerable::new(Duration::from_secs_f32(2.0), GROUP_ENEMY))
-                .insert(Blink::new(Duration::from_secs_f32(0.15)));
-
-            // To allow player to not collide with enemies
-            collision_groups.filters &= !GROUP_ENEMY;
-        }
-    }
+    commands.trigger_targets(CharacterDiedEvent, trigger.entity());
+    send_death.send(PlayerDeathEvent);
 }
 
 ///
