@@ -1,7 +1,7 @@
 use super::*;
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
-use rand::{thread_rng, Rng};
+use rand::{rngs::ThreadRng, Rng};
 
 pub struct MonsterAssets {
     pub texture: Handle<Image>,
@@ -25,7 +25,7 @@ pub struct MonsterBundle {
     // skills
     skills: SkillsBundle,
     xp_on_death: XpOnDeath,
-    damage: Damage,
+    damage_range: DamageRange,
     // physics
     body: RigidBody,
     velocity: Velocity,
@@ -44,7 +44,7 @@ impl Default for MonsterBundle {
             animation_timer: AnimationTimer::default(),
             skills: SkillsBundle::default(),
             xp_on_death: XpOnDeath(1),
-            damage: Damage::default(),
+            damage_range: DamageRange(1. ..=2.),
             body: RigidBody::Dynamic,
             velocity: Velocity::zero(),
             collider: Collider::default(),
@@ -58,9 +58,13 @@ impl MonsterBundle {
     pub fn new(assets: &MonsterAssets, params: &MonsterSpawnParams) -> Self {
         let size = params.size();
         MonsterBundle {
-            skills: params.into(),
-            xp_on_death: params.into(),
-            damage: params.into(),
+            skills: SkillsBundle {
+                movement_speed: params.movement_speed(),
+                life: params.life(),
+                ..Default::default()
+            },
+            xp_on_death: params.xp(),
+            damage_range: params.damage_range(),
             sprite: SpriteBundle {
                 texture: assets.texture.clone(),
                 sprite: Sprite {
@@ -93,19 +97,21 @@ pub struct MonsterSpawnParams {
     pub pos: Vec2,
     pub rarity: MonsterRarity,
     pub kind: usize,
+    pub level: u16,
 }
 
 impl MonsterSpawnParams {
-    pub fn rand() -> Self {
-        let mut rng = thread_rng();
+    pub fn generate(level: u16, rng: &mut ThreadRng) -> Self {
         // Position
         let x: f32 = rng.gen_range(-150. ..150.);
         let y: f32 = rng.gen_range(-100. ..100.);
+
         // Rarity
         let rarity = match rng.gen_range(0..5) {
             0 => MonsterRarity::Rare,
             _ => MonsterRarity::Normal,
         };
+
         // Kind
         let kind = rand::thread_rng().gen_range(0..MONSTER_KIND_COUNT);
 
@@ -114,6 +120,7 @@ impl MonsterSpawnParams {
             pos: Vec2::new(x, y),
             kind,
             rarity,
+            level,
         }
     }
 
@@ -123,47 +130,46 @@ impl MonsterSpawnParams {
             MonsterRarity::Rare => Vec2::new(32.0, 32.0),
         }
     }
-}
 
-impl From<&MonsterSpawnParams> for SkillsBundle {
-    fn from(value: &MonsterSpawnParams) -> Self {
-        match value.rarity {
-            MonsterRarity::Normal => SkillsBundle {
-                movement_speed: MovementSpeedBundle::new(80.),
-                life: LifeBundle::new(2.),
-                ..Default::default()
-            },
-            MonsterRarity::Rare => SkillsBundle {
-                movement_speed: MovementSpeedBundle::new(70.),
-                life: LifeBundle::new(5.),
-                ..Default::default()
-            },
+    pub fn damage_range(&self) -> DamageRange {
+        let (min, max) = match self.rarity {
+            MonsterRarity::Normal => (1., 2.),
+            MonsterRarity::Rare => (2., 4.),
+        };
+        let multiplier = (self.level + 1) as f32;
+        let min = min * multiplier;
+        let max = max * multiplier;
+        DamageRange(min..=max)
+    }
+
+    pub fn xp(&self) -> XpOnDeath {
+        let xp = match self.rarity {
+            MonsterRarity::Normal => 1u32,
+            MonsterRarity::Rare => 3,
+        };
+        XpOnDeath(xp * self.level as u32)
+    }
+
+    pub fn movement_speed(&self) -> MovementSpeedBundle {
+        match self.rarity {
+            MonsterRarity::Normal => MovementSpeedBundle::new(90.),
+            MonsterRarity::Rare => MovementSpeedBundle::new(70.),
         }
+    }
+
+    pub fn life(&self) -> LifeBundle {
+        let life = match self.rarity {
+            MonsterRarity::Normal => 2.,
+            MonsterRarity::Rare => 5.,
+        };
+        // 5% increase life per level
+        let incr = self.level as f32 * 5.;
+        LifeBundle::new(life * (100. + incr) / 100.)
     }
 }
 
 #[derive(Component, Deref)]
 pub struct XpOnDeath(pub u32);
-
-impl From<&MonsterSpawnParams> for XpOnDeath {
-    fn from(value: &MonsterSpawnParams) -> Self {
-        let xp = match value.rarity {
-            MonsterRarity::Normal => 1,
-            MonsterRarity::Rare => 3,
-        };
-        XpOnDeath(xp)
-    }
-}
-
-impl From<&MonsterSpawnParams> for Damage {
-    fn from(value: &MonsterSpawnParams) -> Self {
-        let xp = match value.rarity {
-            MonsterRarity::Normal => 1.,
-            MonsterRarity::Rare => 3.,
-        };
-        Damage(xp)
-    }
-}
 
 #[derive(Resource)]
 pub struct MonsterSpawningConfig {

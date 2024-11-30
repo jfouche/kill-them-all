@@ -23,7 +23,7 @@ impl Plugin for DebugPlugin {
                 toggle_grab,
                 log_transitions::<GameState>,
                 log_transitions::<InGameState>,
-                display_collision_events.in_set(GameRunningSet::EntityUpdate),
+                // display_collision_events.in_set(GameRunningSet::EntityUpdate),
                 toggle_debug_ui.run_if(input_just_pressed(KeyCode::Backquote)),
             ),
         );

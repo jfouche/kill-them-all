@@ -83,7 +83,7 @@ pub struct Score(pub u16);
 ///
 /// A [Round] is fixed time period when monster spawn
 ///
-#[derive(Resource)]
+#[derive(Resource, Reflect)]
 pub struct Round {
     pub level: u16,
     pub timer: Timer,

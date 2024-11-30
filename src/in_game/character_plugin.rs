@@ -45,19 +45,20 @@ fn register_hooks(world: &mut World) {
             world
                 .commands()
                 .entity(entity)
-                .observe(mitigate_damage)
-                .observe(loose_life);
+                .observe(mitigate_damage_on_hit)
+                .observe(loose_life)
+                .observe(despawn_character_on_death);
         });
 }
 
-fn mitigate_damage(
+fn mitigate_damage_on_hit(
     trigger: Trigger<HitEvent>,
     mut commands: Commands,
     characters: Query<&Armour, With<Character>>,
 ) {
     if let Ok(armour) = characters.get(trigger.entity()) {
         let damage = armour.mitigate(trigger.event().damage);
-        info!("trigger_take_hit: damage: {:.0}", *damage);
+        info!("trigger_take_hit: damage: {:.1}", *damage);
         if *damage > 0. {
             commands.trigger_targets(LooseLifeEvent(damage), trigger.entity());
         }
@@ -70,11 +71,16 @@ fn loose_life(
     mut characters: Query<&mut Life, With<Character>>,
 ) {
     if let Ok(mut life) = characters.get_mut(trigger.entity()) {
+        info!("loose_life : {:.1} - {:.1}", **life, ***trigger.event());
         life.hit(**trigger.event());
         if life.is_dead() {
             commands.trigger_targets(CharacterDyingEvent, trigger.entity());
         }
     }
+}
+
+fn despawn_character_on_death(trigger: Trigger<CharacterDiedEvent>, mut commands: Commands) {
+    commands.entity(trigger.entity()).despawn_recursive();
 }
 
 /// [Armour] = sum([Armour]) + sum ([MoreArmour])

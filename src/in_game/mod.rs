@@ -9,7 +9,7 @@ mod round_plugin;
 mod weapons;
 mod world_map_plugin;
 
-use crate::components::{LifeTime, PlayerDeathEvent};
+use crate::components::{LifeTime, PlayerDeathEvent, Round};
 use crate::schedule::*;
 use crate::utils::blink::Blink;
 use crate::utils::cursor::*;
@@ -39,7 +39,8 @@ impl PluginGroup for InGamePluginsGroup {
 }
 
 fn in_game_schedule_plugin(app: &mut App) {
-    app.add_systems(Startup, stop_physics)
+    app.register_type::<Round>()
+        .add_systems(Startup, stop_physics)
         .add_systems(OnEnter(GameState::InGame), (run_game, grab_cursor))
         .add_systems(OnExit(GameState::InGame), (ungrab_cursor, reset_physics))
         .add_systems(OnEnter(InGameState::Running), (grab_cursor, start_physics))

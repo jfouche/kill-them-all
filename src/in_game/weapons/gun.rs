@@ -7,7 +7,6 @@ pub struct Gun;
 
 const BASE_ATTACK_SPEED: f32 = 1.2;
 
-// TODO: create a WeaponBundle for common weapon components
 pub fn gun() -> impl Bundle {
     (
         Gun,

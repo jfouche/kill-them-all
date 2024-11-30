@@ -4,6 +4,7 @@ use crate::utils::collision::*;
 use bevy::prelude::*;
 use bevy::utils::{HashMap, HashSet};
 use bevy_rapier2d::prelude::*;
+use rand::thread_rng;
 
 pub struct CollisionsPlugin;
 
@@ -75,17 +76,24 @@ fn monster_hit_by_ammo(
 fn player_touched_by_monster(
     mut commands: Commands,
     mut collisions: EventReader<CollisionEvent>,
-    q_monsters: Query<&Damage, With<Monster>>,
+    q_monsters: Query<&DamageRange, With<Monster>>,
     q_player: Query<(), With<Player>>,
 ) {
+    let mut rng = thread_rng();
     collisions
         .read()
         .filter_map(start_event_filter)
         .filter_map(|(&e1, &e2)| q_player.get_either(e1, e2))
-        .filter_map(|(_, player, other)| q_monsters.get(other).map(|damage| (player, damage)).ok())
-        .for_each(|(player, damage)| {
+        .filter_map(|(_, player, other)| {
+            q_monsters
+                .get(other)
+                .map(|damage_range| (player, damage_range))
+                .ok()
+        })
+        .for_each(|(player, damage_range)| {
             info!("player_touched_by_monster");
-            commands.trigger_targets(HitEvent { damage: *damage }, player);
+            let damage = damage_range.gen(&mut rng);
+            commands.trigger_targets(HitEvent { damage }, player);
         });
 }
 

@@ -203,5 +203,7 @@ pub struct LooseLifeEvent(pub Damage);
 pub struct CharacterDyingEvent;
 
 /// Event to notify a character has died
+///
+/// The entity will be despawn when receiving this event
 #[derive(Event)]
 pub struct CharacterDiedEvent;

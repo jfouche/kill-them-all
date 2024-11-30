@@ -73,12 +73,15 @@ fn monster_spawning_timer(
     mut commands: Commands,
     time: Res<Time>,
     mut config: ResMut<MonsterSpawningConfig>,
+    round: Res<Round>,
 ) {
     // tick the timer
     config.timer.tick(time.delta());
     if config.timer.finished() {
+        let mut rng = rand::thread_rng();
         for _ in 0..config.enemy_count {
-            commands.spawn(MonsterFuturePosBundle::new(MonsterSpawnParams::rand()));
+            let params = MonsterSpawnParams::generate(round.level, &mut rng);
+            commands.spawn(MonsterFuturePosBundle::new(params));
         }
         config.enemy_count += 1;
     }
