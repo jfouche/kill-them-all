@@ -1,7 +1,7 @@
-pub mod menu_level_up;
-pub mod menu_pause;
-pub mod menu_player_died;
-pub mod menu_round_end;
+mod menu_level_up;
+mod menu_pause;
+mod menu_player_died;
+mod menu_round_end;
 mod panel_characteristics;
 mod panel_inventory;
 
