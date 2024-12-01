@@ -1,3 +1,4 @@
+use super::inventory_panel::inventory_panel;
 use crate::components::*;
 use crate::in_game::back_to_game;
 use crate::schedule::*;
@@ -6,6 +7,10 @@ use bevy::prelude::*;
 
 #[derive(Component)]
 struct LevelUpMenu;
+
+fn level_up_menu_bundle() -> impl Bundle {
+    (LevelUpMenu, Name::new("LevelUpMenu"))
+}
 
 #[derive(Resource, Default)]
 struct LevelUpMenuNav(Vec<Entity>);
@@ -81,9 +86,22 @@ fn spawn_level_up_menu(mut commands: Commands) {
         commands.entity(**entity).insert(SelectedOption);
     }
 
+    let level_up_panel = commands
+        .spawn(NodeBundle {
+            style: Style {
+                flex_direction: FlexDirection::Column,
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .push_children(&level_up_nav)
+        .id();
+
+    let inventory_panel = commands.spawn(inventory_panel()).id();
+
     commands
-        .spawn_popup("Level up!", (LevelUpMenu, Name::new("LevelUpMenu")))
-        .push_children(&level_up_nav);
+        .spawn_popup("Level up!", level_up_menu_bundle())
+        .push_children(&[level_up_panel, inventory_panel]);
 
     commands.insert_resource(level_up_nav);
     commands.insert_resource(upgrade_list);

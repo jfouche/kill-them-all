@@ -126,6 +126,7 @@ fn item_affixes_panel() -> impl Bundle {
         )
         .with_style(Style {
             margin: UiRect::all(Val::Px(5.)),
+            width: Val::Px(180.),
             ..Default::default()
         }),
     )
