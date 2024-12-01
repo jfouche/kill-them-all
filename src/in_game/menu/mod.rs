@@ -1,27 +1,27 @@
-mod characteristics_panel;
-mod inventory_panel;
-pub mod level_up_menu;
-pub mod pause_menu;
-pub mod player_died_menu;
-pub mod round_end_menu;
+pub mod menu_level_up;
+pub mod menu_pause;
+pub mod menu_player_died;
+pub mod menu_round_end;
+mod panel_characteristics;
+mod panel_inventory;
 
 use super::{pause, unpause, InGameState};
 use crate::components::EquipmentAssets;
 use bevy::{app::PluginGroupBuilder, prelude::*};
-use characteristics_panel::characteristics_panel;
-use inventory_panel::inventory_panel;
+use panel_characteristics::characteristics_panel;
+use panel_inventory::inventory_panel;
 
 pub struct InGameMenuPluginsGroup;
 
 impl PluginGroup for InGameMenuPluginsGroup {
     fn build(self) -> PluginGroupBuilder {
         PluginGroupBuilder::start::<Self>()
-            .add(pause_menu::PausePlugin)
-            .add(level_up_menu::LevelUpMenuPlugin)
-            .add(player_died_menu::PlayerDiedMenuPlugin)
-            .add(round_end_menu::RoundEndMenuPlugin)
-            .add(inventory_panel::inventory_panel_plugin)
-            .add(characteristics_panel::CharacteristicsPanelPlugin)
+            .add(menu_pause::PausePlugin)
+            .add(menu_level_up::LevelUpMenuPlugin)
+            .add(menu_player_died::PlayerDiedMenuPlugin)
+            .add(menu_round_end::RoundEndMenuPlugin)
+            .add(panel_inventory::inventory_panel_plugin)
+            .add(panel_characteristics::CharacteristicsPanelPlugin)
             .add(menu_plugin)
     }
 }

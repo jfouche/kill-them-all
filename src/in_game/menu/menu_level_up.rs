@@ -1,4 +1,4 @@
-use super::inventory_panel::inventory_panel;
+use super::panel_inventory::inventory_panel;
 use crate::components::*;
 use crate::in_game::back_to_game;
 use crate::schedule::*;
