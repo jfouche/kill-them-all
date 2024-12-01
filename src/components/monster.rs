@@ -147,7 +147,7 @@ impl MonsterSpawnParams {
             MonsterRarity::Normal => 1u32,
             MonsterRarity::Rare => 3,
         };
-        XpOnDeath(xp * self.level as u32)
+        XpOnDeath(xp * (self.level + 1) as u32)
     }
 
     pub fn movement_speed(&self) -> MovementSpeedBundle {
