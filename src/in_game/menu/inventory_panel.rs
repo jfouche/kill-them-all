@@ -4,6 +4,21 @@ use bevy::prelude::*;
 #[derive(Component)]
 pub struct InventoryPanel;
 
+pub fn inventory_panel() -> impl Bundle {
+    (
+        InventoryPanel,
+        Name::new("InventoryPanel"),
+        NodeBundle {
+            style: Style {
+                flex_direction: FlexDirection::Row,
+                padding: UiRect::all(Val::Px(5.)),
+                ..Default::default()
+            },
+            ..Default::default()
+        },
+    )
+}
+
 #[derive(Component)]
 struct AffixesText;
 
@@ -42,18 +57,6 @@ impl EquipmentPos for Helmet {
     }
 }
 
-fn add_inventory_panel(mut commands: Commands, panels: Query<Entity, Added<InventoryPanel>>) {
-    for entity in &panels {
-        commands
-            .entity(entity)
-            .insert(main_panel_bundle())
-            .with_children(|panel| {
-                panel.spawn(items_panel_bundle());
-                panel.spawn(item_affixes_panel());
-            });
-    }
-}
-
 fn show_equipment<T>(
     mut commands: Commands,
     panels: Query<Entity, Added<EquipmentsPanel>>,
@@ -84,32 +87,17 @@ fn hover_equipment(
     equipments: Query<(&AffixesLabels, &Interaction)>,
     mut texts: Query<&mut Text, With<AffixesText>>,
 ) {
-    let Ok(mut text) = texts.get_single_mut() else {
-        return;
-    };
-    text.sections[0].value = "".into();
-    for (label, interaction) in &equipments {
-        if interaction == &Interaction::Hovered {
-            text.sections[0].value = label.to_string();
+    if let Ok(mut text) = texts.get_single_mut() {
+        text.sections[0].value = "".into();
+        for (label, interaction) in &equipments {
+            if interaction == &Interaction::Hovered {
+                text.sections[0].value = label.to_string();
+            }
         }
-    }
+    };
 }
 
-fn main_panel_bundle() -> impl Bundle {
-    (
-        Name::new("InventoryPanel"),
-        NodeBundle {
-            style: Style {
-                flex_direction: FlexDirection::Row,
-                padding: UiRect::all(Val::Px(5.)),
-                ..Default::default()
-            },
-            ..Default::default()
-        },
-    )
-}
-
-fn items_panel_bundle() -> impl Bundle {
+fn equipments_panel_bundle() -> impl Bundle {
     (
         EquipmentsPanel,
         Name::new("Equipments Panel"),
@@ -178,11 +166,21 @@ fn inventory_box(pos: Vec2, texture: Handle<Image>, atlas: TextureAtlas) -> impl
     )
 }
 
+fn setup_hooks(world: &mut World) {
+    world.register_component_hooks::<InventoryPanel>().on_add(
+        |mut world, entity, _component_id| {
+            world.commands().entity(entity).with_children(|panel| {
+                panel.spawn(equipments_panel_bundle());
+                panel.spawn(item_affixes_panel());
+            });
+        },
+    );
+}
+
 pub fn inventory_panel_plugin(app: &mut App) {
-    app.add_systems(
+    app.add_systems(Startup, setup_hooks).add_systems(
         Update,
         (
-            add_inventory_panel,
             show_equipment::<Amulet>,
             show_equipment::<BodyArmour>,
             show_equipment::<Boots>,

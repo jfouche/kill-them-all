@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 use crate::{schedule::*, utils::cursor::set_grab_cursor};
 use bevy::{
     dev_tools::{fps_overlay::*, states::log_transitions, ui_debug_overlay::*},
