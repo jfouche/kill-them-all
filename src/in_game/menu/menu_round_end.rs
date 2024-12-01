@@ -1,3 +1,4 @@
+use super::panel_inventory::inventory_panel;
 use crate::components::*;
 use crate::in_game::back_to_game;
 use crate::schedule::*;
@@ -72,9 +73,22 @@ fn spawn_round_end_menu(mut commands: Commands, assets: Res<EquipmentAssets>) {
         commands.entity(**entity).insert(SelectedOption);
     }
 
+    let level_up_panel = commands
+        .spawn(NodeBundle {
+            style: Style {
+                flex_direction: FlexDirection::Column,
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .push_children(&round_end_nav)
+        .id();
+
+    let inventory_panel = commands.spawn(inventory_panel()).id();
+
     commands
         .spawn_popup("End of round", (RoundEndMenu, Name::new("RoundEndMenu")))
-        .push_children(&round_end_nav);
+        .push_children(&[level_up_panel, inventory_panel]);
 
     commands.insert_resource(round_end_nav);
     commands.insert_resource(equipment_list);
