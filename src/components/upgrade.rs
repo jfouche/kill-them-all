@@ -14,14 +14,13 @@ struct UpgradeBundle<U: Component> {
 
 impl<U> UpgradeBundle<U>
 where
-    U: Component + std::fmt::Debug,
+    U: Component,
 {
     pub fn new(upgrade: U) -> Self {
-        let name = format!("{upgrade:?}");
         UpgradeBundle {
             tag: Upgrade,
             upgrade,
-            name: name.into(),
+            name: std::any::type_name::<U>().into(),
         }
     }
 }
@@ -68,9 +67,9 @@ impl UpgradeKind {
 
     fn spawn<U>(commands: &mut Commands, upgrade: U) -> UpgradeView
     where
-        U: Component + Clone + super::Label + std::fmt::Debug,
+        U: Component + Clone + std::fmt::Display,
     {
-        let label = upgrade.label();
+        let label = upgrade.to_string();
         let bundle = UpgradeBundle::new(upgrade);
         let entity = commands.spawn(bundle).id();
         UpgradeView { entity, label }

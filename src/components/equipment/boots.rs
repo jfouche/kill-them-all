@@ -44,17 +44,17 @@ impl Boots {
             match provider.gen(rng) {
                 Some(BootsAffixKind::AddArmour) => {
                     let affix = Armour(rng.gen_range(1. ..=3.));
-                    labels.push(affix.label());
+                    labels.push(affix.to_string());
                     boots_commands.insert(affix);
                 }
                 Some(BootsAffixKind::AddLife) => {
                     let affix = MoreLife(rng.gen_range(5. ..=10.));
-                    labels.push(affix.label());
+                    labels.push(affix.to_string());
                     boots_commands.insert(affix);
                 }
                 Some(BootsAffixKind::IncreaseMovementSpeed) => {
                     let affix = IncreaseMovementSpeed(rng.gen_range(5. ..=30.));
-                    labels.push(affix.label());
+                    labels.push(affix.to_string());
                     boots_commands.insert(affix);
                 }
                 None => {}

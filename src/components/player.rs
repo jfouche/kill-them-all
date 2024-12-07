@@ -129,9 +129,10 @@ impl Experience {
     }
 }
 
-impl super::Label for Experience {
-    fn label(&self) -> String {
-        format!(
+impl std::fmt::Display for Experience {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
             "{}/{} (level {})",
             self.0,
             self.get_current_level_min_max_exp().1,

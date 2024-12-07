@@ -43,9 +43,9 @@ pub fn despawn_all<T: Component>(to_despawn: Query<Entity, With<T>>, mut command
 #[derive(Component, Deref, DerefMut, Reflect)]
 pub struct Money(pub u16);
 
-impl Label for Money {
-    fn label(&self) -> String {
-        format!("{}", self.0)
+impl std::fmt::Display for Money {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
 
@@ -98,8 +98,4 @@ impl Default for Round {
             timer: Timer::from_seconds(15., TimerMode::Repeating),
         }
     }
-}
-
-pub trait Label {
-    fn label(&self) -> String;
 }
