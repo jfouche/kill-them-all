@@ -41,7 +41,7 @@ impl Default for PlayerBundle {
             transform: Transform::default(),
             animation_timer: AnimationTimer::default(),
             skills: SkillsBundle {
-                life: LifeBundle::new(10.),
+                life: BaseLife(10.),
                 movement_speed: BaseMovementSpeed(130.),
                 ..Default::default()
             },

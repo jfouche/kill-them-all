@@ -154,14 +154,14 @@ impl MonsterSpawnParams {
         }
     }
 
-    pub fn life(&self) -> LifeBundle {
+    pub fn life(&self) -> BaseLife {
         let life = match self.rarity {
             MonsterRarity::Normal => 2.,
             MonsterRarity::Rare => 5.,
         };
         // 5% increase life per level
         let incr = self.level as f32 * 5.;
-        LifeBundle::new(life * (100. + incr) / 100.)
+        BaseLife(life * (100. + incr) / 100.)
     }
 }
 

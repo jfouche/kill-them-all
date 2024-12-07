@@ -7,7 +7,7 @@ pub struct SkillsBundle {
     pub character: Character,
     pub armour: Armour,
     pub movement_speed: BaseMovementSpeed,
-    pub life: LifeBundle,
+    pub life: BaseLife,
     pub more_life: MoreLife,
     pub incr_life: IncreaseMaxLife,
     pub life_regen: LifeRegen,
@@ -67,39 +67,9 @@ pub struct MovementSpeed(pub f32);
 #[require(Life, MaxLife, LifeRegen)]
 pub struct BaseLife(pub f32);
 
-#[derive(Bundle, Default)]
-pub struct LifeBundle {
-    base: BaseLife,
-    current: Life,
-    max: MaxLife,
-}
-
-impl LifeBundle {
-    pub fn new(life: f32) -> Self {
-        LifeBundle {
-            base: BaseLife(life),
-            current: Life(life),
-            max: MaxLife(life),
-        }
-    }
-}
-
 /// Represent current life of a character
 #[derive(Component, Default, Deref, DerefMut, Clone, Copy, Debug, Reflect)]
 pub struct Life(pub f32);
-
-/// Represent the max life of a character
-///
-/// It's calculated with the [BaseLife], [crate::components::MoreLife]s
-/// and [crate::components::IncreaseMaxLife]s
-#[derive(Component, Default, Deref, DerefMut, Clone, Copy, Reflect)]
-pub struct MaxLife(pub f32);
-
-impl std::fmt::Display for MaxLife {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:.0} life", self.0)
-    }
-}
 
 impl Life {
     pub fn check(&mut self, max: MaxLife) {
@@ -122,6 +92,19 @@ impl Life {
 
     pub fn regenerate(&mut self, life: f32) {
         self.0 += life;
+    }
+}
+
+/// Represent the max life of a character
+///
+/// It's calculated with the [BaseLife], [crate::components::MoreLife]s
+/// and [crate::components::IncreaseMaxLife]s
+#[derive(Component, Default, Deref, DerefMut, Clone, Copy, Reflect)]
+pub struct MaxLife(pub f32);
+
+impl std::fmt::Display for MaxLife {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:.0} life", self.0)
     }
 }
 
