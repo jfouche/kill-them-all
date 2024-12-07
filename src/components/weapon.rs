@@ -63,9 +63,14 @@ impl DamageRange {
     }
 }
 
-#[derive(Component, Default, Deref, DerefMut, Reflect)]
+#[derive(Component, Deref, DerefMut, Reflect)]
 pub struct AttackTimer(pub Timer);
-// TODO: initiate AttackTimer OnAdd<BaseAttackSpeed> ?
+
+impl Default for AttackTimer {
+    fn default() -> Self {
+        AttackTimer(Timer::from_seconds(1., TimerMode::Repeating))
+    }
+}
 
 impl AttackTimer {
     pub fn new(attack_speed: f32) -> Self {
