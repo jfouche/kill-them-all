@@ -70,10 +70,10 @@ fn show_equipment<T>(
         for (tile_index, label, parent) in &equipments {
             if **parent == player {
                 commands.entity(panel).with_children(|p| {
-                    let pos = T::pos();
-                    let texture = assets.texture();
-                    let atlas = assets.atlas(**tile_index);
-                    p.spawn((inventory_box(pos, texture, atlas), label.clone()));
+                    p.spawn((
+                        inventory_box(T::pos(), assets.image_node(**tile_index)),
+                        label.clone(),
+                    ));
                 });
             }
         }
@@ -136,9 +136,9 @@ fn item_affixes_panel() -> impl Bundle {
 //     }
 // }
 
-fn inventory_box(pos: Vec2, texture: Handle<Image>, atlas: TextureAtlas) -> impl Bundle {
+fn inventory_box(pos: Vec2, image_node: ImageNode) -> impl Bundle {
     (
-        ImageNode::from_atlas_image(texture, atlas),
+        image_node,
         Node {
             position_type: PositionType::Absolute,
             left: Val::Px(pos.x),

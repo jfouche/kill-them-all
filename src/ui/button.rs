@@ -8,17 +8,32 @@ const PRESSED_BUTTON: Color = Color::srgb(0.35, 0.75, 0.35);
 
 const BUTTON_TEXT_COLOR: Color = Color::srgb(0.9, 0.9, 0.9);
 
-pub enum ButtonImage {
-    _Image(Handle<Image>),
-    ImageAtlas(Handle<Image>, TextureAtlas),
-}
+#[derive(Component)]
+#[require(
+    Button, 
+    Node(default_button_node),
+    BackgroundColor(|| BackgroundColor(NORMAL_BUTTON)), 
+    BorderColor(|| BorderColor(Color::BLACK))
+)]
+pub struct MyButton;
+
+
+#[derive(Component)]
+#[require(
+    Text,
+    TextFont(|| TextFont::from_font_size(18.)),
+    TextColor(|| TextColor(BUTTON_TEXT_COLOR)),
+    TextLayout(|| TextLayout::new_with_justify(JustifyText::Center))
+)]
+pub struct MyButtonText;
+
 
 pub trait SpawnButton {
     fn spawn_text_button(&mut self, label: impl Into<String>, bundle: impl Bundle) -> Entity;
 
     fn spawn_img_text_button(
         &mut self,
-        image: ButtonImage,
+        image: ImageNode,
         label: impl Into<String>,
         bundle: impl Bundle,
     ) -> Entity;
@@ -29,34 +44,32 @@ where
     T: SpawnImpl,
 {
     fn spawn_text_button(&mut self, label: impl Into<String>, bundle: impl Bundle) -> Entity {
-        self.spawn_impl((button_bundle(), bundle))
+        self.spawn_impl((MyButton, bundle))
             .with_children(|parent| {
-                parent.spawn(button_text(label));
+                parent.spawn((MyButtonText, Text(label.into())));
             })
             .id()
     }
 
     fn spawn_img_text_button(
         &mut self,
-        image: ButtonImage,
+        image: ImageNode,
         label: impl Into<String>,
         bundle: impl Bundle,
     ) -> Entity {
-        let mut button_bundle = button_bundle();
-        // button_bundle.style.height = Val::Auto;
-        self.spawn_impl((button_bundle, bundle))
-            .with_children(|parent| {
-                match image {
-                    ButtonImage::_Image(texture) => {
-                        parent.spawn(ImageNode::new(texture));
-                    }
-                    ButtonImage::ImageAtlas(texture, atlas) => {
-                        parent.spawn(ImageNode::from_atlas_image(texture, atlas));
-                    }
-                }
-                parent.spawn(button_text(label));
-            })
-            .id()
+        self.spawn_impl((
+            MyButton,
+            Node {
+                height: Val::Auto,
+                ..default_button_node()
+            },
+            bundle,
+        ))
+        .with_children(|parent| {
+            parent.spawn(image);
+            parent.spawn((MyButtonText, Text(label.into())));
+        })
+        .id()
     }
 }
 
@@ -73,26 +86,6 @@ fn default_button_node() -> Node {
         border: UiRect::all(Val::Px(1.0)),
         ..default()
     }
-}
-
-#[inline]
-pub fn button_bundle() -> impl Bundle {
-    (
-        Button,
-        default_button_node(),
-        BackgroundColor(NORMAL_BUTTON),
-        BorderColor(Color::BLACK),
-    )
-}
-
-#[inline]
-pub fn button_text(text: impl Into<String>) -> impl Bundle {
-    (
-        Text(text.into()),
-        TextFont::from_font_size(18.),
-        TextColor(BUTTON_TEXT_COLOR),
-        TextLayout::new_with_justify(JustifyText::Center),
-    )
 }
 
 pub trait ButtonNav<T> {

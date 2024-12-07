@@ -56,11 +56,8 @@ fn spawn_round_end_menu(mut commands: Commands, assets: Res<EquipmentAssets>) {
         if let Some(equipment) = equipment_provider.gen(&mut rng) {
             let equipment_entity = equipment.spawn(&mut commands, &mut rng);
             equipment_list.push(equipment_entity.entity);
-            let texture = assets.texture();
-            let atlas = assets.atlas(equipment_entity.tile_index);
-            let img = ButtonImage::ImageAtlas(texture, atlas);
             let entity = commands.spawn_img_text_button(
-                img,
+                assets.image_node(equipment_entity.tile_index),
                 equipment_entity.label,
                 EquipmentEntity(equipment_entity.entity),
             );

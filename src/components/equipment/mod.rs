@@ -43,15 +43,14 @@ impl EquipmentAssets {
         }
     }
 
-    pub fn texture(&self) -> Handle<Image> {
-        self.texture.clone()
-    }
-
-    pub fn atlas(&self, index: usize) -> TextureAtlas {
-        TextureAtlas {
-            layout: self.texture_atlas_layout.clone(),
-            index,
-        }
+    pub fn image_node(&self, index: usize) -> ImageNode {
+        ImageNode::from_atlas_image(
+            self.texture.clone(),
+            TextureAtlas {
+                layout: self.texture_atlas_layout.clone(),
+                index,
+            },
+        )
     }
 }
 
