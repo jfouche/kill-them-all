@@ -46,9 +46,6 @@ fn main() {
         ))
         // resources
         .init_resource::<components::Score>() // TODO: Move to plugin
-        // startup
-        .add_systems(Startup, init_rapier)
-        // systems
         ;
 
     #[cfg(feature = "dev")]
@@ -56,10 +53,4 @@ fn main() {
 
     // RUN
     app.run();
-}
-
-fn init_rapier(mut conf: Query<&mut RapierConfiguration>) {
-    if let Ok(mut conf) = conf.get_single_mut() {
-        conf.gravity = Vect::ZERO;
-    }
 }
