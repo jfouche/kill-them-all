@@ -19,8 +19,8 @@ pub struct MonsterBundle {
     tag: Monster,
     name: Name,
     // bevy view
-    sprite: SpriteBundle,
-    texture_atlas: TextureAtlas,
+    sprite: Sprite,
+    transform: Transform,
     animation_timer: AnimationTimer,
     // skills
     skills: SkillsBundle,
@@ -39,8 +39,8 @@ impl Default for MonsterBundle {
         MonsterBundle {
             tag: Monster,
             name: Name::new("Monster"),
-            sprite: SpriteBundle::default(),
-            texture_atlas: TextureAtlas::default(),
+            sprite: Sprite::default(),
+            transform: Transform::default(),
             animation_timer: AnimationTimer::default(),
             skills: SkillsBundle::default(),
             xp_on_death: XpOnDeath(1),
@@ -65,19 +65,16 @@ impl MonsterBundle {
             },
             xp_on_death: params.xp(),
             damage_range: params.damage_range(),
-            sprite: SpriteBundle {
-                texture: assets.texture.clone(),
-                sprite: Sprite {
-                    custom_size: Some(size),
-                    ..Default::default()
-                },
-                transform: Transform::from_xyz(params.pos.x, params.pos.y, 10.),
+            sprite: Sprite {
+                image: assets.texture.clone(),
+                texture_atlas: Some(TextureAtlas {
+                    layout: assets.texture_atlas_layout.clone(),
+                    index: 0,
+                }),
+                custom_size: Some(size),
                 ..Default::default()
             },
-            texture_atlas: TextureAtlas {
-                layout: assets.texture_atlas_layout.clone(),
-                ..Default::default()
-            },
+            transform: Transform::from_xyz(params.pos.x, params.pos.y, 10.),
             collider: Collider::cuboid(size.x / 2., size.y / 2.),
             ..Default::default()
         }
@@ -150,10 +147,10 @@ impl MonsterSpawnParams {
         XpOnDeath(xp * (self.level + 1) as u32)
     }
 
-    pub fn movement_speed(&self) -> MovementSpeedBundle {
+    pub fn movement_speed(&self) -> BaseMovementSpeed {
         match self.rarity {
-            MonsterRarity::Normal => MovementSpeedBundle::new(90.),
-            MonsterRarity::Rare => MovementSpeedBundle::new(70.),
+            MonsterRarity::Normal => BaseMovementSpeed(90.),
+            MonsterRarity::Rare => BaseMovementSpeed(70.),
         }
     }
 
@@ -208,7 +205,8 @@ pub struct MonsterFuturePos;
 pub struct MonsterFuturePosBundle {
     tag: MonsterFuturePos,
     name: Name,
-    sprite: SpriteBundle,
+    sprite: Sprite,
+    transform: Transform,
     config: MonsterSpawnConfig,
 }
 
@@ -217,15 +215,12 @@ impl MonsterFuturePosBundle {
         MonsterFuturePosBundle {
             tag: MonsterFuturePos,
             name: Name::new("MonsterFuturePos"),
-            sprite: SpriteBundle {
-                sprite: Sprite {
-                    color: Color::srgba(0.8, 0.3, 0.3, 0.2),
-                    custom_size: Some(params.size()),
-                    ..Default::default()
-                },
-                transform: Transform::from_xyz(params.pos.x, params.pos.y, 1.),
+            sprite: Sprite {
+                color: Color::srgba(0.8, 0.3, 0.3, 0.2),
+                custom_size: Some(params.size()),
                 ..Default::default()
             },
+            transform: Transform::from_xyz(params.pos.x, params.pos.y, 1.),
             config: MonsterSpawnConfig::new(params),
         }
     }

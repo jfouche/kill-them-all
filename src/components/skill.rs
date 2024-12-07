@@ -2,15 +2,11 @@ use super::*;
 use bevy::prelude::*;
 use rand::Rng;
 
-// TODO: move to character module ?
-#[derive(Component, Default)]
-pub struct Character;
-
 #[derive(Bundle, Default)]
 pub struct SkillsBundle {
     pub character: Character,
     pub armour: Armour,
-    pub movement_speed: MovementSpeedBundle,
+    pub movement_speed: BaseMovementSpeed,
     pub life: LifeBundle,
     pub more_life: MoreLife,
     pub incr_life: IncreaseMaxLife,
@@ -44,37 +40,26 @@ impl Armour {
 // ==================================================================
 // MovementSpeed
 
-#[derive(Bundle, Default)]
-pub struct MovementSpeedBundle {
-    base: BaseMovementSpeed,
-    current: MovementSpeed,
-    incr: IncreaseMovementSpeed,
-}
-
-impl MovementSpeedBundle {
-    pub fn new(base: f32) -> Self {
-        MovementSpeedBundle {
-            base: BaseMovementSpeed(base),
-            current: MovementSpeed(base),
-            incr: IncreaseMovementSpeed(0.),
-        }
-    }
-}
-
 #[derive(Component, Default, Deref, Reflect)]
-pub struct BaseMovementSpeed(f32);
+#[require(MovementSpeed, IncreaseMovementSpeed)]
+pub struct BaseMovementSpeed(pub f32);
 
 #[derive(Component, Default, Deref, DerefMut, Reflect)]
 pub struct MovementSpeed(pub f32);
 
-impl super::Label for MovementSpeed {
-    fn label(&self) -> String {
-        format!("Add {:.0}% movement speed", self.0)
-    }
-}
+// impl super::Label for MovementSpeed {
+//     fn label(&self) -> String {
+//         format!("Add {:.0}% movement speed", self.0)
+//     }
+// }
 
 // ==================================================================
 // Life
+
+/// Represent the initial life of a character
+#[derive(Component, Default, Deref, Clone, Copy, Reflect)]
+#[require(Life, MaxLife, LifeRegen)]
+pub struct BaseLife(pub f32);
 
 #[derive(Bundle, Default)]
 pub struct LifeBundle {
@@ -92,10 +77,6 @@ impl LifeBundle {
         }
     }
 }
-
-/// Represent the initial life of a character
-#[derive(Component, Default, Deref, Clone, Copy, Reflect)]
-pub struct BaseLife(pub f32);
 
 /// Represent current life of a character
 #[derive(Component, Default, Deref, DerefMut, Clone, Copy, Debug, Reflect)]

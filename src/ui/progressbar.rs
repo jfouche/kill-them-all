@@ -6,7 +6,7 @@ pub fn progressbar_plugin(app: &mut App) {
     app.add_systems(Update, (create_progress_bars, update_progress_bars));
 }
 
-/// The [ProgressBar] component should be nested with a [bevy::ui::node_bundles::NodeBundle]
+/// The [ProgressBar] component should be nested with a [bevy::ui::Node]
 // TODO: use bundle
 #[derive(Debug, Clone, Component)]
 pub struct ProgressBar {
@@ -90,23 +90,20 @@ fn create_progress_bars(
         commands.entity(entity).with_children(|parent| {
             // foreground
             parent.spawn((
-                NodeBundle {
-                    style: Style {
-                        width: Val::Percent(0.0),
-                        height: Val::Percent(100.0),
-                        ..default()
-                    },
-                    background_color: data.foreground.into(),
+                Node {
+                    width: Val::Percent(0.0),
+                    height: Val::Percent(100.0),
                     ..default()
                 },
+                BackgroundColor(data.foreground),
                 ProgressBarForeground::new(data),
             ));
         });
     }
 }
 
-fn update_progress_bars(mut child_query: Query<(&ProgressBarForeground, &mut Style)>) {
-    for (data, mut style) in child_query.iter_mut() {
-        style.width = Val::Percent(100.0 * data.percent());
+fn update_progress_bars(mut child_query: Query<(&ProgressBarForeground, &mut Node)>) {
+    for (data, mut node) in child_query.iter_mut() {
+        node.width = Val::Percent(100.0 * data.percent());
     }
 }

@@ -43,24 +43,15 @@ where
         bundle: impl Bundle,
     ) -> Entity {
         let mut button_bundle = button_bundle();
-        button_bundle.style.height = Val::Auto;
+        // button_bundle.style.height = Val::Auto;
         self.spawn_impl((button_bundle, bundle))
             .with_children(|parent| {
                 match image {
                     ButtonImage::_Image(texture) => {
-                        parent.spawn(ImageBundle {
-                            image: UiImage::new(texture),
-                            ..Default::default()
-                        });
+                        parent.spawn(ImageNode::new(texture));
                     }
                     ButtonImage::ImageAtlas(texture, atlas) => {
-                        parent.spawn((
-                            ImageBundle {
-                                image: UiImage::new(texture),
-                                ..Default::default()
-                            },
-                            atlas,
-                        ));
+                        parent.spawn(ImageNode::from_atlas_image(texture, atlas));
                     }
                 }
                 parent.spawn(button_text(label));
@@ -70,42 +61,32 @@ where
 }
 
 #[inline]
-pub fn button_bundle() -> ButtonBundle {
-    ButtonBundle {
-        style: button_style(),
-        background_color: NORMAL_BUTTON.into(),
-        border_color: Color::BLACK.into(),
-        ..default()
-    }
+pub fn button_bundle() -> impl Bundle {
+    (
+        Node {
+            width: Val::Px(180.0),
+            height: Val::Px(50.0),
+            margin: UiRect::all(Val::Px(10.0)),
+            padding: UiRect::all(Val::Px(2.0)),
+            flex_direction: FlexDirection::Column,
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Center,
+            border: UiRect::all(Val::Px(1.0)),
+            ..default()
+        },
+        BackgroundColor(NORMAL_BUTTON),
+        BorderColor(Color::BLACK),
+    )
 }
 
 #[inline]
-pub fn button_style() -> Style {
-    Style {
-        width: Val::Px(180.0),
-        height: Val::Px(50.0),
-        margin: UiRect::all(Val::Px(10.0)),
-        padding: UiRect::all(Val::Px(2.0)),
-        flex_direction: FlexDirection::Column,
-        justify_content: JustifyContent::Center,
-        align_items: AlignItems::Center,
-        border: UiRect::all(Val::Px(1.0)),
-        ..default()
-    }
-}
-
-#[inline]
-pub fn button_text_style() -> TextStyle {
-    TextStyle {
-        font_size: 18.0,
-        color: BUTTON_TEXT_COLOR,
-        ..default()
-    }
-}
-
-#[inline]
-pub fn button_text(text: impl Into<String>) -> TextBundle {
-    TextBundle::from_section(text, button_text_style()).with_text_justify(JustifyText::Center)
+pub fn button_text(text: impl Into<String>) -> impl Bundle {
+    (
+        Text(text.into()),
+        TextFont::from_font_size(18.),
+        TextColor(BUTTON_TEXT_COLOR),
+        TextLayout::new_with_justify(JustifyText::Center),
+    )
 }
 
 pub trait ButtonNav<T> {

@@ -30,7 +30,11 @@ fn spawn_bonus(
     let mut rng = thread_rng();
     for event in monster_death_events.read() {
         if rng.gen_range(0..100) < 20 {
-            commands.spawn(BonusBundle::new(event.pos, &assets));
+            commands.spawn((
+                Bonus,
+                Bonus::sprite(&assets),
+                Transform::from_translation(event.pos),
+            ));
         }
     }
 }

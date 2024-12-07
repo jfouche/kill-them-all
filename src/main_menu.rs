@@ -46,7 +46,7 @@ fn spawn_menu(mut commands: Commands) {
 
     commands
         .spawn_popup("Kill'em all", (MainMenu, Name::new("MainMenu")))
-        .push_children(&menu_nav);
+        .add_children(&menu_nav);
 
     commands.insert_resource(menu_nav);
 }

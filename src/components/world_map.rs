@@ -48,7 +48,7 @@ pub struct WorldMapColliderBundle {
     tag: WorldMapCollider,
     name: Name,
     collider: Collider,
-    transform: TransformBundle,
+    transform: Transform,
 }
 
 impl Default for WorldMapColliderBundle {
@@ -57,7 +57,7 @@ impl Default for WorldMapColliderBundle {
             tag: WorldMapCollider,
             name: Name::new("WorldMapCollider"),
             collider: Collider::default(),
-            transform: TransformBundle::default(),
+            transform: Transform::default(),
         }
     }
 }
@@ -161,28 +161,28 @@ impl WorldMapBuilder {
         // TOP
         child_builder.spawn(WorldMapColliderBundle {
             collider: Collider::cuboid(half_w, COLLIDER_HALF_WIDTH),
-            transform: TransformBundle::from_transform(Transform::from_xyz(x_center, top, 0.)),
+            transform: Transform::from_xyz(x_center, top, 0.),
             ..Default::default()
         });
 
         // BOTTOM
         child_builder.spawn(WorldMapColliderBundle {
             collider: Collider::cuboid(half_w, COLLIDER_HALF_WIDTH),
-            transform: TransformBundle::from_transform(Transform::from_xyz(x_center, bottom, 0.)),
+            transform: Transform::from_xyz(x_center, bottom, 0.),
             ..Default::default()
         });
 
         // LEFT
         child_builder.spawn(WorldMapColliderBundle {
             collider: Collider::cuboid(COLLIDER_HALF_WIDTH, half_h),
-            transform: TransformBundle::from_transform(Transform::from_xyz(left, y_center, 0.)),
+            transform: Transform::from_xyz(left, y_center, 0.),
             ..Default::default()
         });
 
         // RIGHT
         child_builder.spawn(WorldMapColliderBundle {
             collider: Collider::cuboid(COLLIDER_HALF_WIDTH, half_h),
-            transform: TransformBundle::from_transform(Transform::from_xyz(right, y_center, 0.)),
+            transform: Transform::from_xyz(right, y_center, 0.),
             ..Default::default()
         });
     }

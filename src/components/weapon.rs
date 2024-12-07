@@ -3,7 +3,8 @@ use bevy::prelude::*;
 use rand::{rngs::ThreadRng, Rng};
 use std::{ops::RangeInclusive, time::Duration};
 
-#[derive(Component)]
+#[derive(Component, Default)]
+#[require(DamageRange(||DamageRange(1. ..=2.)), BaseAttackSpeed, AttackTimer)]
 pub struct Weapon;
 
 #[derive(Bundle)]
@@ -37,7 +38,8 @@ impl std::ops::Sub<f32> for Damage {
 }
 
 /// Attack per second
-#[derive(Component, Clone, Copy, Deref, Reflect)]
+#[derive(Component, Default, Clone, Copy, Deref, Reflect)]
+#[require(AttackTimer)]
 pub struct BaseAttackSpeed(pub f32);
 
 impl std::ops::Mul<&IncreaseAttackSpeed> for &BaseAttackSpeed {
@@ -61,8 +63,9 @@ impl DamageRange {
     }
 }
 
-#[derive(Component, Deref, DerefMut, Reflect)]
+#[derive(Component, Default, Deref, DerefMut, Reflect)]
 pub struct AttackTimer(pub Timer);
+// TODO: initiate AttackTimer OnAdd<BaseAttackSpeed> ?
 
 impl AttackTimer {
     pub fn new(attack_speed: f32) -> Self {
@@ -74,7 +77,8 @@ impl AttackTimer {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Default)]
+#[require(Damage, PierceChance, Velocity, Collider)]
 pub struct Ammo;
 
 #[derive(Bundle, Default)]

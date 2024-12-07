@@ -30,6 +30,7 @@ bevy = { version = "0.15", default-features = false, features = [
     "bevy_state",
     "bevy_text",
     "bevy_ui",
+    "bevy_window",
     "bevy_winit",
     "multi_threaded",
     "default_font",

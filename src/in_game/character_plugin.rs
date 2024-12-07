@@ -219,7 +219,7 @@ fn update_pierce_chance(
 fn regen_life(mut query: Query<(&mut Life, &MaxLife, &LifeRegen)>, time: Res<Time>) {
     for (mut life, max_life, regen) in &mut query {
         let life_per_sec = **max_life * (**regen / 100.);
-        life.regenerate(life_per_sec * time.delta_seconds());
+        life.regenerate(life_per_sec * time.delta_secs());
         life.check(*max_life);
     }
 }

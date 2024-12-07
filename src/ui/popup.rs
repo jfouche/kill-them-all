@@ -21,47 +21,39 @@ where
 }
 
 #[inline]
-fn popup() -> NodeBundle {
-    let vsizer = vsizer();
-    NodeBundle {
-        background_color: Color::srgb(0.25, 0.25, 0.25).into(),
-        border_color: Color::BLACK.into(),
-        style: Style {
+fn popup() -> impl Bundle {
+    (
+        BackgroundColor(Color::srgb(0.25, 0.25, 0.25)),
+        BorderColor(Color::BLACK),
+        Node {
             border: UiRect::all(Val::Px(2.0)),
             width: Val::Percent(40.0),
             margin: UiRect::all(Val::Auto),
             padding: UiRect::bottom(Val::Px(7.0)),
-            ..vsizer.style
+            ..vsizer()
         },
-        ..vsizer
-    }
+    )
 }
 
 #[inline]
 fn popup_title_bar() -> impl Bundle {
     (
         Name::new("Title"),
-        NodeBundle {
-            background_color: Color::srgb(0.1, 0.1, 0.1).into(),
-            style: Style {
-                width: Val::Percent(100.0),
-                justify_content: JustifyContent::Center,
-                ..Default::default()
-            },
+        BackgroundColor(Color::srgb(0.1, 0.1, 0.1)),
+        Node {
+            width: Val::Percent(100.0),
+            justify_content: JustifyContent::Center,
             ..Default::default()
         },
     )
 }
 
 #[inline]
-fn popup_title(title: impl Into<String>) -> TextBundle {
-    TextBundle::from_section(
-        title.into(),
-        TextStyle {
-            font_size: 32.0,
-            color: Color::srgb(0.72, 0.72, 0.72),
-            ..default()
-        },
+fn popup_title(title: impl Into<String>) -> impl Bundle {
+    (
+        Text(title.into()),
+        TextFont::from_font_size(32.),
+        TextColor(Color::srgb(0.72, 0.72, 0.72)),
     )
 }
 

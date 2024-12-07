@@ -49,13 +49,10 @@ impl SpawnImpl for ChildBuilder<'_> {
 // }
 
 #[inline]
-pub fn vsizer() -> NodeBundle {
-    NodeBundle {
-        style: Style {
-            flex_direction: FlexDirection::Column,
-            align_items: AlignItems::Center,
-            ..default()
-        },
+pub fn vsizer() -> Node {
+    Node {
+        flex_direction: FlexDirection::Column,
+        align_items: AlignItems::Center,
         ..default()
     }
 }

@@ -15,8 +15,8 @@ pub struct PlayerBundle {
     money: Money,
     xp: Experience,
     // bevy view
-    sprite: SpriteBundle,
-    texture_atlas: TextureAtlas,
+    sprite: Sprite,
+    transform: Transform,
     animation_timer: AnimationTimer,
     // skills
     skills: SkillsBundle,
@@ -37,12 +37,12 @@ impl Default for PlayerBundle {
             // equipments: Equipments::default(),
             money: Money(0),
             xp: Experience::default(),
-            sprite: SpriteBundle::default(),
-            texture_atlas: TextureAtlas::default(),
+            sprite: Sprite::default(),
+            transform: Transform::default(),
             animation_timer: AnimationTimer::default(),
             skills: SkillsBundle {
                 life: LifeBundle::new(10.),
-                movement_speed: MovementSpeedBundle::new(130.),
+                movement_speed: BaseMovementSpeed(130.),
                 ..Default::default()
             },
             body: RigidBody::Dynamic,
@@ -58,19 +58,13 @@ impl Default for PlayerBundle {
 impl PlayerBundle {
     pub fn from_assets(assets: &PlayerAssets) -> Self {
         PlayerBundle {
-            sprite: SpriteBundle {
-                texture: assets.texture.clone(),
-                sprite: Sprite {
-                    custom_size: Some(PLAYER_SIZE),
-                    ..Default::default()
-                },
-                transform: Transform::from_xyz(0., 0., 10.),
+            sprite: Sprite {
+                image: assets.texture.clone(),
+                texture_atlas: Some(assets.texture_atlas_layout.clone().into()),
+                custom_size: Some(PLAYER_SIZE),
                 ..Default::default()
             },
-            texture_atlas: TextureAtlas {
-                layout: assets.texture_atlas_layout.clone(),
-                ..Default::default()
-            },
+            transform: Transform::from_xyz(0., 0., 10.),
             ..Default::default()
         }
     }

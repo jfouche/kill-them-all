@@ -159,21 +159,23 @@ fn increment_score(_trigger: Trigger<CharacterDiedEvent>, mut score: ResMut<Scor
 ///
 fn animate_sprite(
     time: Res<Time>,
-    mut q_monster: Query<(&Velocity, &mut AnimationTimer, &mut TextureAtlas), With<Monster>>,
+    mut q_monster: Query<(&Velocity, &mut AnimationTimer, &mut Sprite), With<Monster>>,
 ) {
-    for (&velocity, mut timer, mut atlas) in q_monster.iter_mut() {
+    for (&velocity, mut timer, mut sprite) in q_monster.iter_mut() {
         timer.tick(time.delta());
         if timer.just_finished() {
-            atlas.index = if velocity == Velocity::zero() {
-                0
-            } else {
-                match atlas.index {
-                    0 => 4,
-                    4 => 8,
-                    8 => 12,
-                    12 => 0,
-                    _ => 0,
-                }
+            if let Some(atlas) = &mut sprite.texture_atlas {
+                atlas.index = if velocity == Velocity::zero() {
+                    0
+                } else {
+                    match atlas.index {
+                        0 => 4,
+                        4 => 8,
+                        8 => 12,
+                        12 => 0,
+                        _ => 0,
+                    }
+                };
             }
         }
     }

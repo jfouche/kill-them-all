@@ -5,11 +5,8 @@ pub fn characteristics_panel() -> impl Bundle {
     (
         CharacteristicsPanel,
         Name::new("CharacteristicsPanel"),
-        NodeBundle {
-            style: Style {
-                flex_direction: FlexDirection::Column,
-                ..Default::default()
-            },
+        Node {
+            flex_direction: FlexDirection::Column,
             ..Default::default()
         },
     )
@@ -138,40 +135,41 @@ fn setup_hooks(world: &mut World) {
 
 fn spawn_skill(panel: &mut ChildBuilder, label: impl Into<String>, component: impl Bundle) {
     const MARGIN: Val = Val::Px(12.);
-    let text_style = TextStyle {
-        font_size: 12.0,
-        color: Color::WHITE,
-        ..Default::default()
-    };
+
+    let text_font = TextFont::from_font_size(12.);
+    let text_color = TextColor(Color::WHITE);
+
     panel
-        .spawn(NodeBundle {
-            style: Style {
-                width: Val::Percent(100.),
-                height: Val::Percent(100.),
-                flex_direction: FlexDirection::Row,
-                padding: UiRect::all(Val::Px(2.0)),
-                column_gap: MARGIN,
-                ..Default::default()
-            },
+        .spawn(Node {
+            width: Val::Percent(100.),
+            height: Val::Percent(100.),
+            flex_direction: FlexDirection::Row,
+            padding: UiRect::all(Val::Px(2.0)),
+            column_gap: MARGIN,
             ..Default::default()
         })
         .with_children(|row| {
             // Label
-            row.spawn(
-                TextBundle::from_section(label, text_style.clone())
-                    .with_text_justify(JustifyText::Right)
-                    .with_style(Style {
-                        width: Val::Percent(50.0),
-                        ..default()
-                    }),
-            );
+            row.spawn((
+                Text(label.into()),
+                text_font.clone(),
+                text_color,
+                TextLayout::new_with_justify(JustifyText::Center),
+                Node {
+                    width: Val::Percent(50.0),
+                    ..default()
+                },
+            ));
             // Value
             row.spawn((
                 component,
-                TextBundle::from_section("", text_style).with_style(Style {
+                Text("".into()),
+                text_font,
+                text_color,
+                Node {
                     width: Val::Percent(50.0),
                     ..default()
-                }),
+                },
             ));
         });
 }
@@ -185,7 +183,7 @@ fn update_skill<T: Skill + Component>(
 ) {
     if let Ok(mut text) = q_text.get_single_mut() {
         if let Ok(component) = q_player.get_single() {
-            text.sections[0].value = T::format(component);
+            text.0 = T::format(component);
         }
     }
 }

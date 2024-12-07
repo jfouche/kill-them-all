@@ -87,21 +87,18 @@ fn spawn_level_up_menu(mut commands: Commands) {
     }
 
     let level_up_panel = commands
-        .spawn(NodeBundle {
-            style: Style {
-                flex_direction: FlexDirection::Column,
-                ..Default::default()
-            },
+        .spawn(Node {
+            flex_direction: FlexDirection::Column,
             ..Default::default()
         })
-        .push_children(&level_up_nav)
+        .add_children(&level_up_nav)
         .id();
 
     let inventory_panel = commands.spawn(inventory_panel()).id();
 
     commands
         .spawn_popup("Level up!", level_up_menu_bundle())
-        .push_children(&[level_up_panel, inventory_panel]);
+        .add_children(&[level_up_panel, inventory_panel]);
 
     commands.insert_resource(level_up_nav);
     commands.insert_resource(upgrade_list);

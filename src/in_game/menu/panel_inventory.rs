@@ -8,12 +8,9 @@ pub fn inventory_panel() -> impl Bundle {
     (
         InventoryPanel,
         Name::new("InventoryPanel"),
-        NodeBundle {
-            style: Style {
-                flex_direction: FlexDirection::Row,
-                padding: UiRect::all(Val::Px(5.)),
-                ..Default::default()
-            },
+        Node {
+            flex_direction: FlexDirection::Row,
+            padding: UiRect::all(Val::Px(5.)),
             ..Default::default()
         },
     )
@@ -88,10 +85,10 @@ fn hover_equipment(
     mut texts: Query<&mut Text, With<AffixesText>>,
 ) {
     if let Ok(mut text) = texts.get_single_mut() {
-        text.sections[0].value = "".into();
+        *text = "".into();
         for (label, interaction) in &equipments {
             if interaction == &Interaction::Hovered {
-                text.sections[0].value = label.to_string();
+                *text = label.to_string().into();
             }
         }
     };
@@ -101,15 +98,12 @@ fn equipments_panel_bundle() -> impl Bundle {
     (
         EquipmentsPanel,
         Name::new("Equipments Panel"),
-        NodeBundle {
-            style: Style {
-                width: Val::Px(200.),
-                height: Val::Px(200.),
-                ..Default::default()
-            },
-            background_color: Srgba::rgb_u8(40, 40, 40).into(),
+        Node {
+            width: Val::Px(200.),
+            height: Val::Px(200.),
             ..Default::default()
         },
+        BackgroundColor(Srgba::rgb_u8(40, 40, 40).into()),
     )
 }
 
@@ -117,18 +111,13 @@ fn item_affixes_panel() -> impl Bundle {
     (
         AffixesText,
         Name::new("Affixes"),
-        TextBundle::from_section(
-            "",
-            TextStyle {
-                font_size: 16.,
-                ..Default::default()
-            },
-        )
-        .with_style(Style {
+        Text("".into()),
+        TextFont::from_font_size(16.),
+        Node {
             margin: UiRect::all(Val::Px(5.)),
             width: Val::Px(180.),
             ..Default::default()
-        }),
+        },
     )
 }
 
@@ -149,20 +138,16 @@ fn item_affixes_panel() -> impl Bundle {
 
 fn inventory_box(pos: Vec2, texture: Handle<Image>, atlas: TextureAtlas) -> impl Bundle {
     (
-        ImageBundle {
-            image: UiImage::new(texture),
-            style: Style {
-                position_type: PositionType::Absolute,
-                left: Val::Px(pos.x),
-                top: Val::Px(pos.y),
-                width: Val::Px(48.),
-                height: Val::Px(48.),
-                ..Default::default()
-            },
-            background_color: Srgba::rgb_u8(70, 70, 70).into(),
+        ImageNode::from_atlas_image(texture, atlas),
+        Node {
+            position_type: PositionType::Absolute,
+            left: Val::Px(pos.x),
+            top: Val::Px(pos.y),
+            width: Val::Px(48.),
+            height: Val::Px(48.),
             ..Default::default()
         },
-        atlas,
+        BackgroundColor(Srgba::rgb_u8(70, 70, 70).into()),
         Interaction::None,
     )
 }

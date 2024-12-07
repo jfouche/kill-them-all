@@ -24,12 +24,9 @@ fn spawn_pause_menu(mut commands: Commands) {
         .spawn_popup("Pause", (PauseMenu, Name::new("PauseMenu")))
         .with_children(|popup| {
             popup
-                .spawn(NodeBundle {
-                    style: Style {
-                        flex_direction: FlexDirection::Column,
-                        width: Val::Percent(95.),
-                        ..Default::default()
-                    },
+                .spawn(Node {
+                    flex_direction: FlexDirection::Column,
+                    width: Val::Percent(95.),
                     ..Default::default()
                 })
                 .with_children(|flex| {

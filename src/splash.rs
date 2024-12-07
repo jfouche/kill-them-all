@@ -26,37 +26,26 @@ fn spawn_splash_screen(mut commands: Commands) {
         .spawn((
             SplashScreen,
             Name::new("SplashScreen"),
-            NodeBundle {
-                style: Style {
-                    align_items: AlignItems::Center,
-                    justify_content: JustifyContent::Center,
-                    flex_direction: FlexDirection::Column,
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(100.0),
-                    ..default()
-                },
+            Node {
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::Center,
+                flex_direction: FlexDirection::Column,
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
                 ..default()
             },
         ))
         .with_children(|parent| {
-            parent.spawn(TextBundle::from_section(
-                "Kill'em all",
-                TextStyle {
-                    font_size: 80.0,
-                    color: Color::WHITE,
-                    ..Default::default()
-                },
+            parent.spawn((
+                Text("Kill'em all".into()),
+                TextFont::from_font_size(80.),
+                TextColor(Color::WHITE),
             ));
             parent.spawn((
                 SplashScreenMessage,
-                TextBundle::from_section(
-                    "Press any key to continue",
-                    TextStyle {
-                        font_size: 16.0,
-                        color: Color::BLACK,
-                        ..Default::default()
-                    },
-                ),
+                Text("Press any key to continue".into()),
+                TextFont::from_font_size(16.),
+                TextColor(Color::BLACK),
             ));
         });
 }

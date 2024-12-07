@@ -101,14 +101,18 @@ fn unpause(
     }
 }
 
-fn start_physics(mut physics: ResMut<RapierConfiguration>) {
-    physics.physics_pipeline_active = true;
-    physics.query_pipeline_active = true;
+fn start_physics(mut physics: Query<&mut RapierConfiguration>) {
+    if let Ok(mut physics) = physics.get_single_mut() {
+        physics.physics_pipeline_active = true;
+        physics.query_pipeline_active = true;
+    }
 }
 
-fn stop_physics(mut physics: ResMut<RapierConfiguration>) {
-    physics.physics_pipeline_active = false;
-    physics.query_pipeline_active = false;
+fn stop_physics(mut physics: Query<&mut RapierConfiguration>) {
+    if let Ok(mut physics) = physics.get_single_mut() {
+        physics.physics_pipeline_active = false;
+        physics.query_pipeline_active = false;
+    }
 }
 
 fn reset_physics(mut commands: Commands) {

@@ -145,20 +145,22 @@ fn send_player_death_event(
 ///
 fn animate_player_sprite(
     time: Res<Time>,
-    mut q_player: Query<(&Velocity, &mut AnimationTimer, &mut TextureAtlas), With<Player>>,
+    mut q_player: Query<(&Velocity, &mut AnimationTimer, &mut Sprite), With<Player>>,
 ) {
-    if let Ok((&velocity, mut timer, mut atlas)) = q_player.get_single_mut() {
+    if let Ok((&velocity, mut timer, mut sprite)) = q_player.get_single_mut() {
         timer.tick(time.delta());
         if timer.just_finished() {
-            atlas.index = if velocity == Velocity::zero() {
-                0
-            } else {
-                match atlas.index {
-                    4 => 8,
-                    8 => 12,
-                    12 => 16,
-                    16 => 4,
-                    _ => 4,
+            if let Some(atlas) = &mut sprite.texture_atlas {
+                atlas.index = if velocity == Velocity::zero() {
+                    0
+                } else {
+                    match atlas.index {
+                        4 => 8,
+                        8 => 12,
+                        12 => 16,
+                        16 => 4,
+                        _ => 4,
+                    }
                 }
             }
         }

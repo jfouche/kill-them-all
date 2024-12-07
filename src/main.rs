@@ -58,6 +58,8 @@ fn main() {
     app.run();
 }
 
-fn init_rapier(mut conf: ResMut<RapierConfiguration>) {
-    conf.gravity = Vect::ZERO;
+fn init_rapier(mut conf: Query<&mut RapierConfiguration>) {
+    if let Ok(mut conf) = conf.get_single_mut() {
+        conf.gravity = Vect::ZERO;
+    }
 }
