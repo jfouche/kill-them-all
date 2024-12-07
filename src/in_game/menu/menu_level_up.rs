@@ -1,4 +1,4 @@
-use super::panel_inventory::inventory_panel;
+use super::panel_inventory::InventoryPanel;
 use crate::components::*;
 use crate::in_game::back_to_game;
 use crate::schedule::*;
@@ -94,7 +94,7 @@ fn spawn_level_up_menu(mut commands: Commands) {
         .add_children(&level_up_nav)
         .id();
 
-    let inventory_panel = commands.spawn(inventory_panel()).id();
+    let inventory_panel = commands.spawn(InventoryPanel).id();
 
     commands
         .spawn_popup("Level up!", level_up_menu_bundle())

@@ -9,7 +9,7 @@ use super::{pause, unpause, InGameState};
 use crate::components::EquipmentAssets;
 use bevy::{app::PluginGroupBuilder, prelude::*};
 use panel_characteristics::characteristics_panel;
-use panel_inventory::inventory_panel;
+use panel_inventory::InventoryPanel;
 
 pub struct InGameMenuPluginsGroup;
 

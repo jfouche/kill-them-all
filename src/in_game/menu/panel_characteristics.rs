@@ -118,7 +118,6 @@ fn setup_hooks(world: &mut World) {
     world
         .register_component_hooks::<CharacteristicsPanel>()
         .on_add(|mut world, entity, _component_id| {
-            info!("on_add::<CharacteristicsPanel>");
             world.commands().entity(entity).with_children(|panel| {
                 spawn_skill(panel, "Armour :", ArmourText);
                 spawn_skill(panel, "Life :", LifeText);

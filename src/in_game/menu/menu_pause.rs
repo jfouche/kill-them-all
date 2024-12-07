@@ -1,5 +1,5 @@
 use super::characteristics_panel;
-use super::inventory_panel;
+use super::InventoryPanel;
 use crate::components::*;
 use crate::in_game::back_to_game;
 use crate::schedule::*;
@@ -30,7 +30,7 @@ fn spawn_pause_menu(mut commands: Commands) {
                     ..Default::default()
                 })
                 .with_children(|flex| {
-                    flex.spawn(inventory_panel());
+                    flex.spawn(InventoryPanel);
                     flex.spawn(characteristics_panel());
                 });
         });

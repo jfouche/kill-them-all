@@ -1,4 +1,4 @@
-use super::panel_inventory::inventory_panel;
+use super::panel_inventory::InventoryPanel;
 use crate::components::*;
 use crate::in_game::back_to_game;
 use crate::schedule::*;
@@ -78,7 +78,7 @@ fn spawn_round_end_menu(mut commands: Commands, assets: Res<EquipmentAssets>) {
         .add_children(&round_end_nav)
         .id();
 
-    let inventory_panel = commands.spawn(inventory_panel()).id();
+    let inventory_panel = commands.spawn(InventoryPanel).id();
 
     commands
         .spawn_popup("End of round", (RoundEndMenu, Name::new("RoundEndMenu")))

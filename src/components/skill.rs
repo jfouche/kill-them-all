@@ -18,6 +18,12 @@ pub struct SkillsBundle {
 #[derive(Component, Clone, Deref, Reflect)]
 pub struct AffixesLabels(pub String);
 
+impl From<&AffixesLabels> for Text {
+    fn from(value: &AffixesLabels) -> Self {
+        Text(value.0.clone())
+    }
+}
+
 // ==================================================================
 // Armour
 
