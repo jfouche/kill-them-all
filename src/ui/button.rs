@@ -61,19 +61,25 @@ where
 }
 
 #[inline]
+fn default_button_node() -> Node {
+    Node {
+        width: Val::Px(180.0),
+        height: Val::Px(50.0),
+        margin: UiRect::all(Val::Px(10.0)),
+        padding: UiRect::all(Val::Px(2.0)),
+        flex_direction: FlexDirection::Column,
+        justify_content: JustifyContent::Center,
+        align_items: AlignItems::Center,
+        border: UiRect::all(Val::Px(1.0)),
+        ..default()
+    }
+}
+
+#[inline]
 pub fn button_bundle() -> impl Bundle {
     (
-        Node {
-            width: Val::Px(180.0),
-            height: Val::Px(50.0),
-            margin: UiRect::all(Val::Px(10.0)),
-            padding: UiRect::all(Val::Px(2.0)),
-            flex_direction: FlexDirection::Column,
-            justify_content: JustifyContent::Center,
-            align_items: AlignItems::Center,
-            border: UiRect::all(Val::Px(1.0)),
-            ..default()
-        },
+        Button,
+        default_button_node(),
         BackgroundColor(NORMAL_BUTTON),
         BorderColor(Color::BLACK),
     )

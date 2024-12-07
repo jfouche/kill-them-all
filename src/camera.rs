@@ -20,7 +20,7 @@ fn spawn_camera(mut commands: Commands) {
             ..Default::default()
         },
         OrthographicProjection {
-            scale: 2.,
+            scale: 0.5,
             ..OrthographicProjection::default_2d()
         },
         IsDefaultUiCamera,
