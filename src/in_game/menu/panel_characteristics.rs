@@ -154,7 +154,7 @@ fn spawn_skill(panel: &mut ChildBuilder, label: impl Into<String>, component: im
                 Text(label.into()),
                 text_font.clone(),
                 text_color,
-                TextLayout::new_with_justify(JustifyText::Center),
+                TextLayout::new_with_justify(JustifyText::Right),
                 Node {
                     width: Val::Percent(50.0),
                     ..default()
