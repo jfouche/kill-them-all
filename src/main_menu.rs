@@ -38,9 +38,16 @@ fn set_background(mut commands: Commands) {
 }
 
 fn spawn_menu(mut commands: Commands) {
-    let new_game_btn =
-        commands.spawn_text_button("New game", (MenuButtonAction::PlayGame, SelectedOption));
-    let exit_btn = commands.spawn_text_button("Exit", MenuButtonAction::ExitApplication);
+    let new_game_btn = commands
+        .spawn((
+            MyButton::new("New game"),
+            MenuButtonAction::PlayGame,
+            SelectedOption,
+        ))
+        .id();
+    let exit_btn = commands
+        .spawn((MyButton::new("Exit"), MenuButtonAction::ExitApplication))
+        .id();
 
     let menu_nav = MainMenuButtonNav(vec![new_game_btn, exit_btn]);
 

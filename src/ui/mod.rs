@@ -35,24 +35,3 @@ impl SpawnImpl for ChildBuilder<'_> {
         self.spawn(bundle)
     }
 }
-
-// #[inline]
-// pub fn hsizer() -> NodeBundle {
-//     NodeBundle {
-//         style: Style {
-//             flex_direction: FlexDirection::Row,
-//             align_items: AlignItems::Center,
-//             ..default()
-//         },
-//         ..default()
-//     }
-// }
-
-#[inline]
-pub fn vsizer() -> Node {
-    Node {
-        flex_direction: FlexDirection::Column,
-        align_items: AlignItems::Center,
-        ..default()
-    }
-}

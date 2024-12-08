@@ -56,11 +56,13 @@ fn spawn_round_end_menu(mut commands: Commands, assets: Res<EquipmentAssets>) {
         if let Some(equipment) = equipment_provider.gen(&mut rng) {
             let equipment_entity = equipment.spawn(&mut commands, &mut rng);
             equipment_list.push(equipment_entity.entity);
-            let entity = commands.spawn_img_text_button(
-                assets.image_node(equipment_entity.tile_index),
-                equipment_entity.label,
-                EquipmentEntity(equipment_entity.entity),
-            );
+            let entity = commands
+                .spawn((
+                    MyButton::new(equipment_entity.label)
+                        .with_image(assets.image_node(equipment_entity.tile_index)),
+                    EquipmentEntity(equipment_entity.entity),
+                ))
+                .id();
             round_end_nav.0.push(entity);
         }
     }

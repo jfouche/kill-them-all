@@ -1,10 +1,14 @@
 use crate::components::*;
-use bevy::prelude::*;
+use bevy::{
+    ecs::{component::ComponentId, world::DeferredWorld},
+    prelude::*,
+};
 
 ///
 /// Inventory panel
 ///
 #[derive(Component)]
+#[component(on_add = create_inventory_panel)]
 #[require(
     Name(|| Name::new("InventoryPanel")),
     Node(|| Node {
@@ -13,6 +17,13 @@ use bevy::prelude::*;
     })
 )]
 pub struct InventoryPanel;
+
+fn create_inventory_panel(mut world: DeferredWorld, entity: Entity, _component_id: ComponentId) {
+    world.commands().entity(entity).with_children(|panel| {
+        panel.spawn(EquipmentsPanel);
+        panel.spawn(AffixesPanel);
+    });
+}
 
 ///
 /// A panel that show player's equipments
@@ -152,21 +163,9 @@ fn show_affixes(
     };
 }
 
-fn setup_hooks(world: &mut World) {
-    world.register_component_hooks::<InventoryPanel>().on_add(
-        |mut world, entity, _component_id| {
-            world.commands().entity(entity).with_children(|panel| {
-                panel.spawn(EquipmentsPanel);
-                panel.spawn(AffixesPanel);
-            });
-        },
-    );
-}
-
 pub fn inventory_panel_plugin(app: &mut App) {
     app.add_observer(show_equipment::<Amulet>)
         .add_observer(show_equipment::<BodyArmour>)
         .add_observer(show_equipment::<Boots>)
-        .add_observer(show_equipment::<Helmet>)
-        .add_systems(Startup, setup_hooks);
+        .add_observer(show_equipment::<Helmet>);
 }

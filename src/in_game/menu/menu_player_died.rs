@@ -32,7 +32,7 @@ fn spawn_player_died_menu(mut commands: Commands) {
             (PlayerDiedMenu, Name::new("PlayerDiedMenu")),
         )
         .with_children(|popup| {
-            popup.spawn_text_button("Back to menu", (BackToMenu, SelectedOption));
+            popup.spawn((MyButton::new("Back to menu"), BackToMenu, SelectedOption));
         });
 }
 
