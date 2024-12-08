@@ -6,11 +6,11 @@ use crate::ui::*;
 use bevy::prelude::*;
 
 #[derive(Component)]
+#[require(
+    Popup(|| Popup::default().with_title("Level up!")),
+    Name(|| Name::new("LevelUpMenu"))
+)]
 struct LevelUpMenu;
-
-fn level_up_menu_bundle() -> impl Bundle {
-    (LevelUpMenu, Name::new("LevelUpMenu"))
-}
 
 #[derive(Resource, Default)]
 struct LevelUpMenuNav(Vec<Entity>);
@@ -101,7 +101,7 @@ fn spawn_level_up_menu(mut commands: Commands) {
     let inventory_panel = commands.spawn(InventoryPanel).id();
 
     commands
-        .spawn_popup("Level up!", level_up_menu_bundle())
+        .spawn(LevelUpMenu)
         .add_children(&[level_up_panel, inventory_panel]);
 
     commands.insert_resource(level_up_nav);

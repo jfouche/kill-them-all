@@ -27,6 +27,10 @@ impl Plugin for RoundEndMenuPlugin {
 }
 
 #[derive(Component)]
+#[require(
+    Popup(|| Popup::default().with_title("End of round")),
+    Name(|| Name::new("RoundEndMenu"))
+)]
 struct RoundEndMenu;
 
 #[derive(Resource, Default, DerefMut)]
@@ -83,7 +87,7 @@ fn spawn_round_end_menu(mut commands: Commands, assets: Res<EquipmentAssets>) {
     let inventory_panel = commands.spawn(InventoryPanel).id();
 
     commands
-        .spawn_popup("End of round", (RoundEndMenu, Name::new("RoundEndMenu")))
+        .spawn(RoundEndMenu)
         .add_children(&[level_up_panel, inventory_panel]);
 
     commands.insert_resource(round_end_nav);

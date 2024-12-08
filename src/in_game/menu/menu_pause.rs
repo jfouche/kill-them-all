@@ -17,21 +17,23 @@ impl Plugin for PausePlugin {
 }
 
 #[derive(Component)]
+#[require(
+    Popup(|| Popup::default().with_title("Pause")),
+    Name(|| Name::new("PauseMenu"))
+)]
 struct PauseMenu;
 
 fn spawn_pause_menu(mut commands: Commands) {
-    commands
-        .spawn_popup("Pause", (PauseMenu, Name::new("PauseMenu")))
-        .with_children(|popup| {
-            popup
-                .spawn(Node {
-                    flex_direction: FlexDirection::Column,
-                    width: Val::Percent(95.),
-                    ..Default::default()
-                })
-                .with_children(|flex| {
-                    flex.spawn(InventoryPanel);
-                    flex.spawn(CharacteristicsPanel);
-                });
-        });
+    commands.spawn(PauseMenu).with_children(|popup| {
+        popup
+            .spawn(Node {
+                flex_direction: FlexDirection::Column,
+                width: Val::Percent(95.),
+                ..Default::default()
+            })
+            .with_children(|flex| {
+                flex.spawn(InventoryPanel);
+                flex.spawn(CharacteristicsPanel);
+            });
+    });
 }
