@@ -7,7 +7,8 @@ pub struct SkillsBundle {
     pub character: Character,
     pub armour: Armour,
     pub movement_speed: BaseMovementSpeed,
-    pub life: BaseLife,
+    pub base_life: BaseLife,
+    pub life: Life, // TODO: init life with BaseLife when added
     pub more_life: MoreLife,
     pub incr_life: IncreaseMaxLife,
     pub life_regen: LifeRegen,
@@ -64,7 +65,7 @@ pub struct MovementSpeed(pub f32);
 
 /// Represent the initial life of a character
 #[derive(Component, Default, Deref, Clone, Copy, Reflect)]
-#[require(Life, MaxLife, LifeRegen)]
+#[require(Life, MaxLife, LifeRegen, IncreaseMaxLife)]
 pub struct BaseLife(pub f32);
 
 /// Represent current life of a character

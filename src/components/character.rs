@@ -3,11 +3,12 @@ use bevy::prelude::*;
 
 #[derive(Component, Default)]
 #[require(
-    Life,
-    Armour,
+    BaseLife,
     BaseMovementSpeed,
     IncreaseAttackSpeed,
     PierceChance,
+    Armour,
+    Transform,
     RigidBody(|| RigidBody::Dynamic),
     Velocity,
     Collider,

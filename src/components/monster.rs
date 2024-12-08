@@ -60,7 +60,8 @@ impl MonsterBundle {
         MonsterBundle {
             skills: SkillsBundle {
                 movement_speed: params.movement_speed(),
-                life: params.life(),
+                base_life: params.life(),
+                life: Life(*params.life()),
                 ..Default::default()
             },
             xp_on_death: params.xp(),

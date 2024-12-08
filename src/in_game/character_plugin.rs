@@ -21,13 +21,13 @@ impl Plugin for CharacterPlugin {
             .register_type::<Armour>()
             .register_type::<MoreArmour>()
             .register_type::<AffixesLabels>()
+            .add_observer(init_life)
             .add_systems(Startup, register_hooks)
             .add_systems(
                 PreUpdate,
                 (
                     update_armour,
-                    update_life,
-                    update_life_regen,
+                    (update_max_life, update_life_regen).chain(),
                     update_movement_speed,
                     (update_increase_attack_speed, update_weapon_attack_speed).chain(),
                     update_pierce_chance,
@@ -35,6 +35,16 @@ impl Plugin for CharacterPlugin {
                     .run_if(game_is_running),
             )
             .add_systems(Update, regen_life.in_set(GameRunningSet::EntityUpdate));
+    }
+}
+
+fn init_life(
+    trigger: Trigger<OnAdd, (BaseLife, Life, MaxLife)>,
+    mut lifes: Query<(&mut Life, &mut MaxLife, &BaseLife)>,
+) {
+    if let Ok((mut life, mut max_life, base_life)) = lifes.get_mut(trigger.entity()) {
+        **life = **base_life;
+        **max_life = **base_life;
     }
 }
 
@@ -105,7 +115,7 @@ fn update_armour(
 }
 
 /// [MaxLife] = ([BaseLife] + sum([MoreLife])) * sum([IncreaseMaxLife]) %
-fn update_life(
+fn update_max_life(
     mut characters: Query<(&BaseLife, &mut MaxLife, &mut IncreaseMaxLife), With<Character>>,
     more_affixes: Query<(&MoreLife, &Parent), Without<Character>>,
     incr_affixes: Query<(&IncreaseMaxLife, &Parent), Without<Character>>,

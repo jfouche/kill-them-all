@@ -66,7 +66,7 @@ fn load_player_assets(
 
 fn spawn_player(mut commands: Commands, assets: Res<PlayerAssets>) {
     commands
-        .spawn(PlayerBundle::from_assets(&assets))
+        .spawn((Player, Player::sprite(&assets)))
         .with_children(|player| {
             player.spawn(gun());
             player.spawn(shuriken_launcher());

@@ -40,7 +40,7 @@ pub fn despawn_all<T: Component>(to_despawn: Query<Entity, With<T>>, mut command
 ///
 /// [Money]
 ///
-#[derive(Component, Deref, DerefMut, Reflect)]
+#[derive(Component, Default, Deref, DerefMut, Reflect)]
 pub struct Money(pub u16);
 
 impl std::fmt::Display for Money {
