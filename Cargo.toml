@@ -36,7 +36,7 @@ bevy = { version = "0.15", default-features = false, features = [
     "default_font",
     "png"
 ] }
-bevy_rapier2d = {git="https://github.com/dimforge/bevy_rapier", rev="refs/pull/595/head"}
+bevy_rapier2d = "0.28"
 bevy_ecs_tilemap = {git="https://github.com/StarArawn/bevy_ecs_tilemap", rev="refs/pull/574/head"}
 
 # feature: dev
