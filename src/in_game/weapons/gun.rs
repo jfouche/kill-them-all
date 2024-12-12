@@ -11,7 +11,7 @@ pub fn gun() -> impl Bundle {
     (
         Gun,
         Name::new("Gun"),
-        WeaponBundle::new(DamageRange(1. ..=2.), BASE_ATTACK_SPEED),
+        WeaponBundle::new(DamageRange::new(1., 2.), BASE_ATTACK_SPEED),
     )
 }
 

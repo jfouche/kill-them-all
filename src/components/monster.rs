@@ -1,6 +1,5 @@
 use super::*;
 use bevy::prelude::*;
-use bevy_rapier2d::prelude::*;
 use rand::{rngs::ThreadRng, Rng};
 
 pub struct MonsterAssets {
@@ -11,86 +10,56 @@ pub struct MonsterAssets {
 #[derive(Resource, Default, Deref, DerefMut)]
 pub struct AllMonsterAssets(pub Vec<MonsterAssets>);
 
-#[derive(Component)]
+#[derive(Component, Default)]
+#[require(
+    Character,
+    MonsterRarity,
+    XpOnDeath,
+    DamageRange,
+    Sprite,
+    AnimationTimer
+)]
 pub struct Monster;
 
-#[derive(Bundle)]
-pub struct MonsterBundle {
-    tag: Monster,
-    name: Name,
-    // bevy view
-    sprite: Sprite,
-    transform: Transform,
-    animation_timer: AnimationTimer,
-    // skills
-    skills: SkillsBundle,
-    xp_on_death: XpOnDeath,
-    damage_range: DamageRange,
-    // physics
-    body: RigidBody,
-    velocity: Velocity,
-    collider: Collider,
-    collision_groups: CollisionGroups,
-    locked_axes: LockedAxes,
-}
+#[derive(Component)]
+#[require(
+    Name(|| Name::new("Monster#1")),
+    Monster,
+    BaseLife(|| BaseLife(2.)),
+    BaseMovementSpeed(||BaseMovementSpeed(90.)),
+)]
+pub struct MonsterType1;
 
-impl Default for MonsterBundle {
-    fn default() -> Self {
-        MonsterBundle {
-            tag: Monster,
-            name: Name::new("Monster"),
-            sprite: Sprite::default(),
-            transform: Transform::default(),
-            animation_timer: AnimationTimer::default(),
-            skills: SkillsBundle::default(),
-            xp_on_death: XpOnDeath(1),
-            damage_range: DamageRange(1. ..=2.),
-            body: RigidBody::Dynamic,
-            velocity: Velocity::zero(),
-            collider: Collider::default(),
-            collision_groups: CollisionGroups::new(GROUP_ENEMY, Group::ALL & !GROUP_BONUS),
-            locked_axes: LockedAxes::ROTATION_LOCKED,
-        }
-    }
-}
+#[derive(Component)]
+#[require(
+    Name(|| Name::new("Monster#2")),
+    Monster,
+    BaseLife(|| BaseLife(3.)),
+    BaseMovementSpeed(||BaseMovementSpeed(80.)),
+)]
+pub struct MonsterType2;
 
-impl MonsterBundle {
-    pub fn new(assets: &MonsterAssets, params: &MonsterSpawnParams) -> Self {
-        let size = params.size();
-        MonsterBundle {
-            skills: SkillsBundle {
-                movement_speed: params.movement_speed(),
-                base_life: params.life(),
-                life: Life(*params.life()),
-                ..Default::default()
-            },
-            xp_on_death: params.xp(),
-            damage_range: params.damage_range(),
-            sprite: Sprite {
-                image: assets.texture.clone(),
-                texture_atlas: Some(TextureAtlas {
-                    layout: assets.texture_atlas_layout.clone(),
-                    index: 0,
-                }),
-                custom_size: Some(size),
-                ..Default::default()
-            },
-            transform: Transform::from_xyz(params.pos.x, params.pos.y, 10.),
-            collider: Collider::cuboid(size.x / 2., size.y / 2.),
-            ..Default::default()
-        }
-    }
-}
+#[derive(Component)]
+#[require(
+    Name(|| Name::new("Monster#3")),
+    Monster,
+    BaseLife(|| BaseLife(4.)),
+    BaseMovementSpeed(||BaseMovementSpeed(70.)),
+)]
+pub struct MonsterType3;
 
 // TODO: use enum
 const MONSTER_KIND_COUNT: usize = 3;
 
+#[derive(Component, Default, Clone, Copy)]
 pub enum MonsterRarity {
+    #[default]
     Normal,
     Rare,
 }
 
 /// Contains the monster informations to spawn
+#[derive(Default)]
 pub struct MonsterSpawnParams {
     pub pos: Vec2,
     pub rarity: MonsterRarity,
@@ -129,44 +98,118 @@ impl MonsterSpawnParams {
         }
     }
 
-    pub fn damage_range(&self) -> DamageRange {
-        let (min, max) = match self.rarity {
-            MonsterRarity::Normal => (1., 2.),
-            MonsterRarity::Rare => (2., 4.),
-        };
-        let multiplier = (self.level + 1) as f32;
-        let min = min * multiplier;
-        let max = max * multiplier;
-        DamageRange(min..=max)
-    }
+    // pub fn damage_range(&self) -> DamageRange {
+    //     let (min, max) = match self.rarity {
+    //         MonsterRarity::Normal => (1., 2.),
+    //         MonsterRarity::Rare => (2., 4.),
+    //     };
+    //     let multiplier = (self.level + 1) as f32;
+    //     let min = min * multiplier;
+    //     let max = max * multiplier;
+    //     DamageRange::new(min, max)
+    // }
 
-    pub fn xp(&self) -> XpOnDeath {
-        let xp = match self.rarity {
-            MonsterRarity::Normal => 1u32,
-            MonsterRarity::Rare => 3,
-        };
-        XpOnDeath(xp * (self.level + 1) as u32)
-    }
+    // pub fn xp(&self) -> XpOnDeath {
+    //     let xp = match self.rarity {
+    //         MonsterRarity::Normal => 1u32,
+    //         MonsterRarity::Rare => 3,
+    //     };
+    //     XpOnDeath(xp * (self.level + 1) as u32)
+    // }
 
-    pub fn movement_speed(&self) -> BaseMovementSpeed {
-        match self.rarity {
-            MonsterRarity::Normal => BaseMovementSpeed(90.),
-            MonsterRarity::Rare => BaseMovementSpeed(70.),
+    // pub fn movement_speed(&self) -> BaseMovementSpeed {
+    //     match self.rarity {
+    //         MonsterRarity::Normal => BaseMovementSpeed(90.),
+    //         MonsterRarity::Rare => BaseMovementSpeed(70.),
+    //     }
+    // }
+
+    // pub fn life(&self) -> BaseLife {
+    //     let life = match self.rarity {
+    //         MonsterRarity::Normal => 2.,
+    //         MonsterRarity::Rare => 5.,
+    //     };
+    //     // 5% increase life per level
+    //     let incr = self.level as f32 * 5.;
+    //     BaseLife(life * (100. + incr) / 100.)
+    // }
+}
+
+pub struct MonsterSpawningParamsAndAssets<'a> {
+    pub params: &'a MonsterSpawnParams,
+}
+
+impl From<&MonsterSpawningParamsAndAssets<'_>> for Sprite {
+    fn from(value: &MonsterSpawningParamsAndAssets) -> Self {
+        Sprite {
+            color: Color::srgba(0.8, 0.3, 0.3, 0.2),
+            custom_size: Some(value.params.size()),
+            ..Default::default()
         }
-    }
-
-    pub fn life(&self) -> BaseLife {
-        let life = match self.rarity {
-            MonsterRarity::Normal => 2.,
-            MonsterRarity::Rare => 5.,
-        };
-        // 5% increase life per level
-        let incr = self.level as f32 * 5.;
-        BaseLife(life * (100. + incr) / 100.)
     }
 }
 
-#[derive(Component, Deref)]
+pub struct MonsterSpawnParamsAndAssets<'a> {
+    pub params: &'a MonsterSpawnParams,
+    pub assets: &'a AllMonsterAssets,
+}
+
+impl From<&MonsterSpawnParamsAndAssets<'_>> for MonsterRarity {
+    fn from(value: &MonsterSpawnParamsAndAssets) -> Self {
+        value.params.rarity
+    }
+}
+impl From<&MonsterSpawnParamsAndAssets<'_>> for Transform {
+    fn from(value: &MonsterSpawnParamsAndAssets) -> Self {
+        Transform::from_xyz(value.params.pos.x, value.params.pos.y, 10.)
+    }
+}
+
+impl From<&MonsterSpawnParamsAndAssets<'_>> for Sprite {
+    fn from(value: &MonsterSpawnParamsAndAssets) -> Self {
+        let assets = value
+            .assets
+            .get(value.params.kind)
+            .expect("Monster type out of range !");
+
+        Sprite {
+            image: assets.texture.clone(),
+            texture_atlas: Some(assets.texture_atlas_layout.clone().into()),
+            custom_size: Some(value.params.size()),
+            ..Default::default()
+        }
+    }
+}
+
+impl From<&MonsterSpawnParamsAndAssets<'_>> for XpOnDeath {
+    fn from(value: &MonsterSpawnParamsAndAssets) -> Self {
+        match value.params.rarity {
+            MonsterRarity::Normal => XpOnDeath(1),
+            MonsterRarity::Rare => XpOnDeath(4),
+        }
+    }
+}
+
+impl From<&MonsterSpawnParamsAndAssets<'_>> for DamageRange {
+    fn from(value: &MonsterSpawnParamsAndAssets) -> Self {
+        let (min, max) = match value.params.rarity {
+            MonsterRarity::Normal => (1., 2.),
+            MonsterRarity::Rare => (2., 4.),
+        };
+        let multiplier = (value.params.level + 1) as f32;
+        let min = min * multiplier;
+        let max = max * multiplier;
+        DamageRange::new(min, max)
+    }
+}
+
+impl From<&MonsterSpawnParamsAndAssets<'_>> for Collider {
+    fn from(value: &MonsterSpawnParamsAndAssets<'_>) -> Self {
+        Collider::cuboid(value.params.size().x / 2., value.params.size().y / 2.)
+    }
+}
+
+#[derive(Component, Default, Deref)]
 pub struct XpOnDeath(pub u32);
 
 #[derive(Resource)]
@@ -190,6 +233,15 @@ pub struct MonsterSpawnConfig {
     pub params: MonsterSpawnParams,
 }
 
+impl Default for MonsterSpawnConfig {
+    fn default() -> Self {
+        MonsterSpawnConfig {
+            timer: Timer::from_seconds(1., TimerMode::Once),
+            params: MonsterSpawnParams::default(),
+        }
+    }
+}
+
 impl MonsterSpawnConfig {
     pub fn new(params: MonsterSpawnParams) -> Self {
         MonsterSpawnConfig {
@@ -200,16 +252,31 @@ impl MonsterSpawnConfig {
 }
 
 #[derive(Component)]
+#[require(
+    Name(|| Name::new("MonsterFuturePos")),
+    Sprite,
+    MonsterSpawnConfig,
+    MonsterSpawningTimer
+)]
 pub struct MonsterFuturePos;
 
-#[derive(Bundle)]
-pub struct MonsterFuturePosBundle {
-    tag: MonsterFuturePos,
-    name: Name,
-    sprite: Sprite,
-    transform: Transform,
-    config: MonsterSpawnConfig,
+#[derive(Component)]
+pub struct MonsterSpawningTimer(pub Timer);
+
+impl Default for MonsterSpawningTimer {
+    fn default() -> Self {
+        MonsterSpawningTimer(Timer::from_seconds(1., TimerMode::Once))
+    }
 }
+
+// #[derive(Bundle)]
+// pub struct MonsterFuturePosBundle {
+//     tag: MonsterFuturePos,
+//     name: Name,
+//     sprite: Sprite,
+//     transform: Transform,
+//     config: MonsterSpawnConfig,
+// }
 
 impl MonsterFuturePosBundle {
     pub fn new(params: MonsterSpawnParams) -> Self {

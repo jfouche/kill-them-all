@@ -3,6 +3,9 @@ use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 use std::ops::Mul;
 
+#[derive(Component)]
+struct FirstSpawnTimer(Timer);
+
 pub struct MonsterPlugin;
 
 impl Plugin for MonsterPlugin {
@@ -81,7 +84,13 @@ fn monster_spawning_timer(
         let mut rng = rand::thread_rng();
         for _ in 0..config.enemy_count {
             let params = MonsterSpawnParams::generate(round.level, &mut rng);
-            commands.spawn(MonsterFuturePosBundle::new(params));
+            let params_and_assets = MonsterSpawningParamsAndAssets { params: &params };
+            commands.spawn((
+                MonsterFuturePos,
+                Sprite::from(&params_and_assets),
+                MonsterSpawnConfig::new(params),
+            ));
+            // commands.spawn(MonsterFuturePosBundle::new(params));
         }
         config.enemy_count += 1;
     }
@@ -100,14 +109,41 @@ fn spawn_monsters(
         config.timer.tick(time.delta());
         if config.timer.finished() {
             commands.entity(entity).despawn();
-            let monster_assets = assets
-                .get(config.params.kind)
-                .expect("Monster type out of range !");
 
-            commands
-                .spawn(MonsterBundle::new(monster_assets, &config.params))
-                .observe(send_death_event)
-                .observe(increment_score);
+            let params = MonsterSpawnParamsAndAssets {
+                assets: &assets,
+                params: &config.params,
+            };
+
+            let monster_components = (
+                MonsterRarity::from(&params),
+                Sprite::from(&params),
+                Transform::from(&params),
+                XpOnDeath::from(&params),
+            );
+
+            match config.params.kind {
+                0 => commands.spawn((MonsterType1, monster_components)),
+                1 => commands.spawn((MonsterType2, monster_components)),
+                2 => commands.spawn((MonsterType3, monster_components)),
+                _ => unreachable!(),
+            }
+            .observe(send_death_event)
+            .observe(increment_score);
+
+            // commands
+            //     .spawn((
+            //         MonsterType1,
+            //         Monster::sprite(monster_assets, &config.params),
+            //         config.params.life(),
+            //         config.params.movement_speed(),
+            //         DamageRange::from(&config.params),
+            //         config.params.xp(),
+            //         Transform::from(&config.params),
+            //         Monster::collider(&config.params),
+            //     ))
+            //     .observe(send_death_event)
+            //     .observe(increment_score);
         }
     }
 }

@@ -2,19 +2,19 @@ use super::*;
 use bevy::prelude::*;
 use rand::Rng;
 
-#[derive(Bundle, Default)]
-pub struct SkillsBundle {
-    pub character: Character,
-    pub armour: Armour,
-    pub movement_speed: BaseMovementSpeed,
-    pub base_life: BaseLife,
-    pub life: Life, // TODO: init life with BaseLife when added
-    pub more_life: MoreLife,
-    pub incr_life: IncreaseMaxLife,
-    pub life_regen: LifeRegen,
-    pub attack_speed: IncreaseAttackSpeed,
-    pub pierce: PierceChance,
-}
+// #[derive(Bundle, Default)]
+// pub struct SkillsBundle {
+//     pub character: Character,
+//     pub armour: Armour,
+//     pub movement_speed: BaseMovementSpeed,
+//     pub base_life: BaseLife,
+//     pub life: Life, // TODO: init life with BaseLife when added
+//     pub more_life: MoreLife,
+//     pub incr_life: IncreaseMaxLife,
+//     pub life_regen: LifeRegen,
+//     pub attack_speed: IncreaseAttackSpeed,
+//     pub pierce: PierceChance,
+// }
 
 #[derive(Component, Clone, Deref, Reflect)]
 pub struct AffixesLabels(pub String);

@@ -28,66 +28,6 @@ impl Player {
     }
 }
 
-// #[derive(Bundle)]
-// pub struct PlayerBundle {
-//     tag: Player,
-//     name: Name,
-//     character: Character,
-//     money: Money,
-//     xp: Experience,
-//     // bevy view
-//     sprite: Sprite,
-//     animation_timer: AnimationTimer,
-//     // physics
-//     active_events: ActiveEvents,
-// }
-
-// impl Default for PlayerBundle {
-//     fn default() -> Self {
-//         PlayerBundle {
-//             tag: Player,
-//             name: Name::new("Player"),
-//             character: Character {
-//                 base_life: BaseLife(10.),
-//                 life: Life(10.),
-//                 movement_speed: BaseMovementSpeed(130.),
-//                 ..Default::default()
-//             },
-//             money: Money(0),
-//             xp: Experience::default(),
-//             sprite: Sprite::default(),
-//             animation_timer: AnimationTimer::default(),
-//             skills: SkillsBundle {
-//                 base_life: BaseLife(10.),
-//                 life: Life(10.),
-//                 movement_speed: BaseMovementSpeed(130.),
-//                 ..Default::default()
-//             },
-//             body: RigidBody::Dynamic,
-//             velocity: Velocity::zero(),
-//             collider: Collider::cuboid(PLAYER_SIZE.x / 2., PLAYER_SIZE.y / 2.),
-//             collision_groups: CollisionGroups::new(GROUP_PLAYER, Group::ALL),
-//             locked_axes: LockedAxes::ROTATION_LOCKED,
-//             active_envents: ActiveEvents::COLLISION_EVENTS,
-//         }
-//     }
-// }
-
-// impl PlayerBundle {
-//     pub fn from_assets(assets: &PlayerAssets) -> Self {
-//         PlayerBundle {
-//             sprite: Sprite {
-//                 image: assets.texture.clone(),
-//                 texture_atlas: Some(assets.texture_atlas_layout.clone().into()),
-//                 custom_size: Some(PLAYER_SIZE),
-//                 ..Default::default()
-//             },
-//             transform: Transform::from_xyz(0., 0., 10.),
-//             ..Default::default()
-//         }
-//     }
-// }
-
 pub const PLAYER_SIZE: Vec2 = Vec2::new(16.0, 16.0);
 
 #[derive(Resource)]

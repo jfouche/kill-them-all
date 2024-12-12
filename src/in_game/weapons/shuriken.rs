@@ -21,7 +21,7 @@ pub fn shuriken_launcher() -> impl Bundle {
     (
         ShurikenLauncher { dir: Dir2::NORTH },
         Name::new("ShurikenLauncher"),
-        DamageRange(2. ..=4.),
+        DamageRange::new(2., 4.),
         BaseAttackSpeed(BASE_ATTACK_SPEED),
     )
 }
