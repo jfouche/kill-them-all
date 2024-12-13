@@ -100,7 +100,7 @@ impl AttackTimer {
 }
 
 #[derive(Component, Default)]
-#[require(Damage, PierceChance, Velocity, Collider)]
+#[require(Damage, PierceChance, Velocity, Collider)] // TODO: use DamageRange instead of Damage
 pub struct Ammo;
 
 #[derive(Bundle, Default)]
