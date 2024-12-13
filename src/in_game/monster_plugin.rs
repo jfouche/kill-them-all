@@ -3,14 +3,18 @@ use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 use std::ops::Mul;
 
-#[derive(Component)]
-struct FirstSpawnTimer(Timer);
+#[derive(Resource)]
+pub struct MonsterSpawnerTimer {
+    timer: Timer,
+    enemy_count: u16,
+}
 
 pub struct MonsterPlugin;
 
 impl Plugin for MonsterPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<MonsterDeathEvent>()
+        app.register_type::<MonsterSpawnParams>()
+            .add_event::<MonsterDeathEvent>()
             .add_systems(Startup, (load_assets, init_monster_spawning))
             .add_systems(OnExit(GameState::InGame), despawn_all::<Monster>)
             .add_systems(
@@ -30,6 +34,8 @@ fn load_assets(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
     let mut all_monster_assets = AllMonsterAssets::default();
 
@@ -63,10 +69,19 @@ fn load_assets(
     });
 
     commands.insert_resource(all_monster_assets);
+
+    let spawning_assets = SpawningMonsterAssets {
+        mesh: meshes.add(Circle::new(8.0)),
+        color: materials.add(Color::srgba(0.8, 0.3, 0.3, 0.2)),
+    };
+    commands.insert_resource(spawning_assets);
 }
 
 fn init_monster_spawning(mut commands: Commands) {
-    commands.insert_resource(MonsterSpawningConfig::default());
+    commands.insert_resource(MonsterSpawnerTimer {
+        timer: Timer::from_seconds(6., TimerMode::Repeating),
+        enemy_count: 3,
+    });
 }
 
 ///
@@ -75,24 +90,25 @@ fn init_monster_spawning(mut commands: Commands) {
 fn monster_spawning_timer(
     mut commands: Commands,
     time: Res<Time>,
-    mut config: ResMut<MonsterSpawningConfig>,
+    mut spawn_timer: ResMut<MonsterSpawnerTimer>,
+    spawning_assets: Res<SpawningMonsterAssets>,
     round: Res<Round>,
 ) {
     // tick the timer
-    config.timer.tick(time.delta());
-    if config.timer.finished() {
+    spawn_timer.timer.tick(time.delta());
+    if spawn_timer.timer.finished() {
         let mut rng = rand::thread_rng();
-        for _ in 0..config.enemy_count {
+        for _ in 0..spawn_timer.enemy_count {
             let params = MonsterSpawnParams::generate(round.level, &mut rng);
-            let params_and_assets = MonsterSpawningParamsAndAssets { params: &params };
             commands.spawn((
                 MonsterFuturePos,
-                Sprite::from(&params_and_assets),
-                MonsterSpawnConfig::new(params),
+                Transform::from(&params),
+                Mesh2d::from(&*spawning_assets),
+                MeshMaterial2d::from(&*spawning_assets),
+                params,
             ));
-            // commands.spawn(MonsterFuturePosBundle::new(params));
         }
-        config.enemy_count += 1;
+        spawn_timer.enemy_count += 1;
     }
 }
 
@@ -102,27 +118,27 @@ fn monster_spawning_timer(
 fn spawn_monsters(
     mut commands: Commands,
     time: Res<Time>,
-    mut query: Query<(Entity, &mut MonsterSpawnConfig)>,
+    mut query: Query<(Entity, &mut MonsterSpawnTimer, &MonsterSpawnParams)>,
     assets: Res<AllMonsterAssets>,
 ) {
-    for (entity, mut config) in query.iter_mut() {
-        config.timer.tick(time.delta());
-        if config.timer.finished() {
+    for (entity, mut timer, params) in query.iter_mut() {
+        timer.tick(time.delta());
+        if timer.finished() {
             commands.entity(entity).despawn();
 
-            let params = MonsterSpawnParamsAndAssets {
+            let params_assets = MonsterSpawnParamsAndAssets {
                 assets: &assets,
-                params: &config.params,
+                params,
             };
 
             let monster_components = (
-                MonsterRarity::from(&params),
-                Sprite::from(&params),
-                Transform::from(&params),
-                XpOnDeath::from(&params),
+                MonsterRarity::from(&params_assets),
+                Sprite::from(&params_assets),
+                Transform::from(params_assets.params),
+                XpOnDeath::from(&params_assets),
             );
 
-            match config.params.kind {
+            match params.kind {
                 0 => commands.spawn((MonsterType1, monster_components)),
                 1 => commands.spawn((MonsterType2, monster_components)),
                 2 => commands.spawn((MonsterType3, monster_components)),
@@ -130,20 +146,6 @@ fn spawn_monsters(
             }
             .observe(send_death_event)
             .observe(increment_score);
-
-            // commands
-            //     .spawn((
-            //         MonsterType1,
-            //         Monster::sprite(monster_assets, &config.params),
-            //         config.params.life(),
-            //         config.params.movement_speed(),
-            //         DamageRange::from(&config.params),
-            //         config.params.xp(),
-            //         Transform::from(&config.params),
-            //         Monster::collider(&config.params),
-            //     ))
-            //     .observe(send_death_event)
-            //     .observe(increment_score);
         }
     }
 }
