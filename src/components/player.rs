@@ -3,74 +3,26 @@ use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
 #[derive(Component)]
+#[require(
+    Name(|| Name::new("Player")),
+    Character,
+    BaseLife(|| BaseLife(10.)),
+    BaseMovementSpeed(|| BaseMovementSpeed(130.)),
+    Money,
+    Experience,
+    Sprite,
+    Transform(|| Transform::from_xyz(0., 0., 10.)),
+    AnimationTimer,
+    ActiveEvents(|| ActiveEvents::COLLISION_EVENTS)
+)]
 pub struct Player;
 
-#[derive(Bundle)]
-pub struct PlayerBundle {
-    tag: Player,
-    name: Name,
-    // Equipments
-    // equipments: Equipments,
-    //
-    money: Money,
-    xp: Experience,
-    // bevy view
-    sprite: SpriteBundle,
-    texture_atlas: TextureAtlas,
-    animation_timer: AnimationTimer,
-    // skills
-    skills: SkillsBundle,
-    // physics
-    body: RigidBody,
-    velocity: Velocity,
-    collider: Collider,
-    collision_groups: CollisionGroups,
-    locked_axes: LockedAxes,
-    active_envents: ActiveEvents,
-}
-
-impl Default for PlayerBundle {
-    fn default() -> Self {
-        PlayerBundle {
-            tag: Player,
-            name: Name::new("Player"),
-            // equipments: Equipments::default(),
-            money: Money(0),
-            xp: Experience::default(),
-            sprite: SpriteBundle::default(),
-            texture_atlas: TextureAtlas::default(),
-            animation_timer: AnimationTimer::default(),
-            skills: SkillsBundle {
-                life: LifeBundle::new(10.),
-                movement_speed: MovementSpeedBundle::new(130.),
-                ..Default::default()
-            },
-            body: RigidBody::Dynamic,
-            velocity: Velocity::zero(),
-            collider: Collider::cuboid(PLAYER_SIZE.x / 2., PLAYER_SIZE.y / 2.),
-            collision_groups: CollisionGroups::new(GROUP_PLAYER, Group::ALL),
-            locked_axes: LockedAxes::ROTATION_LOCKED,
-            active_envents: ActiveEvents::COLLISION_EVENTS,
-        }
-    }
-}
-
-impl PlayerBundle {
-    pub fn from_assets(assets: &PlayerAssets) -> Self {
-        PlayerBundle {
-            sprite: SpriteBundle {
-                texture: assets.texture.clone(),
-                sprite: Sprite {
-                    custom_size: Some(PLAYER_SIZE),
-                    ..Default::default()
-                },
-                transform: Transform::from_xyz(0., 0., 10.),
-                ..Default::default()
-            },
-            texture_atlas: TextureAtlas {
-                layout: assets.texture_atlas_layout.clone(),
-                ..Default::default()
-            },
+impl Player {
+    pub fn sprite(assets: &PlayerAssets) -> Sprite {
+        Sprite {
+            image: assets.texture.clone(),
+            texture_atlas: Some(assets.texture_atlas_layout.clone().into()),
+            custom_size: Some(PLAYER_SIZE),
             ..Default::default()
         }
     }
@@ -135,9 +87,10 @@ impl Experience {
     }
 }
 
-impl super::Label for Experience {
-    fn label(&self) -> String {
-        format!(
+impl std::fmt::Display for Experience {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
             "{}/{} (level {})",
             self.0,
             self.get_current_level_min_max_exp().1,

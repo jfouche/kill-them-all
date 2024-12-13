@@ -43,12 +43,12 @@ impl Helmet {
             match provider.gen(rng) {
                 Some(HelmetAffixKind::AddArmour) => {
                     let affix = Armour(rng.gen_range(1. ..=3.));
-                    labels.push(affix.label());
+                    labels.push(affix.to_string());
                     helmet_commands.insert(affix);
                 }
                 Some(HelmetAffixKind::AddLife) => {
                     let affix = MoreLife(rng.gen_range(5. ..=10.));
-                    labels.push(affix.label());
+                    labels.push(affix.to_string());
                     helmet_commands.insert(affix);
                 }
                 None => {}

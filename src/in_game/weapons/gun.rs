@@ -11,7 +11,7 @@ pub fn gun() -> impl Bundle {
     (
         Gun,
         Name::new("Gun"),
-        WeaponBundle::new(DamageRange(1. ..=2.), BASE_ATTACK_SPEED),
+        WeaponBundle::new(DamageRange::new(1., 2.), BASE_ATTACK_SPEED),
     )
 }
 
@@ -23,7 +23,8 @@ struct BulletBundle {
     tag: Bullet,
     name: Name,
     ammo: AmmoBundle,
-    sprite: SpriteBundle,
+    sprite: Sprite,
+    transform: Transform,
 }
 
 impl Default for BulletBundle {
@@ -32,7 +33,8 @@ impl Default for BulletBundle {
             tag: Bullet,
             name: Name::new("Bullet"),
             ammo: AmmoBundle::default(),
-            sprite: SpriteBundle::default(),
+            sprite: Sprite::default(),
+            transform: Transform::default(),
         }
     }
 }
@@ -41,7 +43,6 @@ const BULLET_SPEED: f32 = 300.0;
 
 impl BulletBundle {
     pub fn new(options: BulletOptions) -> Self {
-        let pos = Transform::from_translation(options.player_pos);
         let size = 5.;
 
         let ammo_config = AmmoConfig {
@@ -53,15 +54,12 @@ impl BulletBundle {
 
         BulletBundle {
             ammo: AmmoBundle::new(ammo_config),
-            sprite: SpriteBundle {
-                transform: pos,
-                sprite: Sprite {
-                    color: YELLOW.into(),
-                    custom_size: Some(Vec2::new(size, size)),
-                    ..Default::default()
-                },
+            sprite: Sprite {
+                color: YELLOW.into(),
+                custom_size: Some(Vec2::new(size, size)),
                 ..Default::default()
             },
+            transform: Transform::from_translation(options.player_pos),
             ..Default::default()
         }
     }

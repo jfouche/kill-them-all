@@ -12,22 +12,16 @@ pub fn camera_plugin(app: &mut App) {
 const CAM_LERP_FACTOR: f32 = 2.;
 
 fn spawn_camera(mut commands: Commands) {
-    let camera = Camera {
-        hdr: true, // HDR is required for the bloom effect
-        ..default()
-    };
-    let projection = OrthographicProjection {
-        near: -1000.0,
-        far: 1000.0,
-        scaling_mode: bevy::render::camera::ScalingMode::WindowSize(2.0),
-        ..Default::default()
-    };
     commands.spawn((
         Name::new("Camera"),
-        Camera2dBundle {
-            camera,
-            projection,
-            ..default()
+        Camera2d,
+        Camera {
+            hdr: true,
+            ..Default::default()
+        },
+        OrthographicProjection {
+            scale: 0.5,
+            ..OrthographicProjection::default_2d()
         },
         IsDefaultUiCamera,
     ));
@@ -55,5 +49,5 @@ fn camera_follow_player(
     // the player.
     camera.translation = camera
         .translation
-        .lerp(direction, time.delta_seconds() * CAM_LERP_FACTOR);
+        .lerp(direction, time.delta_secs() * CAM_LERP_FACTOR);
 }

@@ -1,4 +1,3 @@
-use super::SpawnImpl;
 use bevy::prelude::*;
 
 const NORMAL_BUTTON: Color = Color::srgb(0.15, 0.35, 0.15);
@@ -8,105 +7,57 @@ const PRESSED_BUTTON: Color = Color::srgb(0.35, 0.75, 0.35);
 
 const BUTTON_TEXT_COLOR: Color = Color::srgb(0.9, 0.9, 0.9);
 
-pub enum ButtonImage {
-    _Image(Handle<Image>),
-    ImageAtlas(Handle<Image>, TextureAtlas),
+///
+/// Component to spawn a button
+/// 
+#[derive(Component, Default)]
+#[require(
+    Button, 
+    Node(MyButton::default_node),
+    BackgroundColor(|| BackgroundColor(NORMAL_BUTTON)), 
+    BorderColor(|| BorderColor(Color::BLACK))
+)]
+pub struct MyButton {
+    text: Option<Text>,
+    image: Option<ImageNode>
 }
 
-pub trait SpawnButton {
-    fn spawn_text_button(&mut self, label: impl Into<String>, bundle: impl Bundle) -> Entity;
-
-    fn spawn_img_text_button(
-        &mut self,
-        image: ButtonImage,
-        label: impl Into<String>,
-        bundle: impl Bundle,
-    ) -> Entity;
-}
-
-impl<T> SpawnButton for T
-where
-    T: SpawnImpl,
-{
-    fn spawn_text_button(&mut self, label: impl Into<String>, bundle: impl Bundle) -> Entity {
-        self.spawn_impl((button_bundle(), bundle))
-            .with_children(|parent| {
-                parent.spawn(button_text(label));
-            })
-            .id()
+impl MyButton {
+    pub fn new(label: impl Into<String>) -> Self {
+        MyButton { text: Some(Text(label.into())), image: None }
     }
 
-    fn spawn_img_text_button(
-        &mut self,
-        image: ButtonImage,
-        label: impl Into<String>,
-        bundle: impl Bundle,
-    ) -> Entity {
-        let mut button_bundle = button_bundle();
-        button_bundle.style.height = Val::Auto;
-        self.spawn_impl((button_bundle, bundle))
-            .with_children(|parent| {
-                match image {
-                    ButtonImage::_Image(texture) => {
-                        parent.spawn(ImageBundle {
-                            image: UiImage::new(texture),
-                            ..Default::default()
-                        });
-                    }
-                    ButtonImage::ImageAtlas(texture, atlas) => {
-                        parent.spawn((
-                            ImageBundle {
-                                image: UiImage::new(texture),
-                                ..Default::default()
-                            },
-                            atlas,
-                        ));
-                    }
-                }
-                parent.spawn(button_text(label));
-            })
-            .id()
+    pub fn with_image(mut self, image: ImageNode) -> Self {
+        self.image = Some(image);
+        self
+    }
+
+    #[inline]
+    pub fn default_node() -> Node {
+        Node {
+            width: Val::Px(180.0),
+            height: Val::Px(50.0),
+            margin: UiRect::all(Val::Px(10.0)),
+            padding: UiRect::all(Val::Px(2.0)),
+            flex_direction: FlexDirection::Column,
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Center,
+            border: UiRect::all(Val::Px(1.0)),
+            ..default()
+        }
     }
 }
 
-#[inline]
-pub fn button_bundle() -> ButtonBundle {
-    ButtonBundle {
-        style: button_style(),
-        background_color: NORMAL_BUTTON.into(),
-        border_color: Color::BLACK.into(),
-        ..default()
-    }
-}
 
-#[inline]
-pub fn button_style() -> Style {
-    Style {
-        width: Val::Px(180.0),
-        height: Val::Px(50.0),
-        margin: UiRect::all(Val::Px(10.0)),
-        padding: UiRect::all(Val::Px(2.0)),
-        flex_direction: FlexDirection::Column,
-        justify_content: JustifyContent::Center,
-        align_items: AlignItems::Center,
-        border: UiRect::all(Val::Px(1.0)),
-        ..default()
-    }
-}
+#[derive(Component)]
+#[require(
+    Text,
+    TextFont(|| TextFont::from_font_size(18.)),
+    TextColor(|| TextColor(BUTTON_TEXT_COLOR)),
+    TextLayout(|| TextLayout::new_with_justify(JustifyText::Center))
+)]
+struct MyButtonText;
 
-#[inline]
-pub fn button_text_style() -> TextStyle {
-    TextStyle {
-        font_size: 18.0,
-        color: BUTTON_TEXT_COLOR,
-        ..default()
-    }
-}
-
-#[inline]
-pub fn button_text(text: impl Into<String>) -> TextBundle {
-    TextBundle::from_section(text, button_text_style()).with_text_justify(JustifyText::Center)
-}
 
 pub trait ButtonNav<T> {
     fn up(&self, current: T) -> Option<T>;
@@ -148,7 +99,7 @@ where
 pub struct SelectedOption;
 
 pub fn button_plugin(app: &mut App) {
-    app.add_systems(
+    app.add_observer(create_button).add_systems(
         Update,
         (
             color_buttons,
@@ -156,6 +107,21 @@ pub fn button_plugin(app: &mut App) {
             color_deselected_buttons,
         ),
     );
+}
+
+// TODO: observe only for the btn entity
+fn create_button(trigger: Trigger<OnAdd, MyButton>, mut commands: Commands, mut buttons: Query<(&MyButton, &mut Node)>) {
+    commands.entity(trigger.entity()).with_children(|parent| {
+        if let Ok((btn, mut node)) = buttons.get_mut(trigger.entity()) {
+            if let Some(image) = &btn.image {
+                node.height = Val::Auto;
+                parent.spawn(image.clone());
+            }
+            if let Some(text) = &btn.text {
+                parent.spawn((MyButtonText, text.clone()));
+            }
+        }
+    });
 }
 
 // This system handles changing all buttons color based on mouse interaction

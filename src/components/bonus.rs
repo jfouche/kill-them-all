@@ -1,44 +1,32 @@
 use crate::utils::despawn_after::DespawnAfter;
-
 use super::*;
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
 #[derive(Component)]
+#[require(
+    Name(|| Name::new("Bonus")), 
+    Sprite, 
+    RigidBody(|| RigidBody::Fixed), 
+    Collider(|| Collider::cuboid(BONUS_SIZE.x / 2.0, BONUS_SIZE.y / 2.0)), 
+    CollisionGroups(|| CollisionGroups::new(GROUP_BONUS, Group::ALL)), 
+    DespawnAfter(despawn_after)
+)]
 pub struct Bonus;
 
-#[derive(Bundle)]
-pub struct BonusBundle {
-    tag: Bonus,
-    name: Name,
-    sprite: SpriteBundle,
-    body: RigidBody,
-    collider: Collider,
-    collision_groups: CollisionGroups,
-    despawn_after: DespawnAfter,
-}
-
-impl BonusBundle {
-    pub fn new(pos: Vec3, assets: &BonusAssets) -> Self {
-        BonusBundle {
-            tag: Bonus,
-            name: Name::new("Bonus"),
-            sprite: SpriteBundle {
-                sprite: Sprite {
-                    custom_size: Some(BONUS_SIZE),
-                    ..Default::default()
-                },
-                texture: assets.texture.clone(),
-                transform: Transform::from_translation(pos),
-                ..Default::default()
-            },
-            body: RigidBody::Fixed,
-            collider: Collider::cuboid(BONUS_SIZE.x / 2.0, BONUS_SIZE.y / 2.0),
-            collision_groups: CollisionGroups::new(GROUP_BONUS, Group::ALL),
-            despawn_after: DespawnAfter::new(Duration::from_secs(8))
-                .with_blink(Duration::from_secs(3)),
+impl Bonus {
+    pub fn sprite(assets: &BonusAssets) -> Sprite {
+        Sprite {
+            image: assets.texture.clone(),                 
+            custom_size: Some(BONUS_SIZE),
+            ..Default::default()
         }
     }
+}
+
+fn despawn_after() -> DespawnAfter {
+    DespawnAfter::new(Duration::from_secs(8))
+                .with_blink(Duration::from_secs(3))
 }
 
 const BONUS_SIZE: Vec2 = Vec2::new(12., 12.);

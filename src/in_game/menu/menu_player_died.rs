@@ -20,20 +20,19 @@ impl Plugin for PlayerDiedMenuPlugin {
 }
 
 #[derive(Component)]
+#[require(
+    Popup(|| Popup::default().with_title("Player died!")),
+    Name(|| Name::new("PlayerDiedMenu"))
+)]
 struct PlayerDiedMenu;
 
 #[derive(Component)]
 struct BackToMenu;
 
 fn spawn_player_died_menu(mut commands: Commands) {
-    commands
-        .spawn_popup(
-            "Player died!",
-            (PlayerDiedMenu, Name::new("PlayerDiedMenu")),
-        )
-        .with_children(|popup| {
-            popup.spawn_text_button("Back to menu", (BackToMenu, SelectedOption));
-        });
+    commands.spawn(PlayerDiedMenu).with_children(|popup| {
+        popup.spawn((MyButton::new("Back to menu"), BackToMenu, SelectedOption));
+    });
 }
 
 fn back_to_menu(

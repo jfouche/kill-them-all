@@ -14,6 +14,10 @@ pub fn main_menu_plugin(app: &mut App) {
 }
 
 #[derive(Component)]
+#[require(
+    Popup(|| Popup::default().with_title("Kill'em all")),
+    Name(|| Name::new("MainMenu"))
+)]
 struct MainMenu;
 
 // All actions that can be triggered from a button click
@@ -38,15 +42,20 @@ fn set_background(mut commands: Commands) {
 }
 
 fn spawn_menu(mut commands: Commands) {
-    let new_game_btn =
-        commands.spawn_text_button("New game", (MenuButtonAction::PlayGame, SelectedOption));
-    let exit_btn = commands.spawn_text_button("Exit", MenuButtonAction::ExitApplication);
+    let new_game_btn = commands
+        .spawn((
+            MyButton::new("New game"),
+            MenuButtonAction::PlayGame,
+            SelectedOption,
+        ))
+        .id();
+    let exit_btn = commands
+        .spawn((MyButton::new("Exit"), MenuButtonAction::ExitApplication))
+        .id();
 
     let menu_nav = MainMenuButtonNav(vec![new_game_btn, exit_btn]);
 
-    commands
-        .spawn_popup("Kill'em all", (MainMenu, Name::new("MainMenu")))
-        .push_children(&menu_nav);
+    commands.spawn(MainMenu).add_children(&menu_nav);
 
     commands.insert_resource(menu_nav);
 }
