@@ -41,7 +41,10 @@ impl PluginGroup for InGamePluginsGroup {
 fn in_game_schedule_plugin(app: &mut App) {
     app.register_type::<Round>()
         .add_systems(Startup, stop_physics)
-        .add_systems(OnEnter(GameState::InGame), (run_game, grab_cursor))
+        .add_systems(
+            OnEnter(GameState::InGame),
+            (run_game, grab_cursor, init_physics),
+        )
         .add_systems(OnExit(GameState::InGame), (ungrab_cursor, reset_physics))
         .add_systems(OnEnter(InGameState::Running), (grab_cursor, start_physics))
         .add_systems(OnExit(InGameState::Running), (ungrab_cursor, stop_physics))
@@ -101,14 +104,25 @@ fn unpause(
     }
 }
 
-fn start_physics(mut physics: ResMut<RapierConfiguration>) {
-    physics.physics_pipeline_active = true;
-    physics.query_pipeline_active = true;
+fn init_physics(mut conf: Query<&mut RapierConfiguration>) {
+    if let Ok(mut conf) = conf.get_single_mut() {
+        info!("init_physics");
+        conf.gravity = Vect::ZERO;
+    }
 }
 
-fn stop_physics(mut physics: ResMut<RapierConfiguration>) {
-    physics.physics_pipeline_active = false;
-    physics.query_pipeline_active = false;
+fn start_physics(mut physics: Query<&mut RapierConfiguration>) {
+    if let Ok(mut physics) = physics.get_single_mut() {
+        physics.physics_pipeline_active = true;
+        physics.query_pipeline_active = true;
+    }
+}
+
+fn stop_physics(mut physics: Query<&mut RapierConfiguration>) {
+    if let Ok(mut physics) = physics.get_single_mut() {
+        physics.physics_pipeline_active = false;
+        physics.query_pipeline_active = false;
+    }
 }
 
 fn reset_physics(mut commands: Commands) {

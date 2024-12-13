@@ -1,4 +1,4 @@
-use super::panel_inventory::inventory_panel;
+use super::panel_inventory::InventoryPanel;
 use crate::components::*;
 use crate::in_game::back_to_game;
 use crate::schedule::*;
@@ -27,6 +27,10 @@ impl Plugin for RoundEndMenuPlugin {
 }
 
 #[derive(Component)]
+#[require(
+    Popup(|| Popup::default().with_title("End of round")),
+    Name(|| Name::new("RoundEndMenu"))
+)]
 struct RoundEndMenu;
 
 #[derive(Resource, Default, DerefMut)]
@@ -56,14 +60,13 @@ fn spawn_round_end_menu(mut commands: Commands, assets: Res<EquipmentAssets>) {
         if let Some(equipment) = equipment_provider.gen(&mut rng) {
             let equipment_entity = equipment.spawn(&mut commands, &mut rng);
             equipment_list.push(equipment_entity.entity);
-            let texture = assets.texture();
-            let atlas = assets.atlas(equipment_entity.tile_index);
-            let img = ButtonImage::ImageAtlas(texture, atlas);
-            let entity = commands.spawn_img_text_button(
-                img,
-                equipment_entity.label,
-                EquipmentEntity(equipment_entity.entity),
-            );
+            let entity = commands
+                .spawn((
+                    MyButton::new(equipment_entity.label)
+                        .with_image(assets.image_node(equipment_entity.tile_index)),
+                    EquipmentEntity(equipment_entity.entity),
+                ))
+                .id();
             round_end_nav.0.push(entity);
         }
     }
@@ -74,21 +77,18 @@ fn spawn_round_end_menu(mut commands: Commands, assets: Res<EquipmentAssets>) {
     }
 
     let level_up_panel = commands
-        .spawn(NodeBundle {
-            style: Style {
-                flex_direction: FlexDirection::Column,
-                ..Default::default()
-            },
+        .spawn(Node {
+            flex_direction: FlexDirection::Column,
             ..Default::default()
         })
-        .push_children(&round_end_nav)
+        .add_children(&round_end_nav)
         .id();
 
-    let inventory_panel = commands.spawn(inventory_panel()).id();
+    let inventory_panel = commands.spawn(InventoryPanel).id();
 
     commands
-        .spawn_popup("End of round", (RoundEndMenu, Name::new("RoundEndMenu")))
-        .push_children(&[level_up_panel, inventory_panel]);
+        .spawn(RoundEndMenu)
+        .add_children(&[level_up_panel, inventory_panel]);
 
     commands.insert_resource(round_end_nav);
     commands.insert_resource(equipment_list);

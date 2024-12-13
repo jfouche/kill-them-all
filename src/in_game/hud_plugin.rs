@@ -47,16 +47,13 @@ fn spawn_life_bar(mut commands: Commands) {
     commands.spawn((
         (Hud, LifeBar),
         Name::new("HUD - LifeBar"),
-        NodeBundle {
-            style: Style {
-                position_type: PositionType::Absolute,
-                left: Val::Px(50.),
-                top: Val::Px(20.),
-                width: Val::Px(300.),
-                height: Val::Px(20.),
-                border: UiRect::all(Val::Px(2.)),
-                ..Default::default()
-            },
+        Node {
+            position_type: PositionType::Absolute,
+            left: Val::Px(50.),
+            top: Val::Px(20.),
+            width: Val::Px(300.),
+            height: Val::Px(20.),
+            border: UiRect::all(Val::Px(2.)),
             ..Default::default()
         },
         ProgressBar::new(0.0, 100.0, 60.0).with_colors(Color::BLACK, RED.into()),
@@ -67,16 +64,13 @@ fn spawn_xp_bar(mut commands: Commands) {
     commands.spawn((
         (Hud, ExperienceBar),
         Name::new("HUD - ExperienceBar"),
-        NodeBundle {
-            style: Style {
-                position_type: PositionType::Absolute,
-                right: Val::Px(50.),
-                top: Val::Px(20.),
-                width: Val::Px(300.),
-                height: Val::Px(20.),
-                border: UiRect::all(Val::Px(2.)),
-                ..Default::default()
-            },
+        Node {
+            position_type: PositionType::Absolute,
+            right: Val::Px(50.),
+            top: Val::Px(20.),
+            width: Val::Px(300.),
+            height: Val::Px(20.),
+            border: UiRect::all(Val::Px(2.)),
             ..Default::default()
         },
         ProgressBar::new(0.0, 100.0, 0.0).with_colors(Color::BLACK, GOLD.into()),
@@ -84,64 +78,50 @@ fn spawn_xp_bar(mut commands: Commands) {
 }
 
 fn spawn_round(mut commands: Commands) {
-    let text_style = TextStyle {
-        font_size: 20.0,
-        color: Color::WHITE,
-        ..Default::default()
-    };
     commands.spawn((
         (Hud, RoundText),
         Name::new("HUD - Round"),
-        TextBundle::from_sections([
-            TextSection::new("Round ", text_style.clone()),
-            TextSection::from_style(text_style.clone()),
-            TextSection::new(" : ", text_style.clone()),
-            TextSection::from_style(text_style.clone()),
-            TextSection::new("s", text_style),
-        ])
-        .with_text_justify(JustifyText::Center)
-        .with_background_color(Color::Srgba(Srgba::new(0.25, 0.25, 0.25, 0.7)))
-        .with_style(Style {
+        Text("".into()),
+        TextFont::from_font_size(20.),
+        TextColor(Srgba::new(0.25, 0.25, 0.25, 0.7).into()),
+        Node {
             position_type: PositionType::Absolute,
             margin: UiRect::horizontal(Val::Auto).with_top(Val::Px(10.)),
             width: Val::Px(180.),
             ..Default::default()
-        }),
+        },
         BorderRadius::all(Val::Px(10.)),
     ));
 }
 
 fn spawn_score(mut commands: Commands) {
-    let text_style = TextStyle {
-        font_size: 20.0,
-        color: Color::WHITE,
-        ..Default::default()
-    };
     commands.spawn((
         (Hud, ScoreText),
         Name::new("HUD - Score"),
-        TextBundle::from_sections([
-            TextSection::new("Score: ", text_style.clone()),
-            TextSection::from_style(text_style),
-        ])
-        .with_style(Style {
+        Text("".into()),
+        TextFont::from_font_size(20.),
+        TextColor(Color::WHITE),
+        Node {
             position_type: PositionType::Absolute,
             left: Val::Px(100.),
             ..Default::default()
-        }),
+        },
     ));
 }
 
 fn update_score(score: Res<Score>, mut q_text: Query<&mut Text, With<ScoreText>>) {
     if let Ok(mut text) = q_text.get_single_mut() {
-        text.sections[1].value = format!("{}", score.0);
+        text.0 = format!("score : {}", score.0);
     }
 }
 
 fn update_round(round: Res<Round>, mut q_text: Query<&mut Text, With<RoundText>>) {
     if let Ok(mut text) = q_text.get_single_mut() {
-        text.sections[1].value = format!("{}", round.level);
-        text.sections[3].value = format!("{}", round.timer.remaining().as_secs());
+        text.0 = format!(
+            "Round: {} - {}s",
+            round.level,
+            round.timer.remaining().as_secs()
+        );
     }
 }
 

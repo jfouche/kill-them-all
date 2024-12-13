@@ -1,4 +1,4 @@
-use super::panel_inventory::inventory_panel;
+use super::panel_inventory::InventoryPanel;
 use crate::components::*;
 use crate::in_game::back_to_game;
 use crate::schedule::*;
@@ -6,11 +6,11 @@ use crate::ui::*;
 use bevy::prelude::*;
 
 #[derive(Component)]
+#[require(
+    Popup(|| Popup::default().with_title("Level up!")),
+    Name(|| Name::new("LevelUpMenu"))
+)]
 struct LevelUpMenu;
-
-fn level_up_menu_bundle() -> impl Bundle {
-    (LevelUpMenu, Name::new("LevelUpMenu"))
-}
 
 #[derive(Resource, Default)]
 struct LevelUpMenuNav(Vec<Entity>);
@@ -74,8 +74,12 @@ fn spawn_level_up_menu(mut commands: Commands) {
     for _ in 0..3 {
         if let Some(upgrade) = upgrade_provider.gen(&mut rng) {
             let upgrade_view = upgrade.generate(&mut commands, &mut rng);
-            let btn_entity =
-                commands.spawn_text_button(upgrade_view.label, UpgradeEntity(upgrade_view.entity));
+            let btn_entity = commands
+                .spawn((
+                    MyButton::new(upgrade_view.label),
+                    UpgradeEntity(upgrade_view.entity),
+                ))
+                .id();
             level_up_nav.0.push(btn_entity);
             upgrade_list.push(upgrade_view.entity);
         }
@@ -87,21 +91,18 @@ fn spawn_level_up_menu(mut commands: Commands) {
     }
 
     let level_up_panel = commands
-        .spawn(NodeBundle {
-            style: Style {
-                flex_direction: FlexDirection::Column,
-                ..Default::default()
-            },
+        .spawn(Node {
+            flex_direction: FlexDirection::Column,
             ..Default::default()
         })
-        .push_children(&level_up_nav)
+        .add_children(&level_up_nav)
         .id();
 
-    let inventory_panel = commands.spawn(inventory_panel()).id();
+    let inventory_panel = commands.spawn(InventoryPanel).id();
 
     commands
-        .spawn_popup("Level up!", level_up_menu_bundle())
-        .push_children(&[level_up_panel, inventory_panel]);
+        .spawn(LevelUpMenu)
+        .add_children(&[level_up_panel, inventory_panel]);
 
     commands.insert_resource(level_up_nav);
     commands.insert_resource(upgrade_list);

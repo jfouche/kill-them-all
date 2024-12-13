@@ -1,9 +1,14 @@
 use super::*;
 use bevy::prelude::*;
 use rand::{rngs::ThreadRng, Rng};
-use std::{ops::RangeInclusive, time::Duration};
+use std::time::Duration;
 
-#[derive(Component)]
+#[derive(Component, Default)]
+#[require(
+    DamageRange(||DamageRange::new(1., 2.)), 
+    BaseAttackSpeed, 
+    AttackTimer
+)]
 pub struct Weapon;
 
 #[derive(Bundle)]
@@ -37,7 +42,8 @@ impl std::ops::Sub<f32> for Damage {
 }
 
 /// Attack per second
-#[derive(Component, Clone, Copy, Deref, Reflect)]
+#[derive(Component, Default, Clone, Copy, Deref, Reflect)]
+#[require(AttackTimer)]
 pub struct BaseAttackSpeed(pub f32);
 
 impl std::ops::Mul<&IncreaseAttackSpeed> for &BaseAttackSpeed {
@@ -51,18 +57,37 @@ impl std::ops::Mul<&IncreaseAttackSpeed> for &BaseAttackSpeed {
 #[derive(Component, Default, Clone, Copy, Deref, DerefMut, Reflect)]
 pub struct AttackSpeed(pub f32);
 
-#[derive(Component, Deref, Reflect)]
-pub struct DamageRange(pub RangeInclusive<f32>);
+#[derive(Component, Clone, Copy, Reflect)]
+pub struct DamageRange {
+    min: f32,
+    max: f32,
+}
+
+impl Default for DamageRange {
+    fn default() -> Self {
+        DamageRange { min: 1., max: 2. }
+    }
+}
 
 impl DamageRange {
+    pub fn new(min: f32, max: f32) -> Self {
+        DamageRange { min, max }
+    }
+
     pub fn gen(&self, rng: &mut ThreadRng) -> Damage {
-        let damage = rng.gen_range(self.0.clone());
+        let damage = rng.gen_range(self.min..=self.max);
         Damage(damage)
     }
 }
 
 #[derive(Component, Deref, DerefMut, Reflect)]
 pub struct AttackTimer(pub Timer);
+
+impl Default for AttackTimer {
+    fn default() -> Self {
+        AttackTimer(Timer::from_seconds(1., TimerMode::Repeating))
+    }
+}
 
 impl AttackTimer {
     pub fn new(attack_speed: f32) -> Self {
@@ -74,7 +99,8 @@ impl AttackTimer {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Default)]
+#[require(Damage, PierceChance, Velocity, Collider)]
 pub struct Ammo;
 
 #[derive(Bundle, Default)]

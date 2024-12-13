@@ -38,7 +38,7 @@ fn toggle_grab(
 ) {
     if let Ok(window) = primary_window.get_single_mut() {
         if keys.just_pressed(KeyCode::KeyG) {
-            match window.cursor.grab_mode {
+            match window.cursor_options.grab_mode {
                 bevy::window::CursorGrabMode::None => {
                     set_grab_cursor(window, true);
                 }
@@ -50,24 +50,20 @@ fn toggle_grab(
     }
 }
 
-fn display_collision_events(mut collisions: EventReader<CollisionEvent>, names: Query<DebugName>) {
-    let get_name = |e| {
-        names
-            .get(e)
-            .map(|dn| format!("{dn:?}"))
-            .unwrap_or(format!("{e:?}"))
-    };
-
+fn display_collision_events(
+    mut collisions: EventReader<CollisionEvent>,
+    names: Query<NameOrEntity>,
+) {
     for collision in collisions.read() {
         match collision {
             CollisionEvent::Started(e1, e2, flag) => {
-                let n1 = get_name(*e1);
-                let n2 = get_name(*e2);
+                let n1 = names.get(*e1).unwrap();
+                let n2 = names.get(*e2).unwrap();
                 info!("CollisionEvent::Started({n1}, {n2}, {flag:?})");
             }
             CollisionEvent::Stopped(e1, e2, flag) => {
-                let n1 = get_name(*e1);
-                let n2 = get_name(*e2);
+                let n1 = names.get(*e1).unwrap();
+                let n2 = names.get(*e2).unwrap();
                 info!("CollisionEvent::Stopped({n1}, {n2}, {flag:?})");
             }
         }

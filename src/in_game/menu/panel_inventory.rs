@@ -1,37 +1,92 @@
 use crate::components::*;
-use bevy::prelude::*;
+use bevy::{
+    ecs::{component::ComponentId, world::DeferredWorld},
+    prelude::*,
+};
 
+///
+/// Inventory panel
+///
 #[derive(Component)]
+#[component(on_add = create_inventory_panel)]
+#[require(
+    Name(|| Name::new("InventoryPanel")),
+    Node(|| Node {
+        padding: UiRect::all(Val::Px(5.)),
+        ..Default::default()
+    })
+)]
 pub struct InventoryPanel;
 
-pub fn inventory_panel() -> impl Bundle {
-    (
-        InventoryPanel,
-        Name::new("InventoryPanel"),
-        NodeBundle {
-            style: Style {
-                flex_direction: FlexDirection::Row,
-                padding: UiRect::all(Val::Px(5.)),
-                ..Default::default()
-            },
-            ..Default::default()
-        },
-    )
+fn create_inventory_panel(mut world: DeferredWorld, entity: Entity, _component_id: ComponentId) {
+    world.commands().entity(entity).with_children(|panel| {
+        panel.spawn(EquipmentsPanel);
+        panel.spawn(AffixesPanel);
+    });
 }
 
+///
+/// A panel that show player's equipments
+///
 #[derive(Component)]
-struct AffixesText;
-
-#[derive(Component)]
+#[require(
+    Name(|| Name::new("EquipmentsPanel")),
+    Node(|| Node {
+        width: Val::Px(200.),
+        height: Val::Px(200.),
+        ..Default::default()
+    }),
+    BackgroundColor(|| BackgroundColor(Srgba::rgb_u8(40, 40, 40).into()))
+)]
 struct EquipmentsPanel;
 
+///
+///  A panel that shows an equipment
+///
+#[derive(Component)]
+#[require(
+    Name(|| Name::new("InventoryBox")),
+    ImageNode,
+    BackgroundColor(|| BackgroundColor(Srgba::rgb_u8(70, 70, 70).into())),
+    Interaction
+)]
+struct InventoryBox;
+
+#[inline]
+fn default_inventory_box_node() -> Node {
+    Node {
+        position_type: PositionType::Absolute,
+        width: Val::Px(48.),
+        height: Val::Px(48.),
+        ..Default::default()
+    }
+}
+
+///
+///  A panel that shows selected equipment affixes
+///
+#[derive(Component)]
+#[require(
+    Name(|| Name::new("AffixesPanel")),
+    Text,
+    TextFont(|| TextFont::from_font_size(16.)),
+    Node(|| Node {
+        margin: UiRect::all(Val::Px(5.)),
+        width: Val::Px(180.),
+        ..Default::default()
+    })
+)]
+struct AffixesPanel;
+
+///
+/// Trait to get position of a specific equipment on the [EquipmentsPanel]
+///
+/// weapon : Vec2::new(7., 74.)
+/// ?      : Vec2::new(142., 74.)
+/// ?      : Vec2::new(7., 142.)
 trait EquipmentPos {
     fn pos() -> Vec2;
 }
-
-// weapon : Vec2::new(7., 74.)
-// ?      : Vec2::new(142., 74.)
-// ?      : Vec2::new(7., 142.)
 
 impl EquipmentPos for Amulet {
     fn pos() -> Vec2 {
@@ -58,135 +113,59 @@ impl EquipmentPos for Helmet {
 }
 
 fn show_equipment<T>(
+    trigger: Trigger<OnAdd, EquipmentsPanel>,
     mut commands: Commands,
-    panels: Query<Entity, Added<EquipmentsPanel>>,
     equipments: Query<(&TileIndex, &AffixesLabels, &Parent), With<T>>,
     players: Query<Entity, With<Player>>,
     assets: Res<EquipmentAssets>,
 ) where
     T: Component + EquipmentPos,
 {
-    let Ok(player) = players.get_single() else {
-        return;
-    };
-    for panel in &panels {
-        for (tile_index, label, parent) in &equipments {
-            if **parent == player {
-                commands.entity(panel).with_children(|p| {
-                    let pos = T::pos();
-                    let texture = assets.texture();
-                    let atlas = assets.atlas(**tile_index);
-                    p.spawn((inventory_box(pos, texture, atlas), label.clone()));
-                });
-            }
-        }
+    let player = players.get_single().expect("Player");
+    equipments
+        .iter()
+        .filter(|(_tile_index, _labels, parent)| ***parent == player)
+        .for_each(|(tile_index, labels, _parent)| {
+            commands.entity(trigger.entity()).with_children(|panel| {
+                let pos = T::pos();
+                panel
+                    .spawn((
+                        InventoryBox,
+                        assets.image_node(**tile_index),
+                        Node {
+                            left: Val::Px(pos.x),
+                            top: Val::Px(pos.y),
+                            ..default_inventory_box_node()
+                        },
+                        labels.clone(),
+                    ))
+                    .observe(show_affixes)
+                    .observe(hide_affixes);
+            });
+        });
+}
+
+fn hide_affixes(_trigger: Trigger<Pointer<Out>>, mut panels: Query<&mut Text, With<AffixesPanel>>) {
+    if let Ok(mut text) = panels.get_single_mut() {
+        *text = "".into();
     }
 }
 
-fn hover_equipment(
-    equipments: Query<(&AffixesLabels, &Interaction)>,
-    mut texts: Query<&mut Text, With<AffixesText>>,
+fn show_affixes(
+    trigger: Trigger<Pointer<Over>>,
+    equipments: Query<&AffixesLabels>,
+    mut panels: Query<&mut Text, With<AffixesPanel>>,
 ) {
-    if let Ok(mut text) = texts.get_single_mut() {
-        text.sections[0].value = "".into();
-        for (label, interaction) in &equipments {
-            if interaction == &Interaction::Hovered {
-                text.sections[0].value = label.to_string();
-            }
+    if let Ok(mut text) = panels.get_single_mut() {
+        if let Ok(labels) = equipments.get(trigger.entity()) {
+            *text = labels.into();
         }
     };
 }
 
-fn equipments_panel_bundle() -> impl Bundle {
-    (
-        EquipmentsPanel,
-        Name::new("Equipments Panel"),
-        NodeBundle {
-            style: Style {
-                width: Val::Px(200.),
-                height: Val::Px(200.),
-                ..Default::default()
-            },
-            background_color: Srgba::rgb_u8(40, 40, 40).into(),
-            ..Default::default()
-        },
-    )
-}
-
-fn item_affixes_panel() -> impl Bundle {
-    (
-        AffixesText,
-        Name::new("Affixes"),
-        TextBundle::from_section(
-            "",
-            TextStyle {
-                font_size: 16.,
-                ..Default::default()
-            },
-        )
-        .with_style(Style {
-            margin: UiRect::all(Val::Px(5.)),
-            width: Val::Px(180.),
-            ..Default::default()
-        }),
-    )
-}
-
-// fn empty_inventory_box(pos: Vec2) -> impl Bundle {
-//     NodeBundle {
-//         style: Style {
-//             position_type: PositionType::Absolute,
-//             left: Val::Px(pos.x),
-//             top: Val::Px(pos.y),
-//             width: Val::Px(48.),
-//             height: Val::Px(48.),
-//             ..Default::default()
-//         },
-//         background_color: Srgba::rgb_u8(70, 70, 70).into(),
-//         ..Default::default()
-//     }
-// }
-
-fn inventory_box(pos: Vec2, texture: Handle<Image>, atlas: TextureAtlas) -> impl Bundle {
-    (
-        ImageBundle {
-            image: UiImage::new(texture),
-            style: Style {
-                position_type: PositionType::Absolute,
-                left: Val::Px(pos.x),
-                top: Val::Px(pos.y),
-                width: Val::Px(48.),
-                height: Val::Px(48.),
-                ..Default::default()
-            },
-            background_color: Srgba::rgb_u8(70, 70, 70).into(),
-            ..Default::default()
-        },
-        atlas,
-        Interaction::None,
-    )
-}
-
-fn setup_hooks(world: &mut World) {
-    world.register_component_hooks::<InventoryPanel>().on_add(
-        |mut world, entity, _component_id| {
-            world.commands().entity(entity).with_children(|panel| {
-                panel.spawn(equipments_panel_bundle());
-                panel.spawn(item_affixes_panel());
-            });
-        },
-    );
-}
-
 pub fn inventory_panel_plugin(app: &mut App) {
-    app.add_systems(Startup, setup_hooks).add_systems(
-        Update,
-        (
-            show_equipment::<Amulet>,
-            show_equipment::<BodyArmour>,
-            show_equipment::<Boots>,
-            show_equipment::<Helmet>,
-            hover_equipment,
-        ),
-    );
+    app.add_observer(show_equipment::<Amulet>)
+        .add_observer(show_equipment::<BodyArmour>)
+        .add_observer(show_equipment::<Boots>)
+        .add_observer(show_equipment::<Helmet>);
 }

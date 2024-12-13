@@ -1,98 +1,97 @@
 use super::*;
 use bevy::prelude::*;
-use bevy_rapier2d::prelude::*;
 use rand::{rngs::ThreadRng, Rng};
 
+///
+///  Assets of a single monster
+///
 pub struct MonsterAssets {
     pub texture: Handle<Image>,
     pub texture_atlas_layout: Handle<TextureAtlasLayout>,
 }
 
+///
+///  Assets of all monsters
+///
 #[derive(Resource, Default, Deref, DerefMut)]
 pub struct AllMonsterAssets(pub Vec<MonsterAssets>);
 
-#[derive(Component)]
+///
+/// Assets used to show where the monster will spawn
+///
+#[derive(Resource)]
+pub struct SpawningMonsterAssets {
+    pub mesh: Handle<Mesh>,
+    pub color: Handle<ColorMaterial>,
+}
+
+impl From<&SpawningMonsterAssets> for Mesh2d {
+    fn from(value: &SpawningMonsterAssets) -> Self {
+        Mesh2d(value.mesh.clone())
+    }
+}
+
+impl From<&SpawningMonsterAssets> for MeshMaterial2d<ColorMaterial> {
+    fn from(value: &SpawningMonsterAssets) -> Self {
+        MeshMaterial2d(value.color.clone())
+    }
+}
+
+///
+/// Generic Monster component
+///
+#[derive(Component, Default)]
+#[require(
+    Character,
+    MonsterRarity,
+    XpOnDeath,
+    DamageRange,
+    Sprite,
+    AnimationTimer
+)]
 pub struct Monster;
 
-#[derive(Bundle)]
-pub struct MonsterBundle {
-    tag: Monster,
-    name: Name,
-    // bevy view
-    sprite: SpriteBundle,
-    texture_atlas: TextureAtlas,
-    animation_timer: AnimationTimer,
-    // skills
-    skills: SkillsBundle,
-    xp_on_death: XpOnDeath,
-    damage_range: DamageRange,
-    // physics
-    body: RigidBody,
-    velocity: Velocity,
-    collider: Collider,
-    collision_groups: CollisionGroups,
-    locked_axes: LockedAxes,
-}
+#[derive(Component)]
+#[require(
+    Name(|| Name::new("Monster#1")),
+    Monster,
+    BaseLife(|| BaseLife(2.)),
+    BaseMovementSpeed(||BaseMovementSpeed(90.)),
+)]
+pub struct MonsterType1;
 
-impl Default for MonsterBundle {
-    fn default() -> Self {
-        MonsterBundle {
-            tag: Monster,
-            name: Name::new("Monster"),
-            sprite: SpriteBundle::default(),
-            texture_atlas: TextureAtlas::default(),
-            animation_timer: AnimationTimer::default(),
-            skills: SkillsBundle::default(),
-            xp_on_death: XpOnDeath(1),
-            damage_range: DamageRange(1. ..=2.),
-            body: RigidBody::Dynamic,
-            velocity: Velocity::zero(),
-            collider: Collider::default(),
-            collision_groups: CollisionGroups::new(GROUP_ENEMY, Group::ALL & !GROUP_BONUS),
-            locked_axes: LockedAxes::ROTATION_LOCKED,
-        }
-    }
-}
+#[derive(Component)]
+#[require(
+    Name(|| Name::new("Monster#2")),
+    Monster,
+    BaseLife(|| BaseLife(3.)),
+    BaseMovementSpeed(||BaseMovementSpeed(80.)),
+)]
+pub struct MonsterType2;
 
-impl MonsterBundle {
-    pub fn new(assets: &MonsterAssets, params: &MonsterSpawnParams) -> Self {
-        let size = params.size();
-        MonsterBundle {
-            skills: SkillsBundle {
-                movement_speed: params.movement_speed(),
-                life: params.life(),
-                ..Default::default()
-            },
-            xp_on_death: params.xp(),
-            damage_range: params.damage_range(),
-            sprite: SpriteBundle {
-                texture: assets.texture.clone(),
-                sprite: Sprite {
-                    custom_size: Some(size),
-                    ..Default::default()
-                },
-                transform: Transform::from_xyz(params.pos.x, params.pos.y, 10.),
-                ..Default::default()
-            },
-            texture_atlas: TextureAtlas {
-                layout: assets.texture_atlas_layout.clone(),
-                ..Default::default()
-            },
-            collider: Collider::cuboid(size.x / 2., size.y / 2.),
-            ..Default::default()
-        }
-    }
-}
+#[derive(Component)]
+#[require(
+    Name(|| Name::new("Monster#3")),
+    Monster,
+    BaseLife(|| BaseLife(4.)),
+    BaseMovementSpeed(||BaseMovementSpeed(70.)),
+)]
+pub struct MonsterType3;
 
 // TODO: use enum
 const MONSTER_KIND_COUNT: usize = 3;
 
+#[derive(Component, Default, Clone, Copy, Reflect)]
 pub enum MonsterRarity {
+    #[default]
     Normal,
     Rare,
 }
 
+///
 /// Contains the monster informations to spawn
+///
+#[derive(Component, Default, Reflect)]
 pub struct MonsterSpawnParams {
     pub pos: Vec2,
     pub rarity: MonsterRarity,
@@ -130,108 +129,107 @@ impl MonsterSpawnParams {
             MonsterRarity::Rare => Vec2::new(32.0, 32.0),
         }
     }
+}
 
-    pub fn damage_range(&self) -> DamageRange {
-        let (min, max) = match self.rarity {
+impl From<&MonsterSpawnParams> for Transform {
+    fn from(value: &MonsterSpawnParams) -> Self {
+        Transform::from_xyz(value.pos.x, value.pos.y, 10.)
+    }
+}
+
+///
+/// Utility to simplify components initialization
+///
+pub struct MonsterSpawnParamsAndAssets<'a> {
+    pub params: &'a MonsterSpawnParams,
+    pub assets: &'a AllMonsterAssets,
+}
+
+impl From<&MonsterSpawnParamsAndAssets<'_>> for MonsterRarity {
+    fn from(value: &MonsterSpawnParamsAndAssets) -> Self {
+        value.params.rarity
+    }
+}
+
+impl From<&MonsterSpawnParamsAndAssets<'_>> for Sprite {
+    fn from(value: &MonsterSpawnParamsAndAssets) -> Self {
+        let assets = value
+            .assets
+            .get(value.params.kind)
+            .expect("Monster type out of range !");
+
+        Sprite {
+            image: assets.texture.clone(),
+            texture_atlas: Some(assets.texture_atlas_layout.clone().into()),
+            custom_size: Some(value.params.size()),
+            ..Default::default()
+        }
+    }
+}
+
+impl From<&MonsterSpawnParamsAndAssets<'_>> for XpOnDeath {
+    fn from(value: &MonsterSpawnParamsAndAssets) -> Self {
+        match value.params.rarity {
+            MonsterRarity::Normal => XpOnDeath(1),
+            MonsterRarity::Rare => XpOnDeath(4),
+        }
+    }
+}
+
+impl From<&MonsterSpawnParamsAndAssets<'_>> for DamageRange {
+    fn from(value: &MonsterSpawnParamsAndAssets) -> Self {
+        let (min, max) = match value.params.rarity {
             MonsterRarity::Normal => (1., 2.),
             MonsterRarity::Rare => (2., 4.),
         };
-        let multiplier = (self.level + 1) as f32;
+        let multiplier = (value.params.level + 1) as f32;
         let min = min * multiplier;
         let max = max * multiplier;
-        DamageRange(min..=max)
-    }
-
-    pub fn xp(&self) -> XpOnDeath {
-        let xp = match self.rarity {
-            MonsterRarity::Normal => 1u32,
-            MonsterRarity::Rare => 3,
-        };
-        XpOnDeath(xp * (self.level + 1) as u32)
-    }
-
-    pub fn movement_speed(&self) -> MovementSpeedBundle {
-        match self.rarity {
-            MonsterRarity::Normal => MovementSpeedBundle::new(90.),
-            MonsterRarity::Rare => MovementSpeedBundle::new(70.),
-        }
-    }
-
-    pub fn life(&self) -> LifeBundle {
-        let life = match self.rarity {
-            MonsterRarity::Normal => 2.,
-            MonsterRarity::Rare => 5.,
-        };
-        // 5% increase life per level
-        let incr = self.level as f32 * 5.;
-        LifeBundle::new(life * (100. + incr) / 100.)
+        DamageRange::new(min, max)
     }
 }
 
-#[derive(Component, Deref)]
+impl From<&MonsterSpawnParamsAndAssets<'_>> for Collider {
+    fn from(value: &MonsterSpawnParamsAndAssets<'_>) -> Self {
+        Collider::cuboid(value.params.size().x / 2., value.params.size().y / 2.)
+    }
+}
+
+///
+/// Experience given to player when the monster is killed
+///
+#[derive(Component, Default, Deref)]
 pub struct XpOnDeath(pub u32);
 
-#[derive(Resource)]
-pub struct MonsterSpawningConfig {
-    pub timer: Timer,
-    pub enemy_count: u16,
-}
-
-impl Default for MonsterSpawningConfig {
-    fn default() -> Self {
-        MonsterSpawningConfig {
-            timer: Timer::from_seconds(6., TimerMode::Repeating),
-            enemy_count: 3,
-        }
-    }
-}
-
+///
+/// Component to inform that a monster will spawn
+///
 #[derive(Component)]
-pub struct MonsterSpawnConfig {
-    pub timer: Timer,
-    pub params: MonsterSpawnParams,
-}
-
-impl MonsterSpawnConfig {
-    pub fn new(params: MonsterSpawnParams) -> Self {
-        MonsterSpawnConfig {
-            timer: Timer::from_seconds(1., TimerMode::Once),
-            params,
-        }
-    }
-}
-
-#[derive(Component)]
+#[require(
+    Name(|| Name::new("MonsterFuturePos")),
+    MonsterSpawnTimer,
+    Transform,
+    Mesh2d,
+    MeshMaterial2d<ColorMaterial>,
+    MonsterSpawnParams
+)]
 pub struct MonsterFuturePos;
 
-#[derive(Bundle)]
-pub struct MonsterFuturePosBundle {
-    tag: MonsterFuturePos,
-    name: Name,
-    sprite: SpriteBundle,
-    config: MonsterSpawnConfig,
-}
+///
+/// Timer between spawning information and real monster spawn
+///
+#[derive(Component, Deref, DerefMut, Reflect)]
+pub struct MonsterSpawnTimer(pub Timer);
 
-impl MonsterFuturePosBundle {
-    pub fn new(params: MonsterSpawnParams) -> Self {
-        MonsterFuturePosBundle {
-            tag: MonsterFuturePos,
-            name: Name::new("MonsterFuturePos"),
-            sprite: SpriteBundle {
-                sprite: Sprite {
-                    color: Color::srgba(0.8, 0.3, 0.3, 0.2),
-                    custom_size: Some(params.size()),
-                    ..Default::default()
-                },
-                transform: Transform::from_xyz(params.pos.x, params.pos.y, 1.),
-                ..Default::default()
-            },
-            config: MonsterSpawnConfig::new(params),
-        }
+impl Default for MonsterSpawnTimer {
+    fn default() -> Self {
+        MonsterSpawnTimer(Timer::from_seconds(1., TimerMode::Once))
     }
 }
 
+///
 /// Event to notify a monster died
+///
 #[derive(Event)]
 pub struct MonsterDeathEvent {
     pub pos: Vec3,
