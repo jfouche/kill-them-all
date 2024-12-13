@@ -26,7 +26,8 @@ impl Plugin for MonsterPlugin {
                     animate_sprite,
                 )
                     .in_set(GameRunningSet::EntityUpdate),
-            );
+            )
+            .add_observer(add_affixes);
     }
 }
 
@@ -147,6 +148,31 @@ fn spawn_monsters(
             .observe(send_death_event)
             .observe(increment_score);
         }
+    }
+}
+
+///
+/// Add affixes to rare monsters
+///
+fn add_affixes(
+    trigger: Trigger<OnAdd, Monster>,
+    mut commands: Commands,
+    rarities: Query<&MonsterRarity>,
+) {
+    if let Ok(MonsterRarity::Rare) = rarities.get(trigger.entity()) {
+        info!("add_affixes()");
+        let mut upgrade_provider = UpgradeProvider::new();
+        let mut rng = rand::thread_rng();
+        let mut entities = Vec::new();
+
+        for _ in 0..3 {
+            if let Some(upgrade) = upgrade_provider.gen(&mut rng) {
+                let upgrade_view = upgrade.generate(&mut commands, &mut rng);
+                entities.push(upgrade_view.entity);
+            }
+        }
+
+        commands.entity(trigger.entity()).add_children(&entities);
     }
 }
 
