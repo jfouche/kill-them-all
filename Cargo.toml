@@ -37,7 +37,7 @@ bevy = { version = "0.15", default-features = false, features = [
     "png"
 ] }
 bevy_rapier2d = "0.28"
-bevy_ecs_tilemap = {git="https://github.com/StarArawn/bevy_ecs_tilemap", rev="refs/pull/574/head"}
+bevy_ecs_tilemap = "0.15"
 
 # feature: dev
 bevy-inspector-egui = { version = "0.28", default-features = false, features = [
