@@ -41,26 +41,12 @@ impl WorldMapBundle {
 }
 
 #[derive(Component)]
+#[require(
+    Name(|| Name::new("WorldMapCollider")),
+    Collider,
+    Transform
+)]
 pub struct WorldMapCollider;
-
-#[derive(Bundle)]
-pub struct WorldMapColliderBundle {
-    tag: WorldMapCollider,
-    name: Name,
-    collider: Collider,
-    transform: Transform,
-}
-
-impl Default for WorldMapColliderBundle {
-    fn default() -> Self {
-        WorldMapColliderBundle {
-            tag: WorldMapCollider,
-            name: Name::new("WorldMapCollider"),
-            collider: Collider::default(),
-            transform: Transform::default(),
-        }
-    }
-}
 
 pub struct WorldMapBuilder {
     map_size: TilemapSize,
@@ -159,31 +145,31 @@ impl WorldMapBuilder {
         const COLLIDER_HALF_WIDTH: f32 = 1.0;
 
         // TOP
-        child_builder.spawn(WorldMapColliderBundle {
-            collider: Collider::cuboid(half_w, COLLIDER_HALF_WIDTH),
-            transform: Transform::from_xyz(x_center, top, 0.),
-            ..Default::default()
-        });
+        child_builder.spawn((
+            WorldMapCollider,
+            Collider::cuboid(half_w, COLLIDER_HALF_WIDTH),
+            Transform::from_xyz(x_center, top, 0.),
+        ));
 
         // BOTTOM
-        child_builder.spawn(WorldMapColliderBundle {
-            collider: Collider::cuboid(half_w, COLLIDER_HALF_WIDTH),
-            transform: Transform::from_xyz(x_center, bottom, 0.),
-            ..Default::default()
-        });
+        child_builder.spawn((
+            WorldMapCollider,
+            Collider::cuboid(half_w, COLLIDER_HALF_WIDTH),
+            Transform::from_xyz(x_center, bottom, 0.),
+        ));
 
         // LEFT
-        child_builder.spawn(WorldMapColliderBundle {
-            collider: Collider::cuboid(COLLIDER_HALF_WIDTH, half_h),
-            transform: Transform::from_xyz(left, y_center, 0.),
-            ..Default::default()
-        });
+        child_builder.spawn((
+            WorldMapCollider,
+            Collider::cuboid(COLLIDER_HALF_WIDTH, half_h),
+            Transform::from_xyz(left, y_center, 0.),
+        ));
 
         // RIGHT
-        child_builder.spawn(WorldMapColliderBundle {
-            collider: Collider::cuboid(COLLIDER_HALF_WIDTH, half_h),
-            transform: Transform::from_xyz(right, y_center, 0.),
-            ..Default::default()
-        });
+        child_builder.spawn((
+            WorldMapCollider,
+            Collider::cuboid(COLLIDER_HALF_WIDTH, half_h),
+            Transform::from_xyz(right, y_center, 0.),
+        ));
     }
 }
