@@ -3,6 +3,9 @@ use bevy::prelude::*;
 use rand::{rngs::ThreadRng, Rng};
 use std::time::Duration;
 
+///
+/// A [Weapon] should be a child of a [Character] to make attacks
+/// 
 #[derive(Component, Default)]
 #[require(
     DamageRange(||DamageRange::new(1., 2.)), 
@@ -11,27 +14,15 @@ use std::time::Duration;
 )]
 pub struct Weapon;
 
-#[derive(Bundle)]
-pub struct WeaponBundle {
-    tag: Weapon,
-    damage_range: DamageRange,
-    base_attack_speed: BaseAttackSpeed,
-    timer: AttackTimer,
-}
-
-impl WeaponBundle {
-    pub fn new(damage_range: DamageRange, attack_per_sec: f32) -> Self {
-        WeaponBundle {
-            tag: Weapon,
-            damage_range,
-            base_attack_speed: BaseAttackSpeed(attack_per_sec),
-            timer: AttackTimer::new(attack_per_sec),
-        }
-    }
-}
-
 #[derive(Clone, Copy, Component, Default, Deref, Reflect)]
 pub struct Damage(pub f32);
+
+
+impl std::ops::AddAssign for Damage {
+    fn add_assign(&mut self, rhs: Self) {
+        self.0 += rhs.0
+    }
+}
 
 impl std::ops::Sub<f32> for Damage {
     type Output = Self;
@@ -41,9 +32,11 @@ impl std::ops::Sub<f32> for Damage {
     }
 }
 
-/// Attack per second
+/// 
+/// It represents the base attack per second
+/// 
 #[derive(Component, Default, Clone, Copy, Deref, Reflect)]
-#[require(AttackTimer)]
+#[require(AttackSpeed, AttackTimer)]
 pub struct BaseAttackSpeed(pub f32);
 
 impl std::ops::Mul<&IncreaseAttackSpeed> for &BaseAttackSpeed {
@@ -56,6 +49,22 @@ impl std::ops::Mul<&IncreaseAttackSpeed> for &BaseAttackSpeed {
 /// Attack per second
 #[derive(Component, Default, Clone, Copy, Deref, DerefMut, Reflect)]
 pub struct AttackSpeed(pub f32);
+
+#[derive(Component, Deref, DerefMut, Reflect)]
+pub struct AttackTimer(pub Timer);
+
+impl Default for AttackTimer {
+    fn default() -> Self {
+        AttackTimer(Timer::from_seconds(1., TimerMode::Repeating))
+    }
+}
+
+impl AttackTimer {
+    pub fn set_attack_speed(&mut self, attack_speed: AttackSpeed) {
+        self.set_duration(Duration::from_secs_f32(1. / *attack_speed));
+    }
+}
+
 
 #[derive(Component, Clone, Copy, Reflect)]
 pub struct DamageRange {
@@ -80,78 +89,80 @@ impl DamageRange {
     }
 }
 
-#[derive(Component, Deref, DerefMut, Reflect)]
-pub struct AttackTimer(pub Timer);
-
-impl Default for AttackTimer {
-    fn default() -> Self {
-        AttackTimer(Timer::from_seconds(1., TimerMode::Repeating))
-    }
-}
-
-impl AttackTimer {
-    pub fn new(attack_speed: f32) -> Self {
-        AttackTimer(Timer::from_seconds(1. / attack_speed, TimerMode::Repeating))
-    }
-
-    pub fn set_attack_speed(&mut self, attack_speed: AttackSpeed) {
-        self.set_duration(Duration::from_secs_f32(1. / *attack_speed));
-    }
-}
-
+/// [Ammo]'s components required:
+/// - [DamageRange]
+/// - [Collider]
 #[derive(Component, Default)]
-#[require(Damage, PierceChance, Velocity, Collider)]
+#[require(
+    DamageRange,
+    LifeTime(|| LifeTime::new(5.)), 
+    RigidBody,
+    Collider,
+    Sensor,
+    // TODO: add a function for a specific group for Player & Monster
+    CollisionGroups(|| CollisionGroups::new(
+        GROUP_BULLET,
+        Group::ALL & !(GROUP_BONUS | GROUP_PLAYER),
+    )),
+    LockedAxes(|| LockedAxes::ROTATION_LOCKED),
+    ActiveEvents(|| ActiveEvents::COLLISION_EVENTS)
+)]
 pub struct Ammo;
 
-#[derive(Bundle, Default)]
-pub struct AmmoConfig {
-    pub damage: Damage,
-    pub pierce: PierceChance,
-    pub velocity: Velocity,
-    pub collider: Collider,
-}
+// // #[derive(Bundle, Default)]
+// // pub struct AmmoConfig {
+// //     pub damage: Damage,
+// //     pub pierce: PierceChance,
+// //     pub velocity: Velocity,
+// //     pub collider: Collider,
+// // }
 
-#[derive(Bundle)]
-pub struct AmmoBundle {
-    tag: Ammo,
-    config: AmmoConfig,
-    lifetime: LifeTime,
-    body: RigidBody,
-    // mass: ColliderMassProperties,
-    sensor: Sensor,
-    collision_groups: CollisionGroups,
-    locked_axes: LockedAxes,
-    active_events: ActiveEvents,
-}
+// // #[derive(Bundle)]
+// // pub struct AmmoBundle {
+// //     tag: Ammo,
+// //     config: AmmoConfig,
+// //     lifetime: LifeTime,
+// //     body: RigidBody,
+// //     // mass: ColliderMassProperties,
+// //     sensor: Sensor,
+// //     collision_groups: CollisionGroups,
+// //     locked_axes: LockedAxes,
+// //     active_events: ActiveEvents,
+// // }
 
-impl Default for AmmoBundle {
-    fn default() -> Self {
-        AmmoBundle {
-            tag: Ammo,
-            config: AmmoConfig::default(),
-            lifetime: LifeTime::new(3.),
-            body: RigidBody::Dynamic,
-            // mass: ColliderMassProperties::MassProperties(MassProperties {
-            //     mass: 0.001,
-            //     principal_inertia: 0.001,
-            //     ..Default::default()
-            // }),
-            sensor: Sensor,
-            collision_groups: CollisionGroups::new(
-                GROUP_BULLET,
-                Group::ALL & !(GROUP_BONUS | GROUP_PLAYER),
-            ),
-            locked_axes: LockedAxes::ROTATION_LOCKED,
-            active_events: ActiveEvents::COLLISION_EVENTS,
-        }
-    }
-}
+// // impl Default for AmmoBundle {
+// //     fn default() -> Self {
+// //         AmmoBundle {
+// //             tag: Ammo,
+// //             config: AmmoConfig::default(),
+// //             lifetime: LifeTime::new(3.),
+// //             body: RigidBody::Dynamic,
+// //             // mass: ColliderMassProperties::MassProperties(MassProperties {
+// //             //     mass: 0.001,
+// //             //     principal_inertia: 0.001,
+// //             //     ..Default::default()
+// //             // }),
+// //             sensor: Sensor,
+// //             collision_groups: CollisionGroups::new(
+// //                 GROUP_BULLET,
+// //                 Group::ALL & !(GROUP_BONUS | GROUP_PLAYER),
+// //             ),
+// //             locked_axes: LockedAxes::ROTATION_LOCKED,
+// //             active_events: ActiveEvents::COLLISION_EVENTS,
+// //         }
+// //     }
+// // }
 
-impl AmmoBundle {
-    pub fn new(config: AmmoConfig) -> Self {
-        AmmoBundle {
-            config,
-            ..Default::default()
-        }
-    }
-}
+// impl AmmoBundle {
+//     pub fn new(config: AmmoConfig) -> Self {
+//         AmmoBundle {
+//             config,
+//             ..Default::default()
+//         }
+//     }
+// }
+
+
+#[derive(Component, Default)]
+#[require(Ammo, PierceChance, Velocity)]
+pub struct Projectile;

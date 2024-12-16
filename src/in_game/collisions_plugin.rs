@@ -29,10 +29,11 @@ fn monster_hit_by_ammo(
     mut commands: Commands,
     mut collisions: EventReader<CollisionEvent>,
     monsters: Query<(), With<Monster>>,
-    mut ammos: Query<(Entity, &Damage, &mut PierceChance), With<Ammo>>,
+    mut ammos: Query<(Entity, &DamageRange, &mut PierceChance), With<Ammo>>,
 ) {
     let mut monster_hits = HashMap::new();
     let mut ammo_hits = HashSet::new();
+    let mut rng = rand::thread_rng();
 
     // apply damage
     collisions
@@ -42,11 +43,11 @@ fn monster_hit_by_ammo(
         .filter_map(|(_, monster, other)| {
             ammos
                 .get(other)
-                .map(|(ammo, damage, _)| (monster, ammo, damage))
+                .map(|(ammo, damage_range, _)| (monster, ammo, damage_range))
                 .ok()
         })
-        .for_each(|(monster, ammo, damage)| {
-            *monster_hits.entry(monster).or_insert(0.) += **damage;
+        .for_each(|(monster, ammo, damage_range)| {
+            *monster_hits.entry(monster).or_default() += damage_range.gen(&mut rng);
             ammo_hits.insert(ammo);
         });
 
@@ -61,12 +62,7 @@ fn monster_hit_by_ammo(
     }
 
     for (entity, damage) in monster_hits.iter() {
-        commands.trigger_targets(
-            HitEvent {
-                damage: Damage(*damage),
-            },
-            *entity,
-        );
+        commands.trigger_targets(HitEvent { damage: *damage }, *entity);
     }
 }
 

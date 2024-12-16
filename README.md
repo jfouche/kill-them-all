@@ -44,3 +44,7 @@ simple-http-server ./out
 ```
 
 and open a browser with the url : `http://localhost:8000/index.html`
+
+# Assets
+
+- 

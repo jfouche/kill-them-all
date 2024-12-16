@@ -1,5 +1,4 @@
 use std::f32::consts::PI;
-
 use crate::{components::*, in_game::GameRunningSet};
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
@@ -9,25 +8,35 @@ struct ShurikenAssets {
     shuriken: Handle<Image>,
 }
 
+///
+/// Weapon that launch [Shuriken]s
+/// 
 #[derive(Component)]
-#[require(Weapon, Name(|| Name::new("ShurikenLauncher")))]
+#[require(
+    Weapon, 
+    Name(|| Name::new("ShurikenLauncher")),
+    DamageRange(|| DamageRange::new(2., 4.)),
+    BaseAttackSpeed(|| BaseAttackSpeed(1.5)),
+)]
 pub struct ShurikenLauncher {
     dir: Dir2,
 }
 
-const BASE_ATTACK_SPEED: f32 = 1.5;
-
-pub fn shuriken_launcher() -> impl Bundle {
-    (
-        ShurikenLauncher { dir: Dir2::NORTH },
-        Name::new("ShurikenLauncher"),
-        DamageRange::new(2., 4.),
-        BaseAttackSpeed(BASE_ATTACK_SPEED),
-    )
+impl Default for ShurikenLauncher {
+    fn default() -> Self {
+        ShurikenLauncher { dir: Dir2::NORTH }
+    }
 }
 
+///
+/// A shuriken projectile
+/// 
 #[derive(Component)]
-#[require(Ammo, Sprite)]
+#[require(
+    Projectile, 
+    Sprite,
+    Collider(|| Collider::ball(8.))
+)]
 pub struct Shuriken;
 
 const SHURIKEN_SPEED: f32 = 100.0;
@@ -75,20 +84,14 @@ fn launch_shuriken(
     for (timer, damage_range, parent, lancher) in &weapons {
         if timer.just_finished() {
             if let Ok((transform, pierce_chance)) = characters.get(**parent) {
-                let velocity = Velocity {
-                    linvel: *lancher.dir * SHURIKEN_SPEED,
-                    angvel: 2. * PI,
-                };
-                let ammo_config = AmmoConfig {
-                    damage: damage_range.gen(&mut rng),
-                    pierce: *pierce_chance,
-                    collider: Collider::ball(8.),
-                    velocity,
-                };
                 commands.spawn((
                     Shuriken,
-                    Name::new("Shuriken"),
-                    AmmoBundle::new(ammo_config),
+                    damage_range.gen(&mut rng),
+                    *pierce_chance,
+                    Velocity {
+                        linvel: *lancher.dir * SHURIKEN_SPEED,
+                        angvel: 2. * PI,
+                    },
                     Sprite::from_image(asset.shuriken.clone()),
                     *transform,
                 ));
