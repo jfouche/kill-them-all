@@ -1,8 +1,11 @@
 mod gun;
-pub use gun::*;
+pub use gun::Gun;
 
 mod shuriken;
-pub use shuriken::*;
+pub use shuriken::ShurikenLauncher;
+
+mod mine;
+pub use mine::MineDropper;
 
 use super::game_is_running;
 use crate::components::*;
@@ -15,6 +18,7 @@ impl PluginGroup for WeaponsPluginGroup {
         PluginGroupBuilder::start::<Self>()
             .add(gun::GunPlugin)
             .add(shuriken::ShurikenPlugin)
+            .add(mine::MinePlugin)
             .add(weapons_plugin)
     }
 }
@@ -43,7 +47,7 @@ fn update_weapon_attack_speed(
         ),
         With<Weapon>,
     >,
-    characters: Query<&IncreaseAttackSpeed>,
+    characters: Query<&IncreaseAttackSpeed, With<Character>>,
 ) {
     for (mut timer, mut attack_speed, base_attack_speed, parent) in &mut weapons {
         if let Ok(increase) = characters.get(**parent) {
