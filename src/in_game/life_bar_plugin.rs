@@ -1,6 +1,6 @@
-use super::{GameRunningSet, GameState};
+use super::{GameRunningSet, GameState, InGameState};
 use crate::{
-    components::{despawn_all, CharacterDyingEvent, Life, MaxLife, Monster},
+    components::{CharacterDyingEvent, Life, MaxLife, Monster},
     ui::{ProgressBar, ProgressBarColor},
 };
 use bevy::prelude::*;
@@ -20,7 +20,7 @@ const BAR_HEIGHT: f32 = 8.;
         ..Default::default()
     }),
     BackgroundColor(|| BackgroundColor(Color::BLACK)),
-    BorderColor(|| BorderColor(Color::srgb(1., 0.1, 0.1))),
+    BorderColor(|| BorderColor(Color::BLACK)),
     ProgressBar,
     ProgressBarColor(|| ProgressBarColor(Color::srgb(1., 0., 0.)))
 )]
@@ -36,7 +36,8 @@ pub struct LifeBarPlugin;
 impl Plugin for LifeBarPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<LifeBarMap>()
-            .add_systems(OnExit(GameState::InGame), despawn_all::<LifeBar>)
+            .add_systems(OnExit(GameState::InGame), clear_life_bars)
+            .add_systems(OnEnter(InGameState::RoundEnd), clear_life_bars)
             .add_systems(
                 Update,
                 (update_life_bar,).in_set(GameRunningSet::EntityUpdate),
@@ -66,6 +67,13 @@ fn remove_life_bar_on_monster_dying(
     if let Some(bar) = life_bar_map.remove(&trigger.entity()) {
         commands.entity(bar).despawn_recursive();
     }
+}
+
+fn clear_life_bars(mut commands: Commands, mut life_bar_map: ResMut<LifeBarMap>) {
+    for life_bar in life_bar_map.values() {
+        commands.entity(*life_bar).despawn_recursive();
+    }
+    life_bar_map.clear();
 }
 
 fn update_life_bar(
