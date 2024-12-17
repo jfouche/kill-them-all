@@ -3,15 +3,15 @@ use std::sync::{Arc, Mutex};
 use bevy::prelude::*;
 
 pub fn progressbar_plugin(app: &mut App) {
-    app.add_systems(Update, (create_progress_bars, update_progress_bars));
+    app.add_observer(create_progress_bars)
+        .add_systems(Update, update_progress_bars);
 }
 
 /// The [ProgressBar] component should be nested with a [bevy::ui::Node]
-// TODO: use bundle
 #[derive(Debug, Clone, Component)]
+#[require(Node)]
 pub struct ProgressBar {
     pub foreground: Color,
-    pub background: Color,
     min: Arc<Mutex<f32>>,
     max: Arc<Mutex<f32>>,
     value: Arc<Mutex<f32>>,
@@ -24,12 +24,10 @@ impl ProgressBar {
             max: Arc::new(Mutex::new(max)),
             value: Arc::new(Mutex::new(value)),
             foreground: Color::WHITE,
-            background: Color::BLACK,
         }
     }
 
-    pub fn with_colors(mut self, background: Color, foreground: Color) -> Self {
-        self.background = background;
+    pub fn with_color(mut self, foreground: Color) -> Self {
         self.foreground = foreground;
         self
     }
@@ -51,6 +49,12 @@ impl ProgressBar {
 }
 
 #[derive(Component)]
+#[require(
+    Node(|| Node {
+        height: Val::Percent(100.0),
+        ..default()     
+    })
+)]
 struct ProgressBarForeground {
     min: Arc<Mutex<f32>>,
     max: Arc<Mutex<f32>>,
@@ -75,23 +79,16 @@ impl ProgressBarForeground {
 }
 
 fn create_progress_bars(
+    trigger: Trigger<OnAdd, ProgressBar>,
     mut commands: Commands,
-    mut query: Query<
-        (Entity, &mut BackgroundColor, &mut BorderColor, &ProgressBar),
-        Added<ProgressBar>,
-    >,
+    mut query: Query<&ProgressBar>,
 ) {
-    for (entity, mut background, mut border, data) in query.iter_mut() {
-        // Set background
-        *background = data.background.into();
-        *border = data.background.into();
-
+    if let Ok(data) = query.get_mut(trigger.entity()) {
         // add foreground
-        commands.entity(entity).with_children(|parent| {
+        commands.entity(trigger.entity()).with_children(|parent| {
             // foreground
             parent.spawn((
                 Node {
-                    width: Val::Percent(0.0),
                     height: Val::Percent(100.0),
                     ..default()
                 },

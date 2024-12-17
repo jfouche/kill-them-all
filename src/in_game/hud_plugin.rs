@@ -28,85 +28,93 @@ impl Plugin for TopMenuPlugin {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Default)]
 struct Hud;
 
 #[derive(Component)]
+#[require(
+    Hud,
+    Name(|| Name::new("HUD - Score")),
+    Text,
+    TextFont(|| TextFont::from_font_size(20.)),
+    TextColor(|| TextColor(Color::WHITE)),
+    Node(|| Node {
+        position_type: PositionType::Absolute,
+        left: Val::Px(100.),
+        ..Default::default()
+    })
+)]
 struct ScoreText;
 
 #[derive(Component)]
+#[require(
+    Hud,
+    Name(|| Name::new("HUD - Round")),
+    Text,
+    TextFont(|| TextFont::from_font_size(20.)),
+    TextColor(|| TextColor(Color::srgba(0.25, 0.25, 0.25, 0.7))),
+    Node(|| Node {
+        position_type: PositionType::Absolute,
+        margin: UiRect::horizontal(Val::Auto).with_top(Val::Px(10.)),
+        width: Val::Px(180.),
+        ..Default::default()
+    }),
+    BorderRadius(|| BorderRadius::all(Val::Px(10.)))
+)]
 struct RoundText;
 
 #[derive(Component)]
+#[require(
+    Hud,
+    Name(|| Name::new("HUD - LifeBar")),
+    Node(|| Node {
+        position_type: PositionType::Absolute,
+        left: Val::Px(50.),
+        top: Val::Px(20.),
+        width: Val::Px(300.),
+        height: Val::Px(20.),
+        border: UiRect::all(Val::Px(2.)),
+        ..Default::default()
+    }),
+    BackgroundColor(|| BackgroundColor(Color::BLACK)),
+    BorderColor(|| BorderColor(Color::BLACK)),
+    ProgressBar(|| ProgressBar::new(0.0, 100.0, 100.0).with_color(RED.into()))
+)]
 struct LifeBar;
 
 #[derive(Component)]
+#[require(
+    Hud,
+    Name(|| Name::new("HUD - ExperienceBar")),
+    Node(|| Node {
+        position_type: PositionType::Absolute,
+        right: Val::Px(50.),
+        top: Val::Px(20.),
+        width: Val::Px(300.),
+        height: Val::Px(20.),
+        border: UiRect::all(Val::Px(2.)),
+        ..Default::default()
+    }),
+    BackgroundColor(|| BackgroundColor(Color::BLACK)),
+    BorderColor(|| BorderColor(Color::BLACK)),
+    ProgressBar(|| ProgressBar::new(0.0, 100.0, 0.0).with_color(GOLD.into()))
+)]
 struct ExperienceBar;
 
 fn spawn_life_bar(mut commands: Commands) {
-    commands.spawn((
-        (Hud, LifeBar),
-        Name::new("HUD - LifeBar"),
-        Node {
-            position_type: PositionType::Absolute,
-            left: Val::Px(50.),
-            top: Val::Px(20.),
-            width: Val::Px(300.),
-            height: Val::Px(20.),
-            border: UiRect::all(Val::Px(2.)),
-            ..Default::default()
-        },
-        ProgressBar::new(0.0, 100.0, 60.0).with_colors(Color::BLACK, RED.into()),
-    ));
+    commands.spawn(LifeBar);
 }
 
 fn spawn_xp_bar(mut commands: Commands) {
-    commands.spawn((
-        (Hud, ExperienceBar),
-        Name::new("HUD - ExperienceBar"),
-        Node {
-            position_type: PositionType::Absolute,
-            right: Val::Px(50.),
-            top: Val::Px(20.),
-            width: Val::Px(300.),
-            height: Val::Px(20.),
-            border: UiRect::all(Val::Px(2.)),
-            ..Default::default()
-        },
-        ProgressBar::new(0.0, 100.0, 0.0).with_colors(Color::BLACK, GOLD.into()),
-    ));
+    commands.spawn(ExperienceBar);
 }
 
 fn spawn_round(mut commands: Commands) {
-    commands.spawn((
-        (Hud, RoundText),
-        Name::new("HUD - Round"),
-        Text("".into()),
-        TextFont::from_font_size(20.),
-        TextColor(Srgba::new(0.25, 0.25, 0.25, 0.7).into()),
-        Node {
-            position_type: PositionType::Absolute,
-            margin: UiRect::horizontal(Val::Auto).with_top(Val::Px(10.)),
-            width: Val::Px(180.),
-            ..Default::default()
-        },
-        BorderRadius::all(Val::Px(10.)),
-    ));
+    commands.spawn(RoundText);
 }
 
 fn spawn_score(mut commands: Commands) {
-    commands.spawn((
-        (Hud, ScoreText),
-        Name::new("HUD - Score"),
-        Text("".into()),
-        TextFont::from_font_size(20.),
-        TextColor(Color::WHITE),
-        Node {
-            position_type: PositionType::Absolute,
-            left: Val::Px(100.),
-            ..Default::default()
-        },
-    ));
+    commands.spawn(ScoreText);
 }
 
 fn update_score(score: Res<Score>, mut q_text: Query<&mut Text, With<ScoreText>>) {
