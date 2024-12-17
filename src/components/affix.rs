@@ -3,7 +3,7 @@ use bevy::prelude::*;
 #[derive(Component, Default, Copy, Clone)]
 pub struct Affix;
 
-#[derive(Component, Default, Deref, Debug, Reflect)]
+#[derive(Component, Default, Clone, Copy, Deref, Debug, Reflect)]
 pub struct MoreLife(pub f32);
 
 impl std::fmt::Display for MoreLife {
