@@ -1,22 +1,18 @@
-mod affix;
 mod bonus;
 mod character;
 mod equipment;
 mod monster;
 mod player;
 mod rng_provider;
-mod skill;
 mod upgrade;
 mod weapon;
 mod world_map;
 
-pub use affix::*;
 pub use bonus::*;
 pub use character::*;
 pub use equipment::*;
 pub use monster::*;
 pub use player::*;
-pub use skill::*;
 pub use upgrade::*;
 pub use weapon::*;
 pub use world_map::*;
