@@ -25,7 +25,7 @@ const BULLET_SIZE: f32 = 5.0;
         ..Default::default()
     }),
 )]
-pub struct Bullet;
+struct Bullet;
 
 pub struct GunPlugin;
 
