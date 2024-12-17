@@ -1,6 +1,6 @@
 use super::{GameRunningSet, GameState};
 use crate::{
-    components::{despawn_all, Character, Life, MaxLife},
+    components::{despawn_all, CharacterDyingEvent, Life, MaxLife, Monster},
     ui::{ProgressBar, ProgressBarColor},
 };
 use bevy::prelude::*;
@@ -19,16 +19,18 @@ const BAR_HEIGHT: f32 = 8.;
         border: UiRect::all(Val::Px(1.)),
         ..Default::default()
     }),
-    BackgroundColor(|| BackgroundColor(Color::srgb(1., 0.1, 0.1))),
+    BackgroundColor(|| BackgroundColor(Color::BLACK)),
     BorderColor(|| BorderColor(Color::srgb(1., 0.1, 0.1))),
     ProgressBar,
     ProgressBarColor(|| ProgressBarColor(Color::srgb(1., 0., 0.)))
 )]
 struct LifeBar;
 
+/// Stores a map with the [Monster] entity as key, and the [LifeBar] entity as value
 #[derive(Resource, Default, Deref, DerefMut)]
 struct LifeBarMap(HashMap<Entity, Entity>);
 
+/// Plugin that show a life bar over the [Monster]s
 pub struct LifeBarPlugin;
 
 impl Plugin for LifeBarPlugin {
@@ -44,23 +46,36 @@ impl Plugin for LifeBarPlugin {
 }
 
 fn spawn_life_bar(
-    trigger: Trigger<OnAdd, Character>,
+    trigger: Trigger<OnAdd, Monster>,
     mut commands: Commands,
     mut life_bar_map: ResMut<LifeBarMap>,
 ) {
     let life_bar = commands.spawn(LifeBar).id();
     life_bar_map.insert(trigger.entity(), life_bar);
-    // TODO: remove when died
+
+    commands
+        .entity(trigger.entity())
+        .observe(remove_life_bar_on_monster_dying);
+}
+
+fn remove_life_bar_on_monster_dying(
+    trigger: Trigger<CharacterDyingEvent>,
+    mut commands: Commands,
+    mut life_bar_map: ResMut<LifeBarMap>,
+) {
+    if let Some(bar) = life_bar_map.remove(&trigger.entity()) {
+        commands.entity(bar).despawn_recursive();
+    }
 }
 
 fn update_life_bar(
     cameras: Query<(&Camera, &GlobalTransform), With<Camera2d>>,
-    characters: Query<(Entity, &Transform, &Life, &MaxLife), With<Character>>,
+    monsters: Query<(Entity, &Transform, &Life, &MaxLife), With<Monster>>,
     mut life_bars: Query<(&mut Node, &mut ProgressBar), With<LifeBar>>,
     life_bar_map: Res<LifeBarMap>,
 ) {
     let (camera, camera_transform) = cameras.get_single().expect("Single camera2d");
-    for (entity, transform, life, max_life) in &characters {
+    for (entity, transform, life, max_life) in &monsters {
         if let Some(life_bar_entity) = life_bar_map.get(&entity) {
             if let Ok((mut node, mut progress)) = life_bars.get_mut(*life_bar_entity) {
                 if let Ok(pos) = camera.world_to_viewport(camera_transform, transform.translation) {
