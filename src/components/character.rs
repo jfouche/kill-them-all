@@ -10,6 +10,8 @@ use rand::Rng;
     IncreaseAttackSpeed,
     PierceChance,
     Armour,
+    MoreDamage,
+    IncreaseDamage,
     Transform,
     RigidBody(|| RigidBody::Dynamic),
     Velocity,
@@ -142,9 +144,7 @@ impl std::fmt::Display for IncreaseAttackSpeed {
     }
 }
 
-// ==================================================================
-// Pierce
-
+/// Pierce chance
 #[derive(Component, Default, Clone, Copy, Deref, DerefMut, Debug, Reflect)]
 pub struct PierceChance(pub f32);
 
@@ -165,8 +165,25 @@ impl std::fmt::Display for PierceChance {
     }
 }
 
-// ==================================================================
-// HitEvent
+/// Add damage to all [Weapon]s of a [Character]
+#[derive(Component, Default, Deref, DerefMut, Reflect)]
+pub struct MoreDamage(pub f32);
+
+impl std::fmt::Display for MoreDamage {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "+{:.0} more damage", **self)
+    }
+}
+
+/// Increase damage to all [Weapon]s, after applying [MoreDamage]
+#[derive(Component, Default, Deref, DerefMut, Reflect)]
+pub struct IncreaseDamage(pub f32);
+
+impl std::fmt::Display for IncreaseDamage {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "+{:.0}% increase damage", **self)
+    }
+}
 
 /// Event to notify a character was hit
 #[derive(Event)]
@@ -178,7 +195,7 @@ pub struct HitEvent {
 #[derive(Event, Deref)]
 pub struct LooseLifeEvent(pub Damage);
 
-/// Event to notify a character is dying
+/// Event to notify a character is dying.
 #[derive(Event)]
 pub struct CharacterDyingEvent;
 
@@ -187,12 +204,3 @@ pub struct CharacterDyingEvent;
 /// The entity will be despawn when receiving this event
 #[derive(Event)]
 pub struct CharacterDiedEvent;
-
-#[derive(Component, Clone, Deref, Reflect)]
-pub struct AffixesLabels(pub String);
-
-impl From<&AffixesLabels> for Text {
-    fn from(value: &AffixesLabels) -> Self {
-        Text(value.0.clone())
-    }
-}

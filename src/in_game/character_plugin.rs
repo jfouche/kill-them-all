@@ -20,19 +20,27 @@ impl Plugin for CharacterPlugin {
             .register_type::<PierceChance>()
             .register_type::<Armour>()
             .register_type::<MoreArmour>()
+            .register_type::<MoreDamage>()
+            .register_type::<IncreaseDamage>()
             .register_type::<AffixesLabels>()
             .add_observer(init_life)
             .add_systems(Startup, register_hooks)
             .add_systems(
                 PreUpdate,
                 (
-                    update_armour,
-                    (update_max_life, update_life_regen).chain(),
-                    update_movement_speed,
-                    (update_increase_attack_speed, update_weapon_attack_speed).chain(),
-                    update_pierce_chance,
-                )
-                    .run_if(game_is_running),
+                    (
+                        (update_increase_attack_speed, update_weapon_attack_speed).chain(),
+                        update_pierce_chance,
+                        (update_more_damage, update_increase_damage).chain(),
+                    )
+                        .in_set(PreUpdateAffixes::Step1),
+                    (
+                        update_armour,
+                        (update_max_life, update_life_regen).chain(),
+                        update_movement_speed,
+                    )
+                        .run_if(game_is_running),
+                ),
             )
             .add_systems(Update, regen_life.in_set(GameRunningSet::EntityUpdate));
     }
@@ -231,5 +239,33 @@ fn regen_life(mut query: Query<(&mut Life, &MaxLife, &LifeRegen)>, time: Res<Tim
         let life_per_sec = **max_life * (**regen / 100.);
         life.regenerate(life_per_sec * time.delta_secs());
         life.check(*max_life);
+    }
+}
+
+fn update_more_damage(
+    mut characters: Query<&mut MoreDamage, With<Character>>,
+    mut affixes: Query<(&mut MoreDamage, &Parent), Without<Character>>,
+) {
+    for mut more_damage in &mut characters {
+        **more_damage = 0.;
+    }
+    for (more_damage, parent) in &mut affixes {
+        if let Ok(mut char_more_damage) = characters.get_mut(**parent) {
+            **char_more_damage += **more_damage;
+        }
+    }
+}
+
+fn update_increase_damage(
+    mut characters: Query<&mut IncreaseDamage, With<Character>>,
+    mut affixes: Query<(&mut IncreaseDamage, &Parent), Without<Character>>,
+) {
+    for mut incr_damage in &mut characters {
+        **incr_damage = 0.;
+    }
+    for (incr_damage, parent) in &mut affixes {
+        if let Ok(mut char_incr_damage) = characters.get_mut(**parent) {
+            **char_incr_damage += **incr_damage;
+        }
     }
 }

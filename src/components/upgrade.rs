@@ -13,6 +13,8 @@ pub enum UpgradeKind {
     IncreaseAttackSpeed,
     IncreaseMovementSpeed,
     PierceChance,
+    MoreDamage,
+    IncreaseDamage,
 }
 
 ///
@@ -50,6 +52,14 @@ impl UpgradeKind {
                 let upgrade = PierceChance(rng.gen_range(2..20) as f32);
                 Self::spawn(commands, upgrade)
             }
+            UpgradeKind::MoreDamage => {
+                let upgrade = MoreDamage(rng.gen_range(2..5) as f32);
+                Self::spawn(commands, upgrade)
+            }
+            UpgradeKind::IncreaseDamage => {
+                let upgrade = IncreaseDamage(rng.gen_range(10..20) as f32);
+                Self::spawn(commands, upgrade)
+            }
         }
     }
 
@@ -76,6 +86,8 @@ impl UpgradeProvider {
         provider.add(UpgradeKind::IncreaseAttackSpeed, 20);
         provider.add(UpgradeKind::IncreaseMovementSpeed, 40);
         provider.add(UpgradeKind::PierceChance, 20);
+        provider.add(UpgradeKind::MoreDamage, 20);
+        provider.add(UpgradeKind::IncreaseDamage, 20);
         UpgradeProvider(provider)
     }
 }

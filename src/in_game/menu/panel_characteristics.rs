@@ -75,16 +75,24 @@ fn spawn_caracteristics(
     players: Query<
         (
             &Armour,
-            &MaxLife,
-            &LifeRegen,
+            (&MaxLife, &LifeRegen),
             &IncreaseMovementSpeed,
             &IncreaseAttackSpeed,
             &PierceChance,
+            (&MoreDamage, &IncreaseDamage),
         ),
         With<Player>,
     >,
 ) {
-    for (armour, max_life, life_regen, move_speed, incr_attack_speed, pierce_chance) in &players {
+    for (
+        armour,
+        (max_life, life_regen),
+        move_speed,
+        incr_attack_speed,
+        pierce_chance,
+        (more_damage, incr_damage),
+    ) in &players
+    {
         commands.entity(trigger.entity()).with_children(|panel| {
             spawn_caracteristic(panel, "Armour :", armour);
             spawn_caracteristic(panel, "Maximum life :", max_life);
@@ -92,6 +100,8 @@ fn spawn_caracteristics(
             spawn_caracteristic(panel, "Movement speed :", move_speed);
             spawn_caracteristic(panel, "Attack speed :", incr_attack_speed);
             spawn_caracteristic(panel, "Pierce chance :", pierce_chance);
+            spawn_caracteristic(panel, "More damage :", more_damage);
+            spawn_caracteristic(panel, "Increase damage :", incr_damage);
         });
     }
 }

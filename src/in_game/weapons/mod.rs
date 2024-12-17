@@ -7,7 +7,7 @@ pub use shuriken::ShurikenLauncher;
 mod mine;
 pub use mine::MineDropper;
 
-use super::game_is_running;
+use super::PreUpdateAffixes;
 use crate::components::*;
 use bevy::{app::PluginGroupBuilder, prelude::*};
 
@@ -27,13 +27,16 @@ fn weapons_plugin(app: &mut App) {
     app.register_type::<Damage>()
         .register_type::<BaseAttackSpeed>()
         .register_type::<AttackSpeed>()
+        .register_type::<BaseDamageRange>()
         .register_type::<DamageRange>()
         .register_type::<AttackTimer>()
         .add_systems(
             PreUpdate,
-            (update_weapon_attack_speed, tick_weapon)
-                .chain()
-                .run_if(game_is_running),
+            (
+                (update_weapon_attack_speed, tick_weapon).chain(),
+                update_weapon_damage_range,
+            )
+                .in_set(PreUpdateAffixes::Step2),
         );
 }
 
@@ -60,5 +63,16 @@ fn update_weapon_attack_speed(
 fn tick_weapon(mut weapons: Query<&mut AttackTimer, With<Weapon>>, time: Res<Time>) {
     for mut timer in &mut weapons {
         timer.tick(time.delta());
+    }
+}
+
+fn update_weapon_damage_range(
+    mut weapons: Query<(&mut DamageRange, &BaseDamageRange, &Parent), With<Weapon>>,
+    characters: Query<(&MoreDamage, &IncreaseDamage), With<Character>>,
+) {
+    for (mut damage_range, base_damage_range, parent) in &mut weapons {
+        if let Ok((more, increase)) = characters.get(**parent) {
+            *damage_range = (base_damage_range + more) * increase;
+        }
     }
 }

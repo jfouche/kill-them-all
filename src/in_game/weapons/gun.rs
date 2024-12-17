@@ -6,7 +6,7 @@ use bevy_rapier2d::prelude::*;
 #[require(
     Weapon,
     Name(|| Name::new("Gun")),
-    DamageRange(|| DamageRange::new(1., 2.)),
+    BaseDamageRange(|| BaseDamageRange::new(1., 2.)),
     BaseAttackSpeed(|| BaseAttackSpeed(1.2))
 )]
 pub struct Gun;

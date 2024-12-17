@@ -126,3 +126,14 @@ impl EquipmentProvider {
         EquipmentProvider(provider)
     }
 }
+
+/// Util component to store all equipments affixes
+
+#[derive(Component, Clone, Deref, Reflect)]
+pub struct AffixesLabels(pub String);
+
+impl From<&AffixesLabels> for Text {
+    fn from(value: &AffixesLabels) -> Self {
+        Text(value.0.clone())
+    }
+}

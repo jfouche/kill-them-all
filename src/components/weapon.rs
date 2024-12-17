@@ -8,19 +8,32 @@ use std::time::Duration;
 /// 
 #[derive(Component, Default)]
 #[require(
-    DamageRange(||DamageRange::new(1., 2.)), 
+    BaseDamageRange(|| BaseDamageRange::new(1., 2.)), 
     BaseAttackSpeed, 
     AttackTimer
 )]
 pub struct Weapon;
 
 ///
+/// Component which stores the base [DamageRange] of a [Weapon]
+/// 
+#[derive(Component, Clone, Copy, Reflect)]
+#[require(DamageRange)]
+pub struct BaseDamageRange(pub DamageRange);
+
+impl BaseDamageRange {
+    pub fn new(min: f32, max: f32) -> Self {
+        BaseDamageRange(DamageRange { min, max })
+    }
+}
+
+///
 /// Component which allows to generate [Damage] base on RNG
 /// 
 #[derive(Component, Clone, Copy, Reflect)]
 pub struct DamageRange {
-    min: f32,
-    max: f32,
+    pub min: f32,
+    pub max: f32,
 }
 
 impl Default for DamageRange {
@@ -37,6 +50,27 @@ impl DamageRange {
     pub fn gen(&self, rng: &mut ThreadRng) -> Damage {
         let damage = rng.gen_range(self.min..=self.max);
         Damage(damage)
+    }
+}
+
+impl std::ops::Add<&MoreDamage> for &BaseDamageRange {
+    type Output = DamageRange;
+    fn add(self, more: &MoreDamage) -> Self::Output {
+        DamageRange {
+            min: self.0.min + **more,
+            max: self.0.max + **more
+        }
+    }
+}
+
+impl std::ops::Mul<&IncreaseDamage> for DamageRange {
+    type Output = DamageRange;
+    fn mul(self, increase: &IncreaseDamage) -> Self::Output {
+        let multiplier = 1. + **increase / 100.;
+        DamageRange {
+            min: self.min * multiplier,
+            max: self.max * multiplier
+        }
     }
 }
 

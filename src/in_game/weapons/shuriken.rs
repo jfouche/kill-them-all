@@ -15,7 +15,7 @@ struct ShurikenAssets {
 #[require(
     Weapon, 
     Name(|| Name::new("ShurikenLauncher")),
-    DamageRange(|| DamageRange::new(2., 4.)),
+    BaseDamageRange(|| BaseDamageRange::new(2., 4.)),
     BaseAttackSpeed(|| BaseAttackSpeed(1.5)),
 )]
 pub struct ShurikenLauncher {
