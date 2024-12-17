@@ -14,6 +14,35 @@ use std::time::Duration;
 )]
 pub struct Weapon;
 
+///
+/// Component which allows to generate [Damage] base on RNG
+/// 
+#[derive(Component, Clone, Copy, Reflect)]
+pub struct DamageRange {
+    min: f32,
+    max: f32,
+}
+
+impl Default for DamageRange {
+    fn default() -> Self {
+        DamageRange { min: 1., max: 2. }
+    }
+}
+
+impl DamageRange {
+    pub fn new(min: f32, max: f32) -> Self {
+        DamageRange { min, max }
+    }
+
+    pub fn gen(&self, rng: &mut ThreadRng) -> Damage {
+        let damage = rng.gen_range(self.min..=self.max);
+        Damage(damage)
+    }
+}
+
+///
+/// Damage
+/// 
 #[derive(Clone, Copy, Component, Default, Deref, Reflect)]
 pub struct Damage(pub f32);
 
@@ -66,28 +95,7 @@ impl AttackTimer {
 }
 
 
-#[derive(Component, Clone, Copy, Reflect)]
-pub struct DamageRange {
-    min: f32,
-    max: f32,
-}
 
-impl Default for DamageRange {
-    fn default() -> Self {
-        DamageRange { min: 1., max: 2. }
-    }
-}
-
-impl DamageRange {
-    pub fn new(min: f32, max: f32) -> Self {
-        DamageRange { min, max }
-    }
-
-    pub fn gen(&self, rng: &mut ThreadRng) -> Damage {
-        let damage = rng.gen_range(self.min..=self.max);
-        Damage(damage)
-    }
-}
 
 /// [Ammo]'s components required:
 /// - [DamageRange]
@@ -104,7 +112,7 @@ impl DamageRange {
         GROUP_BULLET,
         Group::ALL & !(GROUP_BONUS | GROUP_PLAYER),
     )),
-    LockedAxes(|| LockedAxes::ROTATION_LOCKED),
+    // LockedAxes(|| LockedAxes::ROTATION_LOCKED),
     ActiveEvents(|| ActiveEvents::COLLISION_EVENTS)
 )]
 pub struct Ammo;
