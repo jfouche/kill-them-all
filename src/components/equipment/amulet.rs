@@ -44,17 +44,17 @@ impl Amulet {
         for _ in 0..rarity.n_affix() {
             match provider.gen(rng) {
                 Some(AmuletAffixKind::AddArmour) => {
-                    let affix = Armour(rng.gen_range(1. ..=3.));
+                    let affix = Armour(rng.gen_range(1..=3) as f32);
                     labels.push(affix.to_string());
                     amulet_commands.insert(affix);
                 }
                 Some(AmuletAffixKind::AddLife) => {
-                    let affix = MoreLife(rng.gen_range(5. ..=10.));
+                    let affix = MoreLife(rng.gen_range(5..=10) as f32);
                     labels.push(affix.to_string());
                     amulet_commands.insert(affix);
                 }
                 Some(AmuletAffixKind::PierceChance) => {
-                    let affix = PierceChance(rng.gen_range(5. ..=10.));
+                    let affix = PierceChance(rng.gen_range(5..=10) as f32);
                     labels.push(affix.to_string());
                     amulet_commands.insert(affix);
                 }

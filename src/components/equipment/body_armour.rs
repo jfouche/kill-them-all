@@ -42,12 +42,12 @@ impl BodyArmour {
         for _ in 0..rarity.n_affix() {
             match provider.gen(rng) {
                 Some(BodyArmourAffixKind::AddArmour) => {
-                    let affix = Armour(rng.gen_range(1. ..=3.));
+                    let affix = Armour(rng.gen_range(1..=3) as f32);
                     labels.push(affix.to_string());
                     body_armour_commands.insert(affix);
                 }
                 Some(BodyArmourAffixKind::AddLife) => {
-                    let affix = MoreLife(rng.gen_range(5. ..=10.));
+                    let affix = MoreLife(rng.gen_range(5..=10) as f32);
                     labels.push(affix.to_string());
                     body_armour_commands.insert(affix);
                 }
