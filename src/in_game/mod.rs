@@ -2,6 +2,7 @@ mod bonus_plugin;
 mod character_plugin;
 mod collisions_plugin;
 mod hud_plugin;
+mod life_bar_plugin;
 mod menu;
 mod monster_plugin;
 mod player_plugin;
@@ -32,6 +33,7 @@ impl PluginGroup for InGamePluginsGroup {
             .add(player_plugin::PlayerPlugin)
             .add(round_plugin::RoundPlugin)
             .add(world_map_plugin::WorldMapPlugin)
+            .add(life_bar_plugin::LifeBarPlugin)
             .add_group(weapons::WeaponsPluginGroup)
             .add_group(menu::InGameMenuPluginsGroup)
             .add(in_game_schedule_plugin)

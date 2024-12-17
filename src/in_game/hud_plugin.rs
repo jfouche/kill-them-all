@@ -1,7 +1,7 @@
 use super::GameRunningSet;
 use super::GameState;
 use crate::components::*;
-use crate::ui::ProgressBar;
+use crate::ui::{ProgressBar, ProgressBarColor};
 use bevy::color::palettes::css::{GOLD, RED};
 use bevy::prelude::*;
 
@@ -78,7 +78,8 @@ struct RoundText;
     }),
     BackgroundColor(|| BackgroundColor(Color::BLACK)),
     BorderColor(|| BorderColor(Color::BLACK)),
-    ProgressBar(|| ProgressBar::new(0.0, 100.0, 100.0).with_color(RED.into()))
+    ProgressBar,
+    ProgressBarColor(|| ProgressBarColor(RED.into()))
 )]
 struct LifeBar;
 
@@ -97,7 +98,8 @@ struct LifeBar;
     }),
     BackgroundColor(|| BackgroundColor(Color::BLACK)),
     BorderColor(|| BorderColor(Color::BLACK)),
-    ProgressBar(|| ProgressBar::new(0.0, 100.0, 0.0).with_color(GOLD.into()))
+    ProgressBar,
+    ProgressBarColor(|| ProgressBarColor(GOLD.into()))
 )]
 struct ExperienceBar;
 
@@ -139,8 +141,8 @@ fn update_life_bar(
 ) {
     if let Ok(mut progressbar) = q_bar.get_single_mut() {
         if let Ok((life, max_life)) = q_player.get_single() {
-            progressbar.set_range(0.0, **max_life);
-            progressbar.set_value(**life);
+            progressbar.max = **max_life;
+            progressbar.value = **life;
         }
     }
 }
@@ -152,8 +154,9 @@ fn update_xp_bar(
     if let Ok(mut progressbar) = q_bar.get_single_mut() {
         if let Ok(xp) = q_player.get_single() {
             let (min, max) = xp.get_current_level_min_max_exp();
-            progressbar.set_range(min as f32, max as f32);
-            progressbar.set_value(xp.current() as f32);
+            progressbar.min = min as f32;
+            progressbar.max = max as f32;
+            progressbar.value = xp.current() as f32;
         }
     }
 }
@@ -164,7 +167,7 @@ fn update_life_bar_on_death(
 ) {
     if let Ok(mut progressbar) = q_bar.get_single_mut() {
         for _ in player_death_events.read() {
-            progressbar.set_value(0.0);
+            progressbar.value = 0.0;
         }
     }
 }
