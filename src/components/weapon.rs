@@ -5,18 +5,18 @@ use std::time::Duration;
 
 ///
 /// A [Weapon] should be a child of a [Character] to make attacks
-/// 
+///
 #[derive(Component, Default)]
 #[require(
-    BaseDamageRange(|| BaseDamageRange::new(1., 2.)), 
-    BaseAttackSpeed, 
+    BaseDamageRange(|| BaseDamageRange::new(1., 2.)),
+    BaseAttackSpeed,
     AttackTimer
 )]
 pub struct Weapon;
 
 ///
 /// Component which stores the base [DamageRange] of a [Weapon]
-/// 
+///
 #[derive(Component, Clone, Copy, Reflect)]
 #[require(DamageRange)]
 pub struct BaseDamageRange(pub DamageRange);
@@ -29,7 +29,7 @@ impl BaseDamageRange {
 
 ///
 /// Component which allows to generate [Damage] base on RNG
-/// 
+///
 #[derive(Component, Clone, Copy, Reflect)]
 pub struct DamageRange {
     pub min: f32,
@@ -58,7 +58,7 @@ impl std::ops::Add<&MoreDamage> for &BaseDamageRange {
     fn add(self, more: &MoreDamage) -> Self::Output {
         DamageRange {
             min: self.0.min + **more,
-            max: self.0.max + **more
+            max: self.0.max + **more,
         }
     }
 }
@@ -69,17 +69,16 @@ impl std::ops::Mul<&IncreaseDamage> for DamageRange {
         let multiplier = 1. + **increase / 100.;
         DamageRange {
             min: self.min * multiplier,
-            max: self.max * multiplier
+            max: self.max * multiplier,
         }
     }
 }
 
 ///
 /// Damage
-/// 
+///
 #[derive(Clone, Copy, Component, Default, Deref, Reflect)]
 pub struct Damage(pub f32);
-
 
 impl std::ops::AddAssign for Damage {
     fn add_assign(&mut self, rhs: Self) {
@@ -95,9 +94,9 @@ impl std::ops::Sub<f32> for Damage {
     }
 }
 
-/// 
+///
 /// It represents the base attack per second
-/// 
+///
 #[derive(Component, Default, Clone, Copy, Deref, Reflect)]
 #[require(AttackSpeed, AttackTimer)]
 pub struct BaseAttackSpeed(pub f32);
@@ -134,7 +133,7 @@ impl AttackTimer {
 #[derive(Component, Default)]
 #[require(
     DamageRange,
-    LifeTime(|| LifeTime::new(5.)), 
+    LifeTime(|| LifeTime::new(5.)),
     RigidBody,
     Collider,
     Sensor,
@@ -145,17 +144,11 @@ pub struct Ammo;
 
 impl Ammo {
     fn player_collision_groups() -> CollisionGroups {
-        CollisionGroups::new(
-            GROUP_BULLET,
-            Group::ALL & !(GROUP_BONUS | GROUP_PLAYER),
-        )
+        CollisionGroups::new(GROUP_BULLET, Group::ALL & !(GROUP_BONUS | GROUP_PLAYER))
     }
 
     fn monster_collision_groups() -> CollisionGroups {
-        CollisionGroups::new(
-            GROUP_BULLET,
-            Group::ALL & !(GROUP_BONUS | GROUP_ENEMY),
-        )
+        CollisionGroups::new(GROUP_BULLET, Group::ALL & !(GROUP_BONUS | GROUP_ENEMY))
     }
 }
 

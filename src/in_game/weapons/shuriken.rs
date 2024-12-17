@@ -1,7 +1,7 @@
-use std::f32::consts::PI;
 use crate::{components::*, in_game::GameRunningSet};
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
+use std::f32::consts::PI;
 
 #[derive(Resource)]
 struct ShurikenAssets {
@@ -10,10 +10,10 @@ struct ShurikenAssets {
 
 ///
 /// Weapon that launch [Shuriken]s
-/// 
+///
 #[derive(Component)]
 #[require(
-    Weapon, 
+    Weapon,
     Name(|| Name::new("ShurikenLauncher")),
     BaseDamageRange(|| BaseDamageRange::new(2., 4.)),
     BaseAttackSpeed(|| BaseAttackSpeed(1.5)),
@@ -30,10 +30,10 @@ impl Default for ShurikenLauncher {
 
 ///
 /// A shuriken projectile
-/// 
+///
 #[derive(Component)]
 #[require(
-    Projectile, 
+    Projectile,
     Sprite,
     Collider(|| Collider::ball(8.))
 )]

@@ -9,22 +9,25 @@ const BUTTON_TEXT_COLOR: Color = Color::srgb(0.9, 0.9, 0.9);
 
 ///
 /// Component to spawn a button
-/// 
+///
 #[derive(Component, Default)]
 #[require(
-    Button, 
+    Button,
     Node(MyButton::default_node),
-    BackgroundColor(|| BackgroundColor(NORMAL_BUTTON)), 
+    BackgroundColor(|| BackgroundColor(NORMAL_BUTTON)),
     BorderColor(|| BorderColor(Color::BLACK))
 )]
 pub struct MyButton {
     text: Option<Text>,
-    image: Option<ImageNode>
+    image: Option<ImageNode>,
 }
 
 impl MyButton {
     pub fn new(label: impl Into<String>) -> Self {
-        MyButton { text: Some(Text(label.into())), image: None }
+        MyButton {
+            text: Some(Text(label.into())),
+            image: None,
+        }
     }
 
     pub fn with_image(mut self, image: ImageNode) -> Self {
@@ -48,7 +51,6 @@ impl MyButton {
     }
 }
 
-
 #[derive(Component)]
 #[require(
     Text,
@@ -57,7 +59,6 @@ impl MyButton {
     TextLayout(|| TextLayout::new_with_justify(JustifyText::Center))
 )]
 struct MyButtonText;
-
 
 pub trait ButtonNav<T> {
     fn up(&self, current: T) -> Option<T>;
@@ -109,7 +110,11 @@ pub fn button_plugin(app: &mut App) {
     );
 }
 
-fn create_button(trigger: Trigger<OnAdd, MyButton>, mut commands: Commands, mut buttons: Query<(&MyButton, &mut Node)>) {
+fn create_button(
+    trigger: Trigger<OnAdd, MyButton>,
+    mut commands: Commands,
+    mut buttons: Query<(&MyButton, &mut Node)>,
+) {
     commands.entity(trigger.entity()).with_children(|parent| {
         if let Ok((btn, mut node)) = buttons.get_mut(trigger.entity()) {
             if let Some(image) = &btn.image {

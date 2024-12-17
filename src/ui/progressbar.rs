@@ -1,8 +1,11 @@
-use bevy::{ecs::{component::ComponentId, world::DeferredWorld}, prelude::*};
+use bevy::{
+    ecs::{component::ComponentId, world::DeferredWorld},
+    prelude::*,
+};
 
 ///
 /// Define the [ProgressBar] color
-/// 
+///
 #[derive(Component, Reflect, Deref)]
 pub struct ProgressBarColor(pub Color);
 
@@ -13,7 +16,7 @@ impl Default for ProgressBarColor {
 }
 
 /// The [ProgressBar] component should be nested with a [bevy::ui::Node]
-/// 
+///
 /// The background color is defined with the [BackgroundColor] component, and
 /// the foreground color is defined with the [ProgressBarColor] component.
 #[derive(Component, Default, Debug, Clone, Reflect)]
@@ -35,14 +38,14 @@ impl ProgressBar {
 #[require(
     Node(|| Node {
         height: Val::Percent(100.0),
-        ..default()     
+        ..default()
     })
 )]
 struct ProgressBarForeground;
 
 ///
 ///  A [Plugin] to mange [ProgressBar]s
-/// 
+///
 pub struct ProgressBarPlugin;
 
 impl Plugin for ProgressBarPlugin {
@@ -52,20 +55,19 @@ impl Plugin for ProgressBarPlugin {
             .add_systems(Update, update_progress_bars);
     }
 }
-    
 
 fn create_progress_bar(mut world: DeferredWorld, entity: Entity, _id: ComponentId) {
     world.commands().entity(entity).with_children(|parent| {
-            parent.spawn(ProgressBarForeground);
-        });
+        parent.spawn(ProgressBarForeground);
+    });
 }
 
 fn update_progress_bars(
-    mut children: Query<(&mut Node, &mut BackgroundColor, &Parent), With<ProgressBarForeground>>, 
-    parents: Query<(&ProgressBar, &ProgressBarColor)>
+    mut children: Query<(&mut Node, &mut BackgroundColor, &Parent), With<ProgressBarForeground>>,
+    parents: Query<(&ProgressBar, &ProgressBarColor)>,
 ) {
     for (mut node, mut background, parent) in children.iter_mut() {
-        if let Ok((data, color)) = parents.get(**parent){
+        if let Ok((data, color)) = parents.get(**parent) {
             node.width = Val::Percent(100.0 * data.percent());
             *background = BackgroundColor(**color);
         }
