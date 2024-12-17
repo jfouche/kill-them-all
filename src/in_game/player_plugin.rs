@@ -16,6 +16,7 @@ impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<PlayerDeathEvent>()
             .register_type::<Experience>()
+            .init_resource::<Score>()
             .add_systems(Startup, load_player_assets)
             .add_systems(OnEnter(GameState::InGame), spawn_player)
             .add_systems(OnExit(GameState::InGame), despawn_all::<Player>)

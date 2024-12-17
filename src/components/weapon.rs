@@ -128,9 +128,6 @@ impl AttackTimer {
     }
 }
 
-
-
-
 /// [Ammo]'s components required:
 /// - [DamageRange]
 /// - [Collider]
@@ -141,69 +138,26 @@ impl AttackTimer {
     RigidBody,
     Collider,
     Sensor,
-    // TODO: add a function for a specific group for Player & Monster
-    CollisionGroups(|| CollisionGroups::new(
-        GROUP_BULLET,
-        Group::ALL & !(GROUP_BONUS | GROUP_PLAYER),
-    )),
-    // LockedAxes(|| LockedAxes::ROTATION_LOCKED),
+    CollisionGroups(Ammo::player_collision_groups),
     ActiveEvents(|| ActiveEvents::COLLISION_EVENTS)
 )]
 pub struct Ammo;
 
-// // #[derive(Bundle, Default)]
-// // pub struct AmmoConfig {
-// //     pub damage: Damage,
-// //     pub pierce: PierceChance,
-// //     pub velocity: Velocity,
-// //     pub collider: Collider,
-// // }
+impl Ammo {
+    fn player_collision_groups() -> CollisionGroups {
+        CollisionGroups::new(
+            GROUP_BULLET,
+            Group::ALL & !(GROUP_BONUS | GROUP_PLAYER),
+        )
+    }
 
-// // #[derive(Bundle)]
-// // pub struct AmmoBundle {
-// //     tag: Ammo,
-// //     config: AmmoConfig,
-// //     lifetime: LifeTime,
-// //     body: RigidBody,
-// //     // mass: ColliderMassProperties,
-// //     sensor: Sensor,
-// //     collision_groups: CollisionGroups,
-// //     locked_axes: LockedAxes,
-// //     active_events: ActiveEvents,
-// // }
-
-// // impl Default for AmmoBundle {
-// //     fn default() -> Self {
-// //         AmmoBundle {
-// //             tag: Ammo,
-// //             config: AmmoConfig::default(),
-// //             lifetime: LifeTime::new(3.),
-// //             body: RigidBody::Dynamic,
-// //             // mass: ColliderMassProperties::MassProperties(MassProperties {
-// //             //     mass: 0.001,
-// //             //     principal_inertia: 0.001,
-// //             //     ..Default::default()
-// //             // }),
-// //             sensor: Sensor,
-// //             collision_groups: CollisionGroups::new(
-// //                 GROUP_BULLET,
-// //                 Group::ALL & !(GROUP_BONUS | GROUP_PLAYER),
-// //             ),
-// //             locked_axes: LockedAxes::ROTATION_LOCKED,
-// //             active_events: ActiveEvents::COLLISION_EVENTS,
-// //         }
-// //     }
-// // }
-
-// impl AmmoBundle {
-//     pub fn new(config: AmmoConfig) -> Self {
-//         AmmoBundle {
-//             config,
-//             ..Default::default()
-//         }
-//     }
-// }
-
+    fn monster_collision_groups() -> CollisionGroups {
+        CollisionGroups::new(
+            GROUP_BULLET,
+            Group::ALL & !(GROUP_BONUS | GROUP_ENEMY),
+        )
+    }
+}
 
 #[derive(Component, Default)]
 #[require(Ammo, PierceChance, Velocity)]

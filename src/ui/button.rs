@@ -109,7 +109,6 @@ pub fn button_plugin(app: &mut App) {
     );
 }
 
-// TODO: observe only for the btn entity
 fn create_button(trigger: Trigger<OnAdd, MyButton>, mut commands: Commands, mut buttons: Query<(&MyButton, &mut Node)>) {
     commands.entity(trigger.entity()).with_children(|parent| {
         if let Ok((btn, mut node)) = buttons.get_mut(trigger.entity()) {
