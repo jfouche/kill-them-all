@@ -1,6 +1,6 @@
 use super::*;
 use bevy::prelude::*;
-use rand::Rng;
+use rand::{rngs::ThreadRng, Rng};
 
 /// Required components for all characters
 #[derive(Component, Default)]
@@ -158,8 +158,8 @@ impl std::fmt::Display for IncreaseAttackSpeed {
 pub struct PierceChance(pub f32);
 
 impl PierceChance {
-    pub fn try_pierce(&mut self) -> bool {
-        if rand::thread_rng().gen_range(0. ..100.) < **self {
+    pub fn try_pierce(&mut self, rng: &mut ThreadRng) -> bool {
+        if rng.gen_range(0. ..100.) < **self {
             self.0 -= 100.;
             true
         } else {

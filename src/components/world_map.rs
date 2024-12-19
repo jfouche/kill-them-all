@@ -48,6 +48,7 @@ impl WorldMapBundle {
 )]
 pub struct WorldMapCollider;
 
+// TODO: add a `&mut ThreadRng` field
 pub struct WorldMapBuilder {
     map_size: TilemapSize,
     tile_size: TilemapTileSize,

@@ -18,8 +18,16 @@ impl Plugin for CollisionsPlugin {
                 player_hits_bonus,
             )
                 .in_set(GameRunningSet::EntityUpdate),
-        );
+        )
+        .add_observer(update_character_observers);
     }
+}
+
+fn update_character_observers(trigger: Trigger<OnAdd, Character>, mut commands: Commands) {
+    commands
+        .entity(trigger.entity())
+        .observe(despawn_non_projectile_ammo)
+        .observe(try_pierce);
 }
 
 ///
@@ -29,7 +37,7 @@ fn character_hit_by_ammo(
     mut commands: Commands,
     mut collisions: EventReader<CollisionEvent>,
     characters: Query<(), With<Character>>,
-    mut ammos: Query<(Entity, &DamageRange, &mut PierceChance), With<Ammo>>,
+    ammos: Query<(Entity, &DamageRange), With<Ammo>>,
 ) {
     let mut characters_hits = HashMap::new();
     let mut ammo_hits = HashSet::new();
@@ -43,7 +51,7 @@ fn character_hit_by_ammo(
         .filter_map(|(_, character, other)| {
             ammos
                 .get(other)
-                .map(|(ammo, damage_range, _)| (character, ammo, damage_range))
+                .map(|(ammo, damage_range)| (character, ammo, damage_range))
                 .ok()
         })
         .for_each(|(character, ammo, damage_range)| {
@@ -51,19 +59,32 @@ fn character_hit_by_ammo(
             ammo_hits.insert(ammo);
         });
 
-    // try to pierce
-    // TODO: move to another system which check Projectile PierceChance
-    for ammo in ammo_hits {
-        if let Ok((_, _, mut pierce)) = ammos.get_mut(ammo) {
-            if !pierce.try_pierce() {
-                // Didn't pierce => despawn bullet
-                commands.entity(ammo).despawn();
-            }
-        }
-    }
-
     for (character_entity, damage) in characters_hits.iter() {
         commands.trigger_targets(HitEvent { damage: *damage }, *character_entity);
+    }
+}
+
+fn despawn_non_projectile_ammo(
+    trigger: Trigger<HitEvent>,
+    mut commands: Commands,
+    ammos: Query<(), (With<Ammo>, Without<Projectile>)>,
+) {
+    if ammos.get(trigger.entity()).is_ok() {
+        commands.entity(trigger.entity()).despawn_recursive();
+    }
+}
+
+fn try_pierce(
+    trigger: Trigger<HitEvent>,
+    mut commands: Commands,
+    mut projectiles: Query<&mut PierceChance, With<Projectile>>,
+) {
+    if let Ok(mut pierce_chance) = projectiles.get_mut(trigger.entity()) {
+        let mut rng = rand::thread_rng();
+        if !pierce_chance.try_pierce(&mut rng) {
+            // Didn't pierce => despawn projectile
+            commands.entity(trigger.entity()).despawn();
+        }
     }
 }
 

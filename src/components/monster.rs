@@ -114,7 +114,7 @@ impl MonsterSpawnParams {
         };
 
         // Kind
-        let kind = rand::thread_rng().gen_range(0..MONSTER_KIND_COUNT);
+        let kind = rng.gen_range(0..MONSTER_KIND_COUNT);
 
         // Create the params
         MonsterSpawnParams {
