@@ -130,25 +130,26 @@ impl AttackTimer {
 /// [Ammo]'s components required:
 /// - [DamageRange]
 /// - [Collider]
+/// - [CollisionGroups]
 #[derive(Component, Default)]
 #[require(
     DamageRange,
     LifeTime(|| LifeTime::new(5.)),
     RigidBody,
     Collider,
+    CollisionGroups,
     Sensor,
-    CollisionGroups(Ammo::player_collision_groups),
     ActiveEvents(|| ActiveEvents::COLLISION_EVENTS)
 )]
 pub struct Ammo;
 
 impl Ammo {
-    fn player_collision_groups() -> CollisionGroups {
-        CollisionGroups::new(GROUP_BULLET, Group::ALL & !(GROUP_BONUS | GROUP_PLAYER))
-    }
-
-    fn monster_collision_groups() -> CollisionGroups {
-        CollisionGroups::new(GROUP_BULLET, Group::ALL & !(GROUP_BONUS | GROUP_ENEMY))
+    pub fn collision_groups(target: Target) -> CollisionGroups {
+        let filter = match target {
+            Target::Player => GROUP_BONUS | GROUP_ENEMY,
+            Target::Monster => GROUP_BONUS | GROUP_PLAYER,
+        };
+        CollisionGroups::new(GROUP_AMMO, Group::ALL & !filter)
     }
 }
 

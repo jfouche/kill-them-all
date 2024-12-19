@@ -37,32 +37,33 @@ impl Plugin for GunPlugin {
 
 fn gun_fires(
     mut commands: Commands,
-    q_player: Query<(&Transform, &PierceChance), With<Player>>,
     weapons: Query<(&AttackTimer, &DamageRange, &Parent), With<Gun>>,
-    q_monsters: Query<&Transform, With<Monster>>,
+    characters: Query<(&Transform, &PierceChance, &Target), With<Character>>,
 ) {
     for (timer, damage_range, parent) in &weapons {
         if timer.just_finished() {
-            if let Ok((player, pierce)) = q_player.get(**parent) {
-                let player = player.translation;
-                // Get the nearest monster
-                let nearest_monster = q_monsters
+            if let Ok((gunner_pos, pierce, target)) = characters.get(**parent) {
+                let gunner = gunner_pos.translation;
+                // Get the nearest target
+                let nearest_target = characters
                     .iter()
-                    .map(|transform| transform.translation)
+                    .filter(|(_t, _pc, other_target)| *other_target != target)
+                    .map(|(transform, _pc, _t)| transform.translation)
                     .reduce(|nearest, other| {
-                        if player.distance(other) < player.distance(nearest) {
+                        if gunner.distance(other) < gunner.distance(nearest) {
                             other // new nearest
                         } else {
                             nearest
                         }
                     });
-                if let Some(nearest) = nearest_monster {
+                if let Some(target_pos) = nearest_target {
                     commands.spawn((
                         Bullet,
                         *damage_range,
                         *pierce,
-                        Transform::from_translation(player),
-                        Velocity::linear((nearest - player).xy().normalize() * BULLET_SPEED),
+                        Transform::from_translation(gunner),
+                        Velocity::linear((target_pos - gunner).xy().normalize() * BULLET_SPEED),
+                        Ammo::collision_groups(*target),
                     ));
                 }
             }

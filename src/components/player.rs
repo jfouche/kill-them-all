@@ -6,6 +6,7 @@ use bevy_rapier2d::prelude::*;
 #[require(
     Name(|| Name::new("Player")),
     Character,
+    Target(|| Target::Monster),
     BaseLife(|| BaseLife(10.)),
     BaseMovementSpeed(|| BaseMovementSpeed(130.)),
     Money,
@@ -13,6 +14,7 @@ use bevy_rapier2d::prelude::*;
     Sprite,
     Transform(|| Transform::from_xyz(0., 0., 10.)),
     AnimationTimer,
+    CollisionGroups(|| CollisionGroups::new(GROUP_PLAYER, Group::ALL)),
     ActiveEvents(|| ActiveEvents::COLLISION_EVENTS)
 )]
 pub struct Player;

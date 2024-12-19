@@ -76,14 +76,14 @@ fn set_shuriken_direction(
 
 fn launch_shuriken(
     mut commands: Commands,
-    characters: Query<(&Transform, &PierceChance)>,
     weapons: Query<(&AttackTimer, &DamageRange, &Parent, &ShurikenLauncher)>,
+    characters: Query<(&Transform, &PierceChance, &Target), With<Character>>,
     asset: Res<ShurikenAssets>,
 ) {
     let mut rng = rand::thread_rng();
     for (timer, damage_range, parent, lancher) in &weapons {
         if timer.just_finished() {
-            if let Ok((transform, pierce_chance)) = characters.get(**parent) {
+            if let Ok((transform, pierce_chance, target)) = characters.get(**parent) {
                 commands.spawn((
                     Shuriken,
                     damage_range.gen(&mut rng),
@@ -94,6 +94,7 @@ fn launch_shuriken(
                     },
                     Sprite::from_image(asset.shuriken.clone()),
                     *transform,
+                    Ammo::collision_groups(*target),
                 ));
             }
         }

@@ -7,6 +7,7 @@ impl Plugin for CharacterPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<HitEvent>()
             .add_event::<LooseLifeEvent>()
+            .register_type::<Target>()
             .register_type::<BaseLife>()
             .register_type::<Life>()
             .register_type::<MaxLife>()

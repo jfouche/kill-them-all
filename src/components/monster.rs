@@ -43,11 +43,13 @@ impl From<&SpawningMonsterAssets> for MeshMaterial2d<ColorMaterial> {
 #[derive(Component, Default)]
 #[require(
     Character,
+    Target(|| Target::Player),
     MonsterRarity,
     XpOnDeath,
     DamageRange,
     Sprite,
-    AnimationTimer
+    AnimationTimer,
+    CollisionGroups(|| CollisionGroups::new(GROUP_ENEMY, Group::ALL & !GROUP_BONUS))
 )]
 pub struct Monster;
 

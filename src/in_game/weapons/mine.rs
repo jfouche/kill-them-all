@@ -1,4 +1,4 @@
-use super::{Ammo, AttackTimer, BaseAttackSpeed, Character, DamageRange, Weapon};
+use super::{Ammo, AttackTimer, BaseAttackSpeed, Character, DamageRange, Target, Weapon};
 use crate::in_game::GameRunningSet;
 use bevy::prelude::*;
 
@@ -65,12 +65,12 @@ fn load_assets(
 fn drop_mine(
     mut commands: Commands,
     mut mine_droppers: Query<(&AttackTimer, &DamageRange, &Parent), With<MineDropper>>,
-    characters: Query<&Transform, With<Character>>,
+    characters: Query<(&Transform, &Target), With<Character>>,
     assets: Res<MineAssets>,
 ) {
     for (timer, damage_range, parent) in &mut mine_droppers {
         if timer.just_finished() {
-            if let Ok(Transform { translation, .. }) = characters.get(**parent) {
+            if let Ok((Transform { translation, .. }, target)) = characters.get(**parent) {
                 info!("drop_mine() : {}", translation);
                 // drop mine at character position
                 let mut rng = rand::thread_rng();
@@ -81,6 +81,7 @@ fn drop_mine(
                     Transform::from_xyz(translation.x, translation.y, 12.),
                     Mesh2d(assets.mesh.clone()),
                     MeshMaterial2d(assets.color.clone()),
+                    Ammo::collision_groups(*target),
                 ));
             }
         }

@@ -1,4 +1,4 @@
-use crate::{components::*, schedule::*};
+use crate::{components::*, in_game::weapons::*, schedule::*};
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 use std::ops::Mul;
@@ -173,6 +173,8 @@ fn add_affixes(
         }
 
         commands.entity(trigger.entity()).add_children(&entities);
+
+        commands.entity(trigger.entity()).with_child(Gun);
     }
 }
 

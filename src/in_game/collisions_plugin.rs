@@ -13,7 +13,7 @@ impl Plugin for CollisionsPlugin {
         app.add_systems(
             Update,
             (
-                monster_hit_by_ammo,
+                character_hit_by_ammo,
                 player_touched_by_monster,
                 player_hits_bonus,
             )
@@ -23,15 +23,15 @@ impl Plugin for CollisionsPlugin {
 }
 
 ///
-/// Monster hit by an [Ammo]
+/// [Character] hit by an [Ammo]
 ///
-fn monster_hit_by_ammo(
+fn character_hit_by_ammo(
     mut commands: Commands,
     mut collisions: EventReader<CollisionEvent>,
-    monsters: Query<(), With<Monster>>,
+    characters: Query<(), With<Character>>,
     mut ammos: Query<(Entity, &DamageRange, &mut PierceChance), With<Ammo>>,
 ) {
-    let mut monster_hits = HashMap::new();
+    let mut characters_hits = HashMap::new();
     let mut ammo_hits = HashSet::new();
     let mut rng = rand::thread_rng();
 
@@ -39,19 +39,20 @@ fn monster_hit_by_ammo(
     collisions
         .read()
         .filter_map(start_event_filter)
-        .filter_map(|(&e1, &e2)| monsters.get_either(e1, e2))
-        .filter_map(|(_, monster, other)| {
+        .filter_map(|(&e1, &e2)| characters.get_either(e1, e2))
+        .filter_map(|(_, character, other)| {
             ammos
                 .get(other)
-                .map(|(ammo, damage_range, _)| (monster, ammo, damage_range))
+                .map(|(ammo, damage_range, _)| (character, ammo, damage_range))
                 .ok()
         })
-        .for_each(|(monster, ammo, damage_range)| {
-            *monster_hits.entry(monster).or_default() += damage_range.gen(&mut rng);
+        .for_each(|(character, ammo, damage_range)| {
+            *characters_hits.entry(character).or_default() += damage_range.gen(&mut rng);
             ammo_hits.insert(ammo);
         });
 
     // try to pierce
+    // TODO: move to another system which check Projectile PierceChance
     for ammo in ammo_hits {
         if let Ok((_, _, mut pierce)) = ammos.get_mut(ammo) {
             if !pierce.try_pierce() {
@@ -61,8 +62,8 @@ fn monster_hit_by_ammo(
         }
     }
 
-    for (entity, damage) in monster_hits.iter() {
-        commands.trigger_targets(HitEvent { damage: *damage }, *entity);
+    for (character_entity, damage) in characters_hits.iter() {
+        commands.trigger_targets(HitEvent { damage: *damage }, *character_entity);
     }
 }
 

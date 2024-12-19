@@ -5,6 +5,7 @@ use rand::Rng;
 /// Required components for all characters
 #[derive(Component, Default)]
 #[require(
+    Target,
     BaseLife,
     BaseMovementSpeed,
     IncreaseAttackSpeed,
@@ -20,6 +21,14 @@ use rand::Rng;
     LockedAxes(|| LockedAxes::ROTATION_LOCKED)
 )]
 pub struct Character;
+
+/// Weapon target
+#[derive(Component, Default, Debug, Clone, Copy, PartialEq, Eq, Reflect)]
+pub enum Target {
+    #[default]
+    Monster,
+    Player,
+}
 
 /// Represent the initial life of a character
 #[derive(Component, Default, Deref, Clone, Copy, Reflect)]
