@@ -135,6 +135,7 @@ impl AttackTimer {
 #[require(
     DamageRange,
     LifeTime(|| LifeTime::new(5.)),
+    Transform,
     RigidBody,
     Collider,
     CollisionGroups,
@@ -153,6 +154,22 @@ impl Ammo {
     }
 }
 
+/// Helper to spawn required [Ammo] dynamic components
+#[derive(Bundle)]
+pub struct AmmoParams {
+    pub damage_range: DamageRange,
+    pub transform: Transform,
+    pub collision_groups: CollisionGroups
+}
+
+/// A [Projectile] is an [Ammo] which is sent, and can pierce
 #[derive(Component, Default)]
 #[require(Ammo, PierceChance, Velocity)]
 pub struct Projectile;
+
+/// Helper to spawn required [Projectile] dynamic components
+#[derive(Bundle)]
+pub struct ProjectileParams {
+    pub pierce_chance: PierceChance,
+    pub velocity: Velocity
+}

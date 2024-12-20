@@ -80,21 +80,24 @@ fn launch_shuriken(
     characters: Query<(&Transform, &PierceChance, &Target), With<Character>>,
     asset: Res<ShurikenAssets>,
 ) {
-    let mut rng = rand::thread_rng();
     for (timer, damage_range, parent, lancher) in &weapons {
         if timer.just_finished() {
             if let Ok((transform, pierce_chance, target)) = characters.get(**parent) {
                 commands.spawn((
                     Shuriken,
-                    damage_range.gen(&mut rng),
-                    *pierce_chance,
-                    Velocity {
-                        linvel: *lancher.dir * SHURIKEN_SPEED,
-                        angvel: 2. * PI,
+                    AmmoParams {
+                        damage_range: *damage_range,
+                        transform: *transform,
+                        collision_groups: Ammo::collision_groups(*target)
+                    },
+                    ProjectileParams {
+                        pierce_chance: *pierce_chance,
+                        velocity: Velocity {
+                            linvel: *lancher.dir * SHURIKEN_SPEED,
+                            angvel: 2. * PI,
+                        }
                     },
                     Sprite::from_image(asset.shuriken.clone()),
-                    *transform,
-                    Ammo::collision_groups(*target),
                 ));
             }
         }
