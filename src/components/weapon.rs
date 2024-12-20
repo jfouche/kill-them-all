@@ -159,7 +159,7 @@ impl Ammo {
 pub struct AmmoParams {
     pub damage_range: DamageRange,
     pub transform: Transform,
-    pub collision_groups: CollisionGroups
+    pub collision_groups: CollisionGroups,
 }
 
 /// A [Projectile] is an [Ammo] which is sent, and can pierce
@@ -171,5 +171,5 @@ pub struct Projectile;
 #[derive(Bundle)]
 pub struct ProjectileParams {
     pub pierce_chance: PierceChance,
-    pub velocity: Velocity
+    pub velocity: Velocity,
 }

@@ -37,7 +37,15 @@ fn weapons_plugin(app: &mut App) {
                 update_weapon_damage_range,
             )
                 .in_set(PreUpdateAffixes::Step2),
-        );
+        )
+        .add_observer(update_character_observers);
+}
+
+fn update_character_observers(trigger: Trigger<OnAdd, Character>, mut commands: Commands) {
+    commands
+        .entity(trigger.entity())
+        .observe(despawn_non_projectile_ammo)
+        .observe(try_pierce);
 }
 
 fn update_weapon_attack_speed(
@@ -73,6 +81,30 @@ fn update_weapon_damage_range(
     for (mut damage_range, base_damage_range, parent) in &mut weapons {
         if let Ok((more, increase)) = characters.get(**parent) {
             *damage_range = (base_damage_range + more) * increase;
+        }
+    }
+}
+
+fn despawn_non_projectile_ammo(
+    trigger: Trigger<HitEvent>,
+    mut commands: Commands,
+    ammos: Query<(), (With<Ammo>, Without<Projectile>)>,
+) {
+    if ammos.get(trigger.entity()).is_ok() {
+        commands.entity(trigger.entity()).despawn_recursive();
+    }
+}
+
+fn try_pierce(
+    trigger: Trigger<HitEvent>,
+    mut commands: Commands,
+    mut projectiles: Query<&mut PierceChance, With<Projectile>>,
+) {
+    if let Ok(mut pierce_chance) = projectiles.get_mut(trigger.entity()) {
+        let mut rng = rand::thread_rng();
+        if !pierce_chance.try_pierce(&mut rng) {
+            // Didn't pierce => despawn projectile
+            commands.entity(trigger.entity()).despawn();
         }
     }
 }

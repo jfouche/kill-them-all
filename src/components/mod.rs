@@ -49,7 +49,7 @@ impl std::fmt::Display for Money {
 /// The animation [AnimationTimer] component indicates that the entity should
 /// be animated
 ///
-#[derive(Component, Deref, DerefMut)]
+#[derive(Component, Deref, DerefMut, Reflect)]
 pub struct AnimationTimer(Timer);
 
 impl Default for AnimationTimer {

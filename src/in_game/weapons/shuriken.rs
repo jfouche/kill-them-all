@@ -88,14 +88,14 @@ fn launch_shuriken(
                     AmmoParams {
                         damage_range: *damage_range,
                         transform: *transform,
-                        collision_groups: Ammo::collision_groups(*target)
+                        collision_groups: Ammo::collision_groups(*target),
                     },
                     ProjectileParams {
                         pierce_chance: *pierce_chance,
                         velocity: Velocity {
                             linvel: *lancher.dir * SHURIKEN_SPEED,
                             angvel: 2. * PI,
-                        }
+                        },
                     },
                     Sprite::from_image(asset.shuriken.clone()),
                 ));

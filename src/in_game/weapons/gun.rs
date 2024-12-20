@@ -62,12 +62,14 @@ fn gun_fires(
                         AmmoParams {
                             damage_range: *damage_range,
                             transform: Transform::from_translation(gunner),
-                            collision_groups: Ammo::collision_groups(*target)
+                            collision_groups: Ammo::collision_groups(*target),
                         },
                         ProjectileParams {
                             pierce_chance: *pierce,
-                            velocity: Velocity::linear((target_pos - gunner).xy().normalize() * BULLET_SPEED)
-                        }
+                            velocity: Velocity::linear(
+                                (target_pos - gunner).xy().normalize() * BULLET_SPEED,
+                            ),
+                        },
                     ));
                 }
             }

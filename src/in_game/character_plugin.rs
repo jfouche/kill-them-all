@@ -24,6 +24,7 @@ impl Plugin for CharacterPlugin {
             .register_type::<MoreDamage>()
             .register_type::<IncreaseDamage>()
             .register_type::<AffixesLabels>()
+            .register_type::<AnimationTimer>()
             .add_observer(init_life)
             .add_systems(Startup, register_hooks)
             .add_systems(
