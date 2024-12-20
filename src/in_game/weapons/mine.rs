@@ -1,10 +1,10 @@
 use super::{
-    Ammo, AmmoParams, AnimationTimer, AttackTimer, BaseAttackSpeed, Character, CyclicAnimation,
-    DamageRange, OneShotAnimation, Target, Weapon,
+    Ammo, AmmoParams, AttackTimer, BaseAttackSpeed, Character, CyclicAnimation, DamageRange,
+    OneShotAnimation, Target, Weapon,
 };
 use crate::in_game::GameRunningSet;
 use bevy::prelude::*;
-use bevy_rapier2d::prelude::Collider;
+use bevy_rapier2d::prelude::{Collider, CollisionGroups};
 
 ///
 /// Weapon that drop a mine regularly
@@ -25,10 +25,10 @@ pub struct MineDropper;
 #[require(
     Name(|| Name::new("Mine")),
     Ammo,
-    Collider(|| Collider::ball(10.)),
+    Collider(|| Collider::ball(8.)),
     MineExplodeTimer,
     Sprite,
-    CyclicAnimation(|| CyclicAnimation::new(&[0, 1]))
+    CyclicAnimation(|| CyclicAnimation::new(0..2))
 )]
 struct Mine;
 
@@ -43,8 +43,10 @@ impl Default for MineExplodeTimer {
 
 #[derive(Component)]
 #[require(
+    Ammo,
+    Collider(|| Collider::ball(16.)),
     Sprite,
-    OneShotAnimation(|| OneShotAnimation::new(&[0, 1, 2, 3, 4, 5, 6]))
+    OneShotAnimation(|| OneShotAnimation::new(0..8))
 )]
 struct MineExplosion;
 
@@ -116,11 +118,17 @@ fn drop_mine(
 
 fn mine_explosion(
     mut commands: Commands,
-    mut mines: Query<(Entity, &mut MineExplodeTimer, &Transform)>,
+    mut mines: Query<(
+        Entity,
+        &mut MineExplodeTimer,
+        &DamageRange,
+        &Transform,
+        &CollisionGroups,
+    )>,
     time: Res<Time>,
     assets: Res<MineAssets>,
 ) {
-    for (entity, mut timer, transform) in &mut mines {
+    for (entity, mut timer, &damage_range, &transform, &collision_groups) in &mut mines {
         timer.tick(time.delta());
         if timer.just_finished() {
             commands.entity(entity).despawn_recursive();
@@ -130,8 +138,12 @@ fn mine_explosion(
             let atlas = assets.explosion_atlas_layout.clone().into();
             commands.spawn((
                 MineExplosion,
+                AmmoParams {
+                    damage_range,
+                    collision_groups,
+                    transform,
+                },
                 Sprite::from_atlas_image(image, atlas),
-                *transform,
             ));
         }
     }
