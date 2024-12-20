@@ -33,6 +33,7 @@ impl Default for ShurikenLauncher {
 ///
 #[derive(Component)]
 #[require(
+    Name(|| Name::new("Shuriken")),
     Projectile,
     Sprite,
     Collider(|| Collider::ball(8.))

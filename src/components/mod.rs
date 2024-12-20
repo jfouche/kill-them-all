@@ -35,17 +35,7 @@ pub fn despawn_all<T: Component>(to_despawn: Query<Entity, With<T>>, mut command
     }
 }
 
-///
-/// [Money]
-///
-#[derive(Component, Default, Deref, DerefMut, Reflect)]
-pub struct Money(pub u16);
 
-impl std::fmt::Display for Money {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
 
 ///
 /// The [LifeTime] component indicates that the entity should be depawn
@@ -61,11 +51,6 @@ impl LifeTime {
     }
 }
 
-///
-/// Resource to store the score
-///
-#[derive(Default, Resource, Reflect)]
-pub struct Score(pub u16);
 
 ///
 /// A [Round] is fixed time period when monster spawn

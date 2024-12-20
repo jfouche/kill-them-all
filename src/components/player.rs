@@ -100,3 +100,21 @@ impl std::fmt::Display for Experience {
         )
     }
 }
+
+///
+/// [Money]
+///
+#[derive(Component, Default, Deref, DerefMut, Reflect)]
+pub struct Money(pub u16);
+
+impl std::fmt::Display for Money {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+///
+/// Resource to store the score
+///
+#[derive(Default, Resource, Reflect)]
+pub struct Score(pub u16);
