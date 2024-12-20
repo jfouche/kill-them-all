@@ -1,3 +1,4 @@
+mod animation;
 mod bonus;
 mod character;
 mod equipment;
@@ -8,6 +9,7 @@ mod upgrade;
 mod weapon;
 mod world_map;
 
+pub use animation::*;
 pub use bonus::*;
 pub use character::*;
 pub use equipment::*;
@@ -42,19 +44,6 @@ pub struct Money(pub u16);
 impl std::fmt::Display for Money {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
-    }
-}
-
-///
-/// The animation [AnimationTimer] component indicates that the entity should
-/// be animated
-///
-#[derive(Component, Deref, DerefMut, Reflect)]
-pub struct AnimationTimer(Timer);
-
-impl Default for AnimationTimer {
-    fn default() -> Self {
-        AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating))
     }
 }
 

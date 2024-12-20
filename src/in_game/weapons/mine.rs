@@ -1,6 +1,6 @@
 use super::{
-    Ammo, AmmoParams, AnimationTimer, AttackTimer, BaseAttackSpeed, Character, DamageRange, Target,
-    Weapon,
+    Ammo, AmmoParams, AnimationTimer, AttackTimer, BaseAttackSpeed, Character, CyclicAnimation,
+    DamageRange, OneShotAnimation, Target, Weapon,
 };
 use crate::in_game::GameRunningSet;
 use bevy::prelude::*;
@@ -28,7 +28,7 @@ pub struct MineDropper;
     Collider(|| Collider::ball(10.)),
     MineExplodeTimer,
     Sprite,
-    AnimationTimer
+    CyclicAnimation(|| CyclicAnimation::new(&[0, 1]))
 )]
 struct Mine;
 
@@ -42,7 +42,10 @@ impl Default for MineExplodeTimer {
 }
 
 #[derive(Component)]
-#[require(Sprite, AnimationTimer)]
+#[require(
+    Sprite,
+    OneShotAnimation(|| OneShotAnimation::new(&[0, 1, 2, 3, 4, 5, 6]))
+)]
 struct MineExplosion;
 
 #[derive(Resource)]
@@ -59,8 +62,7 @@ impl Plugin for MinePlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_systems(Startup, load_assets).add_systems(
             Update,
-            (drop_mine, animate_mine, mine_explosion, animate_explosion)
-                .in_set(GameRunningSet::EntityUpdate),
+            (drop_mine, mine_explosion, despawn_explosion).in_set(GameRunningSet::EntityUpdate),
         );
     }
 }
@@ -112,16 +114,6 @@ fn drop_mine(
     }
 }
 
-fn animate_mine(mut mines: Query<(&mut Sprite, &mut AnimationTimer), With<Mine>>, time: Res<Time>) {
-    for (mut sprite, mut timer) in &mut mines {
-        if timer.tick(time.delta()).just_finished() {
-            if let Some(atlas) = &mut sprite.texture_atlas {
-                atlas.index = (atlas.index + 1) % 2;
-            }
-        }
-    }
-}
-
 fn mine_explosion(
     mut commands: Commands,
     mut mines: Query<(Entity, &mut MineExplodeTimer, &Transform)>,
@@ -145,20 +137,13 @@ fn mine_explosion(
     }
 }
 
-fn animate_explosion(
+fn despawn_explosion(
     mut commands: Commands,
-    mut explosions: Query<(Entity, &mut Sprite, &mut AnimationTimer), With<MineExplosion>>,
-    time: Res<Time>,
+    explosions: Query<(Entity, &OneShotAnimation), With<MineExplosion>>,
 ) {
-    for (entity, mut sprite, mut timer) in &mut explosions {
-        if timer.tick(time.delta()).just_finished() {
-            if let Some(atlas) = &mut sprite.texture_atlas {
-                if atlas.index >= 7 {
-                    commands.entity(entity).despawn();
-                } else {
-                    atlas.index += 1;
-                }
-            }
+    for (entity, animation) in &explosions {
+        if animation.finished() {
+            commands.entity(entity).despawn();
         }
     }
 }
