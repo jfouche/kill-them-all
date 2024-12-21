@@ -38,9 +38,7 @@ pub struct BonusAssets {
 impl FromWorld for BonusAssets {
     fn from_world(world: &mut World) -> Self {
         BonusAssets {
-            texture: world
-                .resource::<AssetServer>()
-                .load("items/crystal_01a.png"),
+            texture: world.load_asset("items/crystal_01a.png"),
         }
     }
 }

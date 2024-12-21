@@ -11,9 +11,7 @@ pub struct WorldMapAssets {
 impl FromWorld for WorldMapAssets {
     fn from_world(world: &mut World) -> Self {
         WorldMapAssets {
-            texture: world
-                .resource::<AssetServer>()
-                .load("background/TilesetFloor.png"),
+            texture: world.load_asset("background/TilesetFloor.png"),
         }
     }
 }

@@ -24,12 +24,16 @@ pub struct EquipmentAssets {
 impl FromWorld for EquipmentAssets {
     fn from_world(world: &mut World) -> Self {
         EquipmentAssets {
-            texture: world.resource::<AssetServer>().load(
+            texture: world.load_asset(
                 "items/Kyrise's 16x16 RPG Icon Pack - V1.3/spritesheet/spritesheet_48x48.png",
             ),
-            atlas_layout: world.resource_mut::<Assets<TextureAtlasLayout>>().add(
-                TextureAtlasLayout::from_grid(UVec2::new(48, 48), 16, 22, None, None),
-            ),
+            atlas_layout: world.add_asset(TextureAtlasLayout::from_grid(
+                UVec2::new(48, 48),
+                16,
+                22,
+                None,
+                None,
+            )),
         }
     }
 }

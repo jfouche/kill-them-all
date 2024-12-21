@@ -41,19 +41,14 @@ pub struct PlayerAssets {
 
 impl FromWorld for PlayerAssets {
     fn from_world(world: &mut World) -> Self {
-        let texture = world
-            .resource::<AssetServer>()
-            .load("characters/RedNinja/SpriteSheet.png");
-        let atlas_layout =
-            world
-                .resource_mut::<Assets<TextureAtlasLayout>>()
-                .add(TextureAtlasLayout::from_grid(
-                    UVec2::new(16, 16),
-                    4,
-                    7,
-                    None,
-                    None,
-                ));
+        let texture = world.load_asset("characters/RedNinja/SpriteSheet.png");
+        let atlas_layout = world.add_asset(TextureAtlasLayout::from_grid(
+            UVec2::new(16, 16),
+            4,
+            7,
+            None,
+            None,
+        ));
 
         PlayerAssets {
             texture,

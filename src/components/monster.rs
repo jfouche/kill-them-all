@@ -18,39 +18,31 @@ pub struct AllMonsterAssets(pub Vec<MonsterAssets>);
 
 impl FromWorld for AllMonsterAssets {
     fn from_world(world: &mut World) -> Self {
-        let atlas_layout =
-            world
-                .resource_mut::<Assets<TextureAtlasLayout>>()
-                .add(TextureAtlasLayout::from_grid(
-                    UVec2::new(16, 16),
-                    4,
-                    4,
-                    None,
-                    None,
-                ));
+        let atlas_layout = world.add_asset(TextureAtlasLayout::from_grid(
+            UVec2::new(16, 16),
+            4,
+            4,
+            None,
+            None,
+        ));
 
-        let mut all_monster_assets = Vec::new();
-        let asset_server = world.resource::<AssetServer>();
-
-        // Monster kind 1
-        all_monster_assets.push(MonsterAssets {
-            texture: asset_server.load("characters/Cyclope/SpriteSheet.png"),
-            atlas_layout: atlas_layout.clone(),
-        });
-
-        // Monster kind
-        all_monster_assets.push(MonsterAssets {
-            texture: asset_server.load("characters/Skull/SpriteSheet.png"),
-            atlas_layout: atlas_layout.clone(),
-        });
-
-        // Monster kind 1
-        all_monster_assets.push(MonsterAssets {
-            texture: asset_server.load("characters/DragonYellow/SpriteSheet.png"),
-            atlas_layout: atlas_layout.clone(),
-        });
-
-        AllMonsterAssets(all_monster_assets)
+        AllMonsterAssets(vec![
+            // Monster kind 1
+            MonsterAssets {
+                texture: world.load_asset("characters/Cyclope/SpriteSheet.png"),
+                atlas_layout: atlas_layout.clone(),
+            },
+            // Monster kind 2
+            MonsterAssets {
+                texture: world.load_asset("characters/Skull/SpriteSheet.png"),
+                atlas_layout: atlas_layout.clone(),
+            },
+            // Monster kind 3
+            MonsterAssets {
+                texture: world.load_asset("characters/DragonYellow/SpriteSheet.png"),
+                atlas_layout: atlas_layout.clone(),
+            },
+        ])
     }
 }
 
@@ -65,10 +57,8 @@ pub struct SpawningMonsterAssets {
 
 impl FromWorld for SpawningMonsterAssets {
     fn from_world(world: &mut World) -> Self {
-        let mesh = world.resource_mut::<Assets<Mesh>>().add(Circle::new(8.0));
-        let color = world
-            .resource_mut::<Assets<ColorMaterial>>()
-            .add(Color::srgba(0.8, 0.3, 0.3, 0.2));
+        let mesh = world.add_asset(Circle::new(8.0));
+        let color = world.add_asset(Color::srgba(0.8, 0.3, 0.3, 0.2));
 
         SpawningMonsterAssets { mesh, color }
     }

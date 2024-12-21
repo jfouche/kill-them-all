@@ -65,14 +65,10 @@ impl FromWorld for MineAssets {
             TextureAtlasLayout::from_grid(UVec2::new(32, 32), 8, 1, None, None);
 
         MineAssets {
-            mine_texture: world.resource::<AssetServer>().load("mine.png"),
-            mine_atlas_layout: world
-                .resource_mut::<Assets<TextureAtlasLayout>>()
-                .add(mine_atlas_layout),
-            explosion_texture: world.resource::<AssetServer>().load("mine_explosion.png"),
-            explosion_atlas_layout: world
-                .resource_mut::<Assets<TextureAtlasLayout>>()
-                .add(explosion_atlas_layout),
+            mine_texture: world.load_asset("mine.png"),
+            mine_atlas_layout: world.add_asset(mine_atlas_layout),
+            explosion_texture: world.load_asset("mine_explosion.png"),
+            explosion_atlas_layout: world.add_asset(explosion_atlas_layout),
         }
     }
 }

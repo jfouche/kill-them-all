@@ -11,7 +11,7 @@ struct ShurikenAssets {
 impl FromWorld for ShurikenAssets {
     fn from_world(world: &mut World) -> Self {
         ShurikenAssets {
-            shuriken: world.resource::<AssetServer>().load("shuriken.png"),
+            shuriken: world.load_asset("shuriken.png"),
         }
     }
 }
