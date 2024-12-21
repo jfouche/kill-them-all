@@ -14,12 +14,12 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<PlayerDeathEvent>()
+        app.init_resource::<PlayerAssets>()
+            .add_event::<PlayerDeathEvent>()
             .register_type::<Experience>()
             .register_type::<Score>()
             .register_type::<Money>()
             .init_resource::<Score>()
-            .add_systems(Startup, load_player_assets)
             .add_systems(OnEnter(GameState::InGame), spawn_player)
             .add_systems(OnExit(GameState::InGame), despawn_all::<Player>)
             .add_systems(OnEnter(GameState::InGame), unpause)
@@ -50,22 +50,6 @@ impl Default for InvulnerabilityAnimationTimer {
     fn default() -> Self {
         InvulnerabilityAnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating))
     }
-}
-
-fn load_player_assets(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
-) {
-    let texture_handle = asset_server.load("characters/RedNinja/SpriteSheet.png");
-    let texture_atlas_layout = TextureAtlasLayout::from_grid(UVec2::new(16, 16), 4, 7, None, None);
-    let texture_atlas_handle = texture_atlases.add(texture_atlas_layout);
-
-    let player_assets = PlayerAssets {
-        texture: texture_handle,
-        texture_atlas_layout: texture_atlas_handle,
-    };
-    commands.insert_resource(player_assets)
 }
 
 fn spawn_player(mut commands: Commands, assets: Res<PlayerAssets>) {

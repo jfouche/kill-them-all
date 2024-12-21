@@ -4,18 +4,29 @@ use bevy_rapier2d::prelude::*;
 use std::ops::Mul;
 
 #[derive(Resource)]
-pub struct MonsterSpawnerTimer {
+struct MonsterSpawnerTimer {
     timer: Timer,
     enemy_count: u16,
+}
+
+impl Default for MonsterSpawnerTimer {
+    fn default() -> Self {
+        MonsterSpawnerTimer {
+            timer: Timer::from_seconds(6., TimerMode::Repeating),
+            enemy_count: 3,
+        }
+    }
 }
 
 pub struct MonsterPlugin;
 
 impl Plugin for MonsterPlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<MonsterSpawnParams>()
+        app.init_resource::<SpawningMonsterAssets>()
+            .init_resource::<AllMonsterAssets>()
+            .init_resource::<MonsterSpawnerTimer>()
+            .register_type::<MonsterSpawnParams>()
             .add_event::<MonsterDeathEvent>()
-            .add_systems(Startup, (load_assets, init_monster_spawning))
             .add_systems(OnExit(GameState::InGame), despawn_all::<Monster>)
             .add_systems(
                 Update,
@@ -29,60 +40,6 @@ impl Plugin for MonsterPlugin {
             )
             .add_observer(add_affixes);
     }
-}
-
-fn load_assets(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
-) {
-    let mut all_monster_assets = AllMonsterAssets::default();
-
-    let texture_atlas_layout = texture_atlases.add(TextureAtlasLayout::from_grid(
-        UVec2::new(16, 16),
-        4,
-        4,
-        None,
-        None,
-    ));
-
-    // Monster kind 1
-    let texture = asset_server.load("characters/Cyclope/SpriteSheet.png");
-    all_monster_assets.push(MonsterAssets {
-        texture,
-        texture_atlas_layout: texture_atlas_layout.clone(),
-    });
-
-    // Monster kind 2
-    let texture = asset_server.load("characters/Skull/SpriteSheet.png");
-    all_monster_assets.push(MonsterAssets {
-        texture,
-        texture_atlas_layout: texture_atlas_layout.clone(),
-    });
-
-    // Monster kind 3
-    let texture = asset_server.load("characters/DragonYellow/SpriteSheet.png");
-    all_monster_assets.push(MonsterAssets {
-        texture,
-        texture_atlas_layout,
-    });
-
-    commands.insert_resource(all_monster_assets);
-
-    let spawning_assets = SpawningMonsterAssets {
-        mesh: meshes.add(Circle::new(8.0)),
-        color: materials.add(Color::srgba(0.8, 0.3, 0.3, 0.2)),
-    };
-    commands.insert_resource(spawning_assets);
-}
-
-fn init_monster_spawning(mut commands: Commands) {
-    commands.insert_resource(MonsterSpawnerTimer {
-        timer: Timer::from_seconds(6., TimerMode::Repeating),
-        enemy_count: 3,
-    });
 }
 
 ///

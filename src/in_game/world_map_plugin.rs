@@ -7,16 +7,10 @@ pub struct WorldMapPlugin;
 impl Plugin for WorldMapPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(TilemapPlugin)
-            .add_systems(Startup, load_assets)
+            .init_resource::<WorldMapAssets>()
             .add_systems(OnEnter(GameState::InGame), spawn_worldmap)
             .add_systems(OnExit(GameState::InGame), despawn_all::<WorldMap>);
     }
-}
-
-fn load_assets(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let texture = asset_server.load("background/TilesetFloor.png");
-    let assets = WorldMapAssets { texture };
-    commands.insert_resource(assets);
 }
 
 fn spawn_worldmap(mut commands: Commands, assets: Res<WorldMapAssets>) {

@@ -58,37 +58,34 @@ struct MineAssets {
     explosion_atlas_layout: Handle<TextureAtlasLayout>,
 }
 
+impl FromWorld for MineAssets {
+    fn from_world(world: &mut World) -> Self {
+        let mine_atlas_layout = TextureAtlasLayout::from_grid(UVec2::new(32, 32), 2, 1, None, None);
+        let explosion_atlas_layout =
+            TextureAtlasLayout::from_grid(UVec2::new(32, 32), 8, 1, None, None);
+
+        MineAssets {
+            mine_texture: world.resource::<AssetServer>().load("mine.png"),
+            mine_atlas_layout: world
+                .resource_mut::<Assets<TextureAtlasLayout>>()
+                .add(mine_atlas_layout),
+            explosion_texture: world.resource::<AssetServer>().load("mine_explosion.png"),
+            explosion_atlas_layout: world
+                .resource_mut::<Assets<TextureAtlasLayout>>()
+                .add(explosion_atlas_layout),
+        }
+    }
+}
+
 pub struct MinePlugin;
 
 impl Plugin for MinePlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_systems(Startup, load_assets).add_systems(
+        app.init_resource::<MineAssets>().add_systems(
             Update,
             (drop_mine, mine_explosion, despawn_explosion).in_set(GameRunningSet::EntityUpdate),
         );
     }
-}
-
-fn load_assets(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
-) {
-    let mine_texture = asset_server.load("mine.png");
-    let mine_atlas_layout = TextureAtlasLayout::from_grid(UVec2::new(32, 32), 2, 1, None, None);
-    let mine_atlas_layout = texture_atlases.add(mine_atlas_layout);
-
-    let explosion_texture = asset_server.load("mine_explosion.png");
-    let explosion_atlas_layout =
-        TextureAtlasLayout::from_grid(UVec2::new(32, 32), 8, 1, None, None);
-    let explosion_atlas_layout = texture_atlases.add(explosion_atlas_layout);
-
-    commands.insert_resource(MineAssets {
-        mine_texture,
-        mine_atlas_layout,
-        explosion_texture,
-        explosion_atlas_layout,
-    });
 }
 
 fn drop_mine(

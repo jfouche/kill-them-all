@@ -8,6 +8,16 @@ pub struct WorldMapAssets {
     pub texture: Handle<Image>,
 }
 
+impl FromWorld for WorldMapAssets {
+    fn from_world(world: &mut World) -> Self {
+        WorldMapAssets {
+            texture: world
+                .resource::<AssetServer>()
+                .load("background/TilesetFloor.png"),
+        }
+    }
+}
+
 #[derive(Component, Copy, Clone)]
 pub struct WorldMap;
 

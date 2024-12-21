@@ -18,36 +18,28 @@ use rand::rngs::ThreadRng;
 #[derive(Resource)]
 pub struct EquipmentAssets {
     texture: Handle<Image>,
-    texture_atlas_layout: Handle<TextureAtlasLayout>,
+    atlas_layout: Handle<TextureAtlasLayout>,
+}
+
+impl FromWorld for EquipmentAssets {
+    fn from_world(world: &mut World) -> Self {
+        EquipmentAssets {
+            texture: world.resource::<AssetServer>().load(
+                "items/Kyrise's 16x16 RPG Icon Pack - V1.3/spritesheet/spritesheet_48x48.png",
+            ),
+            atlas_layout: world.resource_mut::<Assets<TextureAtlasLayout>>().add(
+                TextureAtlasLayout::from_grid(UVec2::new(48, 48), 16, 22, None, None),
+            ),
+        }
+    }
 }
 
 impl EquipmentAssets {
-    pub fn load(
-        asset_server: &AssetServer,
-        mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
-    ) -> Self {
-        let texture_atlas_layout = texture_atlases.add(TextureAtlasLayout::from_grid(
-            UVec2::new(48, 48),
-            16,
-            22,
-            None,
-            None,
-        ));
-
-        let texture = asset_server
-            .load("items/Kyrise's 16x16 RPG Icon Pack - V1.3/spritesheet/spritesheet_48x48.png");
-
-        EquipmentAssets {
-            texture,
-            texture_atlas_layout,
-        }
-    }
-
     pub fn image_node(&self, index: usize) -> ImageNode {
         ImageNode::from_atlas_image(
             self.texture.clone(),
             TextureAtlas {
-                layout: self.texture_atlas_layout.clone(),
+                layout: self.atlas_layout.clone(),
                 index,
             },
         )

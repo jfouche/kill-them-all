@@ -7,19 +7,10 @@ pub struct BonusPlugin;
 
 impl Plugin for BonusPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, load_asset)
+        app.init_resource::<BonusAssets>()
             .add_systems(OnExit(GameState::InGame), despawn_all::<Bonus>)
             .add_systems(Update, spawn_bonus.in_set(GameRunningSet::EntityUpdate));
     }
-}
-
-const MONEY_ASSET_PATH: &str = "items/crystal_01a.png";
-
-fn load_asset(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let assets = BonusAssets {
-        texture: asset_server.load(MONEY_ASSET_PATH),
-    };
-    commands.insert_resource(assets);
 }
 
 fn spawn_bonus(

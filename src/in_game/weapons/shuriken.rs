@@ -8,6 +8,14 @@ struct ShurikenAssets {
     shuriken: Handle<Image>,
 }
 
+impl FromWorld for ShurikenAssets {
+    fn from_world(world: &mut World) -> Self {
+        ShurikenAssets {
+            shuriken: world.resource::<AssetServer>().load("shuriken.png"),
+        }
+    }
+}
+
 ///
 /// Weapon that launch [Shuriken]s
 ///
@@ -46,20 +54,13 @@ pub struct ShurikenPlugin;
 
 impl Plugin for ShurikenPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, load_shuriken_assets).add_systems(
+        app.init_resource::<ShurikenAssets>().add_systems(
             Update,
             (set_shuriken_direction, launch_shuriken)
                 .chain()
                 .in_set(GameRunningSet::EntityUpdate),
         );
     }
-}
-
-fn load_shuriken_assets(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let assets = ShurikenAssets {
-        shuriken: asset_server.load("shuriken.png"),
-    };
-    commands.insert_resource(assets);
 }
 
 fn set_shuriken_direction(

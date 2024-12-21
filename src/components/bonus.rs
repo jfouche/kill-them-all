@@ -34,3 +34,13 @@ const BONUS_SIZE: Vec2 = Vec2::new(12., 12.);
 pub struct BonusAssets {
     pub texture: Handle<Image>,
 }
+
+impl FromWorld for BonusAssets {
+    fn from_world(world: &mut World) -> Self {
+        BonusAssets {
+            texture: world
+                .resource::<AssetServer>()
+                .load("items/crystal_01a.png"),
+        }
+    }
+}

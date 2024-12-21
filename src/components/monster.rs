@@ -7,14 +7,52 @@ use rand::{rngs::ThreadRng, Rng};
 ///
 pub struct MonsterAssets {
     pub texture: Handle<Image>,
-    pub texture_atlas_layout: Handle<TextureAtlasLayout>,
+    pub atlas_layout: Handle<TextureAtlasLayout>,
 }
 
 ///
 ///  Assets of all monsters
 ///
-#[derive(Resource, Default, Deref, DerefMut)]
+#[derive(Resource, Deref, DerefMut)]
 pub struct AllMonsterAssets(pub Vec<MonsterAssets>);
+
+impl FromWorld for AllMonsterAssets {
+    fn from_world(world: &mut World) -> Self {
+        let atlas_layout =
+            world
+                .resource_mut::<Assets<TextureAtlasLayout>>()
+                .add(TextureAtlasLayout::from_grid(
+                    UVec2::new(16, 16),
+                    4,
+                    4,
+                    None,
+                    None,
+                ));
+
+        let mut all_monster_assets = Vec::new();
+        let asset_server = world.resource::<AssetServer>();
+
+        // Monster kind 1
+        all_monster_assets.push(MonsterAssets {
+            texture: asset_server.load("characters/Cyclope/SpriteSheet.png"),
+            atlas_layout: atlas_layout.clone(),
+        });
+
+        // Monster kind
+        all_monster_assets.push(MonsterAssets {
+            texture: asset_server.load("characters/Skull/SpriteSheet.png"),
+            atlas_layout: atlas_layout.clone(),
+        });
+
+        // Monster kind 1
+        all_monster_assets.push(MonsterAssets {
+            texture: asset_server.load("characters/DragonYellow/SpriteSheet.png"),
+            atlas_layout: atlas_layout.clone(),
+        });
+
+        AllMonsterAssets(all_monster_assets)
+    }
+}
 
 ///
 /// Assets used to show where the monster will spawn
@@ -23,6 +61,17 @@ pub struct AllMonsterAssets(pub Vec<MonsterAssets>);
 pub struct SpawningMonsterAssets {
     pub mesh: Handle<Mesh>,
     pub color: Handle<ColorMaterial>,
+}
+
+impl FromWorld for SpawningMonsterAssets {
+    fn from_world(world: &mut World) -> Self {
+        let mesh = world.resource_mut::<Assets<Mesh>>().add(Circle::new(8.0));
+        let color = world
+            .resource_mut::<Assets<ColorMaterial>>()
+            .add(Color::srgba(0.8, 0.3, 0.3, 0.2));
+
+        SpawningMonsterAssets { mesh, color }
+    }
 }
 
 impl From<&SpawningMonsterAssets> for Mesh2d {
@@ -162,7 +211,7 @@ impl From<&MonsterSpawnParamsAndAssets<'_>> for Sprite {
 
         Sprite {
             image: assets.texture.clone(),
-            texture_atlas: Some(assets.texture_atlas_layout.clone().into()),
+            texture_atlas: Some(assets.atlas_layout.clone().into()),
             custom_size: Some(value.params.size()),
             ..Default::default()
         }

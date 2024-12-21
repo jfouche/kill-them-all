@@ -27,20 +27,11 @@ impl PluginGroup for InGameMenuPluginsGroup {
 }
 
 fn menu_plugin(app: &mut App) {
-    app.add_systems(OnEnter(InGameState::Pause), pause)
+    app.init_resource::<EquipmentAssets>()
+        .add_systems(OnEnter(InGameState::Pause), pause)
         .add_systems(OnExit(InGameState::Pause), unpause)
         .add_systems(OnEnter(InGameState::LevelUp), pause)
         .add_systems(OnExit(InGameState::LevelUp), unpause)
         .add_systems(OnEnter(InGameState::RoundEnd), pause)
-        .add_systems(OnExit(InGameState::RoundEnd), unpause)
-        .add_systems(Startup, load_assets);
-}
-
-fn load_assets(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
-) {
-    let assets = EquipmentAssets::load(&asset_server, texture_atlases);
-    commands.insert_resource(assets);
+        .add_systems(OnExit(InGameState::RoundEnd), unpause);
 }

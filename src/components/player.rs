@@ -23,7 +23,7 @@ impl Player {
     pub fn sprite(assets: &PlayerAssets) -> Sprite {
         Sprite {
             image: assets.texture.clone(),
-            texture_atlas: Some(assets.texture_atlas_layout.clone().into()),
+            texture_atlas: Some(assets.atlas_layout.clone().into()),
             custom_size: Some(PLAYER_SIZE),
             ..Default::default()
         }
@@ -32,10 +32,34 @@ impl Player {
 
 pub const PLAYER_SIZE: Vec2 = Vec2::new(16.0, 16.0);
 
+/// All [Player] assets
 #[derive(Resource)]
 pub struct PlayerAssets {
     pub texture: Handle<Image>,
-    pub texture_atlas_layout: Handle<TextureAtlasLayout>,
+    pub atlas_layout: Handle<TextureAtlasLayout>,
+}
+
+impl FromWorld for PlayerAssets {
+    fn from_world(world: &mut World) -> Self {
+        let texture = world
+            .resource::<AssetServer>()
+            .load("characters/RedNinja/SpriteSheet.png");
+        let atlas_layout =
+            world
+                .resource_mut::<Assets<TextureAtlasLayout>>()
+                .add(TextureAtlasLayout::from_grid(
+                    UVec2::new(16, 16),
+                    4,
+                    7,
+                    None,
+                    None,
+                ));
+
+        PlayerAssets {
+            texture,
+            atlas_layout,
+        }
+    }
 }
 
 /// Event to notify the player died
