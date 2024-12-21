@@ -76,19 +76,14 @@ fn spawn_round_end_menu(mut commands: Commands, assets: Res<EquipmentAssets>) {
         commands.entity(**entity).insert(SelectedOption);
     }
 
-    let level_up_panel = commands
-        .spawn(Node {
-            flex_direction: FlexDirection::Column,
-            ..Default::default()
-        })
-        .add_children(&round_end_nav)
-        .id();
+    let level_up_panel = commands.spawn(VSizer).add_children(&round_end_nav).id();
 
     let inventory_panel = commands.spawn(InventoryPanel).id();
 
-    commands
-        .spawn(RoundEndMenu)
-        .add_children(&[level_up_panel, inventory_panel]);
+    commands.spawn(RoundEndMenu).with_children(|menu| {
+        menu.spawn(HSizer)
+            .add_children(&[level_up_panel, inventory_panel]);
+    });
 
     commands.insert_resource(round_end_nav);
     commands.insert_resource(equipment_list);

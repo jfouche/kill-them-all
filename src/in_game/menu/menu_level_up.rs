@@ -90,19 +90,14 @@ fn spawn_level_up_menu(mut commands: Commands) {
         commands.entity(**entity).insert(SelectedOption);
     }
 
-    let level_up_panel = commands
-        .spawn(Node {
-            flex_direction: FlexDirection::Column,
-            ..Default::default()
-        })
-        .add_children(&level_up_nav)
-        .id();
-
     let inventory_panel = commands.spawn(InventoryPanel).id();
 
-    commands
-        .spawn(LevelUpMenu)
-        .add_children(&[level_up_panel, inventory_panel]);
+    let level_up_panel = commands.spawn(VSizer).add_children(&level_up_nav).id();
+
+    commands.spawn(LevelUpMenu).with_children(|menu| {
+        menu.spawn(HSizer)
+            .add_children(&[level_up_panel, inventory_panel]);
+    });
 
     commands.insert_resource(level_up_nav);
     commands.insert_resource(upgrade_list);

@@ -1,4 +1,4 @@
-use crate::components::*;
+use crate::{components::*, ui::VSizer};
 use bevy::prelude::*;
 
 ///
@@ -7,10 +7,7 @@ use bevy::prelude::*;
 #[derive(Component)]
 #[require(
     Name(|| Name::new("CharacteristicsPanel")),
-    Node(|| Node {
-        flex_direction: FlexDirection::Column,
-        ..Default::default()
-    })
+    VSizer
 )]
 pub struct CharacteristicsPanel;
 
