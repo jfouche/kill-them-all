@@ -127,7 +127,7 @@ impl AttackTimer {
     }
 }
 
-/// [Ammo]'s components required:
+/// [Damager]'s components required:
 /// - [DamageRange]
 /// - [Collider]
 /// - [CollisionGroups]
@@ -142,29 +142,29 @@ impl AttackTimer {
     Sensor,
     ActiveEvents(|| ActiveEvents::COLLISION_EVENTS)
 )]
-pub struct Ammo;
+pub struct Damager;
 
-impl Ammo {
+impl Damager {
     pub fn collision_groups(target: Target) -> CollisionGroups {
         let filter = match target {
             Target::Player => GROUP_BONUS | GROUP_ENEMY,
             Target::Monster => GROUP_BONUS | GROUP_PLAYER,
         };
-        CollisionGroups::new(GROUP_AMMO, Group::ALL & !filter)
+        CollisionGroups::new(GROUP_DAMAGER, Group::ALL & !filter)
     }
 }
 
-/// Helper to spawn required [Ammo] dynamic components
+/// Helper to spawn required [Damager] dynamic components
 #[derive(Bundle)]
-pub struct AmmoParams {
+pub struct DamagerParams {
     pub damage_range: DamageRange,
     pub transform: Transform,
     pub collision_groups: CollisionGroups,
 }
 
-/// A [Projectile] is an [Ammo] which is sent, and can pierce
+/// A [Projectile] is an [Damager] which is sent, and can pierce
 #[derive(Component, Default)]
-#[require(Ammo, PierceChance, Velocity)]
+#[require(Damager, PierceChance, Velocity)]
 pub struct Projectile;
 
 /// Helper to spawn required [Projectile] dynamic components

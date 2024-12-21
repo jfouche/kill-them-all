@@ -86,10 +86,10 @@ fn launch_shuriken(
             if let Ok((transform, pierce_chance, target)) = characters.get(**parent) {
                 commands.spawn((
                     Shuriken,
-                    AmmoParams {
+                    DamagerParams {
                         damage_range: *damage_range,
                         transform: *transform,
-                        collision_groups: Ammo::collision_groups(*target),
+                        collision_groups: Damager::collision_groups(*target),
                     },
                     ProjectileParams {
                         pierce_chance: *pierce_chance,

@@ -59,10 +59,10 @@ fn gun_fires(
                 if let Some(target_pos) = nearest_target {
                     commands.spawn((
                         Bullet,
-                        AmmoParams {
+                        DamagerParams {
                             damage_range: *damage_range,
                             transform: Transform::from_translation(gunner),
-                            collision_groups: Ammo::collision_groups(*target),
+                            collision_groups: Damager::collision_groups(*target),
                         },
                         ProjectileParams {
                             pierce_chance: *pierce,

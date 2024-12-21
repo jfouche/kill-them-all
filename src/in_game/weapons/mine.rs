@@ -1,5 +1,5 @@
 use super::{
-    Ammo, AmmoParams, AttackTimer, BaseAttackSpeed, Character, CyclicAnimation, DamageRange,
+    AttackTimer, BaseAttackSpeed, Character, CyclicAnimation, DamageRange, Damager, DamagerParams,
     OneShotAnimation, Target, Weapon,
 };
 use crate::in_game::GameRunningSet;
@@ -24,7 +24,7 @@ pub struct MineDropper;
 #[derive(Component)]
 #[require(
     Name(|| Name::new("Mine")),
-    Ammo,
+    Damager,
     Collider(|| Collider::ball(8.)),
     MineExplodeTimer,
     Sprite,
@@ -43,7 +43,7 @@ impl Default for MineExplodeTimer {
 
 #[derive(Component)]
 #[require(
-    Ammo,
+    Damager,
     Collider(|| Collider::ball(16.)),
     Sprite,
     OneShotAnimation(|| OneShotAnimation::new(0..8))
@@ -104,10 +104,10 @@ fn drop_mine(
                 let atlas = assets.mine_atlas_layout.clone().into();
                 commands.spawn((
                     Mine,
-                    AmmoParams {
+                    DamagerParams {
                         damage_range: *damage_range,
                         transform: Transform::from_xyz(translation.x, translation.y, 12.),
-                        collision_groups: Ammo::collision_groups(*target),
+                        collision_groups: Damager::collision_groups(*target),
                     },
                     Sprite::from_atlas_image(image, atlas),
                 ));
@@ -138,7 +138,7 @@ fn mine_explosion(
             let atlas = assets.explosion_atlas_layout.clone().into();
             commands.spawn((
                 MineExplosion,
-                AmmoParams {
+                DamagerParams {
                     damage_range,
                     collision_groups,
                     transform,

@@ -44,7 +44,7 @@ fn weapons_plugin(app: &mut App) {
 fn update_character_observers(trigger: Trigger<OnAdd, Character>, mut commands: Commands) {
     commands
         .entity(trigger.entity())
-        .observe(despawn_non_projectile_ammo)
+        .observe(despawn_non_projectile_damager)
         .observe(try_pierce);
 }
 
@@ -85,12 +85,12 @@ fn update_weapon_damage_range(
     }
 }
 
-fn despawn_non_projectile_ammo(
+fn despawn_non_projectile_damager(
     trigger: Trigger<HitEvent>,
     mut commands: Commands,
-    ammos: Query<(), (With<Ammo>, Without<Projectile>)>,
+    damagers: Query<(), (With<Damager>, Without<Projectile>)>,
 ) {
-    if ammos.get(trigger.entity()).is_ok() {
+    if damagers.get(trigger.entity()).is_ok() {
         commands.entity(trigger.entity()).despawn_recursive();
     }
 }
