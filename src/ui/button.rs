@@ -54,7 +54,7 @@ impl MyButton {
 #[derive(Component)]
 #[require(
     Text,
-    TextFont(|| TextFont::from_font_size(18.)),
+    TextFont(|| TextFont::from_font_size(14.)),
     TextColor(|| TextColor(BUTTON_TEXT_COLOR)),
     TextLayout(|| TextLayout::new_with_justify(JustifyText::Center))
 )]

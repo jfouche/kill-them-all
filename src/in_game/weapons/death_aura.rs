@@ -7,6 +7,9 @@ use bevy::{
 };
 use bevy_rapier2d::prelude::*;
 
+///
+/// Death aura weapon
+///
 #[derive(Component)]
 #[require(
     Name(|| Name::new("DeathAura")),
@@ -18,6 +21,9 @@ use bevy_rapier2d::prelude::*;
 )]
 pub struct DeathAura;
 
+///
+/// Assets for [DeathAura]
+///
 #[derive(Resource)]
 pub struct DeathAuraAssets {
     mesh: Handle<Mesh>,
@@ -35,6 +41,9 @@ impl FromWorld for DeathAuraAssets {
     }
 }
 
+///
+///  Material for [DeathAura]
+///
 #[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
 struct DeathAuraMaterial {
     #[uniform(0)]
@@ -51,6 +60,9 @@ impl Material2d for DeathAuraMaterial {
     }
 }
 
+///
+///  Plugin for the [DeathAura] weapon
+///
 pub struct DeathAuraPlugin;
 
 impl Plugin for DeathAuraPlugin {
