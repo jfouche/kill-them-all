@@ -1,19 +1,21 @@
-// The time since startup data is in the globals binding which is part of the mesh_view_bindings import
-// #import bevy_pbr::{
-//     mesh_view_bindings::globals,
-//     forward_io::VertexOutput,
-// }
-
 #import bevy_sprite::mesh2d_vertex_output::VertexOutput
+#import bevy_sprite::mesh2d_view_bindings::globals
 
-const COLOR_MULTIPLIER: vec4<f32> = vec4<f32>(1.0, 1.0, 1.0, 0.4);
+const COLOR_MULTIPLIER: vec4<f32> = vec4<f32>(1.0, 1.0, 1.0, 0.7);
 
 @group(2) @binding(0) var<uniform> material_color: vec4<f32>;
 
-
 @fragment
 fn fragment(mesh: VertexOutput) -> @location(0) vec4<f32> {
-    return material_color * COLOR_MULTIPLIER;
+    let speed = 4.0;
+    let n = 3.0;
+
+    let d = distance(mesh.uv, vec2<f32>(0.5));
+    // value from 0 to 1
+    var v = cos(6.28 * n * (globals.time * speed / 10. - d)) * 0.5 + 0.5;
+    // convert it to 0.3 to 1
+    v = v * 0.7 + 0.3;
+    return material_color * COLOR_MULTIPLIER * v;
 }
 
 // fn oklab_to_linear_srgb(c: vec3<f32>) -> vec3<f32> {

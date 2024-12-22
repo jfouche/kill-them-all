@@ -17,7 +17,7 @@ use bevy_rapier2d::prelude::*;
     Damager,
     Transform,
     Visibility,
-    Collider(|| Collider::ball(16.))
+    Collider(|| Collider::ball(32.))
 )]
 pub struct DeathAura;
 
@@ -33,7 +33,7 @@ pub struct DeathAuraAssets {
 impl FromWorld for DeathAuraAssets {
     fn from_world(world: &mut World) -> Self {
         DeathAuraAssets {
-            mesh: world.add_asset(Circle::new(16.)),
+            mesh: world.add_asset(Circle::new(32.)),
             material: world.add_asset(DeathAuraMaterial {
                 color: LinearRgba::BLUE,
             }),
