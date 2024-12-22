@@ -1,6 +1,4 @@
-use super::weapons::Gun;
-use super::weapons::MineDropper;
-use super::weapons::ShurikenLauncher;
+use super::weapons::*;
 use crate::components::*;
 use crate::schedule::*;
 use crate::utils::blink::Blink;
@@ -56,9 +54,10 @@ fn spawn_player(mut commands: Commands, assets: Res<PlayerAssets>) {
     commands
         .spawn((Player, Player::sprite(&assets)))
         .with_children(|player| {
-            player.spawn(Gun);
-            player.spawn(ShurikenLauncher::default());
-            player.spawn(MineDropper);
+            // player.spawn(Gun);
+            // player.spawn(ShurikenLauncher::default());
+            // player.spawn(MineDropper);
+            player.spawn((DeathAura, Damager::collision_groups(Target::Monster)));
         })
         .observe(set_invulnerable_on_hit)
         .observe(send_player_death_event);

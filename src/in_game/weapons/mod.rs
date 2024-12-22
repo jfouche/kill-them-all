@@ -7,6 +7,9 @@ pub use shuriken::ShurikenLauncher;
 mod mine;
 pub use mine::MineDropper;
 
+mod death_aura;
+pub use death_aura::DeathAura;
+
 use super::PreUpdateAffixes;
 use crate::components::*;
 use bevy::{app::PluginGroupBuilder, prelude::*};
@@ -19,6 +22,7 @@ impl PluginGroup for WeaponsPluginGroup {
             .add(gun::GunPlugin)
             .add(shuriken::ShurikenPlugin)
             .add(mine::MinePlugin)
+            .add(death_aura::DeathAuraPlugin)
             .add(weapons_plugin)
     }
 }
@@ -42,10 +46,7 @@ fn weapons_plugin(app: &mut App) {
 }
 
 fn update_character_observers(trigger: Trigger<OnAdd, Character>, mut commands: Commands) {
-    commands
-        .entity(trigger.entity())
-        .observe(despawn_non_projectile_damager)
-        .observe(try_pierce);
+    commands.entity(trigger.entity()).observe(try_pierce);
 }
 
 fn update_weapon_attack_speed(
@@ -82,16 +83,6 @@ fn update_weapon_damage_range(
         if let Ok((more, increase)) = characters.get(**parent) {
             *damage_range = (base_damage_range + more) * increase;
         }
-    }
-}
-
-fn despawn_non_projectile_damager(
-    trigger: Trigger<HitEvent>,
-    mut commands: Commands,
-    damagers: Query<(), (With<Damager>, Without<Projectile>)>,
-) {
-    if damagers.get(trigger.entity()).is_ok() {
-        commands.entity(trigger.entity()).despawn_recursive();
     }
 }
 

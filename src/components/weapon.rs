@@ -4,14 +4,9 @@ use rand::{rngs::ThreadRng, Rng};
 use std::time::Duration;
 
 ///
-/// A [Weapon] should be a child of a [Character] to make attacks
+/// A [Weapon] should be a child of a [Character]
 ///
 #[derive(Component, Default)]
-#[require(
-    BaseDamageRange(|| BaseDamageRange::new(1., 2.)),
-    BaseAttackSpeed,
-    AttackTimer
-)]
 pub struct Weapon;
 
 ///
@@ -95,7 +90,7 @@ impl std::ops::Sub<f32> for Damage {
 }
 
 ///
-/// It represents the base attack per second
+/// It represents the [Weapon] base attack per second
 ///
 #[derive(Component, Default, Clone, Copy, Deref, Reflect)]
 #[require(AttackSpeed, AttackTimer)]
@@ -134,7 +129,6 @@ impl AttackTimer {
 #[derive(Component, Default)]
 #[require(
     DamageRange,
-    LifeTime(|| LifeTime::new(5.)),
     Transform,
     RigidBody,
     Collider,
@@ -164,7 +158,12 @@ pub struct DamagerParams {
 
 /// A [Projectile] is an [Damager] which is sent, and can pierce
 #[derive(Component, Default)]
-#[require(Damager, PierceChance, Velocity)]
+#[require(
+    Damager,
+    LifeTime(|| LifeTime::new(5.)),
+    PierceChance,
+    Velocity
+)]
 pub struct Projectile;
 
 /// Helper to spawn required [Projectile] dynamic components
