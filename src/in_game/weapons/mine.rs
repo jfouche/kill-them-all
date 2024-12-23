@@ -1,8 +1,7 @@
 use super::{
-    AttackTimer, BaseAttackSpeed, Character, CyclicAnimation, DamageRange, Damager, DamagerParams,
-    OneShotAnimation, Target, Weapon,
+    despawn_all, AttackTimer, BaseAttackSpeed, Character, CyclicAnimation, Damager, DamagerParams, HitDamageRange, OneShotAnimation, Target, Weapon
 };
-use crate::in_game::GameRunningSet;
+use crate::in_game::{GameRunningSet, GameState};
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::{Collider, CollisionGroups};
 
@@ -13,7 +12,7 @@ use bevy_rapier2d::prelude::{Collider, CollisionGroups};
 #[require(
     Name(||Name::new("MineDropper")),
     Weapon,
-    DamageRange(|| DamageRange::new(1., 5.)),
+    HitDamageRange(|| HitDamageRange::new(1., 5.)),
     BaseAttackSpeed(|| BaseAttackSpeed(0.6))
 )]
 pub struct MineDropper;
@@ -77,16 +76,19 @@ pub struct MinePlugin;
 
 impl Plugin for MinePlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.init_resource::<MineAssets>().add_systems(
-            Update,
-            (drop_mine, mine_explosion, despawn_explosion).in_set(GameRunningSet::EntityUpdate),
-        );
+        app.init_resource::<MineAssets>()
+            .add_systems(OnExit(GameState::InGame), despawn_all::<Mine>)
+            .add_systems(OnExit(GameState::InGame), despawn_all::<MineExplosion>)
+            .add_systems(
+                Update,
+                (drop_mine, mine_explosion, despawn_explosion).in_set(GameRunningSet::EntityUpdate),
+            );
     }
 }
 
 fn drop_mine(
     mut commands: Commands,
-    mut mine_droppers: Query<(&AttackTimer, &DamageRange, &Parent), With<MineDropper>>,
+    mut mine_droppers: Query<(&AttackTimer, &HitDamageRange, &Parent), With<MineDropper>>,
     characters: Query<(&Transform, &Target), With<Character>>,
     assets: Res<MineAssets>,
 ) {
@@ -97,8 +99,8 @@ fn drop_mine(
                 let atlas = assets.mine_atlas_layout.clone().into();
                 commands.spawn((
                     Mine,
+                    *damage_range,
                     DamagerParams {
-                        damage_range: *damage_range,
                         transform: Transform::from_xyz(translation.x, translation.y, 12.),
                         collision_groups: Damager::collision_groups(*target),
                     },
@@ -114,7 +116,7 @@ fn mine_explosion(
     mut mines: Query<(
         Entity,
         &mut MineExplodeTimer,
-        &DamageRange,
+        &HitDamageRange,
         &Transform,
         &CollisionGroups,
     )>,
@@ -131,8 +133,8 @@ fn mine_explosion(
             let atlas = assets.explosion_atlas_layout.clone().into();
             commands.spawn((
                 MineExplosion,
+                damage_range,
                 DamagerParams {
-                    damage_range,
                     collision_groups,
                     transform,
                 },

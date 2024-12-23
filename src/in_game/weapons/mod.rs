@@ -12,37 +12,37 @@ pub use death_aura::DeathAura;
 
 use super::PreUpdateAffixes;
 use crate::components::*;
-use bevy::{app::PluginGroupBuilder, prelude::*};
+use bevy::prelude::*;
 
-pub struct WeaponsPluginGroup;
+pub struct WeaponsPlugin;
 
-impl PluginGroup for WeaponsPluginGroup {
-    fn build(self) -> PluginGroupBuilder {
-        PluginGroupBuilder::start::<Self>()
-            .add(gun::GunPlugin)
-            .add(shuriken::ShurikenPlugin)
-            .add(mine::MinePlugin)
-            .add(death_aura::DeathAuraPlugin)
-            .add(weapons_plugin)
-    }
-}
-
-fn weapons_plugin(app: &mut App) {
-    app.register_type::<Damage>()
+impl Plugin for WeaponsPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_plugins((
+            gun::GunPlugin,
+            shuriken::ShurikenPlugin,
+            mine::MinePlugin,
+            death_aura::DeathAuraPlugin,
+        ))
+        .register_type::<Damage>()
         .register_type::<BaseAttackSpeed>()
         .register_type::<AttackSpeed>()
-        .register_type::<BaseDamageRange>()
-        .register_type::<DamageRange>()
+        .register_type::<BaseHitDamageRange>()
+        .register_type::<HitDamageRange>()
+        .register_type::<BaseDamageOverTime>()
+        .register_type::<DamageOverTime>()
         .register_type::<AttackTimer>()
         .add_systems(
             PreUpdate,
             (
                 (update_weapon_attack_speed, tick_weapon).chain(),
-                update_weapon_damage_range,
+                update_weapon_hit_damage_range,
+                update_weapon_damage_over_time,
             )
                 .in_set(PreUpdateAffixes::Step2),
         )
         .add_observer(update_character_observers);
+    }
 }
 
 fn update_character_observers(trigger: Trigger<OnAdd, Character>, mut commands: Commands) {
@@ -63,7 +63,7 @@ fn update_weapon_attack_speed(
 ) {
     for (mut timer, mut attack_speed, base_attack_speed, parent) in &mut weapons {
         if let Ok(increase) = characters.get(**parent) {
-            *attack_speed = base_attack_speed * increase;
+            *attack_speed = base_attack_speed.attack_speed(increase);
             timer.set_attack_speed(*attack_speed);
         }
     }
@@ -75,13 +75,25 @@ fn tick_weapon(mut weapons: Query<&mut AttackTimer, With<Weapon>>, time: Res<Tim
     }
 }
 
-fn update_weapon_damage_range(
-    mut weapons: Query<(&mut DamageRange, &BaseDamageRange, &Parent), With<Weapon>>,
+fn update_weapon_hit_damage_range(
+    mut weapons: Query<(&mut HitDamageRange, &BaseHitDamageRange, &Parent), With<Weapon>>,
     characters: Query<(&MoreDamage, &IncreaseDamage), With<Character>>,
 ) {
-    for (mut damage_range, base_damage_range, parent) in &mut weapons {
+    for (mut damage_range, base_hit_damage_range, parent) in &mut weapons {
         if let Ok((more, increase)) = characters.get(**parent) {
-            *damage_range = (base_damage_range + more) * increase;
+            *damage_range = base_hit_damage_range.damage_range(more, increase);
+        }
+    }
+}
+
+
+fn update_weapon_damage_over_time(
+    mut weapons: Query<(&mut DamageOverTime, &BaseDamageOverTime, &Parent), With<Weapon>>,
+    characters: Query<(&MoreDamage, &IncreaseDamage), With<Character>>,
+) {
+    for (mut damage_over_time, base, parent) in &mut weapons {
+        if let Ok((more, increase)) = characters.get(**parent) {
+            *damage_over_time = base.damage_over_time(more, increase);
         }
     }
 }

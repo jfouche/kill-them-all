@@ -117,7 +117,7 @@ impl std::fmt::Display for Armour {
 
 impl Armour {
     pub fn mitigate(&self, damage: Damage) -> Damage {
-        let d = (5. * *damage) / (self.0 + 5. * *damage);
+        let d = (5. * *damage * *damage) / (self.0 + 5. * *damage);
         Damage(d)
     }
 }

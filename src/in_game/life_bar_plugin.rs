@@ -19,6 +19,7 @@ const BAR_HEIGHT: f32 = 8.;
         border: UiRect::all(Val::Px(1.)),
         ..Default::default()
     }),
+    ZIndex(|| ZIndex(-1)),
     BackgroundColor(|| BackgroundColor(Color::BLACK)),
     BorderColor(|| BorderColor(Color::BLACK)),
     ProgressBar,

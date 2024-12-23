@@ -85,7 +85,7 @@ impl From<&SpawningMonsterAssets> for MeshMaterial2d<ColorMaterial> {
     Target(|| Target::Player),
     MonsterRarity,
     XpOnDeath,
-    DamageRange,
+    HitDamageRange,
     Sprite,
     AnimationTimer,
     CollisionGroups(|| CollisionGroups::new(GROUP_ENEMY, Group::ALL & !GROUP_BONUS))
@@ -217,7 +217,7 @@ impl From<&MonsterSpawnParamsAndAssets<'_>> for XpOnDeath {
     }
 }
 
-impl From<&MonsterSpawnParamsAndAssets<'_>> for DamageRange {
+impl From<&MonsterSpawnParamsAndAssets<'_>> for HitDamageRange {
     fn from(value: &MonsterSpawnParamsAndAssets) -> Self {
         let (min, max) = match value.params.rarity {
             MonsterRarity::Normal => (1., 2.),
@@ -226,7 +226,7 @@ impl From<&MonsterSpawnParamsAndAssets<'_>> for DamageRange {
         let multiplier = (value.params.level + 1) as f32;
         let min = min * multiplier;
         let max = max * multiplier;
-        DamageRange::new(min, max)
+        HitDamageRange::new(min, max)
     }
 }
 

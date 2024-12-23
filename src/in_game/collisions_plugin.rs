@@ -14,6 +14,7 @@ impl Plugin for CollisionsPlugin {
             Update,
             (
                 check_if_character_is_hit,
+                check_if_character_is_in_damage_over_time_zone,
                 player_touched_by_monster,
                 player_takes_bonus,
             )
@@ -29,7 +30,7 @@ fn check_if_character_is_hit(
     mut commands: Commands,
     mut collisions: EventReader<CollisionEvent>,
     characters: Query<(), With<Character>>,
-    damagers: Query<&DamageRange, With<Damager>>,
+    damagers: Query<&HitDamageRange, With<Damager>>,
 ) {
     let mut characters_hits = HashMap::new();
     let mut rng = rand::thread_rng();
@@ -55,12 +56,47 @@ fn check_if_character_is_hit(
 }
 
 ///
+/// Check if a [Character] starts or stops collinding with a [DamageOverTime] zone
+///
+/// TODO: This algo is not good as if a character is in multiple zone,
+///  leaving one will stop damage over time
+fn check_if_character_is_in_damage_over_time_zone(
+    mut commands: Commands,
+    mut collisions: EventReader<CollisionEvent>,
+    characters: Query<(), With<Character>>,
+    damagers: Query<&DamageOverTime, With<Damager>>,
+) {
+    let get_damage = |e1, e2| {
+        characters
+            .get(e1)
+            .and_then(|_| damagers.get(e2))
+            .map(|d| (e1, d))
+    };
+
+    for &event in collisions.read() {
+        match event {
+            CollisionEvent::Started(e1, e2, _) => {
+                if let Ok((entity, &damage)) = get_damage(e1, e2).or(get_damage(e2, e1)) {
+                    commands.entity(entity).insert(damage);
+                }
+            }
+            CollisionEvent::Stopped(e1, e2, _) => {
+                if let Ok((entity, _)) = get_damage(e1, e2).or(get_damage(e2, e1))
+                {
+                    commands.entity(entity).remove::<DamageOverTime>();
+                }
+            }
+        }
+    }
+}
+
+///
 /// Player touched by monster
 ///
 fn player_touched_by_monster(
     mut commands: Commands,
     mut collisions: EventReader<CollisionEvent>,
-    q_monsters: Query<&DamageRange, With<Monster>>,
+    q_monsters: Query<&HitDamageRange, With<Monster>>,
     q_player: Query<(), With<Player>>,
 ) {
     let mut rng = thread_rng();

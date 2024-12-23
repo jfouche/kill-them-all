@@ -11,61 +11,73 @@ pub struct Weapon;
 
 ///
 /// Component which stores the base [DamageRange] of a [Weapon]
+/// which damage on hit.
 ///
 #[derive(Component, Clone, Copy, Reflect)]
-#[require(DamageRange)]
-pub struct BaseDamageRange(pub DamageRange);
+#[require(HitDamageRange)]
+pub struct BaseHitDamageRange(pub HitDamageRange);
 
-impl BaseDamageRange {
+impl BaseHitDamageRange {
     pub fn new(min: f32, max: f32) -> Self {
-        BaseDamageRange(DamageRange { min, max })
+        BaseHitDamageRange(HitDamageRange { min, max })
+    }
+
+    /// Return the real [DamageRange] after applying [MoreDamage] and [IncreaseDamage]
+    pub fn damage_range(&self, more: &MoreDamage, increase: &IncreaseDamage) -> HitDamageRange {
+        let multiplier = 1. + **increase / 100.;
+        HitDamageRange {
+            min: (self.0.min + **more) * multiplier,
+            max: (self.0.max + **more) * multiplier,
+        }
     }
 }
 
 ///
-/// Component which allows to generate [Damage] base on RNG
+/// Component which allows to generate hit [Damage] base on RNG
 ///
-#[derive(Component, Clone, Copy, Reflect)]
-pub struct DamageRange {
+#[derive(Component, Default, Clone, Copy, Reflect)]
+pub struct HitDamageRange {
     pub min: f32,
     pub max: f32,
 }
 
-impl Default for DamageRange {
-    fn default() -> Self {
-        DamageRange { min: 1., max: 2. }
-    }
-}
-
-impl DamageRange {
+impl HitDamageRange {
     pub fn new(min: f32, max: f32) -> Self {
-        DamageRange { min, max }
+        HitDamageRange { min, max }
     }
 
     pub fn gen(&self, rng: &mut ThreadRng) -> Damage {
-        let damage = rng.gen_range(self.min..=self.max);
+        let damage = if self.min == self.max {
+            self.min
+        } else {
+            rng.gen_range(self.min..=self.max)
+        };
         Damage(damage)
     }
 }
 
-impl std::ops::Add<&MoreDamage> for &BaseDamageRange {
-    type Output = DamageRange;
-    fn add(self, more: &MoreDamage) -> Self::Output {
-        DamageRange {
-            min: self.0.min + **more,
-            max: self.0.max + **more,
-        }
+///
+/// Base damage over time
+///
+#[derive(Component, Default, Clone, Copy, Deref, Reflect)]
+#[require(DamageOverTime)]
+pub struct BaseDamageOverTime(pub f32);
+
+impl BaseDamageOverTime {
+    pub fn damage_over_time(&self, more: &MoreDamage, increase: &IncreaseDamage) -> DamageOverTime {
+        DamageOverTime((self.0 + **more) * (1. + **increase / 100.))
     }
 }
 
-impl std::ops::Mul<&IncreaseDamage> for DamageRange {
-    type Output = DamageRange;
-    fn mul(self, increase: &IncreaseDamage) -> Self::Output {
-        let multiplier = 1. + **increase / 100.;
-        DamageRange {
-            min: self.min * multiplier,
-            max: self.max * multiplier,
-        }
+///
+/// Damage over time
+///
+#[derive(Component, Default, Clone, Copy, Deref, Reflect)]
+pub struct DamageOverTime(pub f32);
+
+impl DamageOverTime {
+    pub fn damage(&self, time: &Time)-> Damage {
+        Damage(self.0 * time.delta_secs())
     }
 }
 
@@ -96,10 +108,9 @@ impl std::ops::Sub<f32> for Damage {
 #[require(AttackSpeed, AttackTimer)]
 pub struct BaseAttackSpeed(pub f32);
 
-impl std::ops::Mul<&IncreaseAttackSpeed> for &BaseAttackSpeed {
-    type Output = AttackSpeed;
-    fn mul(self, rhs: &IncreaseAttackSpeed) -> Self::Output {
-        AttackSpeed(self.0 * (1.0 + rhs.0 / 100.))
+impl BaseAttackSpeed {
+    pub fn attack_speed(&self, increase: &IncreaseAttackSpeed) -> AttackSpeed {
+        AttackSpeed(self.0 * (1. + increase.0 / 100.))
     }
 }
 
@@ -118,17 +129,20 @@ impl Default for AttackTimer {
 
 impl AttackTimer {
     pub fn set_attack_speed(&mut self, attack_speed: AttackSpeed) {
+        if *attack_speed == 0.0 {
+            warn!("AttackSpeed is 0.");
+            return;
+        }
         self.set_duration(Duration::from_secs_f32(1. / *attack_speed));
     }
 }
 
 /// [Damager]'s components required:
-/// - [DamageRange]
+/// - At least on of [HitDamageRange] or [DamageOverTime]
 /// - [Collider]
 /// - [CollisionGroups]
 #[derive(Component, Default)]
 #[require(
-    DamageRange,
     Transform,
     RigidBody,
     Collider,
@@ -151,7 +165,6 @@ impl Damager {
 /// Helper to spawn required [Damager] dynamic components
 #[derive(Bundle)]
 pub struct DamagerParams {
-    pub damage_range: DamageRange,
     pub transform: Transform,
     pub collision_groups: CollisionGroups,
 }

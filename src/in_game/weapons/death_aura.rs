@@ -15,6 +15,7 @@ use bevy_rapier2d::prelude::*;
     Name(|| Name::new("DeathAura")),
     Weapon,
     Damager,
+    BaseDamageOverTime(|| BaseDamageOverTime(1.)),
     Transform,
     Visibility,
     Collider(|| Collider::ball(32.))

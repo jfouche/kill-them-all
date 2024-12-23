@@ -44,7 +44,10 @@ impl Plugin for CharacterPlugin {
                         .run_if(game_is_running),
                 ),
             )
-            .add_systems(Update, regen_life.in_set(GameRunningSet::EntityUpdate));
+            .add_systems(
+                Update,
+                (regen_life, mitigate_damage_over_time).in_set(GameRunningSet::EntityUpdate),
+            );
     }
 }
 
@@ -91,7 +94,7 @@ fn loose_life(
     mut characters: Query<&mut Life, With<Character>>,
 ) {
     if let Ok(mut life) = characters.get_mut(trigger.entity()) {
-        info!("loose_life : {:.1} - {:.1}", **life, ***trigger.event());
+        info!("loose_life : {:.2} - {:.2}", **life, ***trigger.event());
         life.hit(**trigger.event());
         if life.is_dead() {
             commands.trigger_targets(CharacterDyingEvent, trigger.entity());
@@ -269,5 +272,16 @@ fn update_increase_damage(
         if let Ok(mut char_incr_damage) = characters.get_mut(**parent) {
             **char_incr_damage += **incr_damage;
         }
+    }
+}
+
+fn mitigate_damage_over_time(
+    mut commands: Commands,
+    characters: Query<(Entity, &Armour, &DamageOverTime), With<Character>>,
+    time: Res<Time>,
+) {
+    for (entity, armour, dot) in &characters {
+        let damage = armour.mitigate(dot.damage(&time));
+        commands.trigger_targets(LooseLifeEvent(damage), entity);
     }
 }

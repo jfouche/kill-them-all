@@ -1,4 +1,4 @@
-use crate::{components::*, in_game::GameRunningSet};
+use crate::{components::*, in_game::{GameRunningSet, GameState}};
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 use std::f32::consts::PI;
@@ -23,7 +23,7 @@ impl FromWorld for ShurikenAssets {
 #[require(
     Weapon,
     Name(|| Name::new("ShurikenLauncher")),
-    BaseDamageRange(|| BaseDamageRange::new(2., 4.)),
+    BaseHitDamageRange(|| BaseHitDamageRange::new(2., 4.)),
     BaseAttackSpeed(|| BaseAttackSpeed(1.5)),
 )]
 pub struct ShurikenLauncher {
@@ -54,12 +54,14 @@ pub struct ShurikenPlugin;
 
 impl Plugin for ShurikenPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<ShurikenAssets>().add_systems(
-            Update,
-            (set_shuriken_direction, launch_shuriken)
-                .chain()
-                .in_set(GameRunningSet::EntityUpdate),
-        );
+        app.init_resource::<ShurikenAssets>()
+            .add_systems(OnExit(GameState::InGame), despawn_all::<Shuriken>)
+            .add_systems(
+                Update,
+                (set_shuriken_direction, launch_shuriken)
+                    .chain()
+                    .in_set(GameRunningSet::EntityUpdate),
+            );
     }
 }
 
@@ -78,7 +80,7 @@ fn set_shuriken_direction(
 
 fn launch_shuriken(
     mut commands: Commands,
-    weapons: Query<(&AttackTimer, &DamageRange, &Parent, &ShurikenLauncher)>,
+    weapons: Query<(&AttackTimer, &HitDamageRange, &Parent, &ShurikenLauncher)>,
     characters: Query<(&Transform, &PierceChance, &Target), With<Character>>,
     asset: Res<ShurikenAssets>,
 ) {
@@ -87,8 +89,8 @@ fn launch_shuriken(
             if let Ok((transform, pierce_chance, target)) = characters.get(**parent) {
                 commands.spawn((
                     Shuriken,
+                    *damage_range,
                     DamagerParams {
-                        damage_range: *damage_range,
                         transform: *transform,
                         collision_groups: Damager::collision_groups(*target),
                     },

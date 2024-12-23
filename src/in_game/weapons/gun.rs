@@ -1,4 +1,7 @@
-use crate::{components::*, in_game::GameRunningSet};
+use crate::{
+    components::*,
+    in_game::{GameRunningSet, GameState},
+};
 use bevy::{color::palettes::css::YELLOW, prelude::*};
 use bevy_rapier2d::prelude::*;
 
@@ -6,7 +9,7 @@ use bevy_rapier2d::prelude::*;
 #[require(
     Weapon,
     Name(|| Name::new("Gun")),
-    BaseDamageRange(|| BaseDamageRange::new(1., 2.)),
+    BaseHitDamageRange(|| BaseHitDamageRange::new(1., 2.)),
     BaseAttackSpeed(|| BaseAttackSpeed(1.2))
 )]
 pub struct Gun;
@@ -31,16 +34,17 @@ pub struct GunPlugin;
 
 impl Plugin for GunPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, gun_fires.in_set(GameRunningSet::EntityUpdate));
+        app.add_systems(OnExit(GameState::InGame), despawn_all::<Bullet>)
+            .add_systems(Update, gun_fires.in_set(GameRunningSet::EntityUpdate));
     }
 }
 
 fn gun_fires(
     mut commands: Commands,
-    weapons: Query<(&AttackTimer, &DamageRange, &Parent), With<Gun>>,
+    weapons: Query<(&AttackTimer, &HitDamageRange, &Parent), With<Gun>>,
     characters: Query<(&Transform, &PierceChance, &Target), With<Character>>,
 ) {
-    for (timer, damage_range, parent) in &weapons {
+    for (timer, hit_damage_range, parent) in &weapons {
         if timer.just_finished() {
             if let Ok((gunner_pos, pierce, target)) = characters.get(**parent) {
                 let gunner = gunner_pos.translation;
@@ -59,8 +63,8 @@ fn gun_fires(
                 if let Some(target_pos) = nearest_target {
                     commands.spawn((
                         Bullet,
+                        *hit_damage_range,
                         DamagerParams {
-                            damage_range: *damage_range,
                             transform: Transform::from_translation(gunner),
                             collision_groups: Damager::collision_groups(*target),
                         },

@@ -131,8 +131,11 @@ fn add_affixes(
 
         commands.entity(trigger.entity()).add_children(&entities);
 
-        // Add a weapon
-        commands.entity(trigger.entity()).with_child(Gun);
+        // Add a weapon and more life
+        commands.entity(trigger.entity()).with_children(|c| {
+            c.spawn(Gun);
+            c.spawn(MoreLife(10.));
+        });
     }
 }
 
