@@ -1,52 +1,10 @@
-use crate::{components::*, in_game::{GameRunningSet, GameState}};
+use crate::{
+    components::*,
+    in_game::{GameRunningSet, GameState},
+};
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 use std::f32::consts::PI;
-
-#[derive(Resource)]
-struct ShurikenAssets {
-    shuriken: Handle<Image>,
-}
-
-impl FromWorld for ShurikenAssets {
-    fn from_world(world: &mut World) -> Self {
-        ShurikenAssets {
-            shuriken: world.load_asset("shuriken.png"),
-        }
-    }
-}
-
-///
-/// Weapon that launch [Shuriken]s
-///
-#[derive(Component)]
-#[require(
-    Weapon,
-    Name(|| Name::new("ShurikenLauncher")),
-    BaseHitDamageRange(|| BaseHitDamageRange::new(2., 4.)),
-    BaseAttackSpeed(|| BaseAttackSpeed(1.5)),
-)]
-pub struct ShurikenLauncher {
-    dir: Dir2,
-}
-
-impl Default for ShurikenLauncher {
-    fn default() -> Self {
-        ShurikenLauncher { dir: Dir2::NORTH }
-    }
-}
-
-///
-/// A shuriken projectile
-///
-#[derive(Component)]
-#[require(
-    Name(|| Name::new("Shuriken")),
-    Projectile,
-    Sprite,
-    Collider(|| Collider::ball(8.))
-)]
-struct Shuriken;
 
 const SHURIKEN_SPEED: f32 = 100.0;
 

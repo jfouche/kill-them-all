@@ -4,14 +4,14 @@ use bevy::prelude::*;
 use rand::{rngs::ThreadRng, Rng};
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
-pub enum BootsAffixKind {
+enum BootsAffixKind {
     AddLife,
     AddArmour,
     IncreaseMovementSpeed,
 }
 
 #[derive(Deref, DerefMut)]
-pub struct BootsAffixProvider(RngKindProvider<BootsAffixKind>);
+struct BootsAffixProvider(RngKindProvider<BootsAffixKind>);
 
 impl BootsAffixProvider {
     pub fn new() -> Self {
@@ -24,48 +24,43 @@ impl BootsAffixProvider {
 }
 
 #[derive(Component)]
+#[require(
+    Name(|| Name::new("Boots"))
+)]
 pub struct Boots;
+
+impl EquipmentUI for Boots {
+    fn title() -> String {
+        "Boots".into()
+    }
+
+    fn tile_index(rarity: EquipmentRarity) -> usize {
+        match rarity {
+            EquipmentRarity::Normal => 63,
+            EquipmentRarity::Magic => 65,
+            EquipmentRarity::Rare => 66,
+        }
+    }
+}
 
 impl Boots {
     pub fn spawn(commands: &mut Commands, rng: &mut ThreadRng) -> EquipmentEntity {
         let mut provider = BootsAffixProvider::new();
-        let rarity = EquipmentRarityProvider::new()
-            .gen(rng)
-            .expect("At least one rarity");
-        let tile_index = match rarity {
-            EquipmentRarity::Normal => 63,
-            EquipmentRarity::Magic => 65,
-            EquipmentRarity::Rare => 66,
-        };
-        let mut boots_commands = commands.spawn((Boots, Name::new("Boots"), TileIndex(tile_index)));
-
-        let mut labels = vec![];
-        for _ in 0..rarity.n_affix() {
+        let mut boots = AffixesInserter::spawn(commands, Boots, rng);
+        for _ in 0..boots.n_affix() {
             match provider.gen(rng) {
                 Some(BootsAffixKind::AddArmour) => {
-                    let affix = Armour(rng.gen_range(1..=3) as f32);
-                    labels.push(affix.to_string());
-                    boots_commands.insert(affix);
+                    boots.insert::<Armour, u16>(rng.gen_range(1..=3));
                 }
                 Some(BootsAffixKind::AddLife) => {
-                    let affix = MoreLife(rng.gen_range(5..=10) as f32);
-                    labels.push(affix.to_string());
-                    boots_commands.insert(affix);
+                    boots.insert::<MoreLife, u16>(rng.gen_range(5..=10));
                 }
                 Some(BootsAffixKind::IncreaseMovementSpeed) => {
-                    let affix = IncreaseMovementSpeed(rng.gen_range(5..=30) as f32);
-                    labels.push(affix.to_string());
-                    boots_commands.insert(affix);
+                    boots.insert::<IncreaseMovementSpeed, u16>(rng.gen_range(5..=30));
                 }
                 None => {}
             }
         }
-        boots_commands.insert(AffixesLabels(labels.join("\n")));
-
-        EquipmentEntity {
-            entity: boots_commands.id(),
-            tile_index,
-            label: labels.join("\n"),
-        }
+        boots.equipment_entity()
     }
 }

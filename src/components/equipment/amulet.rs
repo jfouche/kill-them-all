@@ -1,16 +1,17 @@
 use crate::components::{rng_provider::RngKindProvider, *};
 use bevy::prelude::*;
+use equipment::{AffixesInserter, EquipmentUI};
 use rand::{rngs::ThreadRng, Rng};
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
-pub enum AmuletAffixKind {
+enum AmuletAffixKind {
     AddLife,
     AddArmour,
     PierceChance,
 }
 
 #[derive(Deref, DerefMut)]
-pub struct AmuletAffixProvider(RngKindProvider<AmuletAffixKind>);
+struct AmuletAffixProvider(RngKindProvider<AmuletAffixKind>);
 
 impl AmuletAffixProvider {
     pub fn new() -> Self {
@@ -23,50 +24,43 @@ impl AmuletAffixProvider {
 }
 
 #[derive(Component)]
+#[require(
+    Name(|| Name::new("Amulet"))
+)]
 pub struct Amulet;
+
+impl EquipmentUI for Amulet {
+    fn title() -> String {
+        "Amulet".into()
+    }
+
+    fn tile_index(rarity: EquipmentRarity) -> usize {
+        match rarity {
+            EquipmentRarity::Normal => 213,
+            EquipmentRarity::Magic => 215,
+            EquipmentRarity::Rare => 216,
+        }
+    }
+}
 
 impl Amulet {
     pub fn spawn(commands: &mut Commands, rng: &mut ThreadRng) -> EquipmentEntity {
         let mut provider = AmuletAffixProvider::new();
-        let rarity = EquipmentRarityProvider::new()
-            .gen(rng)
-            .expect("At least one rarity");
-        let tile_index = match rarity {
-            EquipmentRarity::Normal => 213,
-            EquipmentRarity::Magic => 215,
-            EquipmentRarity::Rare => 216,
-        };
-
-        let mut amulet_commands =
-            commands.spawn((Amulet, Name::new("Amulet"), TileIndex(tile_index)));
-
-        let mut labels = vec![];
-        for _ in 0..rarity.n_affix() {
+        let mut amulet = AffixesInserter::spawn(commands, Amulet, rng);
+        for _ in 0..amulet.n_affix() {
             match provider.gen(rng) {
                 Some(AmuletAffixKind::AddArmour) => {
-                    let affix = Armour(rng.gen_range(1..=3) as f32);
-                    labels.push(affix.to_string());
-                    amulet_commands.insert(affix);
+                    amulet.insert::<Armour, u16>(rng.gen_range(1..=3));
                 }
                 Some(AmuletAffixKind::AddLife) => {
-                    let affix = MoreLife(rng.gen_range(5..=10) as f32);
-                    labels.push(affix.to_string());
-                    amulet_commands.insert(affix);
+                    amulet.insert::<MoreLife, u16>(rng.gen_range(5..=10));
                 }
                 Some(AmuletAffixKind::PierceChance) => {
-                    let affix = PierceChance(rng.gen_range(5..=10) as f32);
-                    labels.push(affix.to_string());
-                    amulet_commands.insert(affix);
+                    amulet.insert::<PierceChance, u16>(rng.gen_range(5..=10));
                 }
                 None => {}
             }
         }
-        amulet_commands.insert(AffixesLabels(labels.join("\n")));
-
-        EquipmentEntity {
-            entity: amulet_commands.id(),
-            tile_index,
-            label: labels.join("\n"),
-        }
+        amulet.equipment_entity()
     }
 }

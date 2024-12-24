@@ -1,4 +1,3 @@
-use super::weapons::*;
 use crate::components::*;
 use crate::schedule::*;
 use crate::utils::blink::Blink;
@@ -30,11 +29,14 @@ impl Plugin for PlayerPlugin {
                     player_invulnerability_finished,
                     increment_player_experience,
                     level_up,
-                    // on_player_hit,
                     remove_old_equipment::<Amulet>,
                     remove_old_equipment::<BodyArmour>,
                     remove_old_equipment::<Boots>,
                     remove_old_equipment::<Helmet>,
+                    remove_old_equipment::<Wand>,
+                    remove_old_equipment::<ShurikenLauncher>,
+                    remove_old_equipment::<MineDropper>,
+                    remove_old_equipment::<DeathAura>,
                 )
                     .in_set(GameRunningSet::EntityUpdate),
             );
@@ -54,10 +56,7 @@ fn spawn_player(mut commands: Commands, assets: Res<PlayerAssets>) {
     commands
         .spawn((Player, Player::sprite(&assets)))
         .with_children(|player| {
-            // player.spawn(Gun);
-            // player.spawn(ShurikenLauncher::default());
-            // player.spawn(MineDropper);
-            player.spawn((DeathAura, Damager::collision_groups(Target::Monster)));
+            player.spawn(DeathAura);
         })
         .observe(set_invulnerable_on_hit)
         .observe(send_player_death_event);

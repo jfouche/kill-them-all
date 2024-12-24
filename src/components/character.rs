@@ -1,6 +1,5 @@
 use super::*;
 use bevy::prelude::*;
-use rand::{rngs::ThreadRng, Rng};
 
 /// Required components for all characters
 #[derive(Component, Default)]
@@ -76,56 +75,13 @@ impl std::fmt::Display for MaxLife {
     }
 }
 
-#[derive(Component, Default, Clone, Copy, Deref, DerefMut, Debug, Reflect)]
-pub struct LifeRegen(pub f32);
-
-impl std::fmt::Display for LifeRegen {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Regenerate {:.0} lifes per sec", self.0)
-    }
+/// Event to notify a character was hit
+#[derive(Event)]
+pub struct HitEvent {
+    pub damage: Damage,
 }
 
-/// Add life to the [BaseLife]
-#[derive(Component, Default, Clone, Copy, Deref, Debug, Reflect)]
-pub struct MoreLife(pub f32);
-
-impl std::fmt::Display for MoreLife {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:.0} to maximum life", self.0)
-    }
-}
-
-/// Increase [BaseLife] (after applying [MoreLife])
-#[derive(Component, Default, Clone, Copy, Deref, DerefMut, Debug, Reflect)]
-pub struct IncreaseMaxLife(pub f32);
-
-impl std::fmt::Display for IncreaseMaxLife {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Increase {:.0}% maximum life", self.0)
-    }
-}
-
-/// Armour
-#[derive(Component, Clone, Copy, Default, Deref, DerefMut, Debug, Reflect)]
-pub struct Armour(pub f32);
-
-impl std::fmt::Display for Armour {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:.0} Armour", self.0)
-    }
-}
-
-impl Armour {
-    pub fn mitigate(&self, damage: Damage) -> Damage {
-        let d = (5. * *damage * *damage) / (self.0 + 5. * *damage);
-        Damage(d)
-    }
-}
-
-/// Add armour to base [Armour]
-#[derive(Component, Default, Clone, Copy, Deref, DerefMut, Debug, Reflect)]
-pub struct MoreArmour(pub f32);
-
+/// Base movement speed
 #[derive(Component, Default, Deref, Reflect)]
 #[require(MovementSpeed, IncreaseMovementSpeed)]
 pub struct BaseMovementSpeed(pub f32);
@@ -133,72 +89,6 @@ pub struct BaseMovementSpeed(pub f32);
 /// Caculated movement speed, based on [BaseMovementSpeed] and [IncreaseMovementSpeed]
 #[derive(Component, Default, Deref, DerefMut, Reflect)]
 pub struct MovementSpeed(pub f32);
-
-/// Increase [BaseMovementSpeed]
-#[derive(Component, Default, Clone, Copy, Deref, DerefMut, Debug, Reflect)]
-pub struct IncreaseMovementSpeed(pub f32);
-
-impl std::fmt::Display for IncreaseMovementSpeed {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "+{:.0}% movement speed", self.0)
-    }
-}
-
-#[derive(Component, Default, Clone, Copy, Debug, Deref, DerefMut, Reflect)]
-pub struct IncreaseAttackSpeed(pub f32);
-
-impl std::fmt::Display for IncreaseAttackSpeed {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Add +{:.0}% attack speed", self.0)
-    }
-}
-
-/// Pierce chance
-#[derive(Component, Default, Clone, Copy, Deref, DerefMut, Debug, Reflect)]
-pub struct PierceChance(pub f32);
-
-impl PierceChance {
-    pub fn try_pierce(&mut self, rng: &mut ThreadRng) -> bool {
-        if rng.gen_range(0. ..100.) < **self {
-            self.0 -= 100.;
-            true
-        } else {
-            false
-        }
-    }
-}
-
-impl std::fmt::Display for PierceChance {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "+{:.0}% pierce chance", **self)
-    }
-}
-
-/// Add damage to all [Weapon]s of a [Character]
-#[derive(Component, Default, Deref, DerefMut, Reflect)]
-pub struct MoreDamage(pub f32);
-
-impl std::fmt::Display for MoreDamage {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "+{:.0} more damage", **self)
-    }
-}
-
-/// Increase damage to all [Weapon]s, after applying [MoreDamage]
-#[derive(Component, Default, Deref, DerefMut, Reflect)]
-pub struct IncreaseDamage(pub f32);
-
-impl std::fmt::Display for IncreaseDamage {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "+{:.0}% increase damage", **self)
-    }
-}
-
-/// Event to notify a character was hit
-#[derive(Event)]
-pub struct HitEvent {
-    pub damage: Damage,
-}
 
 /// Event to notify a character loose life
 #[derive(Event, Deref)]

@@ -1,5 +1,6 @@
-use super::*;
+use crate::components::*;
 use bevy::prelude::*;
+use bevy_rapier2d::prelude::*;
 use rand::{rngs::ThreadRng, Rng};
 use std::time::Duration;
 
@@ -10,7 +11,7 @@ use std::time::Duration;
 pub struct Weapon;
 
 ///
-/// Component which stores the base [DamageRange] of a [Weapon]
+/// Component which stores the base [HitDamageRange] of a [Weapon]
 /// which damage on hit.
 ///
 #[derive(Component, Clone, Copy, Reflect)]
@@ -22,7 +23,7 @@ impl BaseHitDamageRange {
         BaseHitDamageRange(HitDamageRange { min, max })
     }
 
-    /// Return the real [DamageRange] after applying [MoreDamage] and [IncreaseDamage]
+    /// Return the real [HitDamageRange] after applying [MoreDamage] and [IncreaseDamage]
     pub fn damage_range(&self, more: &MoreDamage, increase: &IncreaseDamage) -> HitDamageRange {
         let multiplier = 1. + **increase / 100.;
         HitDamageRange {
@@ -76,7 +77,7 @@ impl BaseDamageOverTime {
 pub struct DamageOverTime(pub f32);
 
 impl DamageOverTime {
-    pub fn damage(&self, time: &Time)-> Damage {
+    pub fn damage(&self, time: &Time) -> Damage {
         Damage(self.0 * time.delta_secs())
     }
 }
@@ -146,7 +147,7 @@ impl AttackTimer {
     Transform,
     RigidBody,
     Collider,
-    CollisionGroups,
+    CollisionGroups(|| Damager::collision_groups(Target::Monster)),
     Sensor,
     ActiveEvents(|| ActiveEvents::COLLISION_EVENTS)
 )]

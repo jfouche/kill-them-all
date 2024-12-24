@@ -1,12 +1,24 @@
 mod amulet;
 mod body_armour;
 mod boots;
+mod death_aura;
 mod helmet;
+mod mine;
+mod shuriken;
+mod wand;
+mod weapon;
 
-pub use amulet::*;
-pub use body_armour::*;
-pub use boots::*;
-pub use helmet::*;
+use std::fmt::Display;
+
+pub use amulet::Amulet;
+pub use body_armour::BodyArmour;
+pub use boots::Boots;
+pub use death_aura::*;
+pub use helmet::Helmet;
+pub use mine::*;
+pub use shuriken::*;
+pub use wand::Wand;
+pub use weapon::*;
 
 use super::rng_provider::RngKindProvider;
 use bevy::prelude::*;
@@ -50,8 +62,9 @@ impl EquipmentAssets {
     }
 }
 
+/// The Tile index in the image atlas
 #[derive(Component, Clone, Copy, Deref, Reflect)]
-pub struct TileIndex(pub usize);
+pub struct EquipmentTileIndex(pub usize);
 
 /// Equipment Rarity
 #[derive(Component, Clone, Copy, PartialEq, Eq, Hash)]
@@ -96,6 +109,10 @@ pub enum EquipmentKind {
     BodyArmour,
     Boots,
     Helmet,
+    Wand,
+    Shuriken,
+    Mine,
+    DeathAura,
 }
 
 impl EquipmentKind {
@@ -105,6 +122,10 @@ impl EquipmentKind {
             EquipmentKind::BodyArmour => BodyArmour::spawn(commands, rng),
             EquipmentKind::Boots => Boots::spawn(commands, rng),
             EquipmentKind::Helmet => Helmet::spawn(commands, rng),
+            EquipmentKind::Wand => Wand::spawn(commands, rng),
+            EquipmentKind::Shuriken => ShurikenLauncher::spawn(commands, rng),
+            EquipmentKind::Mine => MineDropper::spawn(commands, rng),
+            EquipmentKind::DeathAura => DeathAura::spawn(commands, rng),
         }
     }
 }
@@ -119,6 +140,10 @@ impl EquipmentProvider {
         provider.add(EquipmentKind::BodyArmour, 40);
         provider.add(EquipmentKind::Boots, 40);
         provider.add(EquipmentKind::Helmet, 40);
+        provider.add(EquipmentKind::Wand, 440);
+        provider.add(EquipmentKind::Shuriken, 440);
+        provider.add(EquipmentKind::Mine, 440);
+        provider.add(EquipmentKind::DeathAura, 440);
         EquipmentProvider(provider)
     }
 }
@@ -131,5 +156,59 @@ pub struct AffixesLabels(pub String);
 impl From<&AffixesLabels> for Text {
     fn from(value: &AffixesLabels) -> Self {
         Text(value.0.clone())
+    }
+}
+
+trait EquipmentUI {
+    fn title() -> String;
+    fn tile_index(rarity: EquipmentRarity) -> usize;
+}
+
+/// Helper to insert affix to an equipment
+struct AffixesInserter<'a> {
+    labels: Vec<String>,
+    commands: EntityCommands<'a>,
+    tile_index: usize,
+    rarity: EquipmentRarity,
+}
+
+impl<'a> AffixesInserter<'a> {
+    fn spawn<T>(commands: &'a mut Commands, equipment: T, rng: &mut ThreadRng) -> Self
+    where
+        T: Component + EquipmentUI,
+    {
+        let rarity = EquipmentRarityProvider::new()
+            .gen(rng)
+            .expect("At least one rarity");
+        let tile_index = T::tile_index(rarity);
+        AffixesInserter {
+            labels: vec![T::title()],
+            commands: commands.spawn((equipment, rarity, EquipmentTileIndex(tile_index))),
+            tile_index,
+            rarity,
+        }
+    }
+
+    fn n_affix(&self) -> u16 {
+        self.rarity.n_affix()
+    }
+
+    fn insert<A, V>(&mut self, value: V)
+    where
+        A: Component + Display + From<V>,
+    {
+        let affix = A::from(value);
+        self.labels.push(affix.to_string());
+        self.commands.insert(affix);
+    }
+
+    fn equipment_entity(mut self) -> EquipmentEntity {
+        let label = self.labels.join("\n");
+        self.commands.insert(AffixesLabels(label.clone()));
+        EquipmentEntity {
+            entity: self.commands.id(),
+            tile_index: self.tile_index,
+            label,
+        }
     }
 }

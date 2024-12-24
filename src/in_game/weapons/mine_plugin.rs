@@ -1,76 +1,10 @@
-use super::{
-    despawn_all, AttackTimer, BaseAttackSpeed, Character, CyclicAnimation, Damager, DamagerParams, HitDamageRange, OneShotAnimation, Target, Weapon
+use super::despawn_all;
+use crate::{
+    components::*,
+    in_game::{GameRunningSet, GameState},
 };
-use crate::in_game::{GameRunningSet, GameState};
 use bevy::prelude::*;
-use bevy_rapier2d::prelude::{Collider, CollisionGroups};
-
-///
-/// Weapon that drop a mine regularly
-///
-#[derive(Component)]
-#[require(
-    Name(||Name::new("MineDropper")),
-    Weapon,
-    HitDamageRange(|| HitDamageRange::new(1., 5.)),
-    BaseAttackSpeed(|| BaseAttackSpeed(0.6))
-)]
-pub struct MineDropper;
-
-///
-/// Mine
-///
-#[derive(Component)]
-#[require(
-    Name(|| Name::new("Mine")),
-    Damager,
-    Collider(|| Collider::ball(8.)),
-    MineExplodeTimer,
-    Sprite,
-    CyclicAnimation(|| CyclicAnimation::new(0..2))
-)]
-struct Mine;
-
-#[derive(Component, Deref, DerefMut, Reflect)]
-struct MineExplodeTimer(Timer);
-
-impl Default for MineExplodeTimer {
-    fn default() -> Self {
-        MineExplodeTimer(Timer::from_seconds(1.5, TimerMode::Once))
-    }
-}
-
-#[derive(Component)]
-#[require(
-    Damager,
-    Collider(|| Collider::ball(16.)),
-    Sprite,
-    OneShotAnimation(|| OneShotAnimation::new(0..8))
-)]
-struct MineExplosion;
-
-#[derive(Resource)]
-struct MineAssets {
-    mine_texture: Handle<Image>,
-    mine_atlas_layout: Handle<TextureAtlasLayout>,
-    explosion_texture: Handle<Image>,
-    explosion_atlas_layout: Handle<TextureAtlasLayout>,
-}
-
-impl FromWorld for MineAssets {
-    fn from_world(world: &mut World) -> Self {
-        let mine_atlas_layout = TextureAtlasLayout::from_grid(UVec2::new(32, 32), 2, 1, None, None);
-        let explosion_atlas_layout =
-            TextureAtlasLayout::from_grid(UVec2::new(32, 32), 8, 1, None, None);
-
-        MineAssets {
-            mine_texture: world.load_asset("mine.png"),
-            mine_atlas_layout: world.add_asset(mine_atlas_layout),
-            explosion_texture: world.load_asset("mine_explosion.png"),
-            explosion_atlas_layout: world.add_asset(explosion_atlas_layout),
-        }
-    }
-}
+use bevy_rapier2d::prelude::CollisionGroups;
 
 pub struct MinePlugin;
 

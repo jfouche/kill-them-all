@@ -1,3 +1,4 @@
+mod affix;
 mod animation;
 mod bonus;
 mod character;
@@ -6,9 +7,9 @@ mod monster;
 mod player;
 mod rng_provider;
 mod upgrade;
-mod weapon;
 mod world_map;
 
+pub use affix::*;
 pub use animation::*;
 pub use bonus::*;
 pub use character::*;
@@ -16,7 +17,6 @@ pub use equipment::*;
 pub use monster::*;
 pub use player::*;
 pub use upgrade::*;
-pub use weapon::*;
 pub use world_map::*;
 
 use bevy::prelude::*;

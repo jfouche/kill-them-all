@@ -5,43 +5,34 @@ use crate::{
 use bevy::{color::palettes::css::YELLOW, prelude::*};
 use bevy_rapier2d::prelude::*;
 
-#[derive(Component)]
-#[require(
-    Weapon,
-    Name(|| Name::new("Gun")),
-    BaseHitDamageRange(|| BaseHitDamageRange::new(1., 2.)),
-    BaseAttackSpeed(|| BaseAttackSpeed(1.2))
-)]
-pub struct Gun;
-
-const BULLET_SPEED: f32 = 300.0;
-const BULLET_SIZE: f32 = 5.0;
+const FIREBALL_SPEED: f32 = 300.0;
+const FIREBALL_SIZE: f32 = 5.0;
 
 #[derive(Component)]
 #[require(
-    Name(|| Name::new("Bullet")),
+    Name(|| Name::new("FireBall")),
     Projectile,
-    Collider(|| Collider::cuboid(BULLET_SIZE / 2., BULLET_SIZE / 2.)),
+    Collider(|| Collider::cuboid(FIREBALL_SIZE / 2., FIREBALL_SIZE / 2.)),
     Sprite(|| Sprite {
         color: YELLOW.into(),
-        custom_size: Some(Vec2::new(BULLET_SIZE, BULLET_SIZE)),
+        custom_size: Some(Vec2::new(FIREBALL_SIZE, FIREBALL_SIZE)),
         ..Default::default()
     }),
 )]
-struct Bullet;
+struct FireBall;
 
-pub struct GunPlugin;
+pub struct WandPlugin;
 
-impl Plugin for GunPlugin {
+impl Plugin for WandPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnExit(GameState::InGame), despawn_all::<Bullet>)
-            .add_systems(Update, gun_fires.in_set(GameRunningSet::EntityUpdate));
+        app.add_systems(OnExit(GameState::InGame), despawn_all::<FireBall>)
+            .add_systems(Update, cast_fireball.in_set(GameRunningSet::EntityUpdate));
     }
 }
 
-fn gun_fires(
+fn cast_fireball(
     mut commands: Commands,
-    weapons: Query<(&AttackTimer, &HitDamageRange, &Parent), With<Gun>>,
+    weapons: Query<(&AttackTimer, &HitDamageRange, &Parent), With<Wand>>,
     characters: Query<(&Transform, &PierceChance, &Target), With<Character>>,
 ) {
     for (timer, hit_damage_range, parent) in &weapons {
@@ -62,7 +53,7 @@ fn gun_fires(
                     });
                 if let Some(target_pos) = nearest_target {
                     commands.spawn((
-                        Bullet,
+                        FireBall,
                         *hit_damage_range,
                         DamagerParams {
                             transform: Transform::from_translation(gunner),
@@ -71,7 +62,7 @@ fn gun_fires(
                         ProjectileParams {
                             pierce_chance: *pierce,
                             velocity: Velocity::linear(
-                                (target_pos - gunner).xy().normalize() * BULLET_SPEED,
+                                (target_pos - gunner).xy().normalize() * FIREBALL_SPEED,
                             ),
                         },
                     ));

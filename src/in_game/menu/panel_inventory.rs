@@ -112,10 +112,16 @@ impl EquipmentPos for Helmet {
     }
 }
 
+impl EquipmentPos for Weapon {
+    fn pos() -> Vec2 {
+        Vec2::new(7., 74.)
+    }
+}
+
 fn show_equipment<T>(
     trigger: Trigger<OnAdd, EquipmentsPanel>,
     mut commands: Commands,
-    equipments: Query<(&TileIndex, &AffixesLabels, &Parent), With<T>>,
+    equipments: Query<(&EquipmentTileIndex, &AffixesLabels, &Parent), With<T>>,
     players: Query<Entity, With<Player>>,
     assets: Res<EquipmentAssets>,
 ) where
@@ -167,5 +173,6 @@ pub fn inventory_panel_plugin(app: &mut App) {
     app.add_observer(show_equipment::<Amulet>)
         .add_observer(show_equipment::<BodyArmour>)
         .add_observer(show_equipment::<Boots>)
-        .add_observer(show_equipment::<Helmet>);
+        .add_observer(show_equipment::<Helmet>)
+        .add_observer(show_equipment::<Weapon>);
 }

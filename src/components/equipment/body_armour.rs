@@ -4,13 +4,13 @@ use bevy::prelude::*;
 use rand::{rngs::ThreadRng, Rng};
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
-pub enum BodyArmourAffixKind {
+enum BodyArmourAffixKind {
     AddLife,
     AddArmour,
 }
 
 #[derive(Deref, DerefMut)]
-pub struct BodyArmourAffixProvider(RngKindProvider<BodyArmourAffixKind>);
+struct BodyArmourAffixProvider(RngKindProvider<BodyArmourAffixKind>);
 
 impl BodyArmourAffixProvider {
     pub fn new() -> Self {
@@ -22,44 +22,39 @@ impl BodyArmourAffixProvider {
 }
 
 #[derive(Component)]
+#[require(
+    Name(|| Name::new("BodyArmour"))
+)]
 pub struct BodyArmour;
+
+impl EquipmentUI for BodyArmour {
+    fn title() -> String {
+        "Body armour".into()
+    }
+    fn tile_index(rarity: EquipmentRarity) -> usize {
+        match rarity {
+            EquipmentRarity::Normal => 0,
+            EquipmentRarity::Magic => 2,
+            EquipmentRarity::Rare => 3,
+        }
+    }
+}
 
 impl BodyArmour {
     pub fn spawn(commands: &mut Commands, rng: &mut ThreadRng) -> EquipmentEntity {
         let mut provider = BodyArmourAffixProvider::new();
-        let rarity = EquipmentRarityProvider::new()
-            .gen(rng)
-            .expect("At least one rarity");
-        let tile_index = match rarity {
-            EquipmentRarity::Normal => 0,
-            EquipmentRarity::Magic => 2,
-            EquipmentRarity::Rare => 3,
-        };
-        let mut body_armour_commands =
-            commands.spawn((BodyArmour, Name::new("BodyArmour"), TileIndex(tile_index)));
-
-        let mut labels = vec![];
-        for _ in 0..rarity.n_affix() {
+        let mut body_armour = AffixesInserter::spawn(commands, BodyArmour, rng);
+        for _ in 0..body_armour.n_affix() {
             match provider.gen(rng) {
                 Some(BodyArmourAffixKind::AddArmour) => {
-                    let affix = Armour(rng.gen_range(1..=3) as f32);
-                    labels.push(affix.to_string());
-                    body_armour_commands.insert(affix);
+                    body_armour.insert::<Armour, u16>(rng.gen_range(1..=3));
                 }
                 Some(BodyArmourAffixKind::AddLife) => {
-                    let affix = MoreLife(rng.gen_range(5..=10) as f32);
-                    labels.push(affix.to_string());
-                    body_armour_commands.insert(affix);
+                    body_armour.insert::<MoreLife, u16>(rng.gen_range(5..=10));
                 }
                 None => {}
             }
         }
-        body_armour_commands.insert(AffixesLabels(labels.join("\n")));
-
-        EquipmentEntity {
-            entity: body_armour_commands.id(),
-            tile_index,
-            label: labels.join("\n"),
-        }
+        body_armour.equipment_entity()
     }
 }

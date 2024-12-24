@@ -1,14 +1,7 @@
-mod gun;
-pub use gun::Gun;
-
-mod shuriken;
-pub use shuriken::ShurikenLauncher;
-
-mod mine;
-pub use mine::MineDropper;
-
-mod death_aura;
-pub use death_aura::DeathAura;
+mod death_aura_plugin;
+mod mine_plugin;
+mod shuriken_plugin;
+mod wand_plugin;
 
 use super::PreUpdateAffixes;
 use crate::components::*;
@@ -19,10 +12,10 @@ pub struct WeaponsPlugin;
 impl Plugin for WeaponsPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
-            gun::GunPlugin,
-            shuriken::ShurikenPlugin,
-            mine::MinePlugin,
-            death_aura::DeathAuraPlugin,
+            wand_plugin::WandPlugin,
+            shuriken_plugin::ShurikenPlugin,
+            mine_plugin::MinePlugin,
+            death_aura_plugin::DeathAuraPlugin,
         ))
         .register_type::<Damage>()
         .register_type::<BaseAttackSpeed>()
@@ -85,7 +78,6 @@ fn update_weapon_hit_damage_range(
         }
     }
 }
-
 
 fn update_weapon_damage_over_time(
     mut weapons: Query<(&mut DamageOverTime, &BaseDamageOverTime, &Parent), With<Weapon>>,

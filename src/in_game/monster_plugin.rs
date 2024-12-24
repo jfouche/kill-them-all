@@ -1,4 +1,4 @@
-use crate::{components::*, in_game::weapons::*, schedule::*};
+use crate::{components::*, schedule::*};
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 use std::ops::Mul;
@@ -94,6 +94,7 @@ fn spawn_monsters(
                 Sprite::from(&params_assets),
                 Transform::from(params_assets.params),
                 XpOnDeath::from(&params_assets),
+                HitDamageRange::from(&params_assets),
             );
 
             match params.kind {
@@ -133,8 +134,10 @@ fn add_affixes(
 
         // Add a weapon and more life
         commands.entity(trigger.entity()).with_children(|c| {
-            c.spawn(Gun);
+            c.spawn(Wand);
             c.spawn(MoreLife(10.));
+            // TODO: Bad life initialisation : init life in observer when IncreaseLife
+            // and MoreLife is added to keep the same life percentage
         });
     }
 }
