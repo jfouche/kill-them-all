@@ -60,29 +60,29 @@ fn check_if_character_is_hit(
 ///
 /// TODO: This algo is not good as if a character is in multiple zone,
 ///  leaving one will stop damage over time
+/// [DamageOverTime] should be a child of the [Character] to allow multiple effects
 fn check_if_character_is_in_damage_over_time_zone(
     mut commands: Commands,
     mut collisions: EventReader<CollisionEvent>,
     characters: Query<(), With<Character>>,
     damagers: Query<&DamageOverTime, With<Damager>>,
 ) {
-    let get_damage = |e1, e2| {
+    let get_dot = |e1, e2| {
         characters
             .get(e1)
             .and_then(|_| damagers.get(e2))
-            .map(|d| (e1, d))
+            .map(|dot| (e1, dot))
     };
 
     for &event in collisions.read() {
         match event {
             CollisionEvent::Started(e1, e2, _) => {
-                if let Ok((entity, &damage)) = get_damage(e1, e2).or(get_damage(e2, e1)) {
-                    commands.entity(entity).insert(damage);
+                if let Ok((entity, &dot)) = get_dot(e1, e2).or(get_dot(e2, e1)) {
+                    commands.entity(entity).insert(dot);
                 }
             }
             CollisionEvent::Stopped(e1, e2, _) => {
-                if let Ok((entity, _)) = get_damage(e1, e2).or(get_damage(e2, e1))
-                {
+                if let Ok((entity, _)) = get_dot(e1, e2).or(get_dot(e2, e1)) {
                     commands.entity(entity).remove::<DamageOverTime>();
                 }
             }
