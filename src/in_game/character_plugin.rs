@@ -26,6 +26,7 @@ impl Plugin for CharacterPlugin {
             .register_type::<AffixesLabels>()
             .register_type::<AnimationTimer>()
             .add_observer(init_life)
+            .add_observer(fix_life)
             .add_systems(Startup, register_hooks)
             .add_systems(
                 PreUpdate,
@@ -58,6 +59,25 @@ fn init_life(
     if let Ok((mut life, mut max_life, base_life)) = lifes.get_mut(trigger.entity()) {
         **life = **base_life;
         **max_life = **base_life;
+    }
+}
+
+/// Fix the life when adding [MoreLife] or [IncreaseMaxLife] affixes
+fn fix_life(
+    trigger: Trigger<OnAdd, Parent>,
+    affixes: Query<(&Parent, Option<&MoreLife>, Option<&IncreaseMaxLife>)>,
+    mut characters: Query<&mut Life, With<Character>>,
+) {
+    if let Ok((parent, more, increase)) = affixes.get(trigger.entity()) {
+        if let Ok(mut life) = characters.get_mut(**parent) {
+            if let Some(more) = more {
+                life.regenerate(**more);
+            }
+            if let Some(increase) = increase {
+                let more = **life * **increase / 100.;
+                life.regenerate(more);
+            }
+        }
     }
 }
 

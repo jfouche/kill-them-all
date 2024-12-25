@@ -136,8 +136,6 @@ fn add_affixes(
         commands.entity(trigger.entity()).with_children(|c| {
             c.spawn(Wand);
             c.spawn(MoreLife(10.));
-            // TODO: Bad life initialisation : init life in observer when IncreaseLife
-            // and MoreLife is added to keep the same life percentage
         });
     }
 }
