@@ -1,4 +1,7 @@
-use bevy::prelude::*;
+use bevy::{
+    ecs::{component::ComponentId, world::DeferredWorld},
+    prelude::*,
+};
 
 const NORMAL_BUTTON: Color = Color::srgb(0.15, 0.35, 0.15);
 const HOVERED_BUTTON: Color = Color::srgb(0.25, 0.55, 0.25);
@@ -10,7 +13,8 @@ const BUTTON_TEXT_COLOR: Color = Color::srgb(0.9, 0.9, 0.9);
 ///
 /// Component to spawn a button
 ///
-#[derive(Component, Default)]
+#[derive(Component, Default, Clone)]
+#[component(on_add = create_button)]
 #[require(
     Button,
     Node(MyButton::default_node),
@@ -48,6 +52,28 @@ impl MyButton {
             border: UiRect::all(Val::Px(1.0)),
             ..default()
         }
+    }
+}
+
+fn create_button(mut world: DeferredWorld, entity: Entity, _: ComponentId) {
+    let button = world
+        .get::<MyButton>(entity)
+        .expect("Added MyButton")
+        .clone();
+
+    let have_image = button.image.is_some();
+
+    world.commands().entity(entity).with_children(|parent| {
+        if let Some(image) = button.image {
+            parent.spawn(image);
+        }
+        if let Some(text) = button.text {
+            parent.spawn((MyButtonText, text));
+        }
+    });
+
+    if have_image {
+        world.get_mut::<Node>(entity).expect("Node").height = Val::Auto;
     }
 }
 
@@ -100,7 +126,7 @@ where
 pub struct SelectedOption;
 
 pub fn button_plugin(app: &mut App) {
-    app.add_observer(create_button).add_systems(
+    app.add_systems(
         Update,
         (
             color_buttons,
@@ -108,24 +134,6 @@ pub fn button_plugin(app: &mut App) {
             color_deselected_buttons,
         ),
     );
-}
-
-fn create_button(
-    trigger: Trigger<OnAdd, MyButton>,
-    mut commands: Commands,
-    mut buttons: Query<(&MyButton, &mut Node)>,
-) {
-    commands.entity(trigger.entity()).with_children(|parent| {
-        if let Ok((btn, mut node)) = buttons.get_mut(trigger.entity()) {
-            if let Some(image) = &btn.image {
-                node.height = Val::Auto;
-                parent.spawn(image.clone());
-            }
-            if let Some(text) = &btn.text {
-                parent.spawn((MyButtonText, text.clone()));
-            }
-        }
-    });
 }
 
 // This system handles changing all buttons color based on mouse interaction

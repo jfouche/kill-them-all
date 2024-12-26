@@ -36,6 +36,5 @@ impl PluginGroup for UiPlugins {
         PluginGroupBuilder::start::<Self>()
             .add(progressbar::ProgressBarPlugin)
             .add(button::button_plugin)
-            .add(popup::popup_plugin)
     }
 }

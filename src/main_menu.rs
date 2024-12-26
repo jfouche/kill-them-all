@@ -20,6 +20,20 @@ pub fn main_menu_plugin(app: &mut App) {
 )]
 struct MainMenu;
 
+#[derive(Component)]
+#[require(
+    MyButton(|| MyButton::new("New game")),
+    MenuButtonAction(|| MenuButtonAction::PlayGame),
+)]
+pub struct ButtonNewGame;
+
+#[derive(Component)]
+#[require(
+    MyButton(|| MyButton::new("Exit")),
+    MenuButtonAction(|| MenuButtonAction::ExitApplication),
+)]
+pub struct ButtonExit;
+
 // All actions that can be triggered from a button click
 #[derive(Component, Clone, Copy, PartialEq)]
 enum MenuButtonAction {
@@ -42,16 +56,8 @@ fn set_background(mut commands: Commands) {
 }
 
 fn spawn_menu(mut commands: Commands) {
-    let new_game_btn = commands
-        .spawn((
-            MyButton::new("New game"),
-            MenuButtonAction::PlayGame,
-            SelectedOption,
-        ))
-        .id();
-    let exit_btn = commands
-        .spawn((MyButton::new("Exit"), MenuButtonAction::ExitApplication))
-        .id();
+    let new_game_btn = commands.spawn((ButtonNewGame, SelectedOption)).id();
+    let exit_btn = commands.spawn(ButtonExit).id();
 
     let menu_nav = MainMenuButtonNav(vec![new_game_btn, exit_btn]);
 

@@ -65,9 +65,3 @@ fn create_popup(mut world: DeferredWorld, entity: Entity, _: ComponentId) {
     node.left = Val::Px(info.pos.x + 5.);
     node.top = Val::Px(info.pos.y - 20.);
 }
-
-pub struct InfoPopupPlugin;
-
-impl Plugin for InfoPopupPlugin {
-    fn build(&self, app: &mut App) {}
-}
