@@ -103,7 +103,7 @@ fn spawn_monsters(
                 2 => commands.spawn((MonsterType3, monster_components)),
                 _ => unreachable!(),
             }
-            .observe(send_death_event)
+            .observe(monster_dying)
             .observe(increment_score);
         }
     }
@@ -159,12 +159,13 @@ fn monsters_moves(
     }
 }
 
-fn send_death_event(
+fn monster_dying(
     trigger: Trigger<CharacterDyingEvent>,
     monsters: Query<(&Transform, &XpOnDeath), With<Monster>>,
     mut monster_death_events: EventWriter<MonsterDeathEvent>,
     mut character_died_events: EventWriter<CharacterDiedEvent>,
 ) {
+    warn!("monster_dying");
     if let Ok((transform, xp)) = monsters.get(trigger.entity()) {
         monster_death_events.send(MonsterDeathEvent {
             pos: transform.translation,

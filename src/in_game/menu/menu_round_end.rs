@@ -62,8 +62,8 @@ fn spawn_round_end_menu(mut commands: Commands, assets: Res<EquipmentAssets>) {
             equipment_list.push(equipment_entity.entity);
             let entity = commands
                 .spawn((
-                    MyButton::new(equipment_entity.label)
-                        .with_image(assets.image_node(equipment_entity.tile_index)),
+                    MyButton::new(equipment_entity.info.text)
+                        .with_image(assets.image_node(equipment_entity.info.tile_index)),
                     EquipmentEntity(equipment_entity.entity),
                 ))
                 .id();

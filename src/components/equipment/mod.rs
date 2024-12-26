@@ -45,14 +45,19 @@ impl FromWorld for EquipmentAssets {
 }
 
 impl EquipmentAssets {
+    pub fn image(&self) -> Handle<Image> {
+        self.texture.clone()
+    }
+
+    pub fn texture_atlas(&self, index: usize) -> TextureAtlas {
+        TextureAtlas {
+            layout: self.atlas_layout.clone(),
+            index,
+        }
+    }
+
     pub fn image_node(&self, index: usize) -> ImageNode {
-        ImageNode::from_atlas_image(
-            self.texture.clone(),
-            TextureAtlas {
-                layout: self.atlas_layout.clone(),
-                index,
-            },
-        )
+        ImageNode::from_atlas_image(self.image(), self.texture_atlas(index))
     }
 }
 
@@ -91,10 +96,9 @@ impl EquipmentRarityProvider {
     }
 }
 
-pub struct EquipmentEntity {
+pub struct EquipmentEntityInfo {
     pub entity: Entity,
-    pub tile_index: usize,
-    pub label: String,
+    pub info: EquipmentInfo,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
@@ -107,7 +111,7 @@ pub enum EquipmentKind {
 }
 
 impl EquipmentKind {
-    pub fn spawn(&self, commands: &mut Commands, rng: &mut ThreadRng) -> EquipmentEntity {
+    pub fn spawn(&self, commands: &mut Commands, rng: &mut ThreadRng) -> EquipmentEntityInfo {
         match self {
             EquipmentKind::Amulet => Amulet::spawn(commands, rng),
             EquipmentKind::BodyArmour => BodyArmour::spawn(commands, rng),
@@ -133,14 +137,17 @@ impl EquipmentProvider {
     }
 }
 
-/// Util component to store all equipments affixes
+/// Util component to store all equipments informations, e.g. image and affixes
 
-#[derive(Component, Clone, Deref, Reflect)]
-pub struct AffixesLabels(pub String);
+#[derive(Component, Default, Clone, Reflect)]
+pub struct EquipmentInfo {
+    pub tile_index: usize,
+    pub text: String,
+}
 
-impl From<&AffixesLabels> for Text {
-    fn from(value: &AffixesLabels) -> Self {
-        Text(value.0.clone())
+impl From<&EquipmentInfo> for Text {
+    fn from(value: &EquipmentInfo) -> Self {
+        Text(value.text.clone())
     }
 }
 
@@ -187,13 +194,15 @@ impl<'a> AffixesInserter<'a> {
         self.commands.insert(affix);
     }
 
-    fn equipment_entity(mut self) -> EquipmentEntity {
-        let label = self.labels.join("\n");
-        self.commands.insert(AffixesLabels(label.clone()));
-        EquipmentEntity {
-            entity: self.commands.id(),
+    fn equipment_entity(mut self) -> EquipmentEntityInfo {
+        let equipment_info = EquipmentInfo {
+            text: self.labels.join("\n"),
             tile_index: self.tile_index,
-            label,
+        };
+        self.commands.insert(equipment_info.clone());
+        EquipmentEntityInfo {
+            entity: self.commands.id(),
+            info: equipment_info,
         }
     }
 }

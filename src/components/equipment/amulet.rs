@@ -44,7 +44,7 @@ impl EquipmentUI for Amulet {
 }
 
 impl Amulet {
-    pub fn spawn(commands: &mut Commands, rng: &mut ThreadRng) -> EquipmentEntity {
+    pub fn spawn(commands: &mut Commands, rng: &mut ThreadRng) -> EquipmentEntityInfo {
         let mut provider = AmuletAffixProvider::new();
         let mut amulet = AffixesInserter::spawn(commands, Amulet, rng);
         for _ in 0..amulet.n_affix() {

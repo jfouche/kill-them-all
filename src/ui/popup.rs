@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
 #[derive(Component, Default)]
+// TODO: use hooks to create it
 #[require(
     Node(Popup::default_node),
     BackgroundColor(|| BackgroundColor(Color::srgb(0.25, 0.25, 0.25))),

@@ -1,3 +1,4 @@
+use super::popup_info::InfoPopup;
 use crate::components::*;
 use bevy::{
     ecs::{component::ComponentId, world::DeferredWorld},
@@ -21,12 +22,11 @@ pub struct InventoryPanel;
 fn create_inventory_panel(mut world: DeferredWorld, entity: Entity, _component_id: ComponentId) {
     world.commands().entity(entity).with_children(|panel| {
         panel.spawn(EquipmentsPanel);
-        panel.spawn(AffixesPanel);
     });
 }
 
 ///
-/// A panel that show player's equipments
+/// A panel that shows player's equipments
 ///
 #[derive(Component)]
 #[require(
@@ -61,22 +61,6 @@ fn default_inventory_box_node() -> Node {
         ..Default::default()
     }
 }
-
-///
-///  A panel that shows selected equipment affixes
-///
-#[derive(Component)]
-#[require(
-    Name(|| Name::new("AffixesPanel")),
-    Text,
-    TextFont(|| TextFont::from_font_size(16.)),
-    Node(|| Node {
-        margin: UiRect::all(Val::Px(5.)),
-        width: Val::Px(180.),
-        ..Default::default()
-    })
-)]
-struct AffixesPanel;
 
 ///
 /// Trait to get position of a specific equipment on the [EquipmentsPanel]
@@ -121,7 +105,7 @@ impl EquipmentPos for Weapon {
 fn show_equipment<T>(
     trigger: Trigger<OnAdd, EquipmentsPanel>,
     mut commands: Commands,
-    equipments: Query<(&EquipmentTileIndex, &AffixesLabels, &Parent), With<T>>,
+    equipments: Query<(&EquipmentTileIndex, &EquipmentInfo, &Parent), With<T>>,
     players: Query<Entity, With<Player>>,
     assets: Res<EquipmentAssets>,
 ) where
@@ -145,28 +129,35 @@ fn show_equipment<T>(
                         },
                         labels.clone(),
                     ))
-                    .observe(show_affixes)
-                    .observe(hide_affixes);
+                    .observe(spawn_popup_info)
+                    .observe(despawn_popup_info);
             });
         });
 }
 
-fn hide_affixes(_trigger: Trigger<Pointer<Out>>, mut panels: Query<&mut Text, With<AffixesPanel>>) {
-    if let Ok(mut text) = panels.get_single_mut() {
-        *text = "".into();
+fn despawn_popup_info(
+    _trigger: Trigger<Pointer<Out>>,
+    mut commands: Commands,
+    popups: Query<Entity, With<InfoPopup>>,
+) {
+    if let Ok(entity) = popups.get_single() {
+        commands.entity(entity).despawn_recursive()
     }
 }
 
-fn show_affixes(
+fn spawn_popup_info(
     trigger: Trigger<Pointer<Over>>,
-    equipments: Query<&AffixesLabels>,
-    mut panels: Query<&mut Text, With<AffixesPanel>>,
+    mut commands: Commands,
+    equipments: Query<&EquipmentInfo>,
+    assets: Res<EquipmentAssets>,
 ) {
-    if let Ok(mut text) = panels.get_single_mut() {
-        if let Ok(labels) = equipments.get(trigger.entity()) {
-            *text = labels.into();
-        }
-    };
+    if let Ok(info) = equipments.get(trigger.entity()) {
+        commands.spawn(
+            InfoPopup::new(info.text.clone())
+                .with_image_atlas(assets.image(), assets.texture_atlas(info.tile_index))
+                .at(trigger.event().pointer_location.position),
+        );
+    }
 }
 
 pub fn inventory_panel_plugin(app: &mut App) {

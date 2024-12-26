@@ -9,7 +9,7 @@ use bevy_rapier2d::prelude::*;
     Sprite,
     RigidBody(|| RigidBody::Fixed),
     Collider(|| Collider::cuboid(BONUS_SIZE.x / 2.0, BONUS_SIZE.y / 2.0)),
-    CollisionGroups(|| CollisionGroups::new(GROUP_BONUS, Group::ALL)),
+    CollisionGroups(|| CollisionGroups::new(GROUP_BONUS, GROUP_ALL)),
     DespawnAfter(despawn_after)
 )]
 pub struct Bonus;

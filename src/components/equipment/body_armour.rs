@@ -41,7 +41,7 @@ impl EquipmentUI for BodyArmour {
 }
 
 impl BodyArmour {
-    pub fn spawn(commands: &mut Commands, rng: &mut ThreadRng) -> EquipmentEntity {
+    pub fn spawn(commands: &mut Commands, rng: &mut ThreadRng) -> EquipmentEntityInfo {
         let mut provider = BodyArmourAffixProvider::new();
         let mut body_armour = AffixesInserter::spawn(commands, BodyArmour, rng);
         for _ in 0..body_armour.n_affix() {

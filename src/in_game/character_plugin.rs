@@ -7,6 +7,7 @@ impl Plugin for CharacterPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<HitEvent>()
             .add_event::<LooseLifeEvent>()
+            .add_event::<CharacterDiedEvent>()
             .register_type::<Target>()
             .register_type::<BaseLife>()
             .register_type::<Life>()
@@ -23,7 +24,7 @@ impl Plugin for CharacterPlugin {
             .register_type::<MoreArmour>()
             .register_type::<MoreDamage>()
             .register_type::<IncreaseDamage>()
-            .register_type::<AffixesLabels>()
+            .register_type::<EquipmentInfo>()
             .register_type::<AnimationTimer>()
             .add_observer(init_life)
             .add_observer(fix_life)
@@ -122,7 +123,7 @@ fn loose_life(
             **life,
             ***trigger.event()
         );
-        life.hit(**trigger.event());
+        life.damage(**trigger.event());
         if life.is_dead() {
             commands.trigger_targets(CharacterDyingEvent, trigger.entity());
         }
@@ -131,6 +132,7 @@ fn loose_life(
 
 fn despawn_character_on_death(mut events: EventReader<CharacterDiedEvent>, mut commands: Commands) {
     for event in events.read() {
+        warn!("despawn_character_on_death");
         commands.entity(**event).despawn_recursive();
     }
 }

@@ -88,7 +88,7 @@ impl From<&SpawningMonsterAssets> for MeshMaterial2d<ColorMaterial> {
     HitDamageRange,
     Sprite,
     AnimationTimer,
-    CollisionGroups(|| CollisionGroups::new(GROUP_ENEMY, Group::ALL & !GROUP_BONUS))
+    CollisionGroups(|| CollisionGroups::new(GROUP_ENEMY, GROUP_ALL & !GROUP_BONUS))
 )]
 pub struct Monster;
 

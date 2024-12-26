@@ -14,7 +14,7 @@ use bevy_rapier2d::prelude::*;
     Sprite,
     Transform(|| Transform::from_xyz(0., 0., 10.)),
     AnimationTimer,
-    CollisionGroups(|| CollisionGroups::new(GROUP_PLAYER, Group::ALL)),
+    CollisionGroups(|| CollisionGroups::new(GROUP_PLAYER, GROUP_ALL)),
     ActiveEvents(|| ActiveEvents::COLLISION_EVENTS)
 )]
 pub struct Player;

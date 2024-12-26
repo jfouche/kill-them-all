@@ -44,7 +44,7 @@ impl EquipmentUI for Boots {
 }
 
 impl Boots {
-    pub fn spawn(commands: &mut Commands, rng: &mut ThreadRng) -> EquipmentEntity {
+    pub fn spawn(commands: &mut Commands, rng: &mut ThreadRng) -> EquipmentEntityInfo {
         let mut provider = BootsAffixProvider::new();
         let mut boots = AffixesInserter::spawn(commands, Boots, rng);
         for _ in 0..boots.n_affix() {

@@ -4,6 +4,7 @@ mod menu_player_died;
 mod menu_round_end;
 mod panel_characteristics;
 mod panel_inventory;
+mod popup_info;
 
 use super::{pause, unpause, InGameState};
 use crate::components::EquipmentAssets;

@@ -138,10 +138,12 @@ impl AttackTimer {
     }
 }
 
-/// [Damager]'s components required:
-/// - At least on of [HitDamageRange] or [DamageOverTime]
-/// - [Collider]
-/// - [CollisionGroups]
+/// A [Damager] is an entity which damages a [Character].
+///
+/// It requires:
+/// - At least one of [HitDamageRange] or [DamageOverTime]
+/// - A [Collider]
+/// - A [CollisionGroups], initialized by [Damager::collision_groups]
 #[derive(Component, Default)]
 #[require(
     Transform,
@@ -159,7 +161,7 @@ impl Damager {
             Target::Player => GROUP_BONUS | GROUP_ENEMY,
             Target::Monster => GROUP_BONUS | GROUP_PLAYER,
         };
-        CollisionGroups::new(GROUP_DAMAGER, Group::ALL & !filter)
+        CollisionGroups::new(GROUP_DAMAGER, GROUP_ALL & !filter)
     }
 }
 

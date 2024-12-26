@@ -52,7 +52,7 @@ impl EquipmentUI for Wand {
 }
 
 impl Wand {
-    pub fn spawn(commands: &mut Commands, rng: &mut ThreadRng) -> EquipmentEntity {
+    pub fn spawn(commands: &mut Commands, rng: &mut ThreadRng) -> EquipmentEntityInfo {
         let mut provider = WandAffixProvider::new();
         let mut wand = AffixesInserter::spawn(commands, Wand, rng);
         for _ in 0..wand.n_affix() {

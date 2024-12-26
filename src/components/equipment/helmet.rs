@@ -42,7 +42,7 @@ impl EquipmentUI for Helmet {
 }
 
 impl Helmet {
-    pub fn spawn(commands: &mut Commands, rng: &mut ThreadRng) -> EquipmentEntity {
+    pub fn spawn(commands: &mut Commands, rng: &mut ThreadRng) -> EquipmentEntityInfo {
         let mut provider = HelmetAffixProvider::new();
         let mut helmet = AffixesInserter::spawn(commands, Helmet, rng);
         for _ in 0..helmet.n_affix() {

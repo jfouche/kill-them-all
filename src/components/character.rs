@@ -45,7 +45,7 @@ impl Life {
         }
     }
 
-    pub fn hit(&mut self, damage: Damage) {
+    pub fn damage(&mut self, damage: Damage) {
         if damage.0 > self.0 {
             self.0 = 0.;
         } else {
@@ -54,7 +54,7 @@ impl Life {
     }
 
     pub fn is_dead(&self) -> bool {
-        self.0 == 0.0
+        self.0 <= 0.0
     }
 
     pub fn regenerate(&mut self, life: f32) {
