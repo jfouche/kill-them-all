@@ -6,6 +6,7 @@ mod equipment;
 mod monster;
 mod player;
 mod rng_provider;
+mod skills;
 mod upgrade;
 mod world_map;
 
@@ -16,6 +17,7 @@ pub use character::*;
 pub use equipment::*;
 pub use monster::*;
 pub use player::*;
+pub use skills::*;
 pub use upgrade::*;
 pub use world_map::*;
 

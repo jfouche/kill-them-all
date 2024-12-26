@@ -1,10 +1,7 @@
 mod amulet;
 mod body_armour;
 mod boots;
-mod death_aura;
 mod helmet;
-mod mine;
-mod shuriken;
 mod wand;
 mod weapon;
 
@@ -13,10 +10,7 @@ use std::fmt::Display;
 pub use amulet::Amulet;
 pub use body_armour::BodyArmour;
 pub use boots::Boots;
-pub use death_aura::*;
 pub use helmet::Helmet;
-pub use mine::*;
-pub use shuriken::*;
 pub use wand::Wand;
 pub use weapon::*;
 
@@ -110,9 +104,6 @@ pub enum EquipmentKind {
     Boots,
     Helmet,
     Wand,
-    Shuriken,
-    Mine,
-    DeathAura,
 }
 
 impl EquipmentKind {
@@ -123,9 +114,6 @@ impl EquipmentKind {
             EquipmentKind::Boots => Boots::spawn(commands, rng),
             EquipmentKind::Helmet => Helmet::spawn(commands, rng),
             EquipmentKind::Wand => Wand::spawn(commands, rng),
-            EquipmentKind::Shuriken => ShurikenLauncher::spawn(commands, rng),
-            EquipmentKind::Mine => MineDropper::spawn(commands, rng),
-            EquipmentKind::DeathAura => DeathAura::spawn(commands, rng),
         }
     }
 }
@@ -140,10 +128,7 @@ impl EquipmentProvider {
         provider.add(EquipmentKind::BodyArmour, 40);
         provider.add(EquipmentKind::Boots, 40);
         provider.add(EquipmentKind::Helmet, 40);
-        provider.add(EquipmentKind::Wand, 440);
-        provider.add(EquipmentKind::Shuriken, 440);
-        provider.add(EquipmentKind::Mine, 440);
-        provider.add(EquipmentKind::DeathAura, 440);
+        provider.add(EquipmentKind::Wand, 40);
         EquipmentProvider(provider)
     }
 }

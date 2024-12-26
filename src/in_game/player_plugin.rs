@@ -34,6 +34,7 @@ impl Plugin for PlayerPlugin {
                     remove_old_equipment::<Boots>,
                     remove_old_equipment::<Helmet>,
                     remove_old_equipment::<Wand>,
+                    remove_old_equipment::<FireBallLauncher>,
                     remove_old_equipment::<ShurikenLauncher>,
                     remove_old_equipment::<MineDropper>,
                     remove_old_equipment::<DeathAura>,
@@ -59,7 +60,7 @@ fn spawn_player(mut commands: Commands, assets: Res<PlayerAssets>) {
             player.spawn(DeathAura);
         })
         .observe(set_invulnerable_on_hit)
-        .observe(send_player_death_event);
+        .observe(player_dying);
 }
 
 fn pause(mut query: Query<(&mut Invulnerable, &mut Blink), With<Player>>) {
@@ -118,12 +119,13 @@ fn set_invulnerable_on_hit(
     }
 }
 
-fn send_player_death_event(
+fn player_dying(
     trigger: Trigger<CharacterDyingEvent>,
-    mut commands: Commands,
+    mut send_died: EventWriter<CharacterDiedEvent>,
     mut send_death: EventWriter<PlayerDeathEvent>,
 ) {
-    commands.trigger_targets(CharacterDiedEvent, trigger.entity());
+    info!("send_player_death_event");
+    send_died.send(CharacterDiedEvent(trigger.entity()));
     send_death.send(PlayerDeathEvent);
 }
 

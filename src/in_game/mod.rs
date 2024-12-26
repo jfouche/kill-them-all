@@ -8,7 +8,8 @@ mod menu;
 mod monster_plugin;
 mod player_plugin;
 mod round_plugin;
-mod weapons;
+mod skill_plugin;
+mod weapon_plugin;
 mod world_map_plugin;
 
 use crate::components::{LifeTime, PlayerDeathEvent, Round};
@@ -36,7 +37,8 @@ impl PluginGroup for InGamePluginsGroup {
             .add(world_map_plugin::WorldMapPlugin)
             .add(life_bar_plugin::LifeBarPlugin)
             .add(animation_plugin::AnimationPlugin)
-            .add(weapons::WeaponsPlugin)
+            .add(weapon_plugin::WeaponPlugin)
+            .add(skill_plugin::SkillsPlugin)
             .add_group(menu::InGameMenuPluginsGroup)
             .add(in_game_schedule_plugin)
     }

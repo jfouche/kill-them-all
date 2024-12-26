@@ -161,9 +161,9 @@ fn monsters_moves(
 
 fn send_death_event(
     trigger: Trigger<CharacterDyingEvent>,
-    mut commands: Commands,
     monsters: Query<(&Transform, &XpOnDeath), With<Monster>>,
     mut monster_death_events: EventWriter<MonsterDeathEvent>,
+    mut character_died_events: EventWriter<CharacterDiedEvent>,
 ) {
     if let Ok((transform, xp)) = monsters.get(trigger.entity()) {
         monster_death_events.send(MonsterDeathEvent {
@@ -171,7 +171,7 @@ fn send_death_event(
             xp: **xp,
         });
 
-        commands.trigger_targets(CharacterDiedEvent, trigger.entity());
+        character_died_events.send(CharacterDiedEvent(trigger.entity()));
     }
 }
 

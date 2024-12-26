@@ -1,10 +1,10 @@
 use crate::components::*;
-use bevy::{color::palettes::css::YELLOW, prelude::*};
+use bevy::prelude::*;
 use equipment::{AffixesInserter, EquipmentUI};
 use rand::{rngs::ThreadRng, Rng};
 use rng_provider::RngKindProvider;
 
-/// A [Wand] shoots [FireBall]s
+/// A [Wand]
 #[derive(Component)]
 #[require(
     Weapon,
@@ -13,22 +13,6 @@ use rng_provider::RngKindProvider;
     BaseAttackSpeed(|| BaseAttackSpeed(1.2))
 )]
 pub struct Wand;
-
-const FIREBALL_SIZE: f32 = 5.0;
-
-/// The [Wand] projectile
-#[derive(Component)]
-#[require(
-    Name(|| Name::new("FireBall")),
-    Projectile,
-    Collider(|| Collider::cuboid(FIREBALL_SIZE / 2., FIREBALL_SIZE / 2.)),
-    Sprite(|| Sprite {
-        color: YELLOW.into(),
-        custom_size: Some(Vec2::new(FIREBALL_SIZE, FIREBALL_SIZE)),
-        ..Default::default()
-    }),
-)]
-struct FireBall;
 
 /// All [Wand] available affixes
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]

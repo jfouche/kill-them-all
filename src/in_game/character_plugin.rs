@@ -48,6 +48,10 @@ impl Plugin for CharacterPlugin {
             .add_systems(
                 Update,
                 (regen_life, mitigate_damage_over_time).in_set(GameRunningSet::EntityUpdate),
+            )
+            .add_systems(
+                Update,
+                despawn_character_on_death.in_set(GameRunningSet::DespawnEntities),
             );
     }
 }
@@ -89,8 +93,7 @@ fn register_hooks(world: &mut World) {
                 .commands()
                 .entity(entity)
                 .observe(mitigate_damage_on_hit)
-                .observe(loose_life)
-                .observe(despawn_character_on_death);
+                .observe(loose_life);
         });
 }
 
@@ -111,10 +114,14 @@ fn mitigate_damage_on_hit(
 fn loose_life(
     trigger: Trigger<LooseLifeEvent>,
     mut commands: Commands,
-    mut characters: Query<&mut Life, With<Character>>,
+    mut characters: Query<(&mut Life, &Name), With<Character>>,
 ) {
-    if let Ok(mut life) = characters.get_mut(trigger.entity()) {
-        info!("loose_life : {:.2} - {:.2}", **life, ***trigger.event());
+    if let Ok((mut life, name)) = characters.get_mut(trigger.entity()) {
+        info!(
+            "loose_life({name}) : {:.2} - {:.2}",
+            **life,
+            ***trigger.event()
+        );
         life.hit(**trigger.event());
         if life.is_dead() {
             commands.trigger_targets(CharacterDyingEvent, trigger.entity());
@@ -122,8 +129,10 @@ fn loose_life(
     }
 }
 
-fn despawn_character_on_death(trigger: Trigger<CharacterDiedEvent>, mut commands: Commands) {
-    commands.entity(trigger.entity()).despawn_recursive();
+fn despawn_character_on_death(mut events: EventReader<CharacterDiedEvent>, mut commands: Commands) {
+    for event in events.read() {
+        commands.entity(**event).despawn_recursive();
+    }
 }
 
 /// [Armour] = sum([Armour]) + sum ([MoreArmour])

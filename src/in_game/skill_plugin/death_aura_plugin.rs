@@ -1,4 +1,4 @@
-use super::*;
+use crate::components::*;
 use bevy::{prelude::*, sprite::Material2dPlugin};
 
 ///
