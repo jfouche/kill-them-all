@@ -61,12 +61,8 @@ impl EquipmentAssets {
     }
 }
 
-/// The Tile index in the image atlas
-#[derive(Component, Clone, Copy, Deref, Reflect)]
-pub struct EquipmentTileIndex(pub usize);
-
 /// Equipment Rarity
-#[derive(Component, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Component, Clone, Copy, PartialEq, Eq, Hash, Reflect)]
 pub enum EquipmentRarity {
     Normal,
     Magic,
@@ -135,6 +131,10 @@ impl EquipmentProvider {
         provider.add(EquipmentKind::Wand, 40);
         EquipmentProvider(provider)
     }
+
+    pub fn spawn(&mut self, commands: &mut Commands, rng: &mut ThreadRng) -> Option<EquipmentEntityInfo> {
+         Some(self.gen(rng)?.spawn(commands, rng))
+    }
 }
 
 /// Util component to store all equipments informations, e.g. image and affixes
@@ -175,7 +175,7 @@ impl<'a> AffixesInserter<'a> {
         let tile_index = T::tile_index(rarity);
         AffixesInserter {
             labels: vec![T::title()],
-            commands: commands.spawn((equipment, rarity, EquipmentTileIndex(tile_index))),
+            commands: commands.spawn((equipment, rarity)),
             tile_index,
             rarity,
         }

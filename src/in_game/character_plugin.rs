@@ -24,8 +24,9 @@ impl Plugin for CharacterPlugin {
             .register_type::<MoreArmour>()
             .register_type::<MoreDamage>()
             .register_type::<IncreaseDamage>()
-            .register_type::<EquipmentInfo>()
             .register_type::<AnimationTimer>()
+            .register_type::<EquipmentInfo>()
+            .register_type::<EquipmentRarity>()
             .add_observer(init_life)
             .add_observer(fix_life)
             .add_systems(Startup, register_hooks)
@@ -132,7 +133,6 @@ fn loose_life(
 
 fn despawn_character_on_death(mut events: EventReader<CharacterDiedEvent>, mut commands: Commands) {
     for event in events.read() {
-        warn!("despawn_character_on_death");
         commands.entity(**event).despawn_recursive();
     }
 }

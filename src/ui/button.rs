@@ -34,10 +34,17 @@ impl MyButton {
         }
     }
 
-    pub fn with_image(mut self, image: ImageNode) -> Self {
-        self.image = Some(image);
-        self
+    pub fn from_image(image: ImageNode) -> Self {
+        MyButton {
+            text: None,
+            image: Some(image),
+        }
     }
+
+    // pub fn with_image(mut self, image: ImageNode) -> Self {
+    //     self.image = Some(image);
+    //     self
+    // }
 
     #[inline]
     pub fn default_node() -> Node {

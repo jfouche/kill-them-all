@@ -7,9 +7,13 @@ pub struct RoundPlugin;
 impl Plugin for RoundPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Round>()
-            .add_systems(Update, round_finish.in_set(GameRunningSet::EntityUpdate))
-            .add_systems(OnEnter(InGameState::RoundEnd), despawn_all::<Monster>);
+            .add_systems(OnEnter(GameState::InGame), reset_round)
+            .add_systems(Update, round_finish.in_set(GameRunningSet::EntityUpdate));
     }
+}
+
+fn reset_round(mut round: ResMut<Round>) {
+    *round = Round::default();
 }
 
 fn round_finish(

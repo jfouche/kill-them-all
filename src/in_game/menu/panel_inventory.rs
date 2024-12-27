@@ -105,7 +105,7 @@ impl EquipmentPos for Weapon {
 fn show_equipment<T>(
     trigger: Trigger<OnAdd, EquipmentsPanel>,
     mut commands: Commands,
-    equipments: Query<(&EquipmentTileIndex, &EquipmentInfo, &Parent), With<T>>,
+    equipments: Query<(&EquipmentInfo, &Parent), With<T>>,
     players: Query<Entity, With<Player>>,
     assets: Res<EquipmentAssets>,
 ) where
@@ -114,50 +114,27 @@ fn show_equipment<T>(
     let player = players.get_single().expect("Player");
     equipments
         .iter()
-        .filter(|(_tile_index, _labels, parent)| ***parent == player)
-        .for_each(|(tile_index, labels, _parent)| {
+        .filter(|(_info, parent)| ***parent == player)
+        .for_each(|(info, _parent)| {
             commands.entity(trigger.entity()).with_children(|panel| {
                 let pos = T::pos();
                 panel
                     .spawn((
                         InventoryBox,
-                        assets.image_node(**tile_index),
                         Node {
                             left: Val::Px(pos.x),
                             top: Val::Px(pos.y),
                             ..default_inventory_box_node()
                         },
-                        labels.clone(),
-                    ))
-                    .observe(spawn_popup_info)
-                    .observe(despawn_popup_info);
+                        assets.image_node(info.tile_index),
+                        info.clone(),
+                        InfoPopup::new(info.text.clone()).with_image_atlas(
+                            assets.image(),
+                            assets.texture_atlas(info.tile_index),
+                        ),
+                    ));
             });
         });
-}
-
-fn despawn_popup_info(
-    _trigger: Trigger<Pointer<Out>>,
-    mut commands: Commands,
-    popups: Query<Entity, With<InfoPopup>>,
-) {
-    if let Ok(entity) = popups.get_single() {
-        commands.entity(entity).despawn_recursive()
-    }
-}
-
-fn spawn_popup_info(
-    trigger: Trigger<Pointer<Over>>,
-    mut commands: Commands,
-    equipments: Query<&EquipmentInfo>,
-    assets: Res<EquipmentAssets>,
-) {
-    if let Ok(info) = equipments.get(trigger.entity()) {
-        commands.spawn(
-            InfoPopup::new(info.text.clone())
-                .with_image_atlas(assets.image(), assets.texture_atlas(info.tile_index))
-                .at(trigger.event().pointer_location.position),
-        );
-    }
 }
 
 pub fn inventory_panel_plugin(app: &mut App) {

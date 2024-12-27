@@ -28,6 +28,7 @@ impl Plugin for MonsterPlugin {
             .register_type::<MonsterSpawnParams>()
             .add_event::<MonsterDeathEvent>()
             .add_systems(OnExit(GameState::InGame), despawn_all::<Monster>)
+            .add_systems(OnEnter(InGameState::RoundEnd), despawn_all::<Monster>)
             .add_systems(
                 Update,
                 (
@@ -165,7 +166,7 @@ fn monster_dying(
     mut monster_death_events: EventWriter<MonsterDeathEvent>,
     mut character_died_events: EventWriter<CharacterDiedEvent>,
 ) {
-    warn!("monster_dying");
+    info!("monster_dying");
     if let Ok((transform, xp)) = monsters.get(trigger.entity()) {
         monster_death_events.send(MonsterDeathEvent {
             pos: transform.translation,

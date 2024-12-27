@@ -1,4 +1,5 @@
 use super::panel_inventory::InventoryPanel;
+use super::popup_info::InfoPopup;
 use crate::components::*;
 use crate::in_game::back_to_game;
 use crate::schedule::*;
@@ -51,20 +52,22 @@ struct EquipmentEntity(Entity);
 
 fn spawn_round_end_menu(mut commands: Commands, assets: Res<EquipmentAssets>) {
     let mut equipment_list = EquipmentList::default();
-
     let mut round_end_nav = RoundEndMenuNav::default();
+
     let mut equipment_provider = EquipmentProvider::new();
     let mut rng = rand::thread_rng();
 
     for _ in 0..3 {
-        if let Some(equipment) = equipment_provider.gen(&mut rng) {
-            let equipment_entity = equipment.spawn(&mut commands, &mut rng);
-            equipment_list.push(equipment_entity.entity);
+        if let Some(equipment) = equipment_provider.spawn(&mut commands, &mut rng) {
+            equipment_list.push(equipment.entity);
             let entity = commands
                 .spawn((
-                    MyButton::new(equipment_entity.info.text)
-                        .with_image(assets.image_node(equipment_entity.info.tile_index)),
-                    EquipmentEntity(equipment_entity.entity),
+                    MyButton::from_image(assets.image_node(equipment.info.tile_index)),
+                    EquipmentEntity(equipment.entity),
+                    InfoPopup::new(equipment.info.text.clone()).with_image_atlas(
+                        assets.image(),
+                        assets.texture_atlas(equipment.info.tile_index),
+                    ),
                 ))
                 .id();
             round_end_nav.0.push(entity);
@@ -76,13 +79,12 @@ fn spawn_round_end_menu(mut commands: Commands, assets: Res<EquipmentAssets>) {
         commands.entity(**entity).insert(SelectedOption);
     }
 
-    let level_up_panel = commands.spawn(VSizer).add_children(&round_end_nav).id();
-
-    let inventory_panel = commands.spawn(InventoryPanel).id();
-
+    // Construct menu
     commands.spawn(RoundEndMenu).with_children(|menu| {
-        menu.spawn(HSizer)
-            .add_children(&[level_up_panel, inventory_panel]);
+        menu.spawn(HSizer).with_children(|sizer| {
+            sizer.spawn(VSizer).add_children(&round_end_nav);
+            sizer.spawn(InventoryPanel);
+        });
     });
 
     commands.insert_resource(round_end_nav);
