@@ -21,9 +21,9 @@ const FIREBALL_SIZE: f32 = 5.0;
 )]
 struct FireBall;
 
-pub struct WandPlugin;
+pub struct FireballPlugin;
 
-impl Plugin for WandPlugin {
+impl Plugin for FireballPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnExit(GameState::InGame), despawn_all::<FireBall>)
             .add_systems(Update, cast_fireball.in_set(GameRunningSet::EntityUpdate));
@@ -32,7 +32,7 @@ impl Plugin for WandPlugin {
 
 fn cast_fireball(
     mut commands: Commands,
-    weapons: Query<(&AttackTimer, &HitDamageRange, &Parent), With<Wand>>,
+    weapons: Query<(&AttackTimer, &HitDamageRange, &Parent), With<FireBallLauncher>>,
     characters: Query<(&Transform, &PierceChance, &Target), With<Character>>,
 ) {
     for (timer, hit_damage_range, parent) in &weapons {

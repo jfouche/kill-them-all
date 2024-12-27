@@ -1,4 +1,4 @@
-use super::panel_inventory::InventoryPanel;
+use super::panel_equipments::EquipmentsPanel;
 use crate::components::*;
 use crate::in_game::back_to_game;
 use crate::schedule::*;
@@ -90,13 +90,11 @@ fn spawn_level_up_menu(mut commands: Commands) {
         commands.entity(**entity).insert(SelectedOption);
     }
 
-    let inventory_panel = commands.spawn(InventoryPanel).id();
-
-    let level_up_panel = commands.spawn(VSizer).add_children(&level_up_nav).id();
-
     commands.spawn(LevelUpMenu).with_children(|menu| {
-        menu.spawn(HSizer)
-            .add_children(&[level_up_panel, inventory_panel]);
+        menu.spawn(HSizer).with_children(|sizer| {
+            sizer.spawn(VSizer).add_children(&level_up_nav);
+            sizer.spawn(EquipmentsPanel);
+        });
     });
 
     commands.insert_resource(level_up_nav);

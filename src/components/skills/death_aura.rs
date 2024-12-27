@@ -21,6 +21,20 @@ use skills::Skill;
 )]
 pub struct DeathAura;
 
+impl SkillUI for DeathAura {
+    fn title() -> String {
+        "Death aura".into()
+    }
+
+    fn label() -> String {
+        "Aura that damages over time".into()
+    }
+
+    fn tile_index() -> usize {
+        61
+    }
+}
+
 ///
 /// Assets for [DeathAura]
 ///

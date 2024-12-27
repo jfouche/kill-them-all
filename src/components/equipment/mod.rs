@@ -5,8 +5,6 @@ mod helmet;
 mod wand;
 mod weapon;
 
-use std::fmt::Display;
-
 pub use amulet::Amulet;
 pub use body_armour::BodyArmour;
 pub use boots::Boots;
@@ -17,6 +15,7 @@ pub use weapon::*;
 use super::rng_provider::RngKindProvider;
 use bevy::prelude::*;
 use rand::rngs::ThreadRng;
+use std::fmt::Display;
 
 // ==================================================================
 // EquipmentAssets

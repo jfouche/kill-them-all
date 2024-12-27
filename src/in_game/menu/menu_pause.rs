@@ -1,5 +1,4 @@
-use super::CharacteristicsPanel;
-use super::InventoryPanel;
+use super::{CharacteristicsPanel, EquipmentsPanel, SkillsPanel};
 use crate::components::*;
 use crate::in_game::back_to_game;
 use crate::schedule::*;
@@ -18,22 +17,17 @@ impl Plugin for PausePlugin {
 
 #[derive(Component)]
 #[require(
-    Popup(|| Popup::default().with_title("Pause")),
-    Name(|| Name::new("PauseMenu"))
+    Name(|| Name::new("PauseMenu")),
+    Popup(|| Popup::default().with_title("Pause"))
 )]
 struct PauseMenu;
 
 fn spawn_pause_menu(mut commands: Commands) {
-    commands.spawn(PauseMenu).with_children(|popup| {
-        popup
-            .spawn(Node {
-                flex_direction: FlexDirection::Column,
-                width: Val::Percent(95.),
-                ..Default::default()
-            })
-            .with_children(|flex| {
-                flex.spawn(InventoryPanel);
-                flex.spawn(CharacteristicsPanel);
-            });
+    commands.spawn(PauseMenu).with_children(|menu| {
+        menu.spawn(VSizer).with_children(|sizer| {
+            sizer.spawn(EquipmentsPanel);
+            sizer.spawn(SkillsPanel);
+            sizer.spawn(CharacteristicsPanel);
+        });
     });
 }

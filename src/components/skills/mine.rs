@@ -24,7 +24,7 @@ impl SkillUI for MineDropper {
     }
 
     fn tile_index() -> usize {
-        103
+        99
     }
 }
 

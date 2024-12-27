@@ -3,14 +3,16 @@ mod menu_pause;
 mod menu_player_died;
 mod menu_round_end;
 mod panel_characteristics;
-mod panel_inventory;
+mod panel_equipments;
+mod panel_skills;
 mod popup_info;
 
 use super::{pause, unpause, InGameState};
 use crate::components::EquipmentAssets;
 use bevy::{app::PluginGroupBuilder, prelude::*};
 use panel_characteristics::CharacteristicsPanel;
-use panel_inventory::InventoryPanel;
+use panel_equipments::EquipmentsPanel;
+use panel_skills::SkillsPanel;
 
 pub struct InGameMenuPluginsGroup;
 
@@ -21,7 +23,8 @@ impl PluginGroup for InGameMenuPluginsGroup {
             .add(menu_level_up::LevelUpMenuPlugin)
             .add(menu_player_died::PlayerDiedMenuPlugin)
             .add(menu_round_end::RoundEndMenuPlugin)
-            .add(panel_inventory::inventory_panel_plugin)
+            .add(panel_equipments::inventory_panel_plugin)
+            .add(panel_skills::SkillsPanelPlugin)
             .add(panel_characteristics::CharacteristicsPanelPlugin)
             .add(menu_plugin)
     }

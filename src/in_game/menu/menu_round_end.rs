@@ -1,4 +1,4 @@
-use super::panel_inventory::InventoryPanel;
+use super::panel_equipments::EquipmentsPanel;
 use super::popup_info::InfoPopup;
 use crate::components::*;
 use crate::in_game::back_to_game;
@@ -83,7 +83,7 @@ fn spawn_round_end_menu(mut commands: Commands, assets: Res<EquipmentAssets>) {
     commands.spawn(RoundEndMenu).with_children(|menu| {
         menu.spawn(HSizer).with_children(|sizer| {
             sizer.spawn(VSizer).add_children(&round_end_nav);
-            sizer.spawn(InventoryPanel);
+            sizer.spawn(EquipmentsPanel);
         });
     });
 

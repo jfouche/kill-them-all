@@ -35,6 +35,19 @@ impl Default for ShurikenLauncher {
     }
 }
 
+impl SkillUI for ShurikenLauncher {
+    fn title() -> String {
+        "Shuriken launcher".into()
+    }
+
+    fn label() -> String {
+        "Launch shurikens".into()
+    }
+
+    fn tile_index() -> usize {
+        153
+    }
+}
 ///
 /// A shuriken projectile
 ///

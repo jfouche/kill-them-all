@@ -1,6 +1,6 @@
 #![allow(unused)]
 
-use crate::{schedule::*, utils::cursor::set_grab_cursor};
+use crate::{components::*, schedule::*, utils::cursor::set_grab_cursor};
 use bevy::{
     dev_tools::{fps_overlay::*, states::log_transitions, ui_debug_overlay::*},
     input::common_conditions::input_just_pressed,
@@ -17,6 +17,8 @@ impl Plugin for DebugPlugin {
             DebugUiPlugin,
             FpsOverlayPlugin::default(),
             bevy_inspector_egui::quick::WorldInspectorPlugin::new(),
+            bevy_inspector_egui::quick::FilterQueryInspectorPlugin::<With<Player>>::default(),
+            bevy_inspector_egui::quick::FilterQueryInspectorPlugin::<With<Monster>>::default(),
             bevy_rapier2d::render::RapierDebugRenderPlugin::default(),
         ))
         .add_systems(

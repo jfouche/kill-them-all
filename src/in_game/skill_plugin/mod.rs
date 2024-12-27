@@ -1,7 +1,7 @@
 mod death_aura_plugin;
+mod fireball_plugin;
 mod mine_plugin;
 mod shuriken_plugin;
-mod wand_plugin;
 
 use crate::components::*;
 use bevy::prelude::*;
@@ -11,11 +11,12 @@ pub struct SkillsPlugin;
 impl Plugin for SkillsPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
-            wand_plugin::WandPlugin,
+            fireball_plugin::FireballPlugin,
             shuriken_plugin::ShurikenPlugin,
             mine_plugin::MinePlugin,
             death_aura_plugin::DeathAuraPlugin,
         ))
+        .init_resource::<SkillAssets>()
         .add_observer(update_character_observers);
     }
 }

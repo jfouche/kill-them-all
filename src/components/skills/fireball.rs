@@ -5,13 +5,13 @@ use bevy::{color::palettes::css::YELLOW, prelude::*};
 #[derive(Component)]
 #[require(
     Skill,
-    Name(|| Name::new("Wand")),
+    Name(|| Name::new("FireBallLauncher")),
     BaseHitDamageRange(|| BaseHitDamageRange::new(1., 2.)),
     BaseAttackSpeed(|| BaseAttackSpeed(1.2))
 )]
 pub struct FireBallLauncher;
 
-/// The [Wand] projectile
+/// The [FireBallLauncher] projectile
 #[derive(Component)]
 #[require(
     Name(|| Name::new("FireBall")),
@@ -26,3 +26,17 @@ pub struct FireBallLauncher;
 struct FireBall;
 
 const FIREBALL_SIZE: f32 = 5.0;
+
+impl SkillUI for FireBallLauncher {
+    fn title() -> String {
+        "Fire ball launcher".into()
+    }
+
+    fn label() -> String {
+        "Launch fire ball".into()
+    }
+
+    fn tile_index() -> usize {
+        150
+    }
+}

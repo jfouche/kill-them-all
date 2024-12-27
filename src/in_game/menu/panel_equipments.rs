@@ -1,32 +1,9 @@
 use super::popup_info::InfoPopup;
 use crate::components::*;
-use bevy::{
-    ecs::{component::ComponentId, world::DeferredWorld},
-    prelude::*,
-};
+use bevy::prelude::*;
 
 ///
 /// Inventory panel
-///
-#[derive(Component)]
-#[component(on_add = create_inventory_panel)]
-#[require(
-    Name(|| Name::new("InventoryPanel")),
-    Node(|| Node {
-        padding: UiRect::all(Val::Px(5.)),
-        ..Default::default()
-    })
-)]
-pub struct InventoryPanel;
-
-fn create_inventory_panel(mut world: DeferredWorld, entity: Entity, _component_id: ComponentId) {
-    world.commands().entity(entity).with_children(|panel| {
-        panel.spawn(EquipmentsPanel);
-    });
-}
-
-///
-/// A panel that shows player's equipments
 ///
 #[derive(Component)]
 #[require(
@@ -34,11 +11,12 @@ fn create_inventory_panel(mut world: DeferredWorld, entity: Entity, _component_i
     Node(|| Node {
         width: Val::Px(200.),
         height: Val::Px(200.),
+        padding: UiRect::all(Val::Px(5.)),
         ..Default::default()
     }),
     BackgroundColor(|| BackgroundColor(Srgba::rgb_u8(40, 40, 40).into()))
 )]
-struct EquipmentsPanel;
+pub struct EquipmentsPanel;
 
 ///
 ///  A panel that shows an equipment
@@ -118,21 +96,18 @@ fn show_equipment<T>(
         .for_each(|(info, _parent)| {
             commands.entity(trigger.entity()).with_children(|panel| {
                 let pos = T::pos();
-                panel
-                    .spawn((
-                        InventoryBox,
-                        Node {
-                            left: Val::Px(pos.x),
-                            top: Val::Px(pos.y),
-                            ..default_inventory_box_node()
-                        },
-                        assets.image_node(info.tile_index),
-                        info.clone(),
-                        InfoPopup::new(info.text.clone()).with_image_atlas(
-                            assets.image(),
-                            assets.texture_atlas(info.tile_index),
-                        ),
-                    ));
+                panel.spawn((
+                    InventoryBox,
+                    Node {
+                        left: Val::Px(pos.x),
+                        top: Val::Px(pos.y),
+                        ..default_inventory_box_node()
+                    },
+                    assets.image_node(info.tile_index),
+                    info.clone(),
+                    InfoPopup::new(info.text.clone())
+                        .with_image_atlas(assets.image(), assets.texture_atlas(info.tile_index)),
+                ));
             });
         });
 }

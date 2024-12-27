@@ -270,6 +270,7 @@ fn update_pierce_chance(
     }
 }
 
+/// Regenerate [Character]'s [Life]
 fn regen_life(mut query: Query<(&mut Life, &MaxLife, &LifeRegen)>, time: Res<Time>) {
     for (mut life, max_life, regen) in &mut query {
         let life_per_sec = **max_life * (**regen / 100.);
@@ -278,6 +279,7 @@ fn regen_life(mut query: Query<(&mut Life, &MaxLife, &LifeRegen)>, time: Res<Tim
     }
 }
 
+/// [MoreDamage] = sum([MoreDamage])
 fn update_more_damage(
     mut characters: Query<&mut MoreDamage, With<Character>>,
     mut affixes: Query<(&mut MoreDamage, &Parent), Without<Character>>,
@@ -292,6 +294,7 @@ fn update_more_damage(
     }
 }
 
+/// [IncreaseDamage] = sum([IncreaseDamage])
 fn update_increase_damage(
     mut characters: Query<&mut IncreaseDamage, With<Character>>,
     mut affixes: Query<(&mut IncreaseDamage, &Parent), Without<Character>>,
@@ -306,6 +309,7 @@ fn update_increase_damage(
     }
 }
 
+/// [Character] is curently having [DamageOverTime]. Mitigate it whith [Armour]
 fn mitigate_damage_over_time(
     mut commands: Commands,
     characters: Query<(Entity, &Armour, &DamageOverTime), With<Character>>,

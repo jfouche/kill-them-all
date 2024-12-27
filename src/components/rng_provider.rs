@@ -24,7 +24,7 @@ where
         self
     }
 
-    /// generate a rand upgrade, removing the option to select it next time
+    /// generate a rand value, removing the option to select it next time
     pub fn gen(&mut self, rng: &mut ThreadRng) -> Option<T> {
         let mut remaing = self
             .weights
