@@ -33,14 +33,14 @@ cargo run --release --target wasm32-unknown-unknown
 
 ```shell
 cargo build --release --target wasm32-unknown-unknown
-wasm-bindgen --no-typescript --target web --out-dir ./out/ --out-name "kill-them-all" ./target/wasm32-unknown-unknown/release/kill-them-all.wasm
+wasm-bindgen --no-typescript --target web --out-dir ./website/ --out-name "kill-them-all" ./target/wasm32-unknown-unknown/release/kill-them-all.wasm
 ```
-Copy the `assets` folder in the `out` folder.
+Copy the `assets` folder in the `website` folder.
 
-run localy
+### run localy
 
 ```shell
-simple-http-server ./out
+simple-http-server ./website
 ```
 
 and open a browser with the url : `http://localhost:8000/index.html`

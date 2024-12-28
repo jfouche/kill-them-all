@@ -1,9 +1,6 @@
 use super::popup_info::InfoPopup;
 use crate::components::*;
-use bevy::{
-    ecs::{component::ComponentId, world::DeferredWorld},
-    prelude::*,
-};
+use bevy::prelude::*;
 
 #[derive(Component)]
 #[require(

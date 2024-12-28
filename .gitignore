@@ -1,4 +1,3 @@
 /target
-out/*.wasm
-out/*.js
-out/assets/
+/website/**
+!/website/index.html
