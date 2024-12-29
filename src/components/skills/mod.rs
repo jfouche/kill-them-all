@@ -59,7 +59,7 @@ pub trait SkillUI {
     fn tile_index() -> usize;
 }
 
-/// Tag to indicate that the [Skill] is affected by all
-/// [AreaOfEffect] affixes
+/// Tag to indicate that the [Skill] is affected by
+/// [crate::components::IncreaseAreaOfEffect] affixes
 #[derive(Component, Default)]
 pub struct AffectedByAreaOfEffect;

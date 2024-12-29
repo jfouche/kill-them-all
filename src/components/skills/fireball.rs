@@ -1,6 +1,7 @@
 use super::Skill;
 use crate::components::*;
 use bevy::{color::palettes::css::YELLOW, prelude::*};
+use bevy_rapier2d::prelude::*;
 
 #[derive(Component)]
 #[require(

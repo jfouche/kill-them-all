@@ -20,6 +20,8 @@ use std::fmt::Display;
 // ==================================================================
 // EquipmentAssets
 
+pub const EQUIPMENT_SIZE: UVec2 = UVec2::new(48, 48);
+
 #[derive(Resource)]
 pub struct EquipmentAssets {
     texture: Handle<Image>,
@@ -33,7 +35,7 @@ impl FromWorld for EquipmentAssets {
                 "items/Kyrise's 16x16 RPG Icon Pack - V1.3/spritesheet/spritesheet_48x48.png",
             ),
             atlas_layout: world.add_asset(TextureAtlasLayout::from_grid(
-                UVec2::new(48, 48),
+                EQUIPMENT_SIZE,
                 16,
                 22,
                 None,
@@ -58,6 +60,14 @@ impl EquipmentAssets {
     pub fn image_node(&self, index: usize) -> ImageNode {
         ImageNode::from_atlas_image(self.image(), self.texture_atlas(index))
     }
+
+    pub fn sprite(&self, index: usize) -> Sprite {
+        Sprite {
+            image: self.image(),
+            texture_atlas: Some(self.texture_atlas(index)),
+            ..Default::default()
+        }
+    }
 }
 
 /// Equipment Rarity
@@ -79,10 +89,10 @@ impl EquipmentRarity {
 }
 
 #[derive(Deref, DerefMut)]
-pub struct EquipmentRarityProvider(RngKindProvider<EquipmentRarity>);
+struct EquipmentRarityProvider(RngKindProvider<EquipmentRarity>);
 
 impl EquipmentRarityProvider {
-    pub fn new() -> Self {
+    fn new() -> Self {
         let mut provider = RngKindProvider::default();
         provider.add(EquipmentRarity::Normal, 10);
         provider.add(EquipmentRarity::Magic, 8);
@@ -131,8 +141,12 @@ impl EquipmentProvider {
         EquipmentProvider(provider)
     }
 
-    pub fn spawn(&mut self, commands: &mut Commands, rng: &mut ThreadRng) -> Option<EquipmentEntityInfo> {
-         Some(self.gen(rng)?.spawn(commands, rng))
+    pub fn spawn(
+        &mut self,
+        commands: &mut Commands,
+        rng: &mut ThreadRng,
+    ) -> Option<EquipmentEntityInfo> {
+        Some(self.gen(rng)?.spawn(commands, rng))
     }
 }
 

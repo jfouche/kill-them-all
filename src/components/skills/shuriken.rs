@@ -1,5 +1,6 @@
 use crate::components::*;
 use bevy::prelude::*;
+use bevy_rapier2d::prelude::*;
 use skills::Skill;
 
 #[derive(Resource)]

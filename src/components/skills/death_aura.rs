@@ -28,7 +28,9 @@ impl SkillUI for DeathAura {
     }
 
     fn label() -> String {
-        "Aura that damages over time".into()
+        r#"Aura that damages over time
+Affected by AOE affixes"#
+            .into()
     }
 
     fn tile_index() -> usize {

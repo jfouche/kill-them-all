@@ -1,13 +1,23 @@
 # kill-them-all
 
-# Native
+**Kill Them All** is a [POE](https://www.pathofexile.com/) lite game.
 
-## run 
+- [Affixes](#affixes)
+- [How to build](#build)
+
+## Player affixes
+
+
+## How to build {#build}
+
+You need [Rust](https://www.rust-lang.org/) to build this game.
+
+### run 
 ```shell
 cargo run --release
 ```
 
-## run with debug features
+### run with debug features
 ```shell
 cargo run --features=dev
 ```

@@ -9,7 +9,6 @@ use bevy_rapier2d::prelude::*;
     Target(|| Target::Monster),
     BaseLife(|| BaseLife(10.)),
     BaseMovementSpeed(|| BaseMovementSpeed(130.)),
-    Money,
     Experience,
     Sprite,
     Transform(|| Transform::from_xyz(0., 0., 10.)),
@@ -98,13 +97,17 @@ impl Experience {
     pub fn get_current_level_min_max_exp(&self) -> (u32, u32) {
         let level = self.level();
         let min = match level {
-            0 => &0,
-            _ => Experience::LEVELS.get(level as usize - 1).unwrap_or(&100),
+            0 => 0,
+            _ => Self::LEVELS
+                .get(level as usize - 1)
+                .map(|l| *l)
+                .unwrap_or(0),
         };
-        let max = Experience::LEVELS
+        let max = Self::LEVELS
             .get(level as usize)
-            .unwrap_or(Experience::LEVELS.last().unwrap());
-        (*min, *max)
+            .map(|l| *l)
+            .unwrap_or(*Self::LEVELS.last().unwrap());
+        (min, max)
     }
 }
 
@@ -121,19 +124,7 @@ impl std::fmt::Display for Experience {
 }
 
 ///
-/// [Money]
-///
-#[derive(Component, Default, Deref, DerefMut, Reflect)]
-pub struct Money(pub u16);
-
-impl std::fmt::Display for Money {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-///
 /// Resource to store the score
 ///
-#[derive(Default, Resource, Reflect)]
+#[derive(Default, Resource)]
 pub struct Score(pub u16);

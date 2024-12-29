@@ -1,5 +1,6 @@
 use super::*;
 use bevy::prelude::*;
+use bevy_rapier2d::prelude::*;
 
 /// Required components for all characters
 #[derive(Component, Default)]

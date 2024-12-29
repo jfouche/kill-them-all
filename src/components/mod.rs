@@ -12,6 +12,7 @@ mod world_map;
 
 pub use affix::*;
 pub use animation::*;
+use bevy_rapier2d::prelude::Group;
 pub use bonus::*;
 pub use character::*;
 pub use equipment::*;
@@ -22,8 +23,6 @@ pub use upgrade::*;
 pub use world_map::*;
 
 use bevy::prelude::*;
-use bevy_rapier2d::prelude::*;
-use std::time::Duration;
 
 pub const GROUP_PLAYER: Group = Group::GROUP_1;
 pub const GROUP_ENEMY: Group = Group::GROUP_2;

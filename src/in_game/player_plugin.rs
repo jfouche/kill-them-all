@@ -14,8 +14,6 @@ impl Plugin for PlayerPlugin {
         app.init_resource::<PlayerAssets>()
             .add_event::<PlayerDeathEvent>()
             .register_type::<Experience>()
-            .register_type::<Score>()
-            .register_type::<Money>()
             .init_resource::<Score>()
             .add_systems(OnEnter(GameState::InGame), spawn_player)
             .add_systems(OnExit(GameState::InGame), despawn_all::<Player>)

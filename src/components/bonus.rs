@@ -1,44 +1,33 @@
 use super::*;
-use crate::utils::despawn_after::DespawnAfter;
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
+use rand::{rngs::ThreadRng, Rng};
 
-#[derive(Component)]
+#[derive(Component, Deref, Reflect)]
 #[require(
     Name(|| Name::new("Bonus")),
     Sprite,
     RigidBody(|| RigidBody::Fixed),
-    Collider(|| Collider::cuboid(BONUS_SIZE.x / 2.0, BONUS_SIZE.y / 2.0)),
+    Collider(bonus_collider),
     CollisionGroups(|| CollisionGroups::new(GROUP_BONUS, GROUP_ALL)),
-    DespawnAfter(despawn_after)
 )]
-pub struct Bonus;
+pub struct Bonus(pub Entity);
 
-impl Bonus {
-    pub fn sprite(assets: &BonusAssets) -> Sprite {
-        Sprite {
-            image: assets.texture.clone(),
-            custom_size: Some(BONUS_SIZE),
-            ..Default::default()
-        }
-    }
+fn bonus_collider() -> Collider {
+    let half_x = (EQUIPMENT_SIZE.x / 2) as f32;
+    let half_y = (EQUIPMENT_SIZE.y / 2) as f32;
+    Collider::cuboid(half_x, half_y)
 }
 
-fn despawn_after() -> DespawnAfter {
-    DespawnAfter::new(Duration::from_secs(8)).with_blink(Duration::from_secs(3))
-}
+/// Provide a random bonus
+pub struct BonusProvider;
 
-const BONUS_SIZE: Vec2 = Vec2::new(12., 12.);
-
-#[derive(Resource)]
-pub struct BonusAssets {
-    pub texture: Handle<Image>,
-}
-
-impl FromWorld for BonusAssets {
-    fn from_world(world: &mut World) -> Self {
-        BonusAssets {
-            texture: world.load_asset("items/crystal_01a.png"),
+impl BonusProvider {
+    pub fn spawn(commands: &mut Commands, rng: &mut ThreadRng) -> Option<EquipmentEntityInfo> {
+        if rng.gen_range(0..100) < 20 {
+            EquipmentProvider::new().spawn(commands, rng)
+        } else {
+            None
         }
     }
 }

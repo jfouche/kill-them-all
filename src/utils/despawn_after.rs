@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 use super::blink::Blink;
 use bevy::prelude::*;
 use std::time::Duration;
