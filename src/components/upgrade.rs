@@ -15,6 +15,7 @@ pub enum UpgradeKind {
     PierceChance,
     MoreDamage,
     IncreaseDamage,
+    IncreaseAreaOfEffect,
 }
 
 ///
@@ -60,6 +61,10 @@ impl UpgradeKind {
                 let upgrade = IncreaseDamage(rng.gen_range(10..20) as f32);
                 Self::spawn(commands, upgrade)
             }
+            UpgradeKind::IncreaseAreaOfEffect => {
+                let upgrade = IncreaseAreaOfEffect(rng.gen_range(10..20) as f32);
+                Self::spawn(commands, upgrade)
+            }
         }
     }
 
@@ -88,6 +93,7 @@ impl UpgradeProvider {
         provider.add(UpgradeKind::PierceChance, 20);
         provider.add(UpgradeKind::MoreDamage, 20);
         provider.add(UpgradeKind::IncreaseDamage, 20);
+        provider.add(UpgradeKind::IncreaseAreaOfEffect, 20);
         UpgradeProvider(provider)
     }
 }

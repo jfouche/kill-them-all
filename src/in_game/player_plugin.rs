@@ -58,6 +58,7 @@ fn spawn_player(mut commands: Commands, assets: Res<PlayerAssets>) {
         .spawn((Player, Player::sprite(&assets)))
         .with_children(|player| {
             player.spawn(DeathAura);
+            player.spawn(IncreaseAreaOfEffect(50.));
         })
         .observe(set_invulnerable_on_hit)
         .observe(player_dying);

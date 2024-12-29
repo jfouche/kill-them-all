@@ -24,6 +24,7 @@ impl Plugin for CharacterPlugin {
             .register_type::<MoreArmour>()
             .register_type::<MoreDamage>()
             .register_type::<IncreaseDamage>()
+            .register_type::<IncreaseAreaOfEffect>()
             .register_type::<AnimationTimer>()
             .register_type::<EquipmentInfo>()
             .register_type::<EquipmentRarity>()
@@ -36,6 +37,7 @@ impl Plugin for CharacterPlugin {
                     (
                         (update_increase_attack_speed, update_weapon_attack_speed).chain(),
                         update_pierce_chance,
+                        update_increase_area_of_effect,
                         (update_more_damage, update_increase_damage).chain(),
                     )
                         .in_set(PreUpdateAffixes::Step1),
@@ -305,6 +307,22 @@ fn update_increase_damage(
     for (incr_damage, parent) in &mut affixes {
         if let Ok(mut char_incr_damage) = characters.get_mut(**parent) {
             **char_incr_damage += **incr_damage;
+        }
+    }
+}
+
+/// [IncreaseAreaOfEffect] = sum([IncreaseAreaOfEffect])
+
+fn update_increase_area_of_effect(
+    mut characters: Query<&mut IncreaseAreaOfEffect, With<Character>>,
+    mut affixes: Query<(&mut IncreaseAreaOfEffect, &Parent), Without<Character>>,
+) {
+    for mut incr_aoe in &mut characters {
+        **incr_aoe = 0.;
+    }
+    for (incr_aoe, parent) in &mut affixes {
+        if let Ok(mut char_incr_aoe) = characters.get_mut(**parent) {
+            **char_incr_aoe += **incr_aoe;
         }
     }
 }

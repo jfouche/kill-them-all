@@ -58,3 +58,8 @@ pub trait SkillUI {
     fn label() -> String;
     fn tile_index() -> usize;
 }
+
+/// Tag to indicate that the [Skill] is affected by all
+/// [AreaOfEffect] affixes
+#[derive(Component, Default)]
+pub struct AffectedByAreaOfEffect;

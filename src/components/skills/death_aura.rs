@@ -13,6 +13,7 @@ use skills::Skill;
 #[require(
     Name(|| Name::new("DeathAura")),
     Skill,
+    AffectedByAreaOfEffect,
     Damager,
     BaseDamageOverTime(|| BaseDamageOverTime(1.)),
     Transform,

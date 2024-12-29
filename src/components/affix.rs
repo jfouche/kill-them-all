@@ -154,3 +154,19 @@ impl From<u16> for IncreaseDamage {
         IncreaseDamage(value as f32)
     }
 }
+
+/// Increase area of effect
+#[derive(Component, Default, Clone, Copy, Deref, DerefMut, Reflect)]
+pub struct IncreaseAreaOfEffect(pub f32);
+
+impl std::fmt::Display for IncreaseAreaOfEffect {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "+{:.0}% increase area of effect", **self)
+    }
+}
+
+impl From<u16> for IncreaseAreaOfEffect {
+    fn from(value: u16) -> Self {
+        IncreaseAreaOfEffect(value as f32)
+    }
+}
