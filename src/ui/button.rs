@@ -63,24 +63,32 @@ impl MyButton {
 }
 
 fn create_button(mut world: DeferredWorld, entity: Entity, _: ComponentId) {
-    let button = world
-        .get::<MyButton>(entity)
-        .expect("Added MyButton")
-        .clone();
+    world.commands().queue(CreateMyButtonCommand(entity));
+}
 
-    let have_image = button.image.is_some();
+struct CreateMyButtonCommand(Entity);
 
-    world.commands().entity(entity).with_children(|parent| {
-        if let Some(image) = button.image {
-            parent.spawn(image);
+impl Command for CreateMyButtonCommand {
+    fn apply(self, world: &mut World) {
+        let button = world
+            .get::<MyButton>(self.0)
+            .expect("Added MyButton")
+            .clone();
+
+        let have_image = button.image.is_some();
+
+        world.commands().entity(self.0).with_children(|parent| {
+            if let Some(image) = button.image {
+                parent.spawn(image);
+            }
+            if let Some(text) = button.text {
+                parent.spawn((MyButtonText, text));
+            }
+        });
+
+        if have_image {
+            world.get_mut::<Node>(self.0).expect("Node").height = Val::Auto;
         }
-        if let Some(text) = button.text {
-            parent.spawn((MyButtonText, text));
-        }
-    });
-
-    if have_image {
-        world.get_mut::<Node>(entity).expect("Node").height = Val::Auto;
     }
 }
 

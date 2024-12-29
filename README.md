@@ -24,11 +24,14 @@ cargo run --features=dev
 
 # WEB
 
+see [Bevy + WebGPU](https://bevyengine.org/news/bevy-webgpu/)
+
 ## Tools
 
 ```shell
 rustup target install wasm32-unknown-unknown
 cargo install wasm-bindgen-cli
+cargo install wasm-opt --locked
 cargo install wasm-server-runner
 cargo install simple-http-server
 ```
@@ -42,9 +45,12 @@ cargo run --release --target wasm32-unknown-unknown
 ## Produce a web site
 
 ```shell
-cargo build --release --target wasm32-unknown-unknown
+cargo build --profile wasm-release --target wasm32-unknown-unknown
 wasm-bindgen --no-typescript --target web --out-dir ./website/ --out-name "kill-them-all" ./target/wasm32-unknown-unknown/release/kill-them-all.wasm
+wasm-opt -Oz --output optimized.wasm ./website/kill-them-all_bg.wasm
 ```
+Move the `optimized.wasm` file to `./website/kill-them-all_bg.wasm`, overiding the existing file.
+
 Copy the `assets` folder in the `website` folder.
 
 ### run localy

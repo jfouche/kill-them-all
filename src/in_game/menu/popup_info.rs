@@ -7,6 +7,7 @@ use bevy::{
 #[derive(Component, Default, Clone)]
 #[component(on_add = create_popup_window)]
 #[require(
+    Name(|| Name::new("InfoPopupWindow")),
     Popup,
     Node(|| Node {
         width: Val::Auto,
@@ -23,25 +24,33 @@ struct InfoPopupWindow {
 }
 
 fn create_popup_window(mut world: DeferredWorld, entity: Entity, _: ComponentId) {
-    let window = world
-        .get::<InfoPopupWindow>(entity)
-        .expect("InfoPopupWindow added")
-        .clone();
-    world.commands().entity(entity).with_children(|parent| {
-        if let Some(image) = window.info.image {
-            if let Some(atlas) = window.info.atlas {
-                parent.spawn(ImageNode::from_atlas_image(image, atlas));
-            } else {
-                parent.spawn(ImageNode::new(image));
+    world.commands().queue(CreatePopupCommand(entity));
+}
+
+struct CreatePopupCommand(Entity);
+
+impl Command for CreatePopupCommand {
+    fn apply(self, world: &mut World) {
+        let window = world
+            .get::<InfoPopupWindow>(self.0)
+            .expect("InfoPopupWindow added")
+            .clone();
+        world.commands().entity(self.0).with_children(|parent| {
+            if let Some(image) = window.info.image {
+                if let Some(atlas) = window.info.atlas {
+                    parent.spawn(ImageNode::from_atlas_image(image, atlas));
+                } else {
+                    parent.spawn(ImageNode::new(image));
+                }
             }
-        }
-        if let Some(text) = window.info.text {
-            parent.spawn((Text(text), TextFont::from_font_size(12.)));
-        }
-    });
-    let mut node = world.get_mut::<Node>(entity).expect("Node");
-    node.left = Val::Px(window.pos.x + 5.);
-    node.top = Val::Px(window.pos.y - 20.);
+            if let Some(text) = window.info.text {
+                parent.spawn((Text(text), TextFont::from_font_size(12.)));
+            }
+        });
+        let mut node = world.get_mut::<Node>(self.0).expect("Node");
+        node.left = Val::Px(window.pos.x + 5.);
+        node.top = Val::Px(window.pos.y - 20.);
+    }
 }
 
 /// Component to add to allow a popup when overing the entity

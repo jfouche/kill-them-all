@@ -37,12 +37,19 @@ struct SplashScreenMessage;
 struct SplashScreen;
 
 fn create_splash_screen(mut world: DeferredWorld, entity: Entity, _: ComponentId) {
-    world.commands().entity(entity).with_children(|parent| {
-        parent.spawn(SplashScreenTitle);
-        parent.spawn(SplashScreenMessage);
-    });
+    world.commands().queue(CreateSpashScreen(entity));
 }
 
+struct CreateSpashScreen(Entity);
+
+impl Command for CreateSpashScreen {
+    fn apply(self, world: &mut World) {
+        world.commands().entity(self.0).with_children(|parent| {
+            parent.spawn(SplashScreenTitle);
+            parent.spawn(SplashScreenMessage);
+        });
+    }
+}
 const BACKGROUND_COLOR: Color = Color::srgb(0.4, 0.4, 0.4);
 
 pub fn splash_plugin(app: &mut App) {

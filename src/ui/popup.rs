@@ -35,17 +35,25 @@ impl Popup {
 }
 
 fn create_popup(mut world: DeferredWorld, entity: Entity, _: ComponentId) {
-    let title = world
-        .get::<Popup>(entity)
-        .expect("Added Popup")
-        .title
-        .clone();
-    if let Some(title) = title {
-        world.commands().entity(entity).with_children(|parent| {
-            parent.spawn(PopupTitleBar).with_children(|bar| {
-                bar.spawn((PopupTitle, Text(title)));
+    world.commands().queue(CreatePopupCommand(entity));
+}
+
+struct CreatePopupCommand(Entity);
+
+impl Command for CreatePopupCommand {
+    fn apply(self, world: &mut World) {
+        let title = world
+            .get::<Popup>(self.0)
+            .expect("Added Popup")
+            .title
+            .clone();
+        if let Some(title) = title {
+            world.commands().entity(self.0).with_children(|parent| {
+                parent.spawn(PopupTitleBar).with_children(|bar| {
+                    bar.spawn((PopupTitle, Text(title)));
+                });
             });
-        });
+        }
     }
 }
 

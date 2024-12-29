@@ -44,3 +44,13 @@ bevy_ecs_tilemap = "0.15"
 bevy-inspector-egui = { version = "0.28", default-features = false, features = [
     "bevy_render",
 ], optional = true }
+
+# WASM
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+bevy = { version = "0.15", default-features = false, features = ["webgpu"] }
+
+[profile.wasm-release]
+inherits = "release"
+opt-level = "z"
+lto = "fat"
+codegen-units = 1

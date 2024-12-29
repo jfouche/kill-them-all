@@ -34,6 +34,20 @@ impl ProgressBar {
     }
 }
 
+fn create_progress_bar(mut world: DeferredWorld, entity: Entity, _id: ComponentId) {
+    world.commands().queue(CreateProgressBarCommand(entity));
+}
+
+struct CreateProgressBarCommand(Entity);
+
+impl Command for CreateProgressBarCommand {
+    fn apply(self, world: &mut World) {
+        world.commands().entity(self.0).with_children(|parent| {
+            parent.spawn(ProgressBarForeground);
+        });
+    }
+}
+
 #[derive(Component)]
 #[require(
     Node(|| Node {
@@ -54,12 +68,6 @@ impl Plugin for ProgressBarPlugin {
             .register_type::<ProgressBar>()
             .add_systems(Update, update_progress_bars);
     }
-}
-
-fn create_progress_bar(mut world: DeferredWorld, entity: Entity, _id: ComponentId) {
-    world.commands().entity(entity).with_children(|parent| {
-        parent.spawn(ProgressBarForeground);
-    });
 }
 
 fn update_progress_bars(
