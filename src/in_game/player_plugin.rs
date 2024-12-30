@@ -16,7 +16,10 @@ impl Plugin for PlayerPlugin {
             .register_type::<Experience>()
             .init_resource::<Score>()
             .add_systems(OnEnter(GameState::InGame), spawn_player)
-            .add_systems(OnExit(GameState::InGame), despawn_all::<Player>)
+            .add_systems(
+                OnExit(GameState::InGame),
+                (despawn_all::<Player>, despawn_all::<Inventory>),
+            )
             .add_systems(OnEnter(GameState::InGame), unpause)
             .add_systems(OnExit(GameState::InGame), pause)
             .add_systems(
@@ -60,6 +63,8 @@ fn spawn_player(mut commands: Commands, assets: Res<PlayerAssets>) {
         })
         .observe(set_invulnerable_on_hit)
         .observe(player_dying);
+
+    commands.spawn(Inventory);
 }
 
 fn pause(mut query: Query<(&mut Invulnerable, &mut Blink), With<Player>>) {

@@ -100,12 +100,12 @@ impl Experience {
             0 => 0,
             _ => Self::LEVELS
                 .get(level as usize - 1)
-                .map(|l| *l)
+                .cloned()
                 .unwrap_or(0),
         };
         let max = Self::LEVELS
             .get(level as usize)
-            .map(|l| *l)
+            .cloned()
             .unwrap_or(*Self::LEVELS.last().unwrap());
         (min, max)
     }
@@ -128,3 +128,10 @@ impl std::fmt::Display for Experience {
 ///
 #[derive(Default, Resource)]
 pub struct Score(pub u16);
+
+///
+/// The [Inventory] contains all items that carry the [Player] as children
+/// 
+#[derive(Component)]
+#[require(Name(|| Name::new("Inventory")))]
+pub struct Inventory;

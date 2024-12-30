@@ -1,3 +1,4 @@
+use super::panel_inventory::InventoryPanel;
 use super::{CharacteristicsPanel, EquipmentsPanel, SkillsPanel};
 use crate::components::*;
 use crate::in_game::back_to_game;
@@ -24,10 +25,13 @@ struct PauseMenu;
 
 fn spawn_pause_menu(mut commands: Commands) {
     commands.spawn(PauseMenu).with_children(|menu| {
-        menu.spawn(VSizer).with_children(|sizer| {
-            sizer.spawn(EquipmentsPanel);
-            sizer.spawn(SkillsPanel);
-            sizer.spawn(CharacteristicsPanel);
+        menu.spawn(VSizer).with_children(|vsizer| {
+            vsizer.spawn(HSizer).with_children(|hsizer| {
+                hsizer.spawn(EquipmentsPanel);
+                hsizer.spawn(InventoryPanel);
+            });
+            vsizer.spawn(SkillsPanel);
+            vsizer.spawn(CharacteristicsPanel);
         });
     });
 }

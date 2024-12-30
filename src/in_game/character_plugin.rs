@@ -312,7 +312,6 @@ fn update_increase_damage(
 }
 
 /// [IncreaseAreaOfEffect] = sum([IncreaseAreaOfEffect])
-
 fn update_increase_area_of_effect(
     mut characters: Query<&mut IncreaseAreaOfEffect, With<Character>>,
     mut affixes: Query<(&mut IncreaseAreaOfEffect, &Parent), Without<Character>>,

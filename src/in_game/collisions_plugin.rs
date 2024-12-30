@@ -123,21 +123,22 @@ fn player_touched_by_monster(
 fn player_takes_bonus(
     mut commands: Commands,
     mut collisions: EventReader<CollisionEvent>,
-    mut q_player: Query<(), With<Player>>,
-    q_bonus: Query<&Bonus>,
+    mut players: Query<(), With<Player>>,
+    bonuses: Query<&Bonus>,
+    inventory: Single<Entity, With<Inventory>>
 ) {
     collisions
         .read()
         .filter_map(start_event_filter)
         .filter_map(|(&e1, &e2)| {
-            let (bonus, bonus_entity, other_entity) = q_bonus.get_either(e1, e2)?;
-            q_player
+            let (bonus, bonus_entity, other_entity) = bonuses.get_either(e1, e2)?;
+            players
                 .get_mut(other_entity)
-                .map(|_| (bonus, bonus_entity, other_entity))
+                .map(|_| (bonus, bonus_entity))
                 .ok()
         })
-        .for_each(|(bonus, bonus_entity, player_entity)| {
+        .for_each(|(bonus, bonus_entity)| {
             commands.entity(bonus_entity).despawn();
-            commands.entity(player_entity).add_child(**bonus);
+            commands.entity(*inventory).add_child(**bonus);
         });
 }
