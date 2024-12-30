@@ -4,84 +4,33 @@ use bevy::{
     prelude::*,
 };
 
-#[derive(Component, Default, Clone)]
-#[component(on_add = create_popup_window)]
-#[require(
-    Name(|| Name::new("InfoPopupWindow")),
-    Popup,
-    Node(|| Node {
-        width: Val::Auto,
-        height: Val::Auto,
-        margin: UiRect::all(Val::Px(0.)),
-        padding: UiRect::all(Val::Px(5.)),
-        ..Popup::default_node()
-    }),
-    ZIndex(|| ZIndex(1))
-)]
-struct InfoPopupWindow {
-    info: InfoPopup,
-    pos: Vec2,
-}
-
-fn create_popup_window(mut world: DeferredWorld, entity: Entity, _: ComponentId) {
-    world.commands().queue(CreatePopupCommand(entity));
-}
-
-struct CreatePopupCommand(Entity);
-
-impl Command for CreatePopupCommand {
-    fn apply(self, world: &mut World) {
-        let window = world
-            .get::<InfoPopupWindow>(self.0)
-            .expect("InfoPopupWindow added")
-            .clone();
-        world.commands().entity(self.0).with_children(|parent| {
-            if let Some(image) = window.info.image {
-                if let Some(atlas) = window.info.atlas {
-                    parent.spawn(ImageNode::from_atlas_image(image, atlas));
-                } else {
-                    parent.spawn(ImageNode::new(image));
-                }
-            }
-            if let Some(text) = window.info.text {
-                parent.spawn((Text(text), TextFont::from_font_size(12.)));
-            }
-        });
-        let mut node = world.get_mut::<Node>(self.0).expect("Node");
-        node.left = Val::Px(window.pos.x + 5.);
-        node.top = Val::Px(window.pos.y - 20.);
-    }
-}
-
 /// Component to add to allow a popup when overing the entity
 #[derive(Component, Default, Clone)]
-#[component(on_add = add_observers)]
-pub struct InfoPopup {
-    image: Option<Handle<Image>>,
-    atlas: Option<TextureAtlas>,
-    text: Option<String>,
+#[component(on_add = init)]
+pub struct ShowPopupOnMouseOver {
+    pub text: String,
+    pub image: Option<ImageNode>,
 }
 
-impl InfoPopup {
-    pub fn new(text: String) -> Self {
-        InfoPopup {
-            text: Some(text),
-            ..Default::default()
-        }
-    }
-
-    pub fn with_image_atlas(mut self, image: Handle<Image>, atlas: TextureAtlas) -> Self {
-        self.image = Some(image);
-        self.atlas = Some(atlas);
-        self
-    }
+fn init(mut world: DeferredWorld, entity: Entity, _: ComponentId) {
+    world
+        .commands()
+        .entity(entity)
+        .observe(spawn_popup)
+        .observe(despawn_popup_on_out)
+        .observe(despawn_popup_on_click)
+        .observe(despawn_popup_on_removed);
 }
 
 /// System to add to an entity observer to spawn the [InfoPopup]
 /// when overing the observed entity
-fn spawn_popup(trigger: Trigger<Pointer<Over>>, mut commands: Commands, infos: Query<&InfoPopup>) {
+fn spawn_popup(
+    trigger: Trigger<Pointer<Over>>,
+    mut commands: Commands,
+    infos: Query<&ShowPopupOnMouseOver>,
+) {
     if let Ok(info) = infos.get(trigger.entity()) {
-        commands.spawn(InfoPopupWindow {
+        commands.spawn(InfoPopup {
             info: info.clone(),
             pos: trigger.event().pointer_location.position,
         });
@@ -93,7 +42,17 @@ fn spawn_popup(trigger: Trigger<Pointer<Over>>, mut commands: Commands, infos: Q
 fn despawn_popup_on_out(
     _trigger: Trigger<Pointer<Out>>,
     mut commands: Commands,
-    popups: Query<Entity, With<InfoPopupWindow>>,
+    popups: Query<Entity, With<InfoPopup>>,
+) {
+    if let Ok(entity) = popups.get_single() {
+        commands.entity(entity).despawn_recursive()
+    }
+}
+
+fn despawn_popup_on_click(
+    _trigger: Trigger<Pointer<Click>>,
+    mut commands: Commands,
+    popups: Query<Entity, With<InfoPopup>>,
 ) {
     if let Ok(entity) = popups.get_single() {
         commands.entity(entity).despawn_recursive()
@@ -101,20 +60,55 @@ fn despawn_popup_on_out(
 }
 
 fn despawn_popup_on_removed(
-    _trigger: Trigger<OnRemove, InfoPopup>,
+    _trigger: Trigger<OnRemove, ShowPopupOnMouseOver>,
     mut commands: Commands,
-    popups: Query<Entity, With<InfoPopupWindow>>,
+    popups: Query<Entity, With<InfoPopup>>,
 ) {
     if let Ok(entity) = popups.get_single() {
         commands.entity(entity).despawn_recursive()
     }
 }
 
-fn add_observers(mut world: DeferredWorld, entity: Entity, _: ComponentId) {
-    world
-        .commands()
-        .entity(entity)
-        .observe(spawn_popup)
-        .observe(despawn_popup_on_out)
-        .observe(despawn_popup_on_removed);
+/// The popup
+#[derive(Component, Default, Clone)]
+#[component(on_add = create_popup)]
+#[require(
+    Name(|| Name::new("InfoPopup")),
+    Popup,
+    Node(|| Node {
+        width: Val::Auto,
+        height: Val::Auto,
+        margin: UiRect::all(Val::Px(0.)),
+        padding: UiRect::all(Val::Px(5.)),
+        ..Popup::default_node()
+    }),
+    ZIndex(|| ZIndex(1))
+)]
+struct InfoPopup {
+    info: ShowPopupOnMouseOver,
+    pos: Vec2,
+}
+
+fn create_popup(mut world: DeferredWorld, entity: Entity, _: ComponentId) {
+    world.commands().queue(CreatePopupCommand(entity));
+}
+
+struct CreatePopupCommand(Entity);
+
+impl Command for CreatePopupCommand {
+    fn apply(self, world: &mut World) {
+        let window = world
+            .get::<InfoPopup>(self.0)
+            .expect("InfoPopupWindow added")
+            .clone();
+        world.commands().entity(self.0).with_children(|parent| {
+            if let Some(image_node) = window.info.image {
+                parent.spawn(image_node);
+            }
+            parent.spawn((Text(window.info.text), TextFont::from_font_size(12.)));
+        });
+        let mut node = world.get_mut::<Node>(self.0).expect("Node");
+        node.left = Val::Px(window.pos.x + 5.);
+        node.top = Val::Px(window.pos.y - 20.);
+    }
 }

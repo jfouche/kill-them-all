@@ -13,6 +13,8 @@ impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<PlayerAssets>()
             .add_event::<PlayerDeathEvent>()
+            .add_event::<InventoryChanged>()
+            .add_event::<PlayerEquipmentChanged>()
             .register_type::<Experience>()
             .init_resource::<Score>()
             .add_systems(OnEnter(GameState::InGame), spawn_player)
@@ -207,21 +209,20 @@ fn level_up(
     }
 }
 
-/// When an equipment is added to the player, the old same one should be removed
+/// When an equipment is added to the player, the old same one should go back to the [Inventory]
+/// TODO: move to observer
+/// FIXME: There is a bug when equiping multiple time the type of equipment
 fn remove_old_equipment<E>(
     mut commands: Commands,
-    players: Query<Entity, With<Player>>,
+    player: Single<Entity, With<Player>>,
     new_equipments: Query<(Entity, &Parent), Added<E>>,
     equipments: Query<(Entity, &Parent), With<E>>,
+    inventory: Single<Entity, With<Inventory>>,
 ) where
     E: Component,
 {
-    let Ok(player) = players.get_single() else {
-        return;
-    };
-
     for (new_equipment, parent) in &new_equipments {
-        if players.get(**parent).is_ok() {
+        if *player == **parent {
             // new_equipment has been added to Player, get old ones
             let old_equipments = equipments
                 .iter()
@@ -230,10 +231,11 @@ fn remove_old_equipment<E>(
                 .map(|(e, _p)| e)
                 .collect::<Vec<_>>();
 
-            // Despawn old equipments
-            commands.entity(player).remove_children(&old_equipments);
-            for e in old_equipments {
-                commands.entity(e).despawn_recursive();
+            if !old_equipments.is_empty() {
+                // Move old equipments to [Inventory], removing them from [Player]
+                commands.entity(*player).remove_children(&old_equipments);
+                commands.entity(*inventory).add_children(&old_equipments);
+                commands.trigger(InventoryChanged);
             }
         }
     }

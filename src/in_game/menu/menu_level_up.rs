@@ -1,4 +1,4 @@
-use super::panel_equipments::EquipmentsPanel;
+use super::EquipmentsPanel;
 use crate::components::*;
 use crate::in_game::back_to_game;
 use crate::schedule::*;

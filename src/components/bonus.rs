@@ -24,7 +24,7 @@ pub struct BonusProvider;
 
 impl BonusProvider {
     pub fn spawn(commands: &mut Commands, rng: &mut ThreadRng) -> Option<EquipmentEntityInfo> {
-        if rng.gen_range(0..100) < 20 {
+        if rng.gen_range(0..100) < 120 {
             EquipmentProvider::new().spawn(commands, rng)
         } else {
             None

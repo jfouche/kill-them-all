@@ -1,7 +1,5 @@
-use crate::{
-    components::*,
-    in_game::{menu::popup_info::InfoPopup, GameRunningSet},
-};
+use super::{ShowEquipmentActionsOnMouseOver, ShowPopupOnMouseOver};
+use crate::components::*;
 use bevy::prelude::*;
 
 /// A panel that shows the content of the [Inventory]
@@ -10,8 +8,8 @@ use bevy::prelude::*;
     Name(|| Name::new("InventoryPanel")),
     Node(|| Node {
         display: Display::Grid,
-        grid_template_columns: RepeatedGridTrack::flex(8, 1.),
-        grid_template_rows: RepeatedGridTrack::flex(4, 1.),
+        grid_template_columns: RepeatedGridTrack::flex(N_COLS, 1.),
+        grid_template_rows: RepeatedGridTrack::flex(N_ROWS, 1.),
         ..Default::default()
     }),
 )]
@@ -20,17 +18,18 @@ pub struct InventoryPanel;
 const N_COLS: u16 = 8;
 const N_ROWS: u16 = 4;
 
-fn pos(index: u16) -> (u16, u16) {
-    let col = index % N_COLS;
-    let row = index / N_COLS;
-    (col, row)
-}
+// fn pos(index: u16) -> (u16, u16) {
+//     let col = index % N_COLS;
+//     let row = index / N_COLS;
+//     (col, row)
+// }
 
 pub struct InventoryPanelPlugin;
 
 impl Plugin for InventoryPanelPlugin {
     fn build(&self, app: &mut App) {
-        app.add_observer(create_inventory_panel);
+        app.add_observer(create_inventory_panel)
+            .add_observer(update_inventory);
     }
 }
 
@@ -38,20 +37,49 @@ fn create_inventory_panel(
     trigger: Trigger<OnAdd, InventoryPanel>,
     mut commands: Commands,
     inventory: Single<Entity, With<Inventory>>,
-    items: Query<(&EquipmentInfo, &Parent)>,
+    items: Query<(Entity, &EquipmentInfo, &Parent)>,
     assets: Res<EquipmentAssets>,
 ) {
-    warn!("create_inventory_panel");
     let panel = trigger.entity();
-    let mut index = 0;
     commands.entity(panel).with_children(|cmd| {
-        for (info, _) in items.iter().filter(|(_, parent)| ***parent == *inventory) {
-            warn!("Add item in inventory");
-            cmd.spawn((
-                assets.image_node(info.tile_index),
-                InfoPopup::new(info.text.clone())
-                    .with_image_atlas(assets.image(), assets.texture_atlas(info.tile_index)),
-            ));
-        }
+        add_items(cmd, &items, *inventory, &assets);
     });
+}
+
+fn update_inventory(
+    _trigger: Trigger<InventoryChanged>,
+    mut commands: Commands,
+    panels: Query<(Entity, &Children), With<InventoryPanel>>,
+    inventory: Single<Entity, With<Inventory>>,
+    items: Query<(Entity, &EquipmentInfo, &Parent)>,
+    assets: Res<EquipmentAssets>,
+) {
+    for (panel, children) in &panels {
+        commands.entity(panel).remove_children(&children);
+        commands.entity(panel).with_children(|cmd| {
+            add_items(cmd, &items, *inventory, &assets);
+        });
+    }
+}
+
+fn add_items(
+    panel: &mut ChildBuilder,
+    items: &Query<(Entity, &EquipmentInfo, &Parent)>,
+    inventory: Entity,
+    assets: &EquipmentAssets,
+) {
+    for (equipment, info, _) in items.iter().filter(|(_, _, parent)| ***parent == inventory) {
+        panel.spawn((
+            assets.image_node(info.tile_index),
+            ShowPopupOnMouseOver {
+                text: info.text.clone(),
+                image: Some(assets.image_node(info.tile_index)),
+            },
+            ShowEquipmentActionsOnMouseOver {
+                text: info.text.clone(),
+                image: Some(assets.image_node(info.tile_index)),
+                item: equipment,
+            },
+        ));
+    }
 }

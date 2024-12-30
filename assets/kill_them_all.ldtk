@@ -11,7 +11,7 @@
 	"iid": "329eefc0-4ce0-11ef-9568-970d3322001f",
 	"jsonVersion": "1.5.3",
 	"appBuildId": 473703,
-	"nextUid": 6,
+	"nextUid": 7,
 	"identifierStyle": "Capitalize",
 	"toc": [],
 	"worldLayout": "Free",
@@ -66,7 +66,7 @@
 		{
 			"__cWid": 4,
 			"__cHei": 7,
-			"identifier": "SpriteSheet",
+			"identifier": "Player",
 			"uid": 2,
 			"relPath": "characters/RedNinja/SpriteSheet.png",
 			"embedAtlas": null,
@@ -88,7 +88,7 @@
 		{
 			"__cWid": 16,
 			"__cHei": 22,
-			"identifier": "Spritesheet_48x48",
+			"identifier": "Items",
 			"uid": 3,
 			"relPath": "items/Kyrise's 16x16 RPG Icon Pack - V1.3/spritesheet/spritesheet_48x48.png",
 			"embedAtlas": null,
@@ -144,6 +144,25 @@
 			"customData": [],
 			"savedSelections": [],
 			"cachedPixelData": { "opaqueTiles": "00000000", "averageColors": "1fff2fff8eec9eca8c867b7659663556" }
+		},
+		{
+			"__cWid": 1,
+			"__cHei": 1,
+			"identifier": "Shuriken",
+			"uid": 6,
+			"relPath": "shuriken.png",
+			"embedAtlas": null,
+			"pxWid": 16,
+			"pxHei": 16,
+			"tileGridSize": 16,
+			"spacing": 0,
+			"padding": 0,
+			"tags": [],
+			"tagsSourceEnumUid": null,
+			"enumTags": [],
+			"customData": [],
+			"savedSelections": [],
+			"cachedPixelData": { "opaqueTiles": "0", "averageColors": "8311" }
 		}
 	], "enums": [], "externalEnums": [], "levelFields": [] },
 	"levels": [

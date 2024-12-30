@@ -4,16 +4,20 @@ mod menu_player_died;
 mod menu_round_end;
 mod panel_characteristics;
 mod panel_equipments;
-mod panel_skills;
 mod panel_inventory;
+mod panel_skills;
 mod popup_info;
+mod popup_select_equipment;
 
 use super::{pause, unpause, InGameState};
 use crate::components::EquipmentAssets;
 use bevy::{app::PluginGroupBuilder, prelude::*};
 use panel_characteristics::CharacteristicsPanel;
 use panel_equipments::EquipmentsPanel;
+use panel_inventory::InventoryPanel;
 use panel_skills::SkillsPanel;
+use popup_info::ShowPopupOnMouseOver;
+use popup_select_equipment::ShowEquipmentActionsOnMouseOver;
 
 pub struct InGameMenuPluginsGroup;
 

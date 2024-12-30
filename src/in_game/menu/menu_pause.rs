@@ -1,5 +1,4 @@
-use super::panel_inventory::InventoryPanel;
-use super::{CharacteristicsPanel, EquipmentsPanel, SkillsPanel};
+use super::{CharacteristicsPanel, EquipmentsPanel, InventoryPanel, SkillsPanel};
 use crate::components::*;
 use crate::in_game::back_to_game;
 use crate::schedule::*;

@@ -1,6 +1,6 @@
-use super::popup_info::InfoPopup;
+use super::popup_info::ShowPopupOnMouseOver;
 use crate::components::*;
-use bevy::prelude::*;
+use bevy::{ecs::query::QueryFilter, prelude::*};
 
 ///
 /// Inventory panel
@@ -80,42 +80,123 @@ impl EquipmentPos for Weapon {
     }
 }
 
-fn show_equipment<T>(
-    trigger: Trigger<OnAdd, EquipmentsPanel>,
-    mut commands: Commands,
-    equipments: Query<(&EquipmentInfo, &Parent), With<T>>,
-    players: Query<Entity, With<Player>>,
-    assets: Res<EquipmentAssets>,
-) where
+fn show_equipment<T>(panel: &mut ChildBuilder, info: &EquipmentInfo, assets: &EquipmentAssets)
+where
     T: Component + EquipmentPos,
 {
-    let player = players.get_single().expect("Player");
-    equipments
+    let pos = T::pos();
+    panel.spawn((
+        InventoryBox,
+        Node {
+            left: Val::Px(pos.x),
+            top: Val::Px(pos.y),
+            ..default_inventory_box_node()
+        },
+        assets.image_node(info.tile_index),
+        info.clone(),
+        ShowPopupOnMouseOver {
+            text: info.text.clone(),
+            image: Some(assets.image_node(info.tile_index)),
+        },
+    ));
+}
+
+fn show_all_equipments(
+    panel: &mut ChildBuilder,
+    helmets: &Query<(&EquipmentInfo, &Parent), With<Helmet>>,
+    body_armours: &Query<(&EquipmentInfo, &Parent), With<BodyArmour>>,
+    boots: &Query<(&EquipmentInfo, &Parent), With<Boots>>,
+    amulets: &Query<(&EquipmentInfo, &Parent), With<Amulet>>,
+    weapons: &Query<(&EquipmentInfo, &Parent), With<Weapon>>,
+    player: Entity,
+    assets: &EquipmentAssets,
+) {
+    if let Some(info) = get_equipment(&helmets, player) {
+        show_equipment::<Helmet>(panel, info, &assets);
+    }
+    if let Some(info) = get_equipment(&body_armours, player) {
+        show_equipment::<BodyArmour>(panel, info, &assets);
+    }
+    if let Some(info) = get_equipment(&boots, player) {
+        show_equipment::<Boots>(panel, info, &assets);
+    }
+    if let Some(info) = get_equipment(&amulets, player) {
+        show_equipment::<Amulet>(panel, info, &assets);
+    }
+    if let Some(info) = get_equipment(&weapons, player) {
+        show_equipment::<Weapon>(panel, info, &assets);
+    }
+}
+
+fn get_equipment<'a, F>(
+    query: &'a Query<(&EquipmentInfo, &Parent), F>,
+    player: Entity,
+) -> Option<&'a EquipmentInfo>
+where
+    F: QueryFilter,
+{
+    query
         .iter()
         .filter(|(_info, parent)| ***parent == player)
-        .for_each(|(info, _parent)| {
-            commands.entity(trigger.entity()).with_children(|panel| {
-                let pos = T::pos();
-                panel.spawn((
-                    InventoryBox,
-                    Node {
-                        left: Val::Px(pos.x),
-                        top: Val::Px(pos.y),
-                        ..default_inventory_box_node()
-                    },
-                    assets.image_node(info.tile_index),
-                    info.clone(),
-                    InfoPopup::new(info.text.clone())
-                        .with_image_atlas(assets.image(), assets.texture_atlas(info.tile_index)),
-                ));
-            });
+        .map(|(info, _)| info)
+        .next()
+}
+
+fn show_equipments(
+    trigger: Trigger<OnAdd, EquipmentsPanel>,
+    mut commands: Commands,
+    helmets: Query<(&EquipmentInfo, &Parent), With<Helmet>>,
+    body_armours: Query<(&EquipmentInfo, &Parent), With<BodyArmour>>,
+    boots: Query<(&EquipmentInfo, &Parent), With<Boots>>,
+    amulets: Query<(&EquipmentInfo, &Parent), With<Amulet>>,
+    weapons: Query<(&EquipmentInfo, &Parent), With<Weapon>>,
+    player: Single<Entity, With<Player>>,
+    assets: Res<EquipmentAssets>,
+) {
+    commands.entity(trigger.entity()).with_children(|panel| {
+        show_all_equipments(
+            panel,
+            &helmets,
+            &body_armours,
+            &boots,
+            &amulets,
+            &weapons,
+            *player,
+            &assets,
+        );
+    });
+}
+
+fn update_equipments(
+    _trigger: Trigger<PlayerEquipmentChanged>,
+    mut commands: Commands,
+    panels: Query<(Entity, &Children), With<EquipmentsPanel>>,
+    helmets: Query<(&EquipmentInfo, &Parent), With<Helmet>>,
+    body_armours: Query<(&EquipmentInfo, &Parent), With<BodyArmour>>,
+    boots: Query<(&EquipmentInfo, &Parent), With<Boots>>,
+    amulets: Query<(&EquipmentInfo, &Parent), With<Amulet>>,
+    weapons: Query<(&EquipmentInfo, &Parent), With<Weapon>>,
+    player: Single<Entity, With<Player>>,
+    assets: Res<EquipmentAssets>,
+) {
+    for (panel, children) in &panels {
+        commands.entity(panel).remove_children(&children);
+        commands.entity(panel).with_children(|panel| {
+            show_all_equipments(
+                panel,
+                &helmets,
+                &body_armours,
+                &boots,
+                &amulets,
+                &weapons,
+                *player,
+                &assets,
+            );
         });
+    }
 }
 
 pub fn inventory_panel_plugin(app: &mut App) {
-    app.add_observer(show_equipment::<Amulet>)
-        .add_observer(show_equipment::<BodyArmour>)
-        .add_observer(show_equipment::<Boots>)
-        .add_observer(show_equipment::<Helmet>)
-        .add_observer(show_equipment::<Weapon>);
+    app.add_observer(show_equipments)
+        .add_observer(update_equipments);
 }

@@ -1,4 +1,4 @@
-use super::popup_info::InfoPopup;
+use super::popup_info::ShowPopupOnMouseOver;
 use crate::components::*;
 use bevy::prelude::*;
 
@@ -63,9 +63,11 @@ where
     T: Component + SkillUI,
 {
     let text = [T::title(), T::label()].join("\n");
-    let atlas = assets.texture_atlas(T::tile_index());
     panel.with_child((
         assets.image_node(T::tile_index()),
-        InfoPopup::new(text).with_image_atlas(assets.image(), atlas),
+        ShowPopupOnMouseOver {
+            text,
+            image: Some(assets.image_node(T::tile_index())),
+        },
     ));
 }

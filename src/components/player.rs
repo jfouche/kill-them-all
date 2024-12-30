@@ -98,10 +98,7 @@ impl Experience {
         let level = self.level();
         let min = match level {
             0 => 0,
-            _ => Self::LEVELS
-                .get(level as usize - 1)
-                .cloned()
-                .unwrap_or(0),
+            _ => Self::LEVELS.get(level as usize - 1).cloned().unwrap_or(0),
         };
         let max = Self::LEVELS
             .get(level as usize)
@@ -131,7 +128,15 @@ pub struct Score(pub u16);
 
 ///
 /// The [Inventory] contains all items that carry the [Player] as children
-/// 
+///
 #[derive(Component)]
 #[require(Name(|| Name::new("Inventory")))]
 pub struct Inventory;
+
+/// Event to indicate The [Inventory] changed
+#[derive(Event)]
+pub struct InventoryChanged;
+
+/// Event to indicate The [Player] equipments changed
+#[derive(Event)]
+pub struct PlayerEquipmentChanged;
