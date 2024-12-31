@@ -111,20 +111,20 @@ fn show_all_equipments(
     player: Entity,
     assets: &EquipmentAssets,
 ) {
-    if let Some(info) = get_equipment(&helmets, player) {
-        show_equipment::<Helmet>(panel, info, &assets);
+    if let Some(info) = get_equipment(helmets, player) {
+        show_equipment::<Helmet>(panel, info, assets);
     }
-    if let Some(info) = get_equipment(&body_armours, player) {
-        show_equipment::<BodyArmour>(panel, info, &assets);
+    if let Some(info) = get_equipment(body_armours, player) {
+        show_equipment::<BodyArmour>(panel, info, assets);
     }
-    if let Some(info) = get_equipment(&boots, player) {
-        show_equipment::<Boots>(panel, info, &assets);
+    if let Some(info) = get_equipment(boots, player) {
+        show_equipment::<Boots>(panel, info, assets);
     }
-    if let Some(info) = get_equipment(&amulets, player) {
-        show_equipment::<Amulet>(panel, info, &assets);
+    if let Some(info) = get_equipment(amulets, player) {
+        show_equipment::<Amulet>(panel, info, assets);
     }
-    if let Some(info) = get_equipment(&weapons, player) {
-        show_equipment::<Weapon>(panel, info, &assets);
+    if let Some(info) = get_equipment(weapons, player) {
+        show_equipment::<Weapon>(panel, info, assets);
     }
 }
 
@@ -180,7 +180,7 @@ fn update_equipments(
     assets: Res<EquipmentAssets>,
 ) {
     for (panel, children) in &panels {
-        commands.entity(panel).remove_children(&children);
+        commands.entity(panel).remove_children(children);
         commands.entity(panel).with_children(|panel| {
             show_all_equipments(
                 panel,

@@ -55,7 +55,7 @@ fn update_inventory(
     assets: Res<EquipmentAssets>,
 ) {
     for (panel, children) in &panels {
-        commands.entity(panel).remove_children(&children);
+        commands.entity(panel).remove_children(children);
         commands.entity(panel).with_children(|cmd| {
             add_items(cmd, &items, *inventory, &assets);
         });

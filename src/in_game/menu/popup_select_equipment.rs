@@ -121,19 +121,19 @@ fn item_action(
 ) {
     if let Ok(action) = actions.get(trigger.entity()) {
         match &action {
-            &ItemAction::Equip(entities) => {
+            ItemAction::Equip(entities) => {
                 commands.entity(entities.item).remove_parent();
                 commands.entity(*player).add_child(entities.item);
                 commands.trigger(InventoryChanged);
                 commands.trigger(PlayerEquipmentChanged);
                 commands.entity(entities.popup).despawn_recursive();
             }
-            &ItemAction::Drop(entities) => {
+            ItemAction::Drop(entities) => {
                 commands.entity(entities.item).despawn_recursive();
                 commands.trigger(InventoryChanged);
                 commands.entity(entities.popup).despawn_recursive();
             }
-            &ItemAction::DespawnPopup(entity) => {
+            ItemAction::DespawnPopup(entity) => {
                 commands.entity(*entity).despawn_recursive();
             }
         }
