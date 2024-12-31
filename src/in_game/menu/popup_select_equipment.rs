@@ -122,15 +122,18 @@ fn item_action(
     if let Ok(action) = actions.get(trigger.entity()) {
         match &action {
             ItemAction::Equip(entities) => {
+                // To force the OnRemove trigger
                 commands.entity(entities.item).remove_parent();
                 commands.entity(*player).add_child(entities.item);
-                commands.trigger(InventoryChanged);
-                commands.trigger(PlayerEquipmentChanged);
+                commands.send_event(InventoryChanged);
+                commands.send_event(PlayerEquipmentChanged);
                 commands.entity(entities.popup).despawn_recursive();
             }
             ItemAction::Drop(entities) => {
+                // To force the OnRemove trigger
+                commands.entity(entities.item).remove_parent();
                 commands.entity(entities.item).despawn_recursive();
-                commands.trigger(InventoryChanged);
+                commands.send_event(InventoryChanged);
                 commands.entity(entities.popup).despawn_recursive();
             }
             ItemAction::DespawnPopup(entity) => {

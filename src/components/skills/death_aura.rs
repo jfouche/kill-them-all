@@ -15,7 +15,7 @@ use skills::Skill;
     Skill,
     AffectedByAreaOfEffect,
     Damager,
-    BaseDamageOverTime(|| BaseDamageOverTime(1.)),
+    BaseDamageOverTime(|| BaseDamageOverTime(3.)),
     Transform,
     Visibility,
     Collider(|| Collider::ball(32.))
