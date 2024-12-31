@@ -32,22 +32,23 @@ impl Plugin for PlayerPlugin {
                     player_invulnerability_finished,
                     increment_player_experience,
                     level_up,
-                    remove_old_equipment::<Amulet>,
-                    remove_old_equipment::<BodyArmour>,
-                    remove_old_equipment::<Boots>,
-                    remove_old_equipment::<Helmet>,
-                    remove_old_equipment::<Wand>,
-                    remove_old_equipment::<FireBallLauncher>,
-                    remove_old_equipment::<ShurikenLauncher>,
-                    remove_old_equipment::<MineDropper>,
-                    remove_old_equipment::<DeathAura>,
+                    // remove_old_equipment::<Amulet>,
+                    // remove_old_equipment::<BodyArmour>,
+                    // remove_old_equipment::<Boots>,
+                    // remove_old_equipment::<Helmet>,
+                    // remove_old_equipment::<Wand>,
+                    // remove_old_equipment::<FireBallLauncher>,
+                    // remove_old_equipment::<ShurikenLauncher>,
+                    // remove_old_equipment::<MineDropper>,
+                    // remove_old_equipment::<DeathAura>,
                 )
                     .in_set(GameRunningSet::EntityUpdate),
             )
-            .add_observer(inventory_modified::<OnAdd, Parent>)
-            .add_observer(inventory_modified::<OnRemove, Parent>)
-            .add_observer(player_modified::<OnAdd, Parent>)
-            .add_observer(player_modified::<OnRemove, Parent>);
+            // .add_observer(inventory_modified::<OnAdd, Parent>)
+            // .add_observer(inventory_modified::<OnRemove, Parent>)
+            // .add_observer(player_modified::<OnAdd, Parent>)
+            // .add_observer(player_modified::<OnRemove, Parent>)
+            ;
     }
 }
 
@@ -213,75 +214,83 @@ fn level_up(
     }
 }
 
-/// When an equipment is added to the player, the old same one should go back to the [Inventory]
-/// TODO: move to observer
-/// FIXME: There is a bug when equiping multiple time the type of equipment
-fn remove_old_equipment<E>(
-    mut commands: Commands,
-    player: Single<Entity, With<Player>>,
-    new_equipments: Query<(Entity, &Parent), (With<E>, Added<Parent>)>,
-    equipments: Query<(Entity, &Parent), With<E>>,
-    inventory: Single<Entity, With<Inventory>>,
-) where
-    E: Component,
-{
-    for (new_equipment, parent) in &new_equipments {
-        warn!("Equipment {new_equipment} has been added to {}", **parent);
-        if *player == **parent {
-            warn!("Equipment {new_equipment} has been added to Player");
-            // new_equipment has been added to Player, get old ones
-            let old_equipments = equipments
-                .iter()
-                // same parent, but different entity
-                .filter(|(e, p)| {
-                    warn!(" * filter({e}, {})", ***p);
-                    *player == ***p && *e != new_equipment})
-                .map(|(e, _p)| e)
-                .collect::<Vec<_>>();
+// /// When an equipment is added to the player, the old same one should go back to the [Inventory]
+// /// TODO: move to observer
+// /// FIXME: There is a bug when equiping multiple time the type of equipment
+// fn remove_old_equipment<E>(
+//     mut commands: Commands,
+//     player: Single<Entity, With<Player>>,
+//     new_equipments: Query<(Entity, &Parent), (With<E>, Added<Parent>)>,
+//     equipments: Query<(Entity, &Parent), With<E>>,
+//     inventory: Single<Entity, With<Inventory>>,
+// ) where
+//     E: Component,
+// {
+//     for (new_equipment, parent) in &new_equipments {
+//         warn!("Equipment {new_equipment} has been added to {}", **parent);
+//         if *player == **parent {
+//             warn!("Equipment {new_equipment} has been added to Player");
+//             // new_equipment has been added to Player, get old ones
+//             let old_equipments = equipments
+//                 .iter()
+//                 // same parent, but different entity
+//                 .filter(|(e, p)| {
+//                     warn!(" * filter({e}, {})", ***p);
+//                     *player == ***p && *e != new_equipment})
+//                 .map(|(e, _p)| e)
+//                 .collect::<Vec<_>>();
 
-            if !old_equipments.is_empty() {
-                // Move old equipments to [Inventory], removing them from [Player]
-                warn!("Moving back items to inventory: {:?}", &old_equipments);
-                for equipment in &old_equipments {
-                    commands.entity(*equipment).remove_parent();
-                }
-                commands.entity(*player).remove_children(&old_equipments);
-                commands.entity(*inventory).add_children(&old_equipments);
-            }
-        }
-    }
-}
+//             if !old_equipments.is_empty() {
+//                 // Move old equipments to [Inventory], removing them from [Player]
+//                 warn!("Moving back items to inventory: {:?}", &old_equipments);
+//                 for equipment in &old_equipments {
+//                     commands.entity(*equipment).remove_parent();
+//                 }
+//                 commands.entity(*player).remove_children(&old_equipments);
+//                 commands.entity(*inventory).add_children(&old_equipments);
+//             }
+//         }
+//     }
+// }
 
-fn inventory_modified<E, B>(
-    trigger: Trigger<E, B>,
-    mut commands: Commands,
-    inventory: Single<Entity, With<Inventory>>,
-    parents: Query<&Parent>,
-) where
-    B: Bundle,
-    E: std::fmt::Debug
-{
-    if let Ok(parent) = parents.get(trigger.entity()) {
-        if **parent == *inventory {
-            warn!("inventory_modified due to {:?}({})", trigger.event(), trigger.entity());
-            commands.trigger(InventoryChanged);
-        }
-    }
-}
+// fn inventory_modified<E, B>(
+//     trigger: Trigger<E, B>,
+//     mut commands: Commands,
+//     inventory: Single<Entity, With<Inventory>>,
+//     parents: Query<&Parent>,
+// ) where
+//     B: Bundle,
+//     E: std::fmt::Debug,
+// {
+//     if let Ok(parent) = parents.get(trigger.entity()) {
+//         if **parent == *inventory {
+//             warn!(
+//                 "inventory_modified due to {:?}({})",
+//                 trigger.event(),
+//                 trigger.entity()
+//             );
+//             commands.trigger(InventoryChanged);
+//         }
+//     }
+// }
 
-fn player_modified<E, B>(
-    trigger: Trigger<E, B>,
-    mut commands: Commands,
-    player: Single<Entity, With<Player>>,
-    parents: Query<&Parent>,
-) where
-    B: Bundle,
-    E: std::fmt::Debug
-{
-    if let Ok(parent) = parents.get(trigger.entity()) {
-        if **parent == *player {
-            warn!("player_modified due to {:?}({})", trigger.event(), trigger.entity());
-            commands.trigger(PlayerEquipmentChanged);
-        }
-    }
-}
+// fn player_modified<E, B>(
+//     trigger: Trigger<E, B>,
+//     mut commands: Commands,
+//     player: Single<Entity, With<Player>>,
+//     parents: Query<&Parent>,
+// ) where
+//     B: Bundle,
+//     E: std::fmt::Debug,
+// {
+//     if let Ok(parent) = parents.get(trigger.entity()) {
+//         if **parent == *player {
+//             warn!(
+//                 "player_modified due to {:?}({})",
+//                 trigger.event(),
+//                 trigger.entity()
+//             );
+//             commands.trigger(PlayerEquipmentChanged);
+//         }
+//     }
+// }

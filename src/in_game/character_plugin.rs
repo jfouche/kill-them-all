@@ -27,6 +27,7 @@ impl Plugin for CharacterPlugin {
             .register_type::<IncreaseAreaOfEffect>()
             .register_type::<AnimationTimer>()
             .register_type::<EquipmentInfo>()
+            .register_type::<Equipment>()
             .register_type::<EquipmentRarity>()
             .add_observer(init_life)
             .add_observer(fix_life)

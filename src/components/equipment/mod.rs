@@ -70,6 +70,16 @@ impl EquipmentAssets {
     }
 }
 
+///
+#[derive(Component, Clone, Copy, Debug, PartialEq, Reflect)]
+pub enum Equipment {
+    Helmet,
+    BodyArmour,
+    Boots,
+    Amulet,
+    Weapon,
+}
+
 /// Equipment Rarity
 #[derive(Component, Clone, Copy, PartialEq, Eq, Hash, Reflect)]
 pub enum EquipmentRarity {

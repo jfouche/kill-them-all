@@ -1,7 +1,4 @@
-use crate::{
-    components::{InventoryChanged, Player, PlayerEquipmentChanged},
-    ui::{HSizer, MyButton, Popup},
-};
+use crate::{components::*, ui::*};
 use bevy::{
     ecs::{component::ComponentId, world::DeferredWorld},
     prelude::*,
@@ -117,23 +114,15 @@ fn item_action(
     trigger: Trigger<Pointer<Click>>,
     mut commands: Commands,
     actions: Query<&ItemAction>,
-    player: Single<Entity, With<Player>>,
 ) {
     if let Ok(action) = actions.get(trigger.entity()) {
         match &action {
-            ItemAction::Equip(entities) => {
-                // To force the OnRemove trigger
-                commands.entity(entities.item).remove_parent();
-                commands.entity(*player).add_child(entities.item);
-                commands.send_event(InventoryChanged);
-                commands.send_event(PlayerEquipmentChanged);
+            &ItemAction::Equip(entities) => {
+                commands.queue(EquipItemCommand(entities.item));
                 commands.entity(entities.popup).despawn_recursive();
             }
-            ItemAction::Drop(entities) => {
-                // To force the OnRemove trigger
-                commands.entity(entities.item).remove_parent();
-                commands.entity(entities.item).despawn_recursive();
-                commands.send_event(InventoryChanged);
+            &ItemAction::Drop(entities) => {
+                commands.queue(DropItemCommand(entities.item));
                 commands.entity(entities.popup).despawn_recursive();
             }
             ItemAction::DespawnPopup(entity) => {

@@ -23,7 +23,8 @@ impl BodyArmourAffixProvider {
 
 #[derive(Component)]
 #[require(
-    Name(|| Name::new("BodyArmour"))
+    Name(|| Name::new("BodyArmour")),
+    Equipment(|| Equipment::BodyArmour)
 )]
 pub struct BodyArmour;
 

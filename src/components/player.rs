@@ -140,3 +140,122 @@ pub struct InventoryChanged;
 /// Event to indicate The [Player] equipments changed
 #[derive(Event)]
 pub struct PlayerEquipmentChanged;
+
+/// Command to add an [Equipment] to the [Player].
+///
+/// If the item is in the [Inventory], it will remove it.
+/// If the [Player] already have this kind of [Equipment], it will put the old
+/// one to the [Inventory]
+pub struct EquipItemCommand(pub Entity);
+
+impl Command for EquipItemCommand {
+    fn apply(self, world: &mut World) {
+        let player = world.query_filtered::<Entity, With<Player>>().single(world);
+        let inventory = world
+            .query_filtered::<Entity, With<Inventory>>()
+            .single(world);
+
+        let mut inventory_changed = world
+            .query::<&Parent>()
+            .get(world, self.0)
+            .map(|parent| **parent == inventory)
+            .unwrap_or(false);
+
+        // Check it the player already have an item of same type
+        let mut equipments = world.query::<(Entity, &Equipment, &Parent)>();
+        let current_equipment = equipments
+            .get(world, self.0)
+            .map(|(_, eqp, _)| *eqp)
+            .expect("Equipment");
+
+        let old_equipments = equipments
+            .iter(world)
+            // same parent, same type, but different entity
+            .filter(|(entity, eqp, parent)| {
+                warn!(" * filter({entity}, {:?}, {})", eqp, ***parent);
+                player == ***parent && **eqp == current_equipment && *entity != self.0
+            })
+            .map(|(e, _eqp, _p)| e)
+            .collect::<Vec<_>>();
+        warn!("old_equipments = {old_equipments:?}");
+        if !old_equipments.is_empty() {
+            // Move old equipments (should be single) in inventory
+            world.entity_mut(inventory).add_children(&old_equipments);
+            inventory_changed = true;
+        }
+
+        // Add_child will remove the old parent before applying new parenting
+        world.entity_mut(player).add_child(self.0);
+
+        // Flush the world to ensure the items are correctly attached to
+        // their parent before triggering events
+        world.flush();
+
+        world.trigger(PlayerEquipmentChanged);
+        if inventory_changed {
+            world.trigger(InventoryChanged);
+        }
+    }
+}
+
+/// Command to drop an item
+pub struct DropItemCommand(pub Entity);
+
+impl Command for DropItemCommand {
+    fn apply(self, world: &mut World) {
+        let player = world.query_filtered::<Entity, With<Player>>().single(world);
+        let inventory = world
+            .query_filtered::<Entity, With<Inventory>>()
+            .single(world);
+
+        enum Change {
+            None,
+            Player,
+            Inventory,
+            Other(Entity),
+        }
+
+        let change = world
+            .query::<&Parent>()
+            .get(world, self.0)
+            .map(|p| {
+                if **p == player {
+                    Change::Player
+                } else if **p == inventory {
+                    Change::Inventory
+                } else {
+                    Change::Other(**p)
+                }
+            })
+            .unwrap_or(Change::None);
+
+        match change {
+            Change::Player => {
+                world.commands().entity(player).remove_children(&[self.0]);
+            }
+            Change::Inventory => {
+                world
+                    .commands()
+                    .entity(inventory)
+                    .remove_children(&[self.0]);
+            }
+            Change::Other(parent) => {
+                world.commands().entity(parent).remove_children(&[self.0]);
+            }
+            Change::None => {}
+        }
+        world.despawn(self.0);
+        world.flush();
+
+        match change {
+            Change::Player => {
+                world.trigger(PlayerEquipmentChanged);
+            }
+            Change::Inventory => {
+                world.trigger(InventoryChanged);
+            }
+            Change::Other(_) => {}
+            Change::None => {}
+        }
+    }
+}

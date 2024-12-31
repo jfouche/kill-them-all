@@ -25,7 +25,8 @@ impl BootsAffixProvider {
 
 #[derive(Component)]
 #[require(
-    Name(|| Name::new("Boots"))
+    Name(|| Name::new("Boots")),
+    Equipment(|| Equipment::Boots)
 )]
 pub struct Boots;
 

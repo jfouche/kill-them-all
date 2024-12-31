@@ -14,7 +14,7 @@ pub struct DebugPlugin;
 impl Plugin for DebugPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
-            DebugUiPlugin,
+            // DebugUiPlugin,
             FpsOverlayPlugin::default(),
             bevy_inspector_egui::quick::WorldInspectorPlugin::new(),
             bevy_inspector_egui::quick::FilterQueryInspectorPlugin::<With<Player>>::default(),

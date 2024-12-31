@@ -23,7 +23,8 @@ impl HelmetAffixProvider {
 
 #[derive(Component)]
 #[require(
-    Name(|| Name::new("Helmet"))
+    Name(|| Name::new("Helmet")),
+    Equipment(|| Equipment::Helmet)
 )]
 pub struct Helmet;
 

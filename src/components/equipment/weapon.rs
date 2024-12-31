@@ -8,6 +8,9 @@ use std::time::Duration;
 /// A [Weapon] should be a child of a [Character]
 ///
 #[derive(Component, Default)]
+#[require(
+    Equipment(|| Equipment::Weapon)
+)]
 pub struct Weapon;
 
 ///

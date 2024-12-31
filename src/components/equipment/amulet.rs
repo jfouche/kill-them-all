@@ -25,7 +25,8 @@ impl AmuletAffixProvider {
 
 #[derive(Component)]
 #[require(
-    Name(|| Name::new("Amulet"))
+    Name(|| Name::new("Amulet")),
+    Equipment(|| Equipment::Amulet)
 )]
 pub struct Amulet;
 
