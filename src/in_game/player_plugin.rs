@@ -4,7 +4,6 @@ use crate::utils::blink::Blink;
 use crate::utils::invulnerable::Invulnerable;
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
-use std::ops::Mul;
 use std::time::Duration;
 
 pub struct PlayerPlugin;
@@ -12,6 +11,7 @@ pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<PlayerAssets>()
+            .init_resource::<NextPositionIndicatorAssets>()
             .init_resource::<Score>()
             .add_event::<PlayerDeathEvent>()
             .add_event::<InventoryChanged>()
@@ -28,28 +28,14 @@ impl Plugin for PlayerPlugin {
                 Update,
                 (
                     init_player_position,
-                    player_movement,
+                    set_target_position,
                     animate_player_sprite,
                     player_invulnerability_finished,
                     increment_player_experience,
                     level_up,
-                    // remove_old_equipment::<Amulet>,
-                    // remove_old_equipment::<BodyArmour>,
-                    // remove_old_equipment::<Boots>,
-                    // remove_old_equipment::<Helmet>,
-                    // remove_old_equipment::<Wand>,
-                    // remove_old_equipment::<FireBallLauncher>,
-                    // remove_old_equipment::<ShurikenLauncher>,
-                    // remove_old_equipment::<MineDropper>,
-                    // remove_old_equipment::<DeathAura>,
                 )
                     .in_set(GameRunningSet::EntityUpdate),
-            )
-            // .add_observer(inventory_modified::<OnAdd, Parent>)
-            // .add_observer(inventory_modified::<OnRemove, Parent>)
-            // .add_observer(player_modified::<OnAdd, Parent>)
-            // .add_observer(player_modified::<OnRemove, Parent>)
-            ;
+            );
     }
 }
 
@@ -63,6 +49,8 @@ impl Default for InvulnerabilityAnimationTimer {
 }
 
 fn spawn_player(mut commands: Commands, assets: Res<PlayerAssets>) {
+    commands.spawn(Inventory);
+
     commands
         .spawn((Player, Player::sprite(&assets)))
         .with_children(|player| {
@@ -71,8 +59,6 @@ fn spawn_player(mut commands: Commands, assets: Res<PlayerAssets>) {
         })
         .observe(set_invulnerable_on_hit)
         .observe(player_dying);
-
-    commands.spawn(Inventory);
 }
 
 fn init_player_position(
@@ -102,27 +88,45 @@ fn unpause(mut query: Query<(&mut Invulnerable, &mut Blink), With<Player>>) {
 }
 
 ///
-/// Manage the keyboard to move the player
+/// Manage the mouse to move the player
 ///
-fn player_movement(
-    keys: Res<ButtonInput<KeyCode>>,
-    mut players: Query<(&MovementSpeed, &mut Velocity), With<Player>>,
+fn set_target_position(
+    mut commands: Commands,
+    window: Single<&Window>,
+    camera: Single<(&Camera, &GlobalTransform)>,
+    player: Single<&mut NextPosition, With<Player>>,
+    mouse_button_inputs: Res<ButtonInput<MouseButton>>,
+    in_game_state: Res<State<InGameState>>,
+    assets: Res<NextPositionIndicatorAssets>,
 ) {
-    if let Ok((speed, mut velocity)) = players.get_single_mut() {
-        let mut linvel = Vec2::default();
-        if keys.any_pressed([KeyCode::ArrowLeft, KeyCode::Numpad4, KeyCode::KeyA]) {
-            linvel.x = -1.0;
-        }
-        if keys.any_pressed([KeyCode::ArrowRight, KeyCode::Numpad6, KeyCode::KeyD]) {
-            linvel.x = 1.0;
-        }
-        if keys.any_pressed([KeyCode::ArrowUp, KeyCode::Numpad8, KeyCode::KeyW]) {
-            linvel.y = 1.0;
-        }
-        if keys.any_pressed([KeyCode::ArrowDown, KeyCode::Numpad2, KeyCode::KeyS]) {
-            linvel.y = -1.0;
-        }
-        velocity.linvel = linvel.normalize_or_zero().mul(**speed);
+    if **in_game_state != InGameState::Running || !mouse_button_inputs.pressed(MouseButton::Left) {
+        return;
+    }
+
+    let mut next_pos = player.into_inner();
+    if !mouse_button_inputs.just_pressed(MouseButton::Left) && next_pos.is_none() {
+        // a mouse is down but was not just pressed, and there is no target at the moment
+        return;
+    }
+
+    let (camera, camera_transform) = *camera;
+    let Some(point) = window
+        .cursor_position()
+        .and_then(|cursor| camera.viewport_to_world_2d(camera_transform, cursor).ok())
+    else {
+        return;
+    };
+    warn!("set_target_position({point})");
+
+    *next_pos = NextPosition(Some(point));
+
+    if mouse_button_inputs.just_pressed(MouseButton::Left) {
+        commands.spawn((
+            NextPositionIndicator,
+            Mesh2d(assets.mesh.clone()),
+            MeshMaterial2d(assets.color.clone()),
+            Transform::from_translation((point, 10.).into()),
+        ));
     }
 }
 
@@ -133,10 +137,10 @@ fn set_invulnerable_on_hit(
 ) {
     if let Ok(mut collision_groups) = players.get_mut(trigger.entity()) {
         // Set player invulnerable
-        commands
-            .entity(trigger.entity())
-            .insert(Invulnerable::new(Duration::from_secs_f32(2.0), GROUP_ENEMY))
-            .insert(Blink::new(Duration::from_secs_f32(0.15)));
+        commands.entity(trigger.entity()).insert((
+            Invulnerable::new(Duration::from_secs_f32(2.0), GROUP_ENEMY),
+            Blink::new(Duration::from_secs_f32(0.15)),
+        ));
 
         // To allow player to not collide with enemies
         collision_groups.filters &= !GROUP_ENEMY;
@@ -226,84 +230,3 @@ fn level_up(
         }
     }
 }
-
-// /// When an equipment is added to the player, the old same one should go back to the [Inventory]
-// /// TODO: move to observer
-// /// FIXME: There is a bug when equiping multiple time the type of equipment
-// fn remove_old_equipment<E>(
-//     mut commands: Commands,
-//     player: Single<Entity, With<Player>>,
-//     new_equipments: Query<(Entity, &Parent), (With<E>, Added<Parent>)>,
-//     equipments: Query<(Entity, &Parent), With<E>>,
-//     inventory: Single<Entity, With<Inventory>>,
-// ) where
-//     E: Component,
-// {
-//     for (new_equipment, parent) in &new_equipments {
-//         warn!("Equipment {new_equipment} has been added to {}", **parent);
-//         if *player == **parent {
-//             warn!("Equipment {new_equipment} has been added to Player");
-//             // new_equipment has been added to Player, get old ones
-//             let old_equipments = equipments
-//                 .iter()
-//                 // same parent, but different entity
-//                 .filter(|(e, p)| {
-//                     warn!(" * filter({e}, {})", ***p);
-//                     *player == ***p && *e != new_equipment})
-//                 .map(|(e, _p)| e)
-//                 .collect::<Vec<_>>();
-
-//             if !old_equipments.is_empty() {
-//                 // Move old equipments to [Inventory], removing them from [Player]
-//                 warn!("Moving back items to inventory: {:?}", &old_equipments);
-//                 for equipment in &old_equipments {
-//                     commands.entity(*equipment).remove_parent();
-//                 }
-//                 commands.entity(*player).remove_children(&old_equipments);
-//                 commands.entity(*inventory).add_children(&old_equipments);
-//             }
-//         }
-//     }
-// }
-
-// fn inventory_modified<E, B>(
-//     trigger: Trigger<E, B>,
-//     mut commands: Commands,
-//     inventory: Single<Entity, With<Inventory>>,
-//     parents: Query<&Parent>,
-// ) where
-//     B: Bundle,
-//     E: std::fmt::Debug,
-// {
-//     if let Ok(parent) = parents.get(trigger.entity()) {
-//         if **parent == *inventory {
-//             warn!(
-//                 "inventory_modified due to {:?}({})",
-//                 trigger.event(),
-//                 trigger.entity()
-//             );
-//             commands.trigger(InventoryChanged);
-//         }
-//     }
-// }
-
-// fn player_modified<E, B>(
-//     trigger: Trigger<E, B>,
-//     mut commands: Commands,
-//     player: Single<Entity, With<Player>>,
-//     parents: Query<&Parent>,
-// ) where
-//     B: Bundle,
-//     E: std::fmt::Debug,
-// {
-//     if let Ok(parent) = parents.get(trigger.entity()) {
-//         if **parent == *player {
-//             warn!(
-//                 "player_modified due to {:?}({})",
-//                 trigger.event(),
-//                 trigger.entity()
-//             );
-//             commands.trigger(PlayerEquipmentChanged);
-//         }
-//     }
-// }

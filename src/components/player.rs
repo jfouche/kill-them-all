@@ -1,6 +1,8 @@
 use super::*;
+use crate::utils::despawn_after::DespawnAfter;
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
+use std::time::Duration;
 
 #[derive(Component)]
 #[require(
@@ -126,6 +128,36 @@ impl std::fmt::Display for Experience {
 ///
 #[derive(Default, Resource)]
 pub struct Score(pub u16);
+
+///
+/// An indicator to show the [NextPosition] of the [Player] on the map
+///
+#[derive(Component)]
+#[require(
+    Name(|| Name::new("NextPositionIndicator")),
+    Mesh2d,
+    MeshMaterial2d<ColorMaterial>,
+    Transform,
+    DespawnAfter(|| DespawnAfter::new(Duration::from_millis(300)))
+)]
+pub struct NextPositionIndicator;
+
+///
+/// Assets for [NextPositionIndicator]
+///
+#[derive(Resource)]
+pub struct NextPositionIndicatorAssets {
+    pub mesh: Handle<Mesh>,
+    pub color: Handle<ColorMaterial>,
+}
+
+impl FromWorld for NextPositionIndicatorAssets {
+    fn from_world(world: &mut World) -> Self {
+        let mesh = world.add_asset(Circle::new(5.0));
+        let color = world.add_asset(Color::srgba(1., 0., 0., 0.8));
+        NextPositionIndicatorAssets { mesh, color }
+    }
+}
 
 ///
 /// The [Inventory] contains all items that carry the [Player] as children

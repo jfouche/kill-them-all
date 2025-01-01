@@ -34,7 +34,7 @@ fn main() {
         ui::UiPlugins,
         utils::blink::BlinkPlugin,
         utils::invulnerable::InvulnerabilityPlugin,
-        // utils::despawn_after::despawn_after_plugin,
+        utils::despawn_after::despawn_after_plugin,
     ))
     // Game plugins
     .add_plugins((

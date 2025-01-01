@@ -15,7 +15,6 @@ mod world_map_plugin;
 use crate::components::{LifeTime, PlayerDeathEvent, Round};
 use crate::schedule::*;
 use crate::utils::blink::Blink;
-use crate::utils::cursor::*;
 use crate::utils::despawn_after::DespawnAfter;
 use crate::utils::invulnerable::Invulnerable;
 use bevy::app::PluginGroupBuilder;
@@ -47,13 +46,10 @@ impl PluginGroup for InGamePluginsGroup {
 fn in_game_schedule_plugin(app: &mut App) {
     app.register_type::<Round>()
         .add_systems(Startup, stop_physics)
-        .add_systems(
-            OnEnter(GameState::InGame),
-            (run_game, grab_cursor, init_physics),
-        )
-        .add_systems(OnExit(GameState::InGame), (ungrab_cursor, reset_physics))
-        .add_systems(OnEnter(InGameState::Running), (grab_cursor, start_physics))
-        .add_systems(OnExit(InGameState::Running), (ungrab_cursor, stop_physics))
+        .add_systems(OnEnter(GameState::InGame), (run_game, init_physics))
+        .add_systems(OnExit(GameState::InGame), reset_physics)
+        .add_systems(OnEnter(InGameState::Running), start_physics)
+        .add_systems(OnExit(InGameState::Running), stop_physics)
         .add_systems(Update, switch_to_pause.in_set(GameRunningSet::UserInput))
         .add_systems(Update, on_player_death.in_set(GameRunningSet::EntityUpdate))
         .add_systems(

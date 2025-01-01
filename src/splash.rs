@@ -1,6 +1,5 @@
 use crate::components::*;
 use crate::schedule::*;
-use crate::utils::cursor::*;
 use bevy::ecs::component::ComponentId;
 use bevy::ecs::world::DeferredWorld;
 use bevy::prelude::*;
@@ -53,12 +52,9 @@ impl Command for CreateSpashScreen {
 const BACKGROUND_COLOR: Color = Color::srgb(0.4, 0.4, 0.4);
 
 pub fn splash_plugin(app: &mut App) {
-    app.add_systems(
-        OnEnter(GameState::Splash),
-        (spawn_splash_screen, ungrab_cursor),
-    )
-    .add_systems(OnExit(GameState::Splash), despawn_all::<SplashScreen>)
-    .add_systems(Update, goto_main_menu.run_if(in_state(GameState::Splash)));
+    app.add_systems(OnEnter(GameState::Splash), spawn_splash_screen)
+        .add_systems(OnExit(GameState::Splash), despawn_all::<SplashScreen>)
+        .add_systems(Update, goto_main_menu.run_if(in_state(GameState::Splash)));
 }
 
 fn spawn_splash_screen(mut commands: Commands) {

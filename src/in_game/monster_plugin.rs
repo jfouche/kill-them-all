@@ -1,7 +1,6 @@
 use crate::{components::*, schedule::*};
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
-use std::ops::Mul;
 
 #[derive(Resource)]
 struct MonsterSpawnerTimer {
@@ -145,18 +144,12 @@ fn add_affixes(
 /// Monsters moves in direction of the Player
 ///
 fn monsters_moves(
-    mut q_monsters: Query<
-        (&Transform, &mut Velocity, &MovementSpeed),
-        (With<Monster>, Without<Player>),
-    >,
-    q_player: Query<&Transform, With<Player>>,
+    mut monsters: Query<&mut NextPosition, With<Monster>>,
+    player: Single<&Transform, With<Player>>,
 ) {
-    if let Ok(player) = q_player.get_single() {
-        for (transform, mut velocity, speed) in q_monsters.iter_mut() {
-            let direction = player.translation - transform.translation;
-            let offset = Vec2::new(direction.x, direction.y);
-            velocity.linvel = offset.normalize_or_zero().mul(**speed);
-        }
+    let player_pos = player.translation.xy();
+    for mut next_pos in &mut monsters {
+        *next_pos = NextPosition(Some(player_pos));
     }
 }
 

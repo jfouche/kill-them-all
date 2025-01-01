@@ -1,6 +1,6 @@
 #![allow(unused)]
 
-use crate::{components::*, schedule::*, utils::cursor::set_grab_cursor};
+use crate::{components::*, schedule::*};
 use bevy::{
     dev_tools::{fps_overlay::*, states::log_transitions, ui_debug_overlay::*},
     input::common_conditions::input_just_pressed,
@@ -24,31 +24,12 @@ impl Plugin for DebugPlugin {
         .add_systems(
             Update,
             (
-                toggle_grab,
                 log_transitions::<GameState>,
                 log_transitions::<InGameState>,
                 // display_collision_events.in_set(GameRunningSet::EntityUpdate),
                 toggle_debug_ui.run_if(input_just_pressed(KeyCode::Backquote)),
             ),
         );
-    }
-}
-
-fn toggle_grab(
-    mut primary_window: Query<&mut Window, With<PrimaryWindow>>,
-    keys: Res<ButtonInput<KeyCode>>,
-) {
-    if let Ok(window) = primary_window.get_single_mut() {
-        if keys.just_pressed(KeyCode::KeyG) {
-            match window.cursor_options.grab_mode {
-                bevy::window::CursorGrabMode::None => {
-                    set_grab_cursor(window, true);
-                }
-                _ => {
-                    set_grab_cursor(window, false);
-                }
-            }
-        }
     }
 }
 

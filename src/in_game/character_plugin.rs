@@ -1,5 +1,6 @@
 use crate::{components::*, schedule::*};
 use bevy::prelude::*;
+use bevy_rapier2d::prelude::Velocity;
 
 pub struct CharacterPlugin;
 
@@ -9,6 +10,7 @@ impl Plugin for CharacterPlugin {
             .add_event::<LooseLifeEvent>()
             .add_event::<CharacterDiedEvent>()
             .register_type::<Target>()
+            .register_type::<NextPosition>()
             .register_type::<BaseLife>()
             .register_type::<Life>()
             .register_type::<MaxLife>()
@@ -52,7 +54,8 @@ impl Plugin for CharacterPlugin {
             )
             .add_systems(
                 Update,
-                (regen_life, mitigate_damage_over_time).in_set(GameRunningSet::EntityUpdate),
+                (regen_life, mitigate_damage_over_time, move_character)
+                    .in_set(GameRunningSet::EntityUpdate),
             )
             .add_systems(
                 Update,
@@ -336,5 +339,36 @@ fn mitigate_damage_over_time(
     for (entity, armour, dot) in &characters {
         let damage = armour.mitigate(dot.damage(&time));
         commands.trigger_targets(LooseLifeEvent(damage), entity);
+    }
+}
+
+fn move_character(
+    mut characters: Query<
+        (
+            &mut Transform,
+            &MovementSpeed,
+            &mut NextPosition,
+            &mut Velocity,
+        ),
+        With<Character>,
+    >,
+    time: Res<Time>,
+) {
+    for (mut transform, movement_speed, mut next_pos, mut velocity) in &mut characters {
+        if let Some(target) = **next_pos {
+            let direction = target - transform.translation.xy();
+            let linvel = direction.normalize_or_zero() * **movement_speed;
+            if direction.length() > linvel.length() * time.delta_secs() {
+                warn!("move_character({linvel}");
+                velocity.linvel = linvel;
+            } else {
+                // Player is next to target, position it at the target and stop moving
+                warn!("move_character: Stop");
+                transform.translation.x = target.x;
+                transform.translation.y = target.y;
+                velocity.linvel = Vec2::ZERO;
+                **next_pos = None;
+            }
+        }
     }
 }

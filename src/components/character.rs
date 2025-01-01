@@ -6,6 +6,7 @@ use bevy_rapier2d::prelude::*;
 #[derive(Component, Default)]
 #[require(
     Target,
+    NextPosition,
     BaseLife,
     BaseMovementSpeed,
     IncreaseAttackSpeed,
@@ -30,6 +31,10 @@ pub enum Target {
     Monster,
     Player,
 }
+
+/// Position the character should move to
+#[derive(Component, Default, Clone, Copy, Deref, DerefMut, Reflect)]
+pub struct NextPosition(pub Option<Vec2>);
 
 /// Represent the initial life of a character
 #[derive(Component, Default, Deref, Clone, Copy, Reflect)]
