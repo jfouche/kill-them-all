@@ -70,7 +70,7 @@ impl EquipmentAssets {
     }
 }
 
-///
+/// Equiment type
 #[derive(Component, Clone, Copy, Debug, PartialEq, Reflect)]
 pub enum Equipment {
     Helmet,

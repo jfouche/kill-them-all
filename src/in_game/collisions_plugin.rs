@@ -125,7 +125,7 @@ fn player_takes_bonus(
     mut collisions: EventReader<CollisionEvent>,
     mut players: Query<(), With<Player>>,
     bonuses: Query<&Bonus>,
-    inventory: Single<Entity, With<Inventory>>
+    inventory: Single<Entity, With<Inventory>>,
 ) {
     collisions
         .read()

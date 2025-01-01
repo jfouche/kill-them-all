@@ -13,6 +13,7 @@ use bevy_rapier2d::prelude::*;
     Sprite,
     Transform(|| Transform::from_xyz(0., 0., 10.)),
     AnimationTimer,
+    Collider(|| Collider::cuboid(PLAYER_SIZE.x / 2., PLAYER_SIZE.y / 2.)),
     CollisionGroups(|| CollisionGroups::new(GROUP_PLAYER, GROUP_ALL)),
     ActiveEvents(|| ActiveEvents::COLLISION_EVENTS)
 )]

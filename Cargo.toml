@@ -39,6 +39,7 @@ bevy = { version = "0.15", default-features = false, features = [
 ] }
 bevy_rapier2d = "0.28"
 bevy_ecs_tilemap = "0.15"
+bevy_ecs_ldtk = "0.11"
 
 # feature: dev
 bevy-inspector-egui = { version = "0.28", default-features = false, features = [

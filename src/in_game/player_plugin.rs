@@ -27,6 +27,7 @@ impl Plugin for PlayerPlugin {
             .add_systems(
                 Update,
                 (
+                    init_player_position,
                     player_movement,
                     animate_player_sprite,
                     player_invulnerability_finished,
@@ -72,6 +73,18 @@ fn spawn_player(mut commands: Commands, assets: Res<PlayerAssets>) {
         .observe(player_dying);
 
     commands.spawn(Inventory);
+}
+
+fn init_player_position(
+    mut commands: Commands,
+    mut player: Single<&mut Transform, With<Player>>,
+    initial_positions: Query<(Entity, &Transform), (With<InitialPosition>, Without<Player>)>,
+) {
+    for (entity, transform) in &initial_positions {
+        info!("init_player_position({})", transform.translation.xy());
+        player.translation = transform.translation.with_z(4.);
+        commands.entity(entity).despawn_recursive();
+    }
 }
 
 fn pause(mut query: Query<(&mut Invulnerable, &mut Blink), With<Player>>) {
