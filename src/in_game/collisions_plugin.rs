@@ -17,6 +17,7 @@ impl Plugin for CollisionsPlugin {
                 check_if_character_is_in_damage_over_time_zone,
                 player_touched_by_monster,
                 player_takes_bonus,
+                stop_player_move_on_collision,
             )
                 .in_set(GameRunningSet::EntityUpdate),
         );
@@ -141,4 +142,20 @@ fn player_takes_bonus(
             commands.entity(bonus_entity).despawn();
             commands.entity(*inventory).add_child(**bonus);
         });
+}
+
+fn stop_player_move_on_collision(
+    player: Single<(Entity, &mut NextPosition)>,
+    mut collisions: EventReader<CollisionEvent>,
+) {
+    let (player, mut next_pos) = player.into_inner();
+    if collisions
+        .read()
+        .filter_map(start_event_filter)
+        .filter(|(e1, e2)| player == **e1 || player == **e2)
+        .next()
+        .is_some()
+    {
+        **next_pos = None;
+    }
 }

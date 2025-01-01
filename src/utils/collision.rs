@@ -4,7 +4,7 @@ use bevy::{
 };
 use bevy_rapier2d::prelude::*;
 
-/// Filter CollisionEvent::Started events
+/// Filter CollisionEvent::Started events, to use with `filter_map`
 pub fn start_event_filter(event: &CollisionEvent) -> Option<(&Entity, &Entity)> {
     match event {
         CollisionEvent::Started(e1, e2, _) => Some((e1, e2)),

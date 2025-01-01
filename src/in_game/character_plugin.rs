@@ -369,6 +369,8 @@ fn move_character(
                 velocity.linvel = Vec2::ZERO;
                 **next_pos = None;
             }
+        } else {
+            velocity.linvel = Vec2::ZERO;
         }
     }
 }
