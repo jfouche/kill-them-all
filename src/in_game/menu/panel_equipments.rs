@@ -80,7 +80,7 @@ impl EquipmentPos for Weapon {
     }
 }
 
-fn show_equipment<T>(panel: &mut ChildBuilder, info: &EquipmentInfo, assets: &EquipmentAssets)
+fn show_equipment<T>(panel: &mut ChildBuilder, info: EquipmentInfo, assets: &EquipmentAssets)
 where
     T: Component + EquipmentPos,
 {
@@ -95,7 +95,7 @@ where
         assets.image_node(info.tile_index),
         info.clone(),
         ShowPopupOnMouseOver {
-            text: info.text.clone(),
+            text: info.text,
             image: Some(assets.image_node(info.tile_index)),
         },
     ));
@@ -103,11 +103,11 @@ where
 
 fn show_all_equipments(
     panel: &mut ChildBuilder,
-    helmets: &Query<(&EquipmentInfo, &Parent), With<Helmet>>,
-    body_armours: &Query<(&EquipmentInfo, &Parent), With<BodyArmour>>,
-    boots: &Query<(&EquipmentInfo, &Parent), With<Boots>>,
-    amulets: &Query<(&EquipmentInfo, &Parent), With<Amulet>>,
-    weapons: &Query<(&EquipmentInfo, &Parent), With<Weapon>>,
+    helmets: Query<(&EquipmentInfo, &Parent), With<Helmet>>,
+    body_armours: Query<(&EquipmentInfo, &Parent), With<BodyArmour>>,
+    boots: Query<(&EquipmentInfo, &Parent), With<Boots>>,
+    amulets: Query<(&EquipmentInfo, &Parent), With<Amulet>>,
+    weapons: Query<(&EquipmentInfo, &Parent), With<Weapon>>,
     player: Entity,
     assets: &EquipmentAssets,
 ) {
@@ -128,17 +128,17 @@ fn show_all_equipments(
     }
 }
 
-fn get_equipment<'a, F>(
-    query: &'a Query<(&EquipmentInfo, &Parent), F>,
+fn get_equipment<F>(
+    query: Query<(&EquipmentInfo, &Parent), F>,
     player: Entity,
-) -> Option<&'a EquipmentInfo>
+) -> Option<EquipmentInfo>
 where
     F: QueryFilter,
 {
     query
         .iter()
         .filter(|(_info, parent)| ***parent == player)
-        .map(|(info, _)| info)
+        .map(|(info, _)| info.clone())
         .next()
 }
 
@@ -156,11 +156,11 @@ fn show_equipments(
     commands.entity(trigger.entity()).with_children(|panel| {
         show_all_equipments(
             panel,
-            &helmets,
-            &body_armours,
-            &boots,
-            &amulets,
-            &weapons,
+            helmets,
+            body_armours,
+            boots,
+            amulets,
+            weapons,
             *player,
             &assets,
         );
@@ -171,11 +171,11 @@ fn update_equipments(
     _trigger: Trigger<PlayerEquipmentChanged>,
     mut commands: Commands,
     panels: Query<(Entity, &Children), With<EquipmentsPanel>>,
-    helmets: Query<(&EquipmentInfo, &Parent), With<Helmet>>,
-    body_armours: Query<(&EquipmentInfo, &Parent), With<BodyArmour>>,
-    boots: Query<(&EquipmentInfo, &Parent), With<Boots>>,
-    amulets: Query<(&EquipmentInfo, &Parent), With<Amulet>>,
-    weapons: Query<(&EquipmentInfo, &Parent), With<Weapon>>,
+    mut helmets: Query<(&EquipmentInfo, &Parent), With<Helmet>>,
+    mut body_armours: Query<(&EquipmentInfo, &Parent), With<BodyArmour>>,
+    mut boots: Query<(&EquipmentInfo, &Parent), With<Boots>>,
+    mut amulets: Query<(&EquipmentInfo, &Parent), With<Amulet>>,
+    mut weapons: Query<(&EquipmentInfo, &Parent), With<Weapon>>,
     player: Single<Entity, With<Player>>,
     assets: Res<EquipmentAssets>,
 ) {
@@ -184,11 +184,11 @@ fn update_equipments(
         commands.entity(panel).with_children(|panel| {
             show_all_equipments(
                 panel,
-                &helmets,
-                &body_armours,
-                &boots,
-                &amulets,
-                &weapons,
+                helmets.reborrow(),
+                body_armours.reborrow(),
+                boots.reborrow(),
+                amulets.reborrow(),
+                weapons.reborrow(),
                 *player,
                 &assets,
             );

@@ -152,9 +152,7 @@ fn stop_player_move_on_collision(
     if collisions
         .read()
         .filter_map(start_event_filter)
-        .filter(|(e1, e2)| player == **e1 || player == **e2)
-        .next()
-        .is_some()
+        .any(|(e1, e2)| player == *e1 || player == *e2)
     {
         **next_pos = None;
     }

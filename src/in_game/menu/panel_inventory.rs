@@ -42,7 +42,7 @@ fn create_inventory_panel(
 ) {
     let panel = trigger.entity();
     commands.entity(panel).with_children(|cmd| {
-        add_items(cmd, &items, *inventory, &assets);
+        add_items(cmd, items, *inventory, &assets);
     });
 }
 
@@ -51,20 +51,20 @@ fn update_inventory(
     mut commands: Commands,
     panels: Query<(Entity, &Children), With<InventoryPanel>>,
     inventory: Single<Entity, With<Inventory>>,
-    items: Query<(Entity, &EquipmentInfo, &Parent)>,
+    mut items: Query<(Entity, &EquipmentInfo, &Parent)>,
     assets: Res<EquipmentAssets>,
 ) {
     for (panel, children) in &panels {
         commands.entity(panel).remove_children(children);
         commands.entity(panel).with_children(|cmd| {
-            add_items(cmd, &items, *inventory, &assets);
+            add_items(cmd, items.reborrow(), *inventory, &assets);
         });
     }
 }
 
 fn add_items(
     panel: &mut ChildBuilder,
-    items: &Query<(Entity, &EquipmentInfo, &Parent)>,
+    items: Query<(Entity, &EquipmentInfo, &Parent)>,
     inventory: Entity,
     assets: &EquipmentAssets,
 ) {
