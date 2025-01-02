@@ -1,3 +1,4 @@
+use super::GameRunningSet;
 use crate::{components::*, schedule::GameState};
 use bevy::{prelude::*, utils::HashMap};
 use bevy_ecs_ldtk::prelude::*;
@@ -11,12 +12,26 @@ impl Plugin for WorldMapPlugin {
         app.add_plugins(LdtkPlugin)
             .init_resource::<WorldMapAssets>()
             .insert_resource(LevelSelection::index(0))
+            .insert_resource(LdtkSettings {
+                level_spawn_behavior: LevelSpawnBehavior::UseWorldTranslation {
+                    load_level_neighbors: true,
+                },
+                ..default()
+            })
             .register_ldtk_int_cell::<MyColliderBundle>(3)
             .register_ldtk_int_cell::<MyColliderBundle>(4)
-            .register_ldtk_entity::<PlayerLdtkBundle>("PlayerInitialPosition")
+            .register_ldtk_entity::<PlayerInitialPositionLdtkBundle>("PlayerInitialPosition")
             .add_systems(OnEnter(GameState::InGame), spawn_worldmap)
             .add_systems(OnExit(GameState::InGame), despawn_all::<WorldMap>)
-            .add_systems(Update, spawn_colliders);
+            .add_systems(
+                Update,
+                (
+                    spawn_colliders,
+                    level_selection_follow_player,
+                    init_player_position,
+                )
+                    .in_set(GameRunningSet::EntityUpdate),
+            );
     }
 }
 
@@ -30,8 +45,9 @@ struct MyColliderBundle {
 struct MyCollider;
 
 fn spawn_worldmap(mut commands: Commands, assets: Res<WorldMapAssets>) {
+    commands.insert_resource(LevelSelection::index(0));
     commands.spawn((
-        Name::new("WorldMap"),
+        WorldMap,
         LdtkWorldBundle {
             ldtk_handle: assets.ldtk_project.clone(),
             ..Default::default()
@@ -39,7 +55,7 @@ fn spawn_worldmap(mut commands: Commands, assets: Res<WorldMapAssets>) {
     ));
 }
 
-/// Spawns heron collisions for the walls of a level
+/// Spawns colliders of a level
 ///
 /// You could just insert a ColliderBundle into the WallBundle,
 /// but this spawns a different collider for EVERY wall tile.
@@ -206,5 +222,58 @@ fn spawn_colliders(
                 });
             }
         });
+    }
+}
+
+fn init_player_position(
+    mut commands: Commands,
+    mut player: Single<&mut Transform, With<Player>>,
+    initial_positions: Query<(Entity, &GridCoords), (With<InitialPosition>, Without<Player>)>,
+) {
+    for (entity, coord) in &initial_positions {
+        player.translation =
+            bevy_ecs_ldtk::utils::grid_coords_to_translation(*coord, IVec2::splat(16)).extend(4.);
+        info!("init_player_position({})", player.translation.xy());
+        commands.entity(entity).despawn_recursive();
+    }
+}
+
+fn level_selection_follow_player(
+    players: Query<&GlobalTransform, With<Player>>,
+    levels: Query<(&LevelIid, &GlobalTransform)>,
+    ldtk_projects: Query<&LdtkProjectHandle>,
+    ldtk_project_assets: Res<Assets<LdtkProject>>,
+    mut level_selection: ResMut<LevelSelection>,
+) {
+    if let Ok(player_transform) = players.get_single() {
+        let ldtk_project = ldtk_project_assets
+            .get(ldtk_projects.single())
+            .expect("ldtk project should be loaded before player is spawned");
+
+        for (level_iid, level_transform) in levels.iter() {
+            let level = ldtk_project
+                .get_raw_level_by_iid(level_iid.get())
+                .expect("level should exist in only project");
+
+            let level_bounds = Rect {
+                min: Vec2::new(
+                    level_transform.translation().x,
+                    level_transform.translation().y,
+                ),
+                max: Vec2::new(
+                    level_transform.translation().x + level.px_wid as f32,
+                    level_transform.translation().y + level.px_hei as f32,
+                ),
+            };
+
+            if level_bounds.contains(player_transform.translation().truncate()) {
+                if let LevelSelection::Iid(ref iid) = *level_selection {
+                    if level_iid != iid {
+                        info!("Player change level to {level_iid}");
+                    }
+                }
+                *level_selection = LevelSelection::Iid(level_iid.clone());
+            }
+        }
     }
 }

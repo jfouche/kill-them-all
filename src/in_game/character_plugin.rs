@@ -359,11 +359,9 @@ fn move_character(
             let direction = target - transform.translation.xy();
             let linvel = direction.normalize_or_zero() * **movement_speed;
             if direction.length() > linvel.length() * time.delta_secs() {
-                warn!("move_character({linvel}");
                 velocity.linvel = linvel;
             } else {
                 // Player is next to target, position it at the target and stop moving
-                warn!("move_character: Stop");
                 transform.translation.x = target.x;
                 transform.translation.y = target.y;
                 velocity.linvel = Vec2::ZERO;

@@ -33,6 +33,15 @@ impl Invulnerable {
     }
 }
 
+#[derive(Component, Deref, DerefMut)]
+struct InvulnerabilityAnimationTimer(Timer);
+
+impl Default for InvulnerabilityAnimationTimer {
+    fn default() -> Self {
+        InvulnerabilityAnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating))
+    }
+}
+
 ///
 /// [`Invulnerable`] finishes
 ///

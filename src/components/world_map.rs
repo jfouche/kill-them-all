@@ -15,11 +15,14 @@ impl FromWorld for WorldMapAssets {
 }
 
 #[derive(Component, Copy, Clone)]
+#[require(Name(|| Name::new("WorldMap")))]
 pub struct WorldMap;
 
 #[derive(Bundle, Default, LdtkEntity)]
-pub struct PlayerLdtkBundle {
+pub struct PlayerInitialPositionLdtkBundle {
     initial_pos: InitialPosition,
+    #[grid_coords]
+    grid_coords: GridCoords,
 }
 
 #[derive(Component, Default)]

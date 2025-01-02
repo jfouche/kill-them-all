@@ -205,12 +205,10 @@ impl Command for EquipItemCommand {
             .iter(world)
             // same parent, same type, but different entity
             .filter(|(entity, eqp, parent)| {
-                warn!(" * filter({entity}, {:?}, {})", eqp, ***parent);
                 player == ***parent && **eqp == current_equipment && *entity != self.0
             })
             .map(|(e, _eqp, _p)| e)
             .collect::<Vec<_>>();
-        warn!("old_equipments = {old_equipments:?}");
         if !old_equipments.is_empty() {
             // Move old equipments (should be single) in inventory
             world.entity_mut(inventory).add_children(&old_equipments);

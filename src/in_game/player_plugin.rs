@@ -13,6 +13,7 @@ impl Plugin for PlayerPlugin {
         app.init_resource::<PlayerAssets>()
             .init_resource::<NextPositionIndicatorAssets>()
             .init_resource::<Score>()
+            .init_resource::<AllowMouseHandling>()
             .add_event::<PlayerDeathEvent>()
             .add_event::<InventoryChanged>()
             .add_event::<PlayerEquipmentChanged>()
@@ -24,11 +25,11 @@ impl Plugin for PlayerPlugin {
             )
             .add_systems(OnEnter(GameState::InGame), unpause)
             .add_systems(OnExit(GameState::InGame), pause)
+            .add_systems(OnEnter(InGameState::Running), disable_mouse_handling)
             .add_systems(
                 Update,
                 (
-                    init_player_position,
-                    set_target_position,
+                    (wait_for_mouse_up, set_target_position).chain(),
                     animate_player_sprite,
                     player_invulnerability_finished,
                     increment_player_experience,
@@ -39,12 +40,19 @@ impl Plugin for PlayerPlugin {
     }
 }
 
-#[derive(Component, Deref, DerefMut)]
-struct InvulnerabilityAnimationTimer(Timer);
+#[derive(Resource, Default, Deref, DerefMut)]
+struct AllowMouseHandling(bool);
 
-impl Default for InvulnerabilityAnimationTimer {
-    fn default() -> Self {
-        InvulnerabilityAnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating))
+fn disable_mouse_handling(mut allow_mouse: ResMut<AllowMouseHandling>) {
+    **allow_mouse = false;
+}
+
+fn wait_for_mouse_up(
+    mouse_inputs: Res<ButtonInput<MouseButton>>,
+    mut allow_mouse: ResMut<AllowMouseHandling>,
+) {
+    if !**allow_mouse && !mouse_inputs.pressed(MouseButton::Left) {
+        **allow_mouse = true;
     }
 }
 
@@ -59,18 +67,6 @@ fn spawn_player(mut commands: Commands, assets: Res<PlayerAssets>) {
         })
         .observe(set_invulnerable_on_hit)
         .observe(player_dying);
-}
-
-fn init_player_position(
-    mut commands: Commands,
-    mut player: Single<&mut Transform, With<Player>>,
-    initial_positions: Query<(Entity, &Transform), (With<InitialPosition>, Without<Player>)>,
-) {
-    for (entity, transform) in &initial_positions {
-        info!("init_player_position({})", transform.translation.xy());
-        player.translation = transform.translation.with_z(4.);
-        commands.entity(entity).despawn_recursive();
-    }
 }
 
 fn pause(mut query: Query<(&mut Invulnerable, &mut Blink), With<Player>>) {
@@ -95,17 +91,11 @@ fn set_target_position(
     window: Single<&Window>,
     camera: Single<(&Camera, &GlobalTransform)>,
     player: Single<&mut NextPosition, With<Player>>,
-    mouse_button_inputs: Res<ButtonInput<MouseButton>>,
-    in_game_state: Res<State<InGameState>>,
+    mouse_inputs: Res<ButtonInput<MouseButton>>,
+    allow_mouse: Res<AllowMouseHandling>,
     assets: Res<NextPositionIndicatorAssets>,
 ) {
-    if **in_game_state != InGameState::Running || !mouse_button_inputs.pressed(MouseButton::Left) {
-        return;
-    }
-
-    let mut next_pos = player.into_inner();
-    if !mouse_button_inputs.just_pressed(MouseButton::Left) && next_pos.is_none() {
-        // a mouse is down but was not just pressed, and there is no target at the moment
+    if !**allow_mouse || !mouse_inputs.pressed(MouseButton::Left) {
         return;
     }
 
@@ -116,11 +106,11 @@ fn set_target_position(
     else {
         return;
     };
-    warn!("set_target_position({point})");
 
+    let mut next_pos = player.into_inner();
     *next_pos = NextPosition(Some(point));
 
-    if mouse_button_inputs.just_pressed(MouseButton::Left) {
+    if mouse_inputs.just_pressed(MouseButton::Left) {
         commands.spawn((
             NextPositionIndicator,
             Mesh2d(assets.mesh.clone()),
