@@ -12,6 +12,7 @@ impl Plugin for WorldMapPlugin {
             .init_resource::<WorldMapAssets>()
             .insert_resource(LevelSelection::index(0))
             .register_ldtk_int_cell::<MyColliderBundle>(3)
+            .register_ldtk_int_cell::<MyColliderBundle>(4)
             .register_ldtk_entity::<PlayerLdtkBundle>("PlayerInitialPosition")
             .add_systems(OnEnter(GameState::InGame), spawn_worldmap)
             .add_systems(OnExit(GameState::InGame), despawn_all::<WorldMap>)
