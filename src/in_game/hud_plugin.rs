@@ -18,7 +18,6 @@ impl Plugin for TopMenuPlugin {
             Update,
             (
                 update_score,
-                update_round,
                 update_life_bar,
                 update_xp_bar,
                 update_life_bar_on_death,
@@ -122,16 +121,6 @@ fn spawn_score(mut commands: Commands) {
 fn update_score(score: Res<Score>, mut q_text: Query<&mut Text, With<ScoreText>>) {
     if let Ok(mut text) = q_text.get_single_mut() {
         text.0 = format!("score : {}", score.0);
-    }
-}
-
-fn update_round(round: Res<Round>, mut q_text: Query<&mut Text, With<RoundText>>) {
-    if let Ok(mut text) = q_text.get_single_mut() {
-        text.0 = format!(
-            "Round: {} - {}s",
-            round.level,
-            round.timer.remaining().as_secs()
-        );
     }
 }
 

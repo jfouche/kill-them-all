@@ -135,7 +135,6 @@ pub enum MonsterRarity {
 ///
 #[derive(Component, Default, Reflect)]
 pub struct MonsterSpawnParams {
-    pub pos: Vec2,
     pub rarity: MonsterRarity,
     pub kind: usize,
     pub level: u16,
@@ -143,10 +142,6 @@ pub struct MonsterSpawnParams {
 
 impl MonsterSpawnParams {
     pub fn generate(level: u16, rng: &mut ThreadRng) -> Self {
-        // Position
-        let x: f32 = rng.gen_range(-150. ..150.);
-        let y: f32 = rng.gen_range(-100. ..100.);
-
         // Rarity
         let rarity = match rng.gen_range(0..5) {
             0 => MonsterRarity::Rare,
@@ -158,7 +153,6 @@ impl MonsterSpawnParams {
 
         // Create the params
         MonsterSpawnParams {
-            pos: Vec2::new(x, y),
             kind,
             rarity,
             level,
@@ -173,11 +167,6 @@ impl MonsterSpawnParams {
     }
 }
 
-impl From<&MonsterSpawnParams> for Transform {
-    fn from(value: &MonsterSpawnParams) -> Self {
-        Transform::from_xyz(value.pos.x, value.pos.y, 10.)
-    }
-}
 
 ///
 /// Utility to simplify components initialization

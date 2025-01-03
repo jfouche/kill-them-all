@@ -50,21 +50,3 @@ impl LifeTime {
         LifeTime(Timer::from_seconds(secs, TimerMode::Once))
     }
 }
-
-///
-/// A [Round] is fixed time period when monster spawn
-///
-#[derive(Resource, Reflect)]
-pub struct Round {
-    pub level: u16,
-    pub timer: Timer,
-}
-
-impl Default for Round {
-    fn default() -> Self {
-        Round {
-            level: 0,
-            timer: Timer::from_seconds(15., TimerMode::Repeating),
-        }
-    }
-}

@@ -2,28 +2,12 @@ use crate::{components::*, schedule::*};
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
-#[derive(Resource)]
-struct MonsterSpawnerTimer {
-    timer: Timer,
-    enemy_count: u16,
-}
-
-impl Default for MonsterSpawnerTimer {
-    fn default() -> Self {
-        MonsterSpawnerTimer {
-            timer: Timer::from_seconds(6., TimerMode::Repeating),
-            enemy_count: 3,
-        }
-    }
-}
-
 pub struct MonsterPlugin;
 
 impl Plugin for MonsterPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<SpawningMonsterAssets>()
             .init_resource::<AllMonsterAssets>()
-            .init_resource::<MonsterSpawnerTimer>()
             .register_type::<MonsterSpawnParams>()
             .add_event::<MonsterDeathEvent>()
             .add_systems(OnExit(GameState::InGame), despawn_all::<Monster>)
@@ -31,7 +15,6 @@ impl Plugin for MonsterPlugin {
             .add_systems(
                 Update,
                 (
-                    monster_spawning_timer,
                     spawn_monsters,
                     monsters_moves,
                     animate_sprite,
@@ -43,43 +26,15 @@ impl Plugin for MonsterPlugin {
 }
 
 ///
-/// Spawn monster at Timer times
-///
-fn monster_spawning_timer(
-    mut commands: Commands,
-    time: Res<Time>,
-    mut spawn_timer: ResMut<MonsterSpawnerTimer>,
-    spawning_assets: Res<SpawningMonsterAssets>,
-    round: Res<Round>,
-) {
-    // tick the timer
-    spawn_timer.timer.tick(time.delta());
-    if spawn_timer.timer.finished() {
-        let mut rng = rand::thread_rng();
-        for _ in 0..spawn_timer.enemy_count {
-            let params = MonsterSpawnParams::generate(round.level, &mut rng);
-            commands.spawn((
-                MonsterFuturePos,
-                Transform::from(&params),
-                Mesh2d::from(&*spawning_assets),
-                MeshMaterial2d::from(&*spawning_assets),
-                params,
-            ));
-        }
-        spawn_timer.enemy_count += 1;
-    }
-}
-
-///
-/// Spawn monster at Timer times
+/// Spawn monster 
 ///
 fn spawn_monsters(
     mut commands: Commands,
     time: Res<Time>,
-    mut query: Query<(Entity, &mut MonsterSpawnTimer, &MonsterSpawnParams)>,
+    mut query: Query<(Entity, &Transform, &mut MonsterSpawnTimer, &MonsterSpawnParams)>,
     assets: Res<AllMonsterAssets>,
 ) {
-    for (entity, mut timer, params) in query.iter_mut() {
+    for (entity, transform, mut timer, params) in query.iter_mut() {
         timer.tick(time.delta());
         if timer.finished() {
             commands.entity(entity).despawn();
@@ -92,7 +47,7 @@ fn spawn_monsters(
             let monster_components = (
                 MonsterRarity::from(&params_assets),
                 Sprite::from(&params_assets),
-                Transform::from(params_assets.params),
+                Transform::from_translation(transform.translation),
                 XpOnDeath::from(&params_assets),
                 HitDamageRange::from(&params_assets),
             );

@@ -1,8 +1,9 @@
 use super::GameRunningSet;
 use crate::{components::*, schedule::GameState};
 use bevy::{prelude::*, utils::HashMap};
-use bevy_ecs_ldtk::prelude::*;
+use bevy_ecs_ldtk::{prelude::*, utils::grid_coords_to_translation};
 use bevy_rapier2d::prelude::*;
+use rand::seq::SliceRandom;
 use std::collections::HashSet;
 
 pub struct WorldMapPlugin;
@@ -18,8 +19,8 @@ impl Plugin for WorldMapPlugin {
                 },
                 ..default()
             })
-            .register_ldtk_int_cell::<MyColliderBundle>(3)
-            .register_ldtk_int_cell::<MyColliderBundle>(4)
+            .register_ldtk_int_cell::<WaterLdtkBundle>(WaterTile::ID)
+            .register_ldtk_int_cell::<ColliderLdtkBundle>(ColliderTile::ID)
             .register_ldtk_entity::<PlayerInitialPositionLdtkBundle>("PlayerInitialPosition")
             .add_systems(OnEnter(GameState::InGame), spawn_worldmap)
             .add_systems(OnExit(GameState::InGame), despawn_all::<WorldMap>)
@@ -29,20 +30,12 @@ impl Plugin for WorldMapPlugin {
                     spawn_colliders,
                     level_selection_follow_player,
                     init_player_position,
+                    spawn_monsters,
                 )
                     .in_set(GameRunningSet::EntityUpdate),
             );
     }
 }
-
-#[derive(Bundle, Default, LdtkIntCell)]
-struct MyColliderBundle {
-    collider: MyCollider,
-}
-
-#[derive(Component, Default)]
-#[require(Name(||Name::new("MyCollider")))]
-struct MyCollider;
 
 fn spawn_worldmap(mut commands: Commands, assets: Res<WorldMapAssets>) {
     commands.insert_resource(LevelSelection::index(0));
@@ -73,8 +66,8 @@ fn spawn_worldmap(mut commands: Commands, assets: Res<WorldMapAssets>) {
 /// 4. spawn colliders for each rectangle
 fn spawn_colliders(
     mut commands: Commands,
-    added_colliders: Query<(&GridCoords, &Parent), Added<MyCollider>>,
-    parents: Query<&Parent, Without<MyCollider>>,
+    added_colliders: Query<(&GridCoords, &Parent), Added<ColliderTile>>,
+    parents: Query<&Parent, Without<ColliderTile>>,
     levels: Query<(Entity, &LevelIid)>,
     ldtk_projects: Query<&LdtkProjectHandle>,
     ldtk_project_assets: Res<Assets<LdtkProject>>,
@@ -198,6 +191,7 @@ fn spawn_colliders(
                     // 2. the colliders will be despawned automatically when levels unload
                     for collider_rect in collider_rects {
                         level.spawn((
+                            Name::new("Map Collider"),
                             Collider::cuboid(
                                 (collider_rect.right as f32 - collider_rect.left as f32 + 1.)
                                     * grid_size as f32
@@ -228,11 +222,10 @@ fn spawn_colliders(
 fn init_player_position(
     mut commands: Commands,
     mut player: Single<&mut Transform, With<Player>>,
-    initial_positions: Query<(Entity, &GridCoords), (With<InitialPosition>, Without<Player>)>,
+    initial_positions: Query<(Entity, &GridCoords), With<InitialPosition>>,
 ) {
     for (entity, coord) in &initial_positions {
-        player.translation =
-            bevy_ecs_ldtk::utils::grid_coords_to_translation(*coord, IVec2::splat(16)).extend(4.);
+        player.translation = grid_coords_to_translation(*coord, IVec2::splat(16)).extend(4.);
         info!("init_player_position({})", player.translation.xy());
         commands.entity(entity).despawn_recursive();
     }
@@ -276,4 +269,43 @@ fn level_selection_follow_player(
             }
         }
     }
+}
+
+fn spawn_monsters(
+    mut commands: Commands,
+    player_tiles: Query<&GridCoords, With<InitialPosition>>,
+    tiles: Query<&GridCoords, Without<ColliderTile>>,
+    spawning_assets: Res<SpawningMonsterAssets>,
+) {
+    let Some(player) = player_tiles.iter().next() else {
+        return;
+    };
+
+    // Monster should spawn at a min distance from the player
+    const MIN_DISTANCE_SQUARED: i32 = 5 * 5;
+    let coords = tiles
+        .iter()
+        .filter(|&coord| {
+            (player.x - coord.x) * (player.x - coord.x)
+                + (player.y - coord.y) * (player.y - coord.y)
+                > MIN_DISTANCE_SQUARED
+        })
+        .cloned()
+        .collect::<Vec<_>>();
+
+    // Spawn the monsters initial position
+    let n_monster = 25;
+    let mut rng = rand::thread_rng();
+    coords.choose_multiple(&mut rng, n_monster).for_each(|coord| {
+        let params = MonsterSpawnParams::generate(1, &mut rng);
+        let translation = grid_coords_to_translation(*coord, IVec2::splat(16)).extend(4.);
+        warn!("spawn_monster at ({}, {}) transform: {}", coord.x, coord.y, translation.xy());
+        commands.spawn((
+            MonsterFuturePos,
+            Transform::from_translation(translation),
+            Mesh2d(spawning_assets.mesh.clone()),
+            MeshMaterial2d(spawning_assets.color.clone()),
+            params,
+        ));
+    });
 }

@@ -7,12 +7,11 @@ mod life_bar_plugin;
 mod menu;
 mod monster_plugin;
 mod player_plugin;
-mod round_plugin;
 mod skill_plugin;
 mod weapon_plugin;
 mod world_map_plugin;
 
-use crate::components::{LifeTime, PlayerDeathEvent, Round};
+use crate::components::{LifeTime, PlayerDeathEvent};
 use crate::schedule::*;
 use crate::utils::blink::Blink;
 use crate::utils::despawn_after::DespawnAfter;
@@ -32,7 +31,6 @@ impl PluginGroup for InGamePluginsGroup {
             .add(character_plugin::CharacterPlugin)
             .add(monster_plugin::MonsterPlugin)
             .add(player_plugin::PlayerPlugin)
-            .add(round_plugin::RoundPlugin)
             .add(world_map_plugin::WorldMapPlugin)
             .add(life_bar_plugin::LifeBarPlugin)
             .add(animation_plugin::AnimationPlugin)
@@ -44,8 +42,7 @@ impl PluginGroup for InGamePluginsGroup {
 }
 
 fn in_game_schedule_plugin(app: &mut App) {
-    app.register_type::<Round>()
-        .add_systems(Startup, stop_physics)
+    app.add_systems(Startup, stop_physics)
         .add_systems(OnEnter(GameState::InGame), (run_game, init_physics))
         .add_systems(OnExit(GameState::InGame), reset_physics)
         .add_systems(OnEnter(InGameState::Running), start_physics)

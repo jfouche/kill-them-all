@@ -27,3 +27,33 @@ pub struct PlayerInitialPositionLdtkBundle {
 
 #[derive(Component, Default)]
 pub struct InitialPosition;
+
+#[derive(Bundle, Default, LdtkIntCell)]
+pub struct ColliderLdtkBundle {
+    collider: ColliderTile,
+}
+
+#[derive(Bundle, Default, LdtkIntCell)]
+pub struct WaterLdtkBundle {
+    collider: WaterTile,
+}
+
+#[derive(Component, Default)]
+#[require(
+    Name(|| Name::new("WaterTile")),
+    ColliderTile
+)]
+pub struct WaterTile;
+
+impl WaterTile {
+    pub const ID: i32 = 4;
+}
+#[derive(Component, Default)]
+#[require(
+    Name(|| Name::new("ColliderTile"))
+)]
+pub struct ColliderTile;
+
+impl ColliderTile {
+    pub const ID: i32 = 3;
+}
