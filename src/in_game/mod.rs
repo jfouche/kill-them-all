@@ -2,7 +2,7 @@ mod animation_plugin;
 mod bonus_plugin;
 mod character_plugin;
 mod collisions_plugin;
-mod hud_plugin;
+mod hud;
 mod life_bar_plugin;
 mod menu;
 mod monster_plugin;
@@ -25,7 +25,7 @@ pub struct InGamePluginsGroup;
 impl PluginGroup for InGamePluginsGroup {
     fn build(self) -> PluginGroupBuilder {
         PluginGroupBuilder::start::<Self>()
-            .add(hud_plugin::TopMenuPlugin)
+            .add(hud::HudPlugin)
             .add(bonus_plugin::BonusPlugin)
             .add(collisions_plugin::CollisionsPlugin)
             .add(character_plugin::CharacterPlugin)
