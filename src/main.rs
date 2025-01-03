@@ -10,20 +10,33 @@ mod utils;
 #[cfg(feature = "dev")]
 mod debug;
 
-use bevy::{prelude::*, window::WindowResolution};
+use bevy::{prelude::*, window::*};
 use bevy_rapier2d::prelude::*;
+
+const APP_TITLE: &str = "Kill'em All";
 
 fn main() {
     let mut app = App::new();
+
+    #[cfg(feature = "dev")]
+    let window = Window {
+        title: APP_TITLE.into(),
+        position: WindowPosition::At(IVec2::new(0, 0)),
+        resolution: WindowResolution::new(1400., 600.),
+        ..Default::default()
+    };
+
+    #[cfg(not(feature = "dev"))]
+    let window = Window {
+        title: APP_TITLE.into(),
+        mode: WindowMode::BorderlessFullscreen(MonitorSelection::Primary),
+        ..Default::default()
+    };
+
     app.add_plugins(
         DefaultPlugins
             .set(WindowPlugin {
-                primary_window: Some(Window {
-                    title: "Kill'em All".to_string(),
-                    position: WindowPosition::At(IVec2::new(0, 0)),
-                    resolution: WindowResolution::new(1500., 600.),
-                    ..Default::default()
-                }),
+                primary_window: Some(window),
                 ..default()
             })
             .set(ImagePlugin::default_nearest()),
