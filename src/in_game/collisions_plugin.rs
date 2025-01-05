@@ -126,34 +126,30 @@ fn player_takes_bonus(
     mut collisions: EventReader<CollisionEvent>,
     mut players: Query<(), With<Player>>,
     bonuses: Query<&Bonus>,
-    inventory: Single<Entity, With<Inventory>>,
 ) {
     collisions
         .read()
         .filter_map(start_event_filter)
         .filter_map(|(&e1, &e2)| {
-            let (bonus, bonus_entity, other_entity) = bonuses.get_either(e1, e2)?;
-            players
-                .get_mut(other_entity)
-                .map(|_| (bonus, bonus_entity))
-                .ok()
+            let (_, bonus_entity, other_entity) = bonuses.get_either(e1, e2)?;
+            players.get_mut(other_entity).map(|_| bonus_entity).ok()
         })
-        .for_each(|(bonus, bonus_entity)| {
-            commands.entity(bonus_entity).despawn();
-            commands.entity(*inventory).add_child(**bonus);
+        .for_each(|bonus_entity| {
+            commands.queue(TakeBonusCommand(bonus_entity));
         });
 }
 
 fn stop_move_on_collision(
-    player: Single<(Entity, &mut NextPosition)>,
+    mut characters: Query<(Entity, &mut NextPosition), With<Character>>,
     mut collisions: EventReader<CollisionEvent>,
 ) {
-    let (player, mut next_pos) = player.into_inner();
-    if collisions
-        .read()
-        .filter_map(start_event_filter)
-        .any(|(e1, e2)| player == *e1 || player == *e2)
-    {
-        **next_pos = None;
+    for (character, mut next_pos) in &mut characters {
+        if collisions
+            .read()
+            .filter_map(start_event_filter)
+            .any(|(e1, e2)| character == *e1 || character == *e2)
+        {
+            next_pos.stop();
+        }
     }
 }

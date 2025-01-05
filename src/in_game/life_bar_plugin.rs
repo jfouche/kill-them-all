@@ -1,4 +1,4 @@
-use super::{GameRunningSet, GameState, InGameState};
+use super::{GameRunningSet, GameState};
 use crate::{
     components::{CharacterDyingEvent, Life, MaxLife, Monster},
     ui::{ProgressBar, ProgressBarColor},
@@ -38,7 +38,6 @@ impl Plugin for LifeBarPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<LifeBarMap>()
             .add_systems(OnExit(GameState::InGame), clear_life_bars)
-            .add_systems(OnEnter(InGameState::RoundEnd), clear_life_bars)
             .add_systems(
                 Update,
                 (update_life_bar,).in_set(GameRunningSet::EntityUpdate),

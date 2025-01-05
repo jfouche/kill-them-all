@@ -77,6 +77,16 @@ impl From<&SpawningMonsterAssets> for MeshMaterial2d<ColorMaterial> {
     }
 }
 
+/// Monster view range
+#[derive(Component, Clone, Copy, Deref, Reflect)]
+pub struct ViewRange(pub f32);
+
+impl Default for ViewRange {
+    fn default() -> Self {
+        ViewRange(300.)
+    }
+}
+
 ///
 /// Generic Monster component
 ///
@@ -84,6 +94,7 @@ impl From<&SpawningMonsterAssets> for MeshMaterial2d<ColorMaterial> {
 #[require(
     Character,
     Target(|| Target::Player),
+    ViewRange,
     MonsterRarity,
     XpOnDeath,
     HitDamageRange,
@@ -98,7 +109,7 @@ pub struct Monster;
     Name(|| Name::new("Monster#1")),
     Monster,
     BaseLife(|| BaseLife(2.)),
-    BaseMovementSpeed(||BaseMovementSpeed(90.)),
+    BaseMovementSpeed(||BaseMovementSpeed(70.)),
 )]
 pub struct MonsterType1;
 
@@ -107,7 +118,7 @@ pub struct MonsterType1;
     Name(|| Name::new("Monster#2")),
     Monster,
     BaseLife(|| BaseLife(3.)),
-    BaseMovementSpeed(||BaseMovementSpeed(80.)),
+    BaseMovementSpeed(||BaseMovementSpeed(60.)),
 )]
 pub struct MonsterType2;
 
@@ -116,7 +127,7 @@ pub struct MonsterType2;
     Name(|| Name::new("Monster#3")),
     Monster,
     BaseLife(|| BaseLife(4.)),
-    BaseMovementSpeed(||BaseMovementSpeed(70.)),
+    BaseMovementSpeed(||BaseMovementSpeed(50.)),
 )]
 pub struct MonsterType3;
 
@@ -166,7 +177,6 @@ impl MonsterSpawnParams {
         }
     }
 }
-
 
 ///
 /// Utility to simplify components initialization
@@ -254,7 +264,7 @@ pub struct MonsterSpawnTimer(pub Timer);
 
 impl Default for MonsterSpawnTimer {
     fn default() -> Self {
-        MonsterSpawnTimer(Timer::from_seconds(1., TimerMode::Once))
+        MonsterSpawnTimer(Timer::from_seconds(3., TimerMode::Once))
     }
 }
 

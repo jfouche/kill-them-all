@@ -63,7 +63,7 @@ impl Command for CreatePopupCommand {
             .get::<EquipmentPopup>(self.0)
             .expect("EquipmentPopup added")
             .clone();
-        world.commands().entity(self.0).with_children(|parent| {
+        world.entity_mut(self.0).with_children(|parent| {
             if let Some(image_node) = popup.content.image {
                 parent.spawn(image_node);
             }

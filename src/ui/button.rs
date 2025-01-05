@@ -34,12 +34,12 @@ impl MyButton {
         }
     }
 
-    pub fn from_image(image: ImageNode) -> Self {
-        MyButton {
-            text: None,
-            image: Some(image),
-        }
-    }
+    // pub fn from_image(image: ImageNode) -> Self {
+    //     MyButton {
+    //         text: None,
+    //         image: Some(image),
+    //     }
+    // }
 
     // pub fn with_image(mut self, image: ImageNode) -> Self {
     //     self.image = Some(image);
@@ -77,7 +77,7 @@ impl Command for CreateMyButtonCommand {
 
         let have_image = button.image.is_some();
 
-        world.commands().entity(self.0).with_children(|parent| {
+        world.entity_mut(self.0).with_children(|parent| {
             if let Some(image) = button.image {
                 parent.spawn(image);
             }

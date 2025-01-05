@@ -36,6 +36,16 @@ pub enum Target {
 #[derive(Component, Default, Clone, Copy, Deref, DerefMut, Reflect)]
 pub struct NextPosition(pub Option<Vec2>);
 
+impl NextPosition {
+    pub fn stop(&mut self) {
+        self.0 = None;
+    }
+
+    pub fn goto(&mut self, pos: Vec2) {
+        self.0 = Some(pos);
+    }
+}
+
 /// Represent the initial life of a character
 #[derive(Component, Default, Deref, Clone, Copy, Reflect)]
 #[require(Life, MaxLife, IncreaseMaxLife, LifeRegen)]

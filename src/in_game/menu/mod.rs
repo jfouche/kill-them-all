@@ -1,21 +1,17 @@
 mod menu_level_up;
 mod menu_pause;
 mod menu_player_died;
-mod menu_round_end;
-mod panel_characteristics;
 mod panel_equipments;
-mod panel_inventory;
 mod panel_skills;
 mod popup_info;
 mod popup_select_equipment;
+mod window_characteristics;
+mod window_inventory;
 
 use super::{pause, unpause, InGameState};
 use crate::components::EquipmentAssets;
 use bevy::{app::PluginGroupBuilder, prelude::*};
-use panel_characteristics::CharacteristicsPanel;
 use panel_equipments::EquipmentsPanel;
-use panel_inventory::InventoryPanel;
-use panel_skills::SkillsPanel;
 use popup_info::ShowPopupOnMouseOver;
 use popup_select_equipment::ShowEquipmentActionsOnMouseOver;
 
@@ -27,11 +23,10 @@ impl PluginGroup for InGameMenuPluginsGroup {
             .add(menu_pause::PausePlugin)
             .add(menu_level_up::LevelUpMenuPlugin)
             .add(menu_player_died::PlayerDiedMenuPlugin)
-            .add(menu_round_end::RoundEndMenuPlugin)
             .add(panel_equipments::inventory_panel_plugin)
             .add(panel_skills::SkillsPanelPlugin)
-            .add(panel_characteristics::CharacteristicsPanelPlugin)
-            .add(panel_inventory::InventoryPanelPlugin)
+            .add(window_characteristics::CharacteristicsPanelPlugin)
+            .add(window_inventory::InventoryPanelPlugin)
             .add(menu_plugin)
     }
 }
@@ -41,7 +36,5 @@ fn menu_plugin(app: &mut App) {
         .add_systems(OnEnter(InGameState::Pause), pause)
         .add_systems(OnExit(InGameState::Pause), unpause)
         .add_systems(OnEnter(InGameState::LevelUp), pause)
-        .add_systems(OnExit(InGameState::LevelUp), unpause)
-        .add_systems(OnEnter(InGameState::RoundEnd), pause)
-        .add_systems(OnExit(InGameState::RoundEnd), unpause);
+        .add_systems(OnExit(InGameState::LevelUp), unpause);
 }

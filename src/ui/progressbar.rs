@@ -42,7 +42,7 @@ struct CreateProgressBarCommand(Entity);
 
 impl Command for CreateProgressBarCommand {
     fn apply(self, world: &mut World) {
-        world.commands().entity(self.0).with_children(|parent| {
+        world.entity_mut(self.0).with_children(|parent| {
             parent.spawn(ProgressBarForeground);
         });
     }

@@ -221,13 +221,19 @@ fn spawn_colliders(
 
 fn init_player_position(
     mut commands: Commands,
-    mut player: Single<&mut Transform, With<Player>>,
+    mut players: Query<&mut Transform, With<Player>>,
     initial_positions: Query<(Entity, &GridCoords), With<InitialPosition>>,
 ) {
-    for (entity, coord) in &initial_positions {
-        player.translation = grid_coords_to_translation(*coord, IVec2::splat(16)).extend(4.);
-        info!("init_player_position({})", player.translation.xy());
-        commands.entity(entity).despawn_recursive();
+    if let Ok(mut player_transform) = players.get_single_mut() {
+        for (entity, coord) in &initial_positions {
+            player_transform.translation =
+                grid_coords_to_translation(*coord, IVec2::splat(16)).extend(4.);
+            info!(
+                "init_player_position({})",
+                player_transform.translation.xy()
+            );
+            commands.entity(entity).despawn_recursive();
+        }
     }
 }
 
@@ -296,16 +302,23 @@ fn spawn_monsters(
     // Spawn the monsters initial position
     let n_monster = 25;
     let mut rng = rand::thread_rng();
-    coords.choose_multiple(&mut rng, n_monster).for_each(|coord| {
-        let params = MonsterSpawnParams::generate(1, &mut rng);
-        let translation = grid_coords_to_translation(*coord, IVec2::splat(16)).extend(4.);
-        warn!("spawn_monster at ({}, {}) transform: {}", coord.x, coord.y, translation.xy());
-        commands.spawn((
-            MonsterFuturePos,
-            Transform::from_translation(translation),
-            Mesh2d(spawning_assets.mesh.clone()),
-            MeshMaterial2d(spawning_assets.color.clone()),
-            params,
-        ));
-    });
+    coords
+        .choose_multiple(&mut rng, n_monster)
+        .for_each(|coord| {
+            let params = MonsterSpawnParams::generate(1, &mut rng);
+            let translation = grid_coords_to_translation(*coord, IVec2::splat(16)).extend(4.);
+            warn!(
+                "spawn_monster at ({}, {}) transform: {}",
+                coord.x,
+                coord.y,
+                translation.xy()
+            );
+            commands.spawn((
+                MonsterFuturePos,
+                Transform::from_translation(translation),
+                Mesh2d(spawning_assets.mesh.clone()),
+                MeshMaterial2d(spawning_assets.color.clone()),
+                params,
+            ));
+        });
 }

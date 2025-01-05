@@ -8,17 +8,13 @@ impl Plugin for MonsterPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<SpawningMonsterAssets>()
             .init_resource::<AllMonsterAssets>()
+            .register_type::<ViewRange>()
             .register_type::<MonsterSpawnParams>()
             .add_event::<MonsterDeathEvent>()
             .add_systems(OnExit(GameState::InGame), despawn_all::<Monster>)
-            .add_systems(OnEnter(InGameState::RoundEnd), despawn_all::<Monster>)
             .add_systems(
                 Update,
-                (
-                    spawn_monsters,
-                    monsters_moves,
-                    animate_sprite,
-                )
+                (spawn_monsters, monsters_moves, animate_sprite)
                     .in_set(GameRunningSet::EntityUpdate),
             )
             .add_observer(add_affixes);
@@ -26,12 +22,17 @@ impl Plugin for MonsterPlugin {
 }
 
 ///
-/// Spawn monster 
+/// Spawn monster
 ///
 fn spawn_monsters(
     mut commands: Commands,
     time: Res<Time>,
-    mut query: Query<(Entity, &Transform, &mut MonsterSpawnTimer, &MonsterSpawnParams)>,
+    mut query: Query<(
+        Entity,
+        &Transform,
+        &mut MonsterSpawnTimer,
+        &MonsterSpawnParams,
+    )>,
     assets: Res<AllMonsterAssets>,
 ) {
     for (entity, transform, mut timer, params) in query.iter_mut() {
@@ -99,12 +100,19 @@ fn add_affixes(
 /// Monsters moves in direction of the Player
 ///
 fn monsters_moves(
-    mut monsters: Query<&mut NextPosition, With<Monster>>,
-    player: Single<&Transform, With<Player>>,
+    mut monsters: Query<(&mut NextPosition, &Transform, &ViewRange), With<Monster>>,
+    players: Query<&Transform, With<Player>>,
 ) {
-    let player_pos = player.translation.xy();
-    for mut next_pos in &mut monsters {
-        *next_pos = NextPosition(Some(player_pos));
+    if let Ok(player_pos) = players.get_single().map(|t| t.translation.xy()) {
+        for (mut next_pos, monster_transform, view_range) in &mut monsters {
+            let distance = (monster_transform.translation.xy() - player_pos).length();
+            // warn!("distance={distance}");
+            if distance < **view_range {
+                next_pos.goto(player_pos);
+            } else {
+                next_pos.stop();
+            }
+        }
     }
 }
 

@@ -110,7 +110,7 @@ fn despawn_remaining_upgrades(mut commands: Commands, upgrade_list: Res<UpgradeL
 }
 
 ///
-/// Upgrade a skill of the player, returning back to game
+/// Upgrade the player, returning back to game
 ///
 fn upgrade_skill(
     mut commands: Commands,
@@ -123,7 +123,7 @@ fn upgrade_skill(
         for (interaction, upgrade_entity) in &interactions {
             if *interaction == Interaction::Pressed {
                 if let Some(i) = upgrade_list.iter().position(|&e| e == **upgrade_entity) {
-                    // move equipment to player
+                    // move upgrade to player
                     commands.entity(player).add_child(**upgrade_entity);
                     // Remove it from the list of entity to despawn
                     upgrade_list.swap_remove(i);

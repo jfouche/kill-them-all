@@ -14,7 +14,7 @@ impl Default for AnimationTimer {
     }
 }
 
-/// Animation indexes
+/// The animation indexes
 #[derive(Deref)]
 pub struct AnimationIndexes(Vec<usize>);
 

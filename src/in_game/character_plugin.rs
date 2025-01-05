@@ -122,14 +122,9 @@ fn mitigate_damage_on_hit(
 fn loose_life(
     trigger: Trigger<LooseLifeEvent>,
     mut commands: Commands,
-    mut characters: Query<(&mut Life, &Name), With<Character>>,
+    mut characters: Query<&mut Life, With<Character>>,
 ) {
-    if let Ok((mut life, name)) = characters.get_mut(trigger.entity()) {
-        info!(
-            "loose_life({name}) : {:.2} - {:.2}",
-            **life,
-            ***trigger.event()
-        );
+    if let Ok(mut life) = characters.get_mut(trigger.entity()) {
         life.damage(**trigger.event());
         if life.is_dead() {
             commands.trigger_targets(CharacterDyingEvent, trigger.entity());
@@ -365,7 +360,7 @@ fn move_character(
                 transform.translation.x = target.x;
                 transform.translation.y = target.y;
                 velocity.linvel = Vec2::ZERO;
-                **next_pos = None;
+                next_pos.stop();
             }
         } else {
             velocity.linvel = Vec2::ZERO;

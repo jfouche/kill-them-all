@@ -43,7 +43,7 @@ struct CreateSpashScreen(Entity);
 
 impl Command for CreateSpashScreen {
     fn apply(self, world: &mut World) {
-        world.commands().entity(self.0).with_children(|parent| {
+        world.entity_mut(self.0).with_children(|parent| {
             parent.spawn(SplashScreenTitle);
             parent.spawn(SplashScreenMessage);
         });

@@ -18,6 +18,8 @@ impl Plugin for PlayerPlugin {
             .add_event::<InventoryChanged>()
             .add_event::<PlayerEquipmentChanged>()
             .register_type::<Experience>()
+            .register_type::<Inventory>()
+            .register_type::<InventoryPos>()
             .add_systems(OnEnter(GameState::InGame), spawn_player)
             .add_systems(
                 OnExit(GameState::InGame),
@@ -57,7 +59,7 @@ fn wait_for_mouse_up(
 }
 
 fn spawn_player(mut commands: Commands, assets: Res<PlayerAssets>) {
-    commands.spawn(Inventory);
+    commands.spawn(Inventory::default());
 
     commands
         .spawn((Player, Player::sprite(&assets)))
@@ -108,7 +110,7 @@ fn set_target_position(
     };
 
     let mut next_pos = player.into_inner();
-    *next_pos = NextPosition(Some(point));
+    next_pos.goto(point);
 
     if mouse_inputs.just_pressed(MouseButton::Left) {
         commands.spawn((
@@ -197,7 +199,7 @@ fn increment_player_experience(
 ) {
     if let Ok(mut experience) = q_player.get_single_mut() {
         for monster_death_ev in monster_death_reader.read() {
-            info!("increment_player_experience");
+            // info!("increment_player_experience");
             let level_before = experience.level();
             experience.add(monster_death_ev.xp);
             if experience.level() > level_before {

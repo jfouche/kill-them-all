@@ -48,7 +48,7 @@ impl Command for CreatePopupCommand {
             .title
             .clone();
         if let Some(title) = title {
-            world.commands().entity(self.0).with_children(|parent| {
+            world.entity_mut(self.0).with_children(|parent| {
                 parent.spawn(PopupTitleBar).with_children(|bar| {
                     bar.spawn((PopupTitle, Text(title)));
                 });
