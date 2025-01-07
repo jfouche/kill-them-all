@@ -14,15 +14,15 @@ pub struct MouseOverUi(bool);
 
 /// Component to add to [Node] in order to inform that the mouse is over it.
 ///
-///  Use it alongside the [mouse_not_over_ui] run condition if you want to 
+///  Use it alongside the [mouse_not_over_ui] run condition if you want to
 /// block mouse click on world while on a UI.
-/// 
+///
 /// ex:
 /// ```
 /// #[derive(Component)]
 /// #[(require(Node{...}, CaptureMouse))]
 /// struct MyPanel;
-/// 
+///
 /// fn my_plugin(app: &mut App) {
 ///     app.add_systems(Update, move_player.run_if(mouse_not_over_ui));
 /// }

@@ -1,4 +1,6 @@
-use super::{ShowEquipmentActionsOnMouseOver, ShowPopupOnMouseOver};
+use super::{
+    panel_equipments::EquipmentsPanel, ShowEquipmentActionsOnMouseOver, ShowPopupOnMouseOver,
+};
 use crate::{components::*, in_game::GameRunningSet, ui::mouse_over_ui::CaptureMouse};
 use bevy::prelude::*;
 
@@ -9,6 +11,7 @@ use bevy::prelude::*;
     CaptureMouse,
     Node(|| Node {
         position_type: PositionType::Absolute,
+        flex_direction: FlexDirection::Column,
         right: Val::Px(0.),
         bottom: Val::Px(0.),
         border: UiRect::all(Val::Px(1.)),
@@ -25,20 +28,14 @@ pub struct InventoryWindow;
     Name(|| Name::new("InventoryPanel")),
     Node(|| Node {
         display: Display::Grid,
-        min_width: Val::Px(Inventory::N_COLS as f32 * 32.),
-        min_height: Val::Px(Inventory::N_ROWS as f32 * 32.),
+        width: Val::Px(Inventory::N_COLS as f32 * 32.),
+        height: Val::Px(Inventory::N_ROWS as f32 * 32.),
         grid_template_columns: RepeatedGridTrack::flex(Inventory::N_COLS, 1.),
         grid_template_rows: RepeatedGridTrack::flex(Inventory::N_ROWS, 1.),
         ..Default::default()
     }),
 )]
 pub struct InventoryPanel;
-
-// fn pos(index: u16) -> (u16, u16) {
-//     let col = index % N_COLS;
-//     let row = index / N_COLS;
-//     (col, row)
-// }
 
 pub struct InventoryPanelPlugin;
 
@@ -65,7 +62,10 @@ fn spawn_or_despawn_window(
     if let Ok(entity) = windows.get_single() {
         commands.entity(entity).despawn_recursive();
     } else {
-        commands.spawn(InventoryWindow).with_child(InventoryPanel);
+        commands.spawn(InventoryWindow).with_children(|wnd| {
+            wnd.spawn(EquipmentsPanel);
+            wnd.spawn(InventoryPanel);
+        });
     }
 }
 

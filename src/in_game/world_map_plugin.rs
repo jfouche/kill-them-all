@@ -307,12 +307,6 @@ fn spawn_monsters(
         .for_each(|coord| {
             let params = MonsterSpawnParams::generate(1, &mut rng);
             let translation = grid_coords_to_translation(*coord, IVec2::splat(16)).extend(4.);
-            warn!(
-                "spawn_monster at ({}, {}) transform: {}",
-                coord.x,
-                coord.y,
-                translation.xy()
-            );
             commands.spawn((
                 MonsterFuturePos,
                 Transform::from_translation(translation),

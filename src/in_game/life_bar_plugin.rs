@@ -1,5 +1,6 @@
 use super::{GameRunningSet, GameState};
 use crate::{
+    camera::MainCamera,
     components::{CharacterDyingEvent, Life, MaxLife, Monster},
     ui::{ProgressBar, ProgressBarColor},
 };
@@ -77,12 +78,12 @@ fn clear_life_bars(mut commands: Commands, mut life_bar_map: ResMut<LifeBarMap>)
 }
 
 fn update_life_bar(
-    cameras: Query<(&Camera, &GlobalTransform), With<Camera2d>>,
+    cameras: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
     monsters: Query<(Entity, &Transform, &Life, &MaxLife), With<Monster>>,
     mut life_bars: Query<(&mut Node, &mut ProgressBar), With<LifeBar>>,
     life_bar_map: Res<LifeBarMap>,
 ) {
-    let (camera, camera_transform) = cameras.get_single().expect("Single camera2d");
+    let (camera, camera_transform) = cameras.get_single().expect("Single MainCamera");
     for (entity, transform, life, max_life) in &monsters {
         if let Some(life_bar_entity) = life_bar_map.get(&entity) {
             if let Ok((mut node, mut progress)) = life_bars.get_mut(*life_bar_entity) {

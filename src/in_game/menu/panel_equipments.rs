@@ -12,6 +12,7 @@ use bevy::{ecs::query::QueryFilter, prelude::*};
         width: Val::Px(200.),
         height: Val::Px(200.),
         padding: UiRect::all(Val::Px(5.)),
+        margin: UiRect::horizontal(Val::Auto),
         ..Default::default()
     }),
     BackgroundColor(|| BackgroundColor(Srgba::rgb_u8(40, 40, 40).into()))
@@ -80,7 +81,7 @@ impl EquipmentPos for Weapon {
     }
 }
 
-fn show_equipment<T>(panel: &mut ChildBuilder, info: EquipmentInfo, assets: &EquipmentAssets)
+fn spawn_equipment<T>(panel: &mut ChildBuilder, info: EquipmentInfo, assets: &EquipmentAssets)
 where
     T: Component + EquipmentPos,
 {
@@ -112,19 +113,19 @@ fn show_all_equipments(
     assets: &EquipmentAssets,
 ) {
     if let Some(info) = get_equipment(helmets, player) {
-        show_equipment::<Helmet>(panel, info, assets);
+        spawn_equipment::<Helmet>(panel, info, assets);
     }
     if let Some(info) = get_equipment(body_armours, player) {
-        show_equipment::<BodyArmour>(panel, info, assets);
+        spawn_equipment::<BodyArmour>(panel, info, assets);
     }
     if let Some(info) = get_equipment(boots, player) {
-        show_equipment::<Boots>(panel, info, assets);
+        spawn_equipment::<Boots>(panel, info, assets);
     }
     if let Some(info) = get_equipment(amulets, player) {
-        show_equipment::<Amulet>(panel, info, assets);
+        spawn_equipment::<Amulet>(panel, info, assets);
     }
     if let Some(info) = get_equipment(weapons, player) {
-        show_equipment::<Weapon>(panel, info, assets);
+        spawn_equipment::<Weapon>(panel, info, assets);
     }
 }
 
@@ -170,7 +171,7 @@ fn show_equipments(
 fn update_equipments(
     _trigger: Trigger<PlayerEquipmentChanged>,
     mut commands: Commands,
-    panels: Query<(Entity, &Children), With<EquipmentsPanel>>,
+    panels: Query<Entity, With<EquipmentsPanel>>,
     mut helmets: Query<(&EquipmentInfo, &Parent), With<Helmet>>,
     mut body_armours: Query<(&EquipmentInfo, &Parent), With<BodyArmour>>,
     mut boots: Query<(&EquipmentInfo, &Parent), With<Boots>>,
@@ -179,8 +180,9 @@ fn update_equipments(
     player: Single<Entity, With<Player>>,
     assets: Res<EquipmentAssets>,
 ) {
-    for (panel, children) in &panels {
-        commands.entity(panel).remove_children(children);
+    for panel in &panels {
+        warn!("update_equipments");
+        commands.entity(panel).despawn_descendants();
         commands.entity(panel).with_children(|panel| {
             show_all_equipments(
                 panel,
@@ -196,7 +198,11 @@ fn update_equipments(
     }
 }
 
-pub fn inventory_panel_plugin(app: &mut App) {
-    app.add_observer(show_equipments)
-        .add_observer(update_equipments);
+pub struct InventoryPanelPlugin;
+
+impl Plugin for InventoryPanelPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_observer(show_equipments)
+            .add_observer(update_equipments);
+    }
 }

@@ -1,3 +1,4 @@
+use crate::camera::MainCamera;
 use crate::components::*;
 use crate::schedule::*;
 use crate::ui::mouse_over_ui::mouse_not_over_ui;
@@ -96,7 +97,7 @@ fn unpause(mut query: Query<(&mut Invulnerable, &mut Blink), With<Player>>) {
 fn set_target_position(
     mut commands: Commands,
     window: Single<&Window>,
-    camera: Single<(&Camera, &GlobalTransform)>,
+    camera: Single<(&Camera, &GlobalTransform), With<MainCamera>>,
     player: Single<&mut NextPosition, With<Player>>,
     mouse_inputs: Res<ButtonInput<MouseButton>>,
     allow_mouse: Res<AllowMouseHandling>,
@@ -146,12 +147,12 @@ fn set_invulnerable_on_hit(
 
 fn player_dying(
     trigger: Trigger<CharacterDyingEvent>,
+    mut commands: Commands,
     mut send_died: EventWriter<CharacterDiedEvent>,
-    mut send_death: EventWriter<PlayerDeathEvent>,
 ) {
-    info!("send_player_death_event");
+    info!("player_dying");
+    commands.trigger(PlayerDeathEvent);
     send_died.send(CharacterDiedEvent(trigger.entity()));
-    send_death.send(PlayerDeathEvent);
 }
 
 ///

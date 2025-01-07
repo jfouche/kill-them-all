@@ -8,28 +8,31 @@ pub fn camera_plugin(app: &mut App) {
     );
 }
 
+#[derive(Component)]
+#[require(
+    Name(|| Name::new("MainCamera")),
+    Camera2d,
+    Camera(|| Camera {
+        hdr: true,
+        ..Default::default()
+    }),
+    OrthographicProjection(|| OrthographicProjection {
+        scale: 0.5,
+        ..OrthographicProjection::default_2d()
+    }),
+)]
+pub struct MainCamera;
+
 // const ASPECT_RATIO: f32 = 16. / 9.;
 const CAM_LERP_FACTOR: f32 = 2.;
 
 fn spawn_camera(mut commands: Commands) {
-    commands.spawn((
-        Name::new("Camera"),
-        Camera2d,
-        Camera {
-            hdr: true,
-            ..Default::default()
-        },
-        OrthographicProjection {
-            scale: 0.5,
-            ..OrthographicProjection::default_2d()
-        },
-        IsDefaultUiCamera,
-    ));
+    commands.spawn((MainCamera, IsDefaultUiCamera));
 }
 
 fn camera_follow_player(
-    mut camera: Query<&mut Transform, (With<Camera2d>, Without<Player>)>,
-    player: Query<&Transform, (With<Player>, Without<Camera2d>)>,
+    mut camera: Query<&mut Transform, (With<MainCamera>, Without<Player>)>,
+    player: Query<&Transform, (With<Player>, Without<MainCamera>)>,
     time: Res<Time>,
 ) {
     let Ok(mut camera) = camera.get_single_mut() else {

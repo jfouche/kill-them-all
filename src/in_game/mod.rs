@@ -48,11 +48,11 @@ fn in_game_schedule_plugin(app: &mut App) {
         .add_systems(OnEnter(InGameState::Running), start_physics)
         .add_systems(OnExit(InGameState::Running), stop_physics)
         .add_systems(Update, switch_to_pause.in_set(GameRunningSet::UserInput))
-        .add_systems(Update, on_player_death.in_set(GameRunningSet::EntityUpdate))
         .add_systems(
             Update,
             despawn_if_too_old.in_set(GameRunningSet::DespawnEntities),
-        );
+        )
+        .add_observer(change_state_on_player_death);
 }
 
 fn run_game(mut state: ResMut<NextState<InGameState>>) {
@@ -129,13 +129,12 @@ fn reset_physics(mut commands: Commands) {
     commands.insert_resource(Events::<ContactForceEvent>::default());
 }
 
-fn on_player_death(
-    mut player_death_events: EventReader<PlayerDeathEvent>,
+fn change_state_on_player_death(
+    _trigger: Trigger<PlayerDeathEvent>,
     mut in_game_state: ResMut<NextState<InGameState>>,
 ) {
-    for _ in player_death_events.read() {
-        in_game_state.set(InGameState::PlayerDied);
-    }
+    warn!("change_state_on_player_death");
+    in_game_state.set(InGameState::PlayerDied);
 }
 
 pub fn despawn_if_too_old(

@@ -5,8 +5,8 @@ mod panel_equipments;
 mod panel_skills;
 mod popup_info;
 mod popup_select_equipment;
-mod window_characteristics;
 mod window_inventory;
+mod window_statistics;
 
 use super::{pause, unpause, InGameState};
 use crate::components::EquipmentAssets;
@@ -23,9 +23,9 @@ impl PluginGroup for InGameMenuPluginsGroup {
             .add(menu_pause::PausePlugin)
             .add(menu_level_up::LevelUpMenuPlugin)
             .add(menu_player_died::PlayerDiedMenuPlugin)
-            .add(panel_equipments::inventory_panel_plugin)
+            .add(panel_equipments::InventoryPanelPlugin)
             .add(panel_skills::SkillsPanelPlugin)
-            .add(window_characteristics::CharacteristicsPanelPlugin)
+            .add(window_statistics::StatsWindowPlugin)
             .add(window_inventory::InventoryPanelPlugin)
             .add(menu_plugin)
     }
