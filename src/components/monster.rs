@@ -11,6 +11,16 @@ pub struct MonsterAssets {
     pub atlas_layout: Handle<TextureAtlasLayout>,
 }
 
+impl MonsterAssets {
+    pub fn sprite(&self) -> Sprite {
+        Sprite {
+            image: self.texture.clone(),
+            texture_atlas: Some(self.atlas_layout.clone().into()),
+            ..Default::default()
+        }
+    }
+}
+
 ///
 ///  Assets of all monsters
 ///
@@ -47,33 +57,11 @@ impl FromWorld for AllMonsterAssets {
     }
 }
 
-///
-/// Assets used to show where the monster will spawn
-///
-#[derive(Resource)]
-pub struct SpawningMonsterAssets {
-    pub mesh: Handle<Mesh>,
-    pub color: Handle<ColorMaterial>,
-}
-
-impl FromWorld for SpawningMonsterAssets {
-    fn from_world(world: &mut World) -> Self {
-        let mesh = world.add_asset(Circle::new(8.0));
-        let color = world.add_asset(Color::srgba(0.8, 0.3, 0.3, 0.2));
-
-        SpawningMonsterAssets { mesh, color }
-    }
-}
-
-impl From<&SpawningMonsterAssets> for Mesh2d {
-    fn from(value: &SpawningMonsterAssets) -> Self {
-        Mesh2d(value.mesh.clone())
-    }
-}
-
-impl From<&SpawningMonsterAssets> for MeshMaterial2d<ColorMaterial> {
-    fn from(value: &SpawningMonsterAssets) -> Self {
-        MeshMaterial2d(value.color.clone())
+impl AllMonsterAssets {
+    pub fn sprite(&self, kind: usize) -> Sprite {
+        self.get(kind)
+            .expect("Monster type out of range !")
+            .sprite()
     }
 }
 
@@ -100,6 +88,7 @@ impl Default for ViewRange {
     HitDamageRange,
     Sprite,
     AnimationTimer,
+    Collider(|| Collider::cuboid(8., 8.)),
     CollisionGroups(|| CollisionGroups::new(GROUP_ENEMY, GROUP_ALL & !GROUP_BONUS))
 )]
 pub struct Monster;
@@ -170,69 +159,44 @@ impl MonsterSpawnParams {
         }
     }
 
-    fn size(&self) -> Vec2 {
-        match self.rarity {
-            MonsterRarity::Normal => Vec2::new(16.0, 16.0),
-            MonsterRarity::Rare => Vec2::new(32.0, 32.0),
-        }
+    pub fn scale(&self) -> Vec3 {
+        let scale = match self.rarity {
+            MonsterRarity::Normal => 1.,
+            MonsterRarity::Rare => 2.,
+        };
+        Vec3::new(scale, scale, 1.)
     }
-}
 
-///
-/// Utility to simplify components initialization
-///
-pub struct MonsterSpawnParamsAndAssets<'a> {
-    pub params: &'a MonsterSpawnParams,
-    pub assets: &'a AllMonsterAssets,
-}
-
-impl From<&MonsterSpawnParamsAndAssets<'_>> for MonsterRarity {
-    fn from(value: &MonsterSpawnParamsAndAssets) -> Self {
-        value.params.rarity
+    pub fn xp_on_death(&self) -> XpOnDeath {
+        let xp = match self.rarity {
+            MonsterRarity::Normal => 1,
+            MonsterRarity::Rare => 4,
+        };
+        let multiplier = u32::from(self.level) + 1;
+        XpOnDeath(xp * multiplier)
     }
-}
 
-impl From<&MonsterSpawnParamsAndAssets<'_>> for Sprite {
-    fn from(value: &MonsterSpawnParamsAndAssets) -> Self {
-        let assets = value
-            .assets
-            .get(value.params.kind)
-            .expect("Monster type out of range !");
-
-        Sprite {
-            image: assets.texture.clone(),
-            texture_atlas: Some(assets.atlas_layout.clone().into()),
-            custom_size: Some(value.params.size()),
-            ..Default::default()
-        }
-    }
-}
-
-impl From<&MonsterSpawnParamsAndAssets<'_>> for XpOnDeath {
-    fn from(value: &MonsterSpawnParamsAndAssets) -> Self {
-        match value.params.rarity {
-            MonsterRarity::Normal => XpOnDeath(1),
-            MonsterRarity::Rare => XpOnDeath(4),
-        }
-    }
-}
-
-impl From<&MonsterSpawnParamsAndAssets<'_>> for HitDamageRange {
-    fn from(value: &MonsterSpawnParamsAndAssets) -> Self {
-        let (min, max) = match value.params.rarity {
+    pub fn hit_damage_range(&self) -> HitDamageRange {
+        let (min, max) = match self.rarity {
             MonsterRarity::Normal => (1., 2.),
             MonsterRarity::Rare => (2., 4.),
         };
-        let multiplier = (value.params.level + 1) as f32;
+        let multiplier = (self.level + 1) as f32;
         let min = min * multiplier;
         let max = max * multiplier;
         HitDamageRange::new(min, max)
     }
 }
 
-impl From<&MonsterSpawnParamsAndAssets<'_>> for Collider {
-    fn from(value: &MonsterSpawnParamsAndAssets<'_>) -> Self {
-        Collider::cuboid(value.params.size().x / 2., value.params.size().y / 2.)
+impl From<&MonsterSpawnParams> for XpOnDeath {
+    fn from(value: &MonsterSpawnParams) -> Self {
+        value.xp_on_death()
+    }
+}
+
+impl From<&MonsterSpawnParams> for HitDamageRange {
+    fn from(value: &MonsterSpawnParams) -> Self {
+        value.hit_damage_range()
     }
 }
 

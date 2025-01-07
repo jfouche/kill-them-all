@@ -6,75 +6,28 @@ pub struct MonsterPlugin;
 
 impl Plugin for MonsterPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<SpawningMonsterAssets>()
-            .init_resource::<AllMonsterAssets>()
+        app.init_resource::<AllMonsterAssets>()
             .register_type::<ViewRange>()
             .register_type::<MonsterSpawnParams>()
             .add_event::<MonsterDeathEvent>()
             .add_systems(OnExit(GameState::InGame), despawn_all::<Monster>)
             .add_systems(
                 Update,
-                (spawn_monsters, monsters_moves, animate_sprite)
-                    .in_set(GameRunningSet::EntityUpdate),
+                (monsters_moves, animate_sprite).in_set(GameRunningSet::EntityUpdate),
             )
-            .add_observer(add_affixes);
+            .add_observer(update_monster);
     }
 }
 
 ///
-/// Spawn monster
+/// Update monster to add affixes and observers
 ///
-fn spawn_monsters(
-    mut commands: Commands,
-    time: Res<Time>,
-    mut query: Query<(
-        Entity,
-        &Transform,
-        &mut MonsterSpawnTimer,
-        &MonsterSpawnParams,
-    )>,
-    assets: Res<AllMonsterAssets>,
-) {
-    for (entity, transform, mut timer, params) in query.iter_mut() {
-        timer.tick(time.delta());
-        if timer.finished() {
-            commands.entity(entity).despawn();
-
-            let params_assets = MonsterSpawnParamsAndAssets {
-                assets: &assets,
-                params,
-            };
-
-            let monster_components = (
-                MonsterRarity::from(&params_assets),
-                Sprite::from(&params_assets),
-                Transform::from_translation(transform.translation),
-                XpOnDeath::from(&params_assets),
-                HitDamageRange::from(&params_assets),
-            );
-
-            match params.kind {
-                0 => commands.spawn((MonsterType1, monster_components)),
-                1 => commands.spawn((MonsterType2, monster_components)),
-                2 => commands.spawn((MonsterType3, monster_components)),
-                _ => unreachable!(),
-            }
-            .observe(monster_dying)
-            .observe(increment_score);
-        }
-    }
-}
-
-///
-/// Add affixes to rare monsters
-///
-fn add_affixes(
+fn update_monster(
     trigger: Trigger<OnAdd, Monster>,
     mut commands: Commands,
     rarities: Query<&MonsterRarity>,
 ) {
     if let Ok(MonsterRarity::Rare) = rarities.get(trigger.entity()) {
-        info!("add_affixes()");
         let mut upgrade_provider = UpgradeProvider::new();
         let mut rng = rand::thread_rng();
         let mut entities = Vec::new();
@@ -86,7 +39,9 @@ fn add_affixes(
             }
         }
 
-        commands.entity(trigger.entity()).add_children(&entities);
+        commands
+            .entity(trigger.entity())
+            .add_children(&entities);
 
         // Add a weapon and more life
         commands.entity(trigger.entity()).with_children(|c| {
@@ -94,6 +49,10 @@ fn add_affixes(
             c.spawn(MoreLife(10.));
         });
     }
+    commands
+    .entity(trigger.entity())
+    .observe(monster_dying)
+    .observe(increment_score);
 }
 
 ///

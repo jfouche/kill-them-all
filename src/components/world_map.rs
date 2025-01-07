@@ -18,11 +18,49 @@ impl FromWorld for WorldMapAssets {
 #[require(Name(|| Name::new("WorldMap")))]
 pub struct WorldMap;
 
+#[derive(Component, Default)]
+pub struct PlayerInitialPosition;
+
 #[derive(Bundle, Default, LdtkEntity)]
 pub struct PlayerInitialPositionLdtkBundle {
+    tag: PlayerInitialPosition,
     initial_pos: InitialPosition,
     #[grid_coords]
     grid_coords: GridCoords,
+}
+
+#[derive(Component, Default)]
+pub struct MonsterInitialPosition;
+
+#[derive(Bundle, Default, LdtkEntity)]
+pub struct MonsterInitialPositionLdtkBundle {
+    tag: MonsterInitialPosition,
+    initial_pos: InitialPosition,
+    #[grid_coords]
+    grid_coords: GridCoords,
+    #[from_entity_instance]
+    count: MonsterCount,
+}
+
+#[derive(Component, Deref)]
+pub struct MonsterCount(pub u16);
+
+const DEFAULT_MONSTER_COUNT: u16 = 1;
+
+impl Default for MonsterCount {
+    fn default() -> Self {
+        MonsterCount(DEFAULT_MONSTER_COUNT)
+    }
+}
+
+impl From<&EntityInstance> for MonsterCount {
+    fn from(value: &EntityInstance) -> Self {
+        let count = value
+            .get_int_field("count")
+            .map(|v| u16::try_from(*v).unwrap_or(DEFAULT_MONSTER_COUNT))
+            .unwrap_or(DEFAULT_MONSTER_COUNT);
+        MonsterCount(count)
+    }
 }
 
 #[derive(Component, Default)]
