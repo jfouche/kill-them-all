@@ -1,4 +1,4 @@
-use crate::{components::*, in_game::GameRunningSet};
+use crate::{components::*, in_game::GameRunningSet, ui::mouse_over_ui::CaptureMouse};
 use bevy::prelude::*;
 
 ///
@@ -7,6 +7,7 @@ use bevy::prelude::*;
 #[derive(Component)]
 #[require(
     Name(|| Name::new("CharacteristicsWindow")),
+    CaptureMouse,
     Node(|| Node {
         position_type: PositionType::Absolute,
         left: Val::Px(0.),

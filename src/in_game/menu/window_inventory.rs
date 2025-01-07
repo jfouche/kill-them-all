@@ -1,11 +1,12 @@
 use super::{ShowEquipmentActionsOnMouseOver, ShowPopupOnMouseOver};
-use crate::{components::*, in_game::GameRunningSet};
+use crate::{components::*, in_game::GameRunningSet, ui::mouse_over_ui::CaptureMouse};
 use bevy::prelude::*;
 
 /// A window that shows the content of the [Inventory]
 #[derive(Component)]
 #[require(
     Name(|| Name::new("InventoryWindow")),
+    CaptureMouse,
     Node(|| Node {
         position_type: PositionType::Absolute,
         right: Val::Px(0.),

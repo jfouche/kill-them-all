@@ -1,5 +1,6 @@
 use crate::components::*;
 use crate::schedule::*;
+use crate::ui::mouse_over_ui::mouse_not_over_ui;
 use crate::utils::blink::Blink;
 use crate::utils::invulnerable::Invulnerable;
 use bevy::prelude::*;
@@ -31,7 +32,11 @@ impl Plugin for PlayerPlugin {
             .add_systems(
                 Update,
                 (
-                    (wait_for_mouse_up, set_target_position).chain(),
+                    (
+                        wait_for_mouse_up,
+                        set_target_position.run_if(mouse_not_over_ui),
+                    )
+                        .chain(),
                     animate_player_sprite,
                     player_invulnerability_finished,
                     increment_player_experience,
