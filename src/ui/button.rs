@@ -1,7 +1,4 @@
-use bevy::{
-    ecs::{component::ComponentId, world::DeferredWorld},
-    prelude::*,
-};
+use bevy::prelude::*;
 
 const NORMAL_BUTTON: Color = Color::srgb(0.15, 0.35, 0.15);
 const HOVERED_BUTTON: Color = Color::srgb(0.25, 0.55, 0.25);
@@ -9,97 +6,69 @@ const HOVERED_PRESSED_BUTTON: Color = Color::srgb(0.35, 0.75, 0.35);
 const PRESSED_BUTTON: Color = Color::srgb(0.35, 0.75, 0.35);
 
 const BUTTON_TEXT_COLOR: Color = Color::srgb(0.9, 0.9, 0.9);
+const BIG_BUTTON_FONT_SIZE: f32 = 18.;
+const SMALL_BUTTON_FONT_SIZE: f32 = 12.;
+
+pub fn big_button_node() -> Node {
+    Node {
+        width: Val::Px(180.0),
+        height: Val::Px(50.0),
+        margin: UiRect::all(Val::Px(10.0)),
+        justify_content: JustifyContent::Center,
+        align_items: AlignItems::Center,
+        border: UiRect::all(Val::Px(1.0)),
+        ..default()
+    }
+}
+
+pub fn small_button_node() -> Node {
+    Node {
+        width: Val::Px(120.0),
+        height: Val::Px(35.0),
+        margin: UiRect::all(Val::Px(5.0)),
+        justify_content: JustifyContent::Center,
+        align_items: AlignItems::Center,
+        border: UiRect::all(Val::Px(1.0)),
+        ..default()
+    }
+}
+
+#[derive(Clone, Copy)]
+pub enum ButtonKind {
+    Big,
+    Small,
+}
 
 ///
-/// Component to spawn a button
+/// Component to spawn a button with text
 ///
-#[derive(Component, Default, Clone)]
-#[component(on_add = create_button)]
+#[derive(Component, Clone)]
 #[require(
     Button,
-    Node(MyButton::default_node),
+    Node,
     BackgroundColor(|| BackgroundColor(NORMAL_BUTTON)),
     BorderColor(|| BorderColor(Color::BLACK))
 )]
-pub struct MyButton {
-    text: Option<Text>,
-    image: Option<ImageNode>,
+pub struct TextButton {
+    pub text: String,
+    pub kind: ButtonKind,
 }
 
-impl MyButton {
-    pub fn new(label: impl Into<String>) -> Self {
-        MyButton {
-            text: Some(Text(label.into())),
-            image: None,
+impl TextButton {
+    pub fn big(text: impl Into<String>) -> Self {
+        Self {
+            text: text.into(),
+            kind: ButtonKind::Big,
         }
     }
 
-    // pub fn from_image(image: ImageNode) -> Self {
-    //     MyButton {
-    //         text: None,
-    //         image: Some(image),
-    //     }
-    // }
-
-    // pub fn with_image(mut self, image: ImageNode) -> Self {
-    //     self.image = Some(image);
-    //     self
-    // }
-
-    #[inline]
-    pub fn default_node() -> Node {
-        Node {
-            width: Val::Px(180.0),
-            height: Val::Px(50.0),
-            margin: UiRect::all(Val::Px(10.0)),
-            padding: UiRect::all(Val::Px(2.0)),
-            flex_direction: FlexDirection::Column,
-            justify_content: JustifyContent::Center,
-            align_items: AlignItems::Center,
-            border: UiRect::all(Val::Px(1.0)),
-            ..default()
+    pub fn small(text: impl Into<String>) -> Self {
+        Self {
+            text: text.into(),
+            kind: ButtonKind::Small,
         }
     }
 }
-
-fn create_button(mut world: DeferredWorld, entity: Entity, _: ComponentId) {
-    world.commands().queue(CreateMyButtonCommand(entity));
-}
-
-struct CreateMyButtonCommand(Entity);
-
-impl Command for CreateMyButtonCommand {
-    fn apply(self, world: &mut World) {
-        let button = world
-            .get::<MyButton>(self.0)
-            .expect("Added MyButton")
-            .clone();
-
-        let have_image = button.image.is_some();
-
-        world.entity_mut(self.0).with_children(|parent| {
-            if let Some(image) = button.image {
-                parent.spawn(image);
-            }
-            if let Some(text) = button.text {
-                parent.spawn((MyButtonText, text));
-            }
-        });
-
-        if have_image {
-            world.get_mut::<Node>(self.0).expect("Node").height = Val::Auto;
-        }
-    }
-}
-
-#[derive(Component)]
-#[require(
-    Text,
-    TextFont(|| TextFont::from_font_size(14.)),
-    TextColor(|| TextColor(BUTTON_TEXT_COLOR)),
-    TextLayout(|| TextLayout::new_with_justify(JustifyText::Center))
-)]
-struct MyButtonText;
 
 pub trait ButtonNav<T> {
     fn up(&self, current: T) -> Option<T>;
@@ -136,7 +105,7 @@ where
 }
 
 /// Tag component used to mark which setting is currently selected
-#[derive(Component)]
+#[derive(Component, Default)]
 #[component(storage = "SparseSet")]
 pub struct SelectedOption;
 
@@ -148,7 +117,33 @@ pub fn button_plugin(app: &mut App) {
             color_selected_buttons,
             color_deselected_buttons,
         ),
-    );
+    )
+    .add_observer(create_text_button);
+}
+
+fn create_text_button(
+    trigger: Trigger<OnAdd, TextButton>,
+    mut commands: Commands,
+    mut buttons: Query<(&TextButton, &mut Node)>,
+) {
+    let (button, mut node) = buttons.get_mut(trigger.entity()).expect("Added TextButton");
+
+    *node = match button.kind {
+        ButtonKind::Big => big_button_node(),
+        ButtonKind::Small => small_button_node(),
+    };
+
+    let font_size = match button.kind {
+        ButtonKind::Big => BIG_BUTTON_FONT_SIZE,
+        ButtonKind::Small => SMALL_BUTTON_FONT_SIZE,
+    };
+    commands.entity(trigger.entity()).with_child((
+        Text(button.text.clone()),
+        TextColor(BUTTON_TEXT_COLOR),
+        TextFont::from_font_size(font_size),
+        TextLayout::new_with_justify(JustifyText::Center),
+    ));
+    // TODO: add observers to change color ?
 }
 
 // This system handles changing all buttons color based on mouse interaction

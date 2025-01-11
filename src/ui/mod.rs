@@ -2,7 +2,7 @@ mod button;
 mod popup;
 mod progressbar;
 
-pub use button::{button_keyboard_nav, MyButton, SelectedOption};
+pub use button::{button_keyboard_nav, SelectedOption, TextButton};
 pub use popup::Popup;
 pub use progressbar::{ProgressBar, ProgressBarColor};
 

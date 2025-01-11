@@ -76,7 +76,7 @@ fn spawn_level_up_menu(mut commands: Commands) {
             let upgrade_view = upgrade.generate(&mut commands, &mut rng);
             let btn_entity = commands
                 .spawn((
-                    MyButton::new(upgrade_view.label),
+                    TextButton::big(upgrade_view.label),
                     UpgradeEntity(upgrade_view.entity),
                 ))
                 .id();

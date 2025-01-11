@@ -26,7 +26,6 @@ fn spawn_popup(
     if let Ok(content) = contents.get(trigger.entity()) {
         commands.spawn(EquipmentPopup {
             content: content.clone(),
-            pos: trigger.event().pointer_location.position,
         });
     }
 }
@@ -38,9 +37,7 @@ fn spawn_popup(
     Name(|| Name::new("EquipmentPopup")),
     Popup,
     Node(|| Node {
-        width: Val::Auto,
-        height: Val::Auto,
-        margin: UiRect::all(Val::Px(0.)),
+        margin: UiRect::all(Val::Auto),
         padding: UiRect::all(Val::Px(5.)),
         ..Popup::default_node()
     }),
@@ -48,7 +45,6 @@ fn spawn_popup(
 )]
 struct EquipmentPopup {
     content: ShowEquipmentActionsOnMouseOver,
-    pos: Vec2,
 }
 
 fn create_popup(mut world: DeferredWorld, entity: Entity, _: ComponentId) {
@@ -71,7 +67,7 @@ impl Command for CreatePopupCommand {
             parent.spawn(HSizer).with_children(|hsizer| {
                 hsizer
                     .spawn((
-                        MyButton::new("Equip"),
+                        TextButton::small("Equip"),
                         ItemAction::Equip(ItemAndPopup {
                             item: popup.content.item,
                             popup: self.0,
@@ -80,7 +76,7 @@ impl Command for CreatePopupCommand {
                     .observe(item_action);
                 hsizer
                     .spawn((
-                        MyButton::new("Drop"),
+                        TextButton::small("Drop"),
                         ItemAction::Drop(ItemAndPopup {
                             item: popup.content.item,
                             popup: self.0,
@@ -88,13 +84,13 @@ impl Command for CreatePopupCommand {
                     ))
                     .observe(item_action);
                 hsizer
-                    .spawn((MyButton::new("Cancel"), ItemAction::DespawnPopup(self.0)))
+                    .spawn((
+                        TextButton::small("Cancel"),
+                        ItemAction::DespawnPopup(self.0),
+                    ))
                     .observe(item_action);
             });
         });
-        let mut node = world.get_mut::<Node>(self.0).expect("Node");
-        node.left = Val::Px(popup.pos.x + 5.);
-        node.top = Val::Px(popup.pos.y - 20.);
     }
 }
 

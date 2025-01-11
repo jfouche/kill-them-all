@@ -23,14 +23,14 @@ struct PauseMenu;
 
 #[derive(Component)]
 #[require(
-    MyButton(|| MyButton::new("Back to game")),
+    TextButton(|| TextButton::big("Back to game")),
     MenuButtonAction(|| MenuButtonAction::BackToGame),
 )]
 pub struct ButtonBackToGame;
 
 #[derive(Component)]
 #[require(
-    MyButton(|| MyButton::new("Quit game")),
+    TextButton(|| TextButton::big("Quit game")),
     MenuButtonAction(|| MenuButtonAction::QuitGame),
 )]
 pub struct ButtonQuitGame;

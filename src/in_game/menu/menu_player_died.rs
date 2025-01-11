@@ -27,11 +27,15 @@ impl Plugin for PlayerDiedMenuPlugin {
 struct PlayerDiedMenu;
 
 #[derive(Component)]
+#[require(
+    TextButton(|| TextButton::big("Back to menu")),
+    SelectedOption
+)]
 struct BackToMenu;
 
 fn spawn_player_died_menu(mut commands: Commands) {
     commands.spawn(PlayerDiedMenu).with_children(|popup| {
-        popup.spawn((MyButton::new("Back to menu"), BackToMenu, SelectedOption));
+        popup.spawn(BackToMenu);
     });
 }
 
