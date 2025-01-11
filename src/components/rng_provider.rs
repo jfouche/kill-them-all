@@ -1,6 +1,7 @@
 use rand::{rngs::ThreadRng, Rng};
 use std::collections::HashMap;
 
+/// An provider of values based an values weight
 pub struct RngKindProvider<T> {
     weights: HashMap<T, usize>,
     filters: Vec<T>,
@@ -19,12 +20,14 @@ impl<T> RngKindProvider<T>
 where
     T: Copy + Eq + std::hash::Hash,
 {
+    /// Add an kind based on its weigh.
+    /// The hight the weight is, the most probable it will appear.
     pub fn add(&mut self, kind: T, weight: usize) -> &mut Self {
         self.weights.insert(kind, weight);
         self
     }
 
-    /// generate a rand value, removing the option to select it next time
+    /// generate a rand value, removing the option to select it next time.
     pub fn gen(&mut self, rng: &mut ThreadRng) -> Option<T> {
         let mut remaing = self
             .weights

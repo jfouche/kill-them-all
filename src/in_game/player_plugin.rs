@@ -1,7 +1,6 @@
 use crate::camera::MainCamera;
 use crate::components::*;
 use crate::schedule::*;
-use crate::ui::mouse_over_ui::mouse_not_over_ui;
 use crate::utils::blink::Blink;
 use crate::utils::invulnerable::Invulnerable;
 use bevy::prelude::*;
@@ -15,7 +14,7 @@ impl Plugin for PlayerPlugin {
         app.init_resource::<PlayerAssets>()
             .init_resource::<NextPositionIndicatorAssets>()
             .init_resource::<Score>()
-            .init_resource::<AllowMouseHandling>()
+            // .init_resource::<AllowMouseHandling>()
             .add_event::<PlayerDeathEvent>()
             .add_event::<InventoryChanged>()
             .add_event::<PlayerEquipmentChanged>()
@@ -29,39 +28,68 @@ impl Plugin for PlayerPlugin {
             )
             .add_systems(OnEnter(GameState::InGame), unpause)
             .add_systems(OnExit(GameState::InGame), pause)
-            .add_systems(OnEnter(InGameState::Running), disable_mouse_handling)
             .add_systems(
                 Update,
                 (
-                    (
-                        wait_for_mouse_up,
-                        set_target_position.run_if(mouse_not_over_ui),
-                    )
-                        .chain(),
                     animate_player_sprite,
                     player_invulnerability_finished,
                     increment_player_experience,
                     level_up,
                 )
                     .in_set(GameRunningSet::EntityUpdate),
-            );
+            )
+            .add_observer(manage_player_movement_with_mouse);
     }
 }
 
-#[derive(Resource, Default, Deref, DerefMut)]
-struct AllowMouseHandling(bool);
-
-fn disable_mouse_handling(mut allow_mouse: ResMut<AllowMouseHandling>) {
-    **allow_mouse = false;
+fn world_position<E>(
+    cameras: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
+    pointer: &Pointer<E>,
+) -> Option<Vec2>
+where
+    E: std::fmt::Debug + Clone + Reflect,
+{
+    cameras.get_single().ok().and_then(|(camera, transform)| {
+        camera
+            .viewport_to_world_2d(transform, pointer.pointer_location.position)
+            .ok()
+    })
 }
 
-fn wait_for_mouse_up(
-    mouse_inputs: Res<ButtonInput<MouseButton>>,
-    mut allow_mouse: ResMut<AllowMouseHandling>,
-) {
-    if !**allow_mouse && !mouse_inputs.pressed(MouseButton::Left) {
-        **allow_mouse = true;
-    }
+fn manage_player_movement_with_mouse(trigger: Trigger<OnAdd, WorldMap>, mut commands: Commands) {
+    commands
+        .entity(trigger.entity())
+        .observe(
+            |trigger: Trigger<Pointer<Down>>,
+             mut commands: Commands,
+             mut player: Single<&mut NextPosition, With<Player>>,
+             cameras: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
+             assets: Res<NextPositionIndicatorAssets>| {
+                warn!("{trigger:?}");
+                if let Some(world_pos) = world_position(cameras, trigger.event()) {
+                    player.goto(world_pos);
+                    commands.spawn((
+                        NextPositionIndicator,
+                        Mesh2d(assets.mesh.clone()),
+                        MeshMaterial2d(assets.color.clone()),
+                        Transform::from_translation(world_pos.extend(10.)),
+                    ));
+                }
+            },
+        )
+        .observe(|trigger: Trigger<Pointer<DragStart>>| {
+            warn!("{trigger:?}");
+        })
+        .observe(
+            |trigger: Trigger<Pointer<Drag>>,
+             mut player: Single<&mut NextPosition, With<Player>>,
+             cameras: Query<(&Camera, &GlobalTransform), With<MainCamera>>| {
+                warn!("{trigger:?}");
+                if let Some(world_pos) = world_position(cameras, trigger.event()) {
+                    player.goto(world_pos);
+                }
+            },
+        );
 }
 
 fn spawn_player(mut commands: Commands, assets: Res<PlayerAssets>) {
@@ -91,43 +119,6 @@ fn unpause(mut query: Query<(&mut Invulnerable, &mut Blink), With<Player>>) {
     }
 }
 
-///
-/// Manage the mouse to move the player
-///
-fn set_target_position(
-    mut commands: Commands,
-    window: Single<&Window>,
-    camera: Single<(&Camera, &GlobalTransform), With<MainCamera>>,
-    player: Single<&mut NextPosition, With<Player>>,
-    mouse_inputs: Res<ButtonInput<MouseButton>>,
-    allow_mouse: Res<AllowMouseHandling>,
-    assets: Res<NextPositionIndicatorAssets>,
-) {
-    if !**allow_mouse || !mouse_inputs.pressed(MouseButton::Left) {
-        return;
-    }
-
-    let (camera, camera_transform) = *camera;
-    let Some(point) = window
-        .cursor_position()
-        .and_then(|cursor| camera.viewport_to_world_2d(camera_transform, cursor).ok())
-    else {
-        return;
-    };
-
-    let mut next_pos = player.into_inner();
-    next_pos.goto(point);
-
-    if mouse_inputs.just_pressed(MouseButton::Left) {
-        commands.spawn((
-            NextPositionIndicator,
-            Mesh2d(assets.mesh.clone()),
-            MeshMaterial2d(assets.color.clone()),
-            Transform::from_translation((point, 10.).into()),
-        ));
-    }
-}
-
 fn set_invulnerable_on_hit(
     trigger: Trigger<LooseLifeEvent>,
     mut commands: Commands,
@@ -136,7 +127,7 @@ fn set_invulnerable_on_hit(
     if let Ok(mut collision_groups) = players.get_mut(trigger.entity()) {
         // Set player invulnerable
         commands.entity(trigger.entity()).insert((
-            Invulnerable::new(Duration::from_secs_f32(2.0), GROUP_ENEMY),
+            Invulnerable::new(Duration::from_secs_f32(1.0), GROUP_ENEMY),
             Blink::new(Duration::from_secs_f32(0.15)),
         ));
 

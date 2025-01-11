@@ -1,5 +1,4 @@
 mod button;
-pub mod mouse_over_ui;
 mod popup;
 mod progressbar;
 
@@ -37,6 +36,5 @@ impl PluginGroup for UiPlugins {
         PluginGroupBuilder::start::<Self>()
             .add(progressbar::ProgressBarPlugin)
             .add(button::button_plugin)
-            .add(mouse_over_ui::MouseOverUiPlugin)
     }
 }

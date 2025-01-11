@@ -1,6 +1,15 @@
 use super::GameRunningSet;
-use crate::{components::*, schedule::GameState};
-use bevy::{math::vec2, prelude::*, utils::HashMap};
+use crate::{camera::MainCamera, components::*, schedule::GameState};
+use bevy::{
+    math::vec2,
+    picking::{
+        backend::{HitData, PointerHits},
+        pointer::{PointerId, PointerLocation},
+        PickSet,
+    },
+    prelude::*,
+    utils::HashMap,
+};
 use bevy_ecs_ldtk::{prelude::*, utils::grid_coords_to_translation};
 use bevy_rapier2d::prelude::*;
 use std::{collections::HashSet, f32::consts::PI};
@@ -24,6 +33,7 @@ impl Plugin for WorldMapPlugin {
             .register_ldtk_entity::<MonsterInitialPositionLdtkBundle>("MonsterInitialPosition")
             .add_systems(OnEnter(GameState::InGame), spawn_worldmap)
             .add_systems(OnExit(GameState::InGame), despawn_all::<WorldMap>)
+            .add_systems(PreUpdate, world_map_picking.in_set(PickSet::Backend))
             .add_systems(
                 Update,
                 (
@@ -191,7 +201,7 @@ fn spawn_colliders(
                     // 2. the colliders will be despawned automatically when levels unload
                     for collider_rect in collider_rects {
                         level.spawn((
-                            Name::new("Map Collider"),
+                            MapCollider,
                             Collider::cuboid(
                                 (collider_rect.right as f32 - collider_rect.left as f32 + 1.)
                                     * grid_size as f32
@@ -200,8 +210,6 @@ fn spawn_colliders(
                                     * grid_size as f32
                                     / 2.,
                             ),
-                            RigidBody::Fixed,
-                            Friction::new(1.0),
                             Transform::from_xyz(
                                 (collider_rect.left + collider_rect.right + 1) as f32
                                     * grid_size as f32
@@ -316,5 +324,33 @@ fn level_selection_follow_player(
                 *level_selection = LevelSelection::Iid(level_iid.clone());
             }
         }
+    }
+}
+
+fn world_map_picking(
+    pointers: Query<(&PointerId, &PointerLocation)>,
+    camera: Single<(Entity, &Camera, &GlobalTransform), With<MainCamera>>,
+    worlds_maps: Query<Entity, With<WorldMap>>,
+    mut output: EventWriter<PointerHits>,
+) {
+    let Ok(world_map) = worlds_maps.get_single() else {
+        return;
+    };
+    let (camera_entity, camera, camera_transform) = *camera;
+    for (pointer_id, pointer_location) in &pointers {
+        let Some(ref location) = pointer_location.location else {
+            continue;
+        };
+        let Ok(world_pos) = camera.viewport_to_world_2d(camera_transform, location.position) else {
+            continue;
+        };
+        let depth = 0.;
+        let position = Some(world_pos.extend(0.));
+        let picks = vec![(
+            world_map,
+            HitData::new(camera_entity, depth, position, Some(Vec3::Z)),
+        )];
+        let order = camera.order as f32;
+        output.send(PointerHits::new(*pointer_id, picks, order));
     }
 }

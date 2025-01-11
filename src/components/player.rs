@@ -10,7 +10,7 @@ use std::time::Duration;
     Character,
     Target(|| Target::Monster),
     BaseLife(|| BaseLife(10.)),
-    BaseMovementSpeed(|| BaseMovementSpeed(130.)),
+    BaseMovementSpeed(|| BaseMovementSpeed(100.)),
     Experience,
     Sprite,
     Transform(|| Transform::from_xyz(0., 0., 10.)),

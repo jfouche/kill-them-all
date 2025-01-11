@@ -6,13 +6,13 @@ use bevy::{
 
 /// Component to add to allow a popup when overing the entity
 #[derive(Component, Default, Clone)]
-#[component(on_add = init)]
+#[component(on_add = init_show_popup_on_mouse_over)]
 pub struct ShowPopupOnMouseOver {
     pub text: String,
     pub image: Option<ImageNode>,
 }
 
-fn init(mut world: DeferredWorld, entity: Entity, _: ComponentId) {
+fn init_show_popup_on_mouse_over(mut world: DeferredWorld, entity: Entity, _: ComponentId) {
     world
         .commands()
         .entity(entity)
@@ -28,12 +28,16 @@ fn spawn_popup(
     trigger: Trigger<Pointer<Over>>,
     mut commands: Commands,
     infos: Query<&ShowPopupOnMouseOver>,
+    popups: Query<&InfoPopup>,
 ) {
     if let Ok(info) = infos.get(trigger.entity()) {
-        commands.spawn(InfoPopup {
-            info: info.clone(),
-            pos: trigger.event().pointer_location.position,
-        });
+        if !popups.iter().any(|popup| popup.source == trigger.entity()) {
+            commands.spawn(InfoPopup {
+                info: info.clone(),
+                source: trigger.entity(),
+                pos: trigger.event().pointer_location.position,
+            });
+        }
     }
 }
 
@@ -69,8 +73,8 @@ fn despawn_popup_on_removed(
     }
 }
 
-/// The popup
-#[derive(Component, Default, Clone)]
+/// The popup itself
+#[derive(Component, Clone)]
 #[component(on_add = create_popup)]
 #[require(
     Name(|| Name::new("InfoPopup")),
@@ -86,6 +90,7 @@ fn despawn_popup_on_removed(
 )]
 struct InfoPopup {
     info: ShowPopupOnMouseOver,
+    source: Entity,
     pos: Vec2,
 }
 
@@ -97,18 +102,18 @@ struct CreatePopupCommand(Entity);
 
 impl Command for CreatePopupCommand {
     fn apply(self, world: &mut World) {
-        let window = world
+        let popup = world
             .get::<InfoPopup>(self.0)
-            .expect("InfoPopupWindow added")
+            .expect("InfoPopup added")
             .clone();
         world.entity_mut(self.0).with_children(|parent| {
-            if let Some(image_node) = window.info.image {
+            if let Some(image_node) = popup.info.image {
                 parent.spawn(image_node);
             }
-            parent.spawn((Text(window.info.text), TextFont::from_font_size(12.)));
+            parent.spawn((Text(popup.info.text), TextFont::from_font_size(12.)));
         });
         let mut node = world.get_mut::<Node>(self.0).expect("Node");
-        node.left = Val::Px(window.pos.x + 5.);
-        node.top = Val::Px(window.pos.y - 20.);
+        node.left = Val::Px(popup.pos.x - 60.);
+        node.top = Val::Px(popup.pos.y - 130.);
     }
 }

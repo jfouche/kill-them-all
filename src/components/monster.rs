@@ -98,7 +98,7 @@ pub struct Monster;
     Name(|| Name::new("Monster#1")),
     Monster,
     BaseLife(|| BaseLife(2.)),
-    BaseMovementSpeed(||BaseMovementSpeed(70.)),
+    BaseMovementSpeed(||BaseMovementSpeed(50.)),
 )]
 pub struct MonsterType1;
 
@@ -107,7 +107,7 @@ pub struct MonsterType1;
     Name(|| Name::new("Monster#2")),
     Monster,
     BaseLife(|| BaseLife(3.)),
-    BaseMovementSpeed(||BaseMovementSpeed(60.)),
+    BaseMovementSpeed(||BaseMovementSpeed(40.)),
 )]
 pub struct MonsterType2;
 
@@ -116,7 +116,7 @@ pub struct MonsterType2;
     Name(|| Name::new("Monster#3")),
     Monster,
     BaseLife(|| BaseLife(4.)),
-    BaseMovementSpeed(||BaseMovementSpeed(50.)),
+    BaseMovementSpeed(||BaseMovementSpeed(30.)),
 )]
 pub struct MonsterType3;
 

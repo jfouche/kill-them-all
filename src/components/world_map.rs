@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_ecs_ldtk::prelude::*;
+use bevy_rapier2d::prelude::*;
 
 #[derive(Resource)]
 pub struct WorldMapAssets {
@@ -95,3 +96,14 @@ pub struct ColliderTile;
 impl ColliderTile {
     pub const ID: i32 = 3;
 }
+
+#[derive(Component)]
+#[require(
+    Name(|| Name::new("Map Collider")),
+    Transform,
+    Collider,
+    RigidBody(|| RigidBody::Fixed),
+    Friction(|| Friction::new(1.0)),
+
+)]
+pub struct MapCollider;
