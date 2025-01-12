@@ -1,4 +1,7 @@
-use crate::{components::*, in_game::GameRunningSet};
+use crate::{
+    components::*,
+    in_game::{GameRunningSet, GameState},
+};
 use bevy::prelude::*;
 
 ///
@@ -65,22 +68,23 @@ pub struct StatsWindowPlugin;
 
 impl Plugin for StatsWindowPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(
-            Update,
-            (
-                spawn_or_despawn_window,
-                update_stat::<Armour>,
-                update_stat::<MaxLife>,
-                update_stat::<LifeRegen>,
-                update_stat::<IncreaseMovementSpeed>,
-                update_stat::<IncreaseAttackSpeed>,
-                update_stat::<PierceChance>,
-                update_stat::<MoreDamage>,
-                update_stat::<IncreaseDamage>,
+        app.add_systems(OnExit(GameState::InGame), despawn_all::<StatisticsWindow>)
+            .add_systems(
+                Update,
+                (
+                    spawn_or_despawn_window,
+                    update_stat::<Armour>,
+                    update_stat::<MaxLife>,
+                    update_stat::<LifeRegen>,
+                    update_stat::<IncreaseMovementSpeed>,
+                    update_stat::<IncreaseAttackSpeed>,
+                    update_stat::<PierceChance>,
+                    update_stat::<MoreDamage>,
+                    update_stat::<IncreaseDamage>,
+                )
+                    .in_set(GameRunningSet::UserInput),
             )
-                .in_set(GameRunningSet::UserInput),
-        )
-        .add_observer(create_panel);
+            .add_observer(create_panel);
     }
 }
 

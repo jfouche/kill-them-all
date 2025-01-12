@@ -11,10 +11,8 @@ pub struct LifeBarPlugin;
 impl Plugin for LifeBarPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(GameState::InGame), spawn_life_bar)
-            .add_systems(
-                Update,
-                (update_life_bar, update_life_bar_on_death).in_set(GameRunningSet::EntityUpdate),
-            );
+            .add_systems(Update, update_life_bar.in_set(GameRunningSet::EntityUpdate))
+            .add_observer(update_life_bar_on_death);
     }
 }
 
@@ -55,12 +53,10 @@ fn update_life_bar(
 }
 
 fn update_life_bar_on_death(
-    mut player_death_events: EventReader<PlayerDeathEvent>,
+    _trigger: Trigger<PlayerDeathEvent>,
     mut q_bar: Query<&mut ProgressBar, With<LifeBar>>,
 ) {
     if let Ok(mut progressbar) = q_bar.get_single_mut() {
-        for _ in player_death_events.read() {
-            progressbar.value = 0.0;
-        }
+        progressbar.value = 0.0;
     }
 }

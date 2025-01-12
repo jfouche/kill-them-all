@@ -133,7 +133,6 @@ fn change_state_on_player_death(
     _trigger: Trigger<PlayerDeathEvent>,
     mut in_game_state: ResMut<NextState<InGameState>>,
 ) {
-    warn!("change_state_on_player_death");
     in_game_state.set(InGameState::PlayerDied);
 }
 

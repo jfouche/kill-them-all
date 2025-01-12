@@ -1,8 +1,11 @@
 use super::{
     panel_equipments::EquipmentsPanel, ShowEquipmentActionsOnMouseOver, ShowPopupOnMouseOver,
 };
-use crate::{components::*, in_game::GameRunningSet};
-use bevy::prelude::*;
+use crate::{
+    components::*,
+    in_game::{GameRunningSet, GameState},
+};
+use bevy::{input::common_conditions::input_just_pressed, prelude::*};
 
 /// A window that shows the content of the [Inventory]
 #[derive(Component)]
@@ -40,24 +43,19 @@ pub struct InventoryPanelPlugin;
 
 impl Plugin for InventoryPanelPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(
-            Update,
-            spawn_or_despawn_window.in_set(GameRunningSet::UserInput),
-        )
-        .add_observer(create_panel)
-        .add_observer(update_inventory);
+        app.add_systems(OnExit(GameState::InGame), despawn_all::<InventoryWindow>)
+            .add_systems(
+                Update,
+                spawn_or_despawn_window
+                    .run_if(input_just_pressed(KeyCode::KeyI))
+                    .in_set(GameRunningSet::UserInput),
+            )
+            .add_observer(create_panel)
+            .add_observer(update_inventory);
     }
 }
 
-fn spawn_or_despawn_window(
-    mut commands: Commands,
-    keyboard: Res<ButtonInput<KeyCode>>,
-    windows: Query<Entity, With<InventoryWindow>>,
-) {
-    if !keyboard.just_pressed(KeyCode::KeyI) {
-        return;
-    }
-
+fn spawn_or_despawn_window(mut commands: Commands, windows: Query<Entity, With<InventoryWindow>>) {
     if let Ok(entity) = windows.get_single() {
         commands.entity(entity).despawn_recursive();
     } else {
@@ -75,6 +73,7 @@ fn create_panel(
     items: Query<&EquipmentInfo>,
     assets: Res<EquipmentAssets>,
 ) {
+    warn!("create_panel()");
     let panel = trigger.entity();
     commands.entity(panel).with_children(|cmd| {
         add_items(cmd, *inventory, items, &assets);
@@ -89,6 +88,7 @@ fn update_inventory(
     mut items: Query<&EquipmentInfo>,
     assets: Res<EquipmentAssets>,
 ) {
+    warn!("update_inventory()");
     for panel in &panels {
         commands.entity(panel).despawn_descendants();
         commands.entity(panel).with_children(|cmd| {

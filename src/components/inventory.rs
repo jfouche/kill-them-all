@@ -140,26 +140,28 @@ pub struct EquipItemCommand(pub Entity);
 impl Command for EquipItemCommand {
     fn apply(self, world: &mut World) {
         warn!("EquipItemCommand({})", self.0);
-        let player = world.query_filtered::<Entity, With<Player>>().single(world);
+
+        let mut equipments = world.query::<(Entity, &Equipment, &Parent)>();
+        let Ok(equipment_to_equip) = equipments.get(world, self.0).map(|(_, eqp, _)| *eqp) else {
+            warn!("Can't equip {} as it's not an Equipment", self.0);
+            return;
+        };
 
         // Check it the player already have an item of same type
-        let mut equipments = world.query::<(Entity, &Equipment, &Parent)>();
-        let current_equipment = equipments
-            .get(world, self.0)
-            .map(|(_, eqp, _)| *eqp)
-            .expect("Equipment");
-
-        if let Some(old_equipment) = equipments
+        let player = world.query_filtered::<Entity, With<Player>>().single(world);
+        let old_equipment = equipments
             .iter(world)
             // same parent, same type, but different entity
             .filter(|(entity, eqp, parent)| {
-                player == ***parent && **eqp == current_equipment && *entity != self.0
+                player == ***parent && **eqp == equipment_to_equip && *entity != self.0
             })
             .map(|(e, _eqp, _p)| e)
-            // There should be only 1 equipment
-            .next()
-        {
-            // Move old equipment in inventory
+            // There should be at most 1 equipment
+            .next();
+
+        // Manage inventory
+        RemoveFromInventoryCommand(self.0).apply(world);
+        if let Some(old_equipment) = old_equipment {
             AddToInventoryCommand(old_equipment).apply(world);
         }
 

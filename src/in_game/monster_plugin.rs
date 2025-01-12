@@ -39,9 +39,7 @@ fn update_monster(
             }
         }
 
-        commands
-            .entity(trigger.entity())
-            .add_children(&entities);
+        commands.entity(trigger.entity()).add_children(&entities);
 
         // Add a weapon and more life
         commands.entity(trigger.entity()).with_children(|c| {
@@ -50,9 +48,9 @@ fn update_monster(
         });
     }
     commands
-    .entity(trigger.entity())
-    .observe(monster_dying)
-    .observe(increment_score);
+        .entity(trigger.entity())
+        .observe(monster_dying)
+        .observe(increment_score);
 }
 
 ///
