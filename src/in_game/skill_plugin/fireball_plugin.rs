@@ -8,6 +8,7 @@ use bevy_rapier2d::prelude::*;
 const FIREBALL_SPEED: f32 = 300.0;
 const FIREBALL_SIZE: f32 = 5.0;
 
+/// The [FireBallLauncher] projectile
 #[derive(Component)]
 #[require(
     Name(|| Name::new("FireBall")),
@@ -51,21 +52,25 @@ fn cast_fireball(
                             nearest
                         }
                     });
+
+                const MAX_DISTANCE: f32 = 200.;
                 if let Some(target_pos) = nearest_target {
-                    commands.spawn((
-                        FireBall,
-                        *hit_damage_range,
-                        DamagerParams {
-                            transform: Transform::from_translation(gunner),
-                            collision_groups: Damager::collision_groups(*target),
-                        },
-                        ProjectileParams {
-                            pierce_chance: *pierce,
-                            velocity: Velocity::linear(
-                                (target_pos - gunner).xy().normalize() * FIREBALL_SPEED,
-                            ),
-                        },
-                    ));
+                    if gunner.distance(target_pos) < MAX_DISTANCE {
+                        commands.spawn((
+                            FireBall,
+                            *hit_damage_range,
+                            DamagerParams {
+                                transform: Transform::from_translation(gunner),
+                                collision_groups: Damager::collision_groups(*target),
+                            },
+                            ProjectileParams {
+                                pierce_chance: *pierce,
+                                velocity: Velocity::linear(
+                                    (target_pos - gunner).xy().normalize() * FIREBALL_SPEED,
+                                ),
+                            },
+                        ));
+                    }
                 }
             }
         }

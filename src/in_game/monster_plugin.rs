@@ -44,6 +44,7 @@ fn update_monster(
         // Add a weapon and more life
         commands.entity(trigger.entity()).with_children(|c| {
             c.spawn(Wand);
+            c.spawn(FireBallLauncher);
             c.spawn(MoreLife(10.));
         });
     }
