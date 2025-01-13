@@ -65,7 +65,6 @@ fn manage_player_movement_with_mouse(trigger: Trigger<OnAdd, WorldMap>, mut comm
              mut player: Single<&mut NextPosition, With<Player>>,
              cameras: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
              assets: Res<NextPositionIndicatorAssets>| {
-                warn!("{trigger:?}");
                 if let Some(world_pos) = world_position(cameras, trigger.event()) {
                     player.goto(world_pos);
                     commands.spawn((
@@ -77,14 +76,10 @@ fn manage_player_movement_with_mouse(trigger: Trigger<OnAdd, WorldMap>, mut comm
                 }
             },
         )
-        .observe(|trigger: Trigger<Pointer<DragStart>>| {
-            warn!("{trigger:?}");
-        })
         .observe(
             |trigger: Trigger<Pointer<Drag>>,
              mut player: Single<&mut NextPosition, With<Player>>,
              cameras: Query<(&Camera, &GlobalTransform), With<MainCamera>>| {
-                warn!("{trigger:?}");
                 if let Some(world_pos) = world_position(cameras, trigger.event()) {
                     player.goto(world_pos);
                 }
