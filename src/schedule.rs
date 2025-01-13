@@ -30,21 +30,9 @@ pub enum GameRunningSet {
     DespawnEntities,
 }
 
-#[derive(Debug, Hash, PartialEq, Eq, Clone, Copy, SystemSet)]
-pub enum PreUpdateAffixes {
-    Step1,
-    Step2,
-}
-
 pub fn schedule_plugin(app: &mut App) {
     app.init_state::<GameState>()
         .init_state::<InGameState>()
-        .configure_sets(
-            PreUpdate,
-            (PreUpdateAffixes::Step1, PreUpdateAffixes::Step2)
-                .chain()
-                .run_if(game_is_running),
-        )
         .configure_sets(
             Update,
             (

@@ -22,7 +22,7 @@ impl Plugin for WeaponPlugin {
                     update_weapon_hit_damage_range,
                     update_weapon_damage_over_time,
                 )
-                    .in_set(PreUpdateAffixes::Step2),
+                    .in_set(PreUpdateAffixes::Weapons),
             );
     }
 }

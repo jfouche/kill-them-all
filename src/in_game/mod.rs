@@ -1,3 +1,4 @@
+mod affix_updates_plugin;
 mod animation_plugin;
 mod bonus_plugin;
 mod character_plugin;
@@ -8,7 +9,6 @@ mod menu;
 mod monster_plugin;
 mod player_plugin;
 mod skill_plugin;
-mod weapon_plugin;
 mod world_map_plugin;
 
 use crate::components::{LifeTime, PlayerDeathEvent};
@@ -29,14 +29,14 @@ impl PluginGroup for InGamePluginsGroup {
             .add(bonus_plugin::BonusPlugin)
             .add(collisions_plugin::CollisionsPlugin)
             .add(character_plugin::CharacterPlugin)
+            .add(affix_updates_plugin::AffixUpdatesPlugin)
             .add(monster_plugin::MonsterPlugin)
             .add(player_plugin::PlayerPlugin)
             .add(world_map_plugin::WorldMapPlugin)
             .add(life_bar_plugin::LifeBarPlugin)
             .add(animation_plugin::AnimationPlugin)
-            .add(weapon_plugin::WeaponPlugin)
             .add(skill_plugin::SkillsPlugin)
-            .add_group(menu::InGameMenuPluginsGroup)
+            .add(menu::InGameMenuPlugin)
             .add(in_game_schedule_plugin)
     }
 }

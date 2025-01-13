@@ -10,31 +10,28 @@ mod window_statistics;
 
 use super::{pause, unpause, InGameState};
 use crate::components::EquipmentAssets;
-use bevy::{app::PluginGroupBuilder, prelude::*};
+use bevy::prelude::*;
 use panel_equipments::EquipmentsPanel;
 use popup_info::ShowPopupOnMouseOver;
 use popup_select_equipment::ShowEquipmentActionsOnMouseOver;
 
-pub struct InGameMenuPluginsGroup;
+pub struct InGameMenuPlugin;
 
-impl PluginGroup for InGameMenuPluginsGroup {
-    fn build(self) -> PluginGroupBuilder {
-        PluginGroupBuilder::start::<Self>()
-            .add(menu_pause::PausePlugin)
-            .add(menu_level_up::LevelUpMenuPlugin)
-            .add(menu_player_died::PlayerDiedMenuPlugin)
-            .add(panel_equipments::InventoryPanelPlugin)
-            .add(panel_skills::SkillsPanelPlugin)
-            .add(window_statistics::StatsWindowPlugin)
-            .add(window_inventory::InventoryPanelPlugin)
-            .add(menu_plugin)
-    }
-}
-
-fn menu_plugin(app: &mut App) {
-    app.init_resource::<EquipmentAssets>()
+impl Plugin for InGameMenuPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_plugins((
+            menu_pause::PausePlugin,
+            menu_level_up::LevelUpMenuPlugin,
+            menu_player_died::PlayerDiedMenuPlugin,
+            panel_equipments::InventoryPanelPlugin,
+            panel_skills::SkillsPanelPlugin,
+            window_statistics::StatsWindowPlugin,
+            window_inventory::InventoryPanelPlugin,
+        ))
+        .init_resource::<EquipmentAssets>()
         .add_systems(OnEnter(InGameState::Pause), pause)
         .add_systems(OnExit(InGameState::Pause), unpause)
         .add_systems(OnEnter(InGameState::LevelUp), pause)
         .add_systems(OnExit(InGameState::LevelUp), unpause);
+    }
 }
