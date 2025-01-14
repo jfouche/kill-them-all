@@ -349,11 +349,11 @@ fn update_skill_damage_over_time(
 
 /// [Skill]'s [AttackSpeed] = [Weapon]'s [AttackSpeed] * [Character] [IncreaseAttackSpeed]
 fn update_skill_attack_speed(
-    mut skills: Query<(&mut AttackSpeed, &Parent), With<Skill>>,
+    mut skills: Query<(&mut AttackSpeed, &mut AttackTimer, &Parent), With<Skill>>,
     weapons: Query<(&AttackSpeed, &Parent), (With<Weapon>, Without<Skill>)>,
     characters: Query<&IncreaseAttackSpeed, With<Character>>,
 ) {
-    for (mut skill_attack_speed, parent) in &mut skills {
+    for (mut skill_attack_speed, mut timer, parent) in &mut skills {
         if let Some(weapon_attack_speed) = weapons
             .iter()
             .find(|(_, p)| ***p == **parent)
@@ -362,6 +362,7 @@ fn update_skill_attack_speed(
             if let Ok(character_inc_attack_speed) = characters.get(**parent) {
                 *skill_attack_speed = *weapon_attack_speed;
                 skill_attack_speed.increase(character_inc_attack_speed);
+                timer.set_attack_speed(*skill_attack_speed);
             }
         }
     }

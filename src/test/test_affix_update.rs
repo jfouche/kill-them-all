@@ -65,6 +65,8 @@ fn test_skill_attack_speed() {
 
     let attack_speed = app.world().get::<AttackSpeed>(skill);
     assert_eq!(2.16, attack_speed.unwrap().0);
+    let attack_timer = app.world().get::<AttackTimer>(skill);
+    assert_eq!(1. / 2.16, attack_timer.unwrap().duration().as_secs_f32())
 }
 
 #[test]
