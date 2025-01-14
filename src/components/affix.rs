@@ -61,9 +61,19 @@ impl Armour {
     }
 }
 
-/// Add armour to base [Armour]
+/// Base equipment [Armour] 
+#[derive(Component, Default, Deref, Reflect)]
+#[require(Armour)]
+pub struct BaseArmour(pub f32);
+
+/// Add armour to base [BaseArmour]
 #[derive(Component, Default, Clone, Copy, Deref, DerefMut, Debug, Reflect)]
 pub struct MoreArmour(pub f32);
+
+
+/// Increase armour to base [BaseArmour], after applying [MoreArmour]
+#[derive(Component, Default, Clone, Copy, Deref, DerefMut, Debug, Reflect)]
+pub struct IncreaseArmour(pub f32);
 
 /// Increase [crate::components::BaseMovementSpeed]
 #[derive(Component, Default, Clone, Copy, Deref, DerefMut, Debug, Reflect)]

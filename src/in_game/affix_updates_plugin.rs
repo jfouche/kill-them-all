@@ -4,6 +4,7 @@ use bevy::prelude::*;
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone, Copy, SystemSet)]
 enum PreUpdateAffixes {
+    LocalEquipment,
     Characters,
     Weapons,
     Skills,
@@ -17,6 +18,7 @@ impl Plugin for AffixUpdatesPlugin {
         app.configure_sets(
             PreUpdate,
             (
+                PreUpdateAffixes::LocalEquipment,
                 PreUpdateAffixes::Characters,
                 PreUpdateAffixes::Weapons,
                 PreUpdateAffixes::Skills,
@@ -27,17 +29,35 @@ impl Plugin for AffixUpdatesPlugin {
         .add_systems(
             PreUpdate,
             (
+                (update_equipment_armour, update_weapon_attack_speed)
+                    .in_set(PreUpdateAffixes::LocalEquipment),
                 (
-                    (update_armour::<Equipment>, update_armour::<Character>).chain(),
-                    (update_increase_attack_speed, update_weapon_attack_speed).chain(),
-                    update_pierce_chance,
+                    (update_character_max_life, update_life_regen).chain(),
+                    update_character_armour,
+                    update_character_movement_speed,
+                    // update_increase_attack_speed,
+                    update_character_pierce_chance,
+                    update_character_more_damage,
+                    update_character_increase_damage,
                     update_increase_area_of_effect,
-                    (update_more_damage, update_increase_damage).chain(),
+                )
+                    .in_set(PreUpdateAffixes::Characters),
+                update_skill_damage_over_time.in_set(PreUpdateAffixes::Skills),
+                tick_weapon.after(PreUpdateAffixes::Skills),
+                (
+                    (update_increase_attack_speed, update_weapon_attack_speed).chain(),
+                    update_character_pierce_chance,
+                    update_increase_area_of_effect,
+                    (
+                        update_character_more_damage,
+                        update_character_increase_damage,
+                    )
+                        .chain(),
                 )
                     .in_set(PreUpdateAffixes::Characters),
                 (
-                    (update_max_life, update_life_regen).chain(),
-                    update_movement_speed,
+                    (update_character_max_life, update_life_regen).chain(),
+                    update_character_movement_speed,
                 )
                     .run_if(game_is_running),
             ),
@@ -47,7 +67,7 @@ impl Plugin for AffixUpdatesPlugin {
             (
                 (update_weapon_attack_speed, tick_weapon).chain(),
                 update_weapon_hit_damage_range,
-                update_weapon_damage_over_time,
+                update_skill_damage_over_time,
             )
                 .in_set(PreUpdateAffixes::Weapons),
         )
@@ -74,29 +94,72 @@ fn fix_life(
     }
 }
 
-/// [Armour] = sum([Armour]) + sum ([MoreArmour])
-fn update_armour<T: Component>(
-    mut armoreds: Query<&mut Armour, With<T>>,
-    armours: Query<(&Armour, &Parent), Without<T>>,
-    more_armours: Query<(&MoreArmour, &Parent), Without<T>>,
+/// [Armour] = ([BaseArmour] + [MoreArmour]) * [IncreaseArmour]
+fn update_equipment_armour(
+    mut equipments: Query<
+        (
+            &mut Armour,
+            &BaseArmour,
+            Option<&MoreArmour>,
+            Option<&IncreaseArmour>,
+        ),
+        With<Equipment>,
+    >,
 ) {
-    for mut armour in &mut armoreds {
+    for (mut armour, base, more, incr) in &mut equipments {
+        **armour = **base;
+        if let Some(more) = more {
+            **armour += **more
+        }
+        if let Some(incr) = incr {
+            **armour += 1. + **incr / 100.;
+        }
+    }
+}
+
+/// Weapon [AttackSpeed] = [BaseAttackSpeed] * [IncreaseAttackSpeed]
+///
+/// Update also the [AttackTimer] based on the new [AttackSpeed].
+fn update_weapon_attack_speed(
+    mut weapons: Query<
+        (
+            &mut AttackSpeed,
+            &mut AttackTimer,
+            &BaseAttackSpeed,
+            &IncreaseAttackSpeed,
+        ),
+        With<Weapon>,
+    >,
+) {
+    for (mut attack_speed, mut timer, base, incr) in &mut weapons {
+        *attack_speed = base.attack_speed(incr);
+        timer.set_attack_speed(*attack_speed);
+    }
+}
+
+/// [Armour] = sum([Equipment] [Armour]) + sum ([MoreArmour] affixes)
+fn update_character_armour(
+    mut characters: Query<&mut Armour, With<Character>>,
+    equipment_armours: Query<(&Armour, &Parent), (With<Equipment>, Without<Character>)>,
+    more_armours: Query<(&MoreArmour, &Parent), (Without<Equipment>, Without<Character>)>,
+) {
+    for mut armour in &mut characters {
         **armour = 0.;
     }
-    for (affix_armour, parent) in &armours {
-        if let Ok(mut armour) = armoreds.get_mut(**parent) {
-            **armour += **affix_armour;
+    for (eqp_armour, parent) in &equipment_armours {
+        if let Ok(mut armour) = characters.get_mut(**parent) {
+            **armour += **eqp_armour;
         }
     }
     for (more_armour, parent) in &more_armours {
-        if let Ok(mut armour) = armoreds.get_mut(**parent) {
+        if let Ok(mut armour) = characters.get_mut(**parent) {
             **armour += **more_armour;
         }
     }
 }
 
 /// [MaxLife] = ([BaseLife] + sum([MoreLife])) * sum([IncreaseMaxLife]) %
-fn update_max_life(
+fn update_character_max_life(
     mut characters: Query<(&BaseLife, &mut MaxLife, &mut IncreaseMaxLife), With<Character>>,
     more_affixes: Query<(&MoreLife, &Parent), Without<Character>>,
     incr_affixes: Query<(&IncreaseMaxLife, &Parent), Without<Character>>,
@@ -137,7 +200,7 @@ fn update_life_regen(
 }
 
 /// [MovementSpeed] = [BaseMovementSpeed] * sum([IncreaseMovementSpeed]) %
-fn update_movement_speed(
+fn update_character_movement_speed(
     mut characters: Query<
         (
             &BaseMovementSpeed,
@@ -163,6 +226,7 @@ fn update_movement_speed(
 }
 
 /// [IncreaseAttackSpeed] = sum([IncreaseAttackSpeed])
+/// TODO: usefull ???
 fn update_increase_attack_speed(
     mut characters: Query<&mut IncreaseAttackSpeed, With<Character>>,
     affixes: Query<(&IncreaseAttackSpeed, &Parent), Without<Character>>,
@@ -179,15 +243,15 @@ fn update_increase_attack_speed(
 }
 
 /// [PierceChance] = sum([PierceChance])
-fn update_pierce_chance(
+fn update_character_pierce_chance(
     mut characters: Query<&mut PierceChance, With<Character>>,
-    mut affixes: Query<(&mut PierceChance, &Parent), Without<Character>>,
+    affixes: Query<(&PierceChance, &Parent), Without<Character>>,
 ) {
     for mut char_pierce_chance in &mut characters {
         **char_pierce_chance = 0.;
     }
 
-    for (pierce_chance, parent) in &mut affixes {
+    for (pierce_chance, parent) in &affixes {
         if let Ok(mut char_pierce_chance) = characters.get_mut(**parent) {
             **char_pierce_chance += **pierce_chance;
         }
@@ -195,14 +259,14 @@ fn update_pierce_chance(
 }
 
 /// [MoreDamage] = sum([MoreDamage])
-fn update_more_damage(
+fn update_character_more_damage(
     mut characters: Query<&mut MoreDamage, With<Character>>,
-    mut affixes: Query<(&mut MoreDamage, &Parent), Without<Character>>,
+    affixes: Query<(&MoreDamage, &Parent), Without<Character>>,
 ) {
     for mut more_damage in &mut characters {
         **more_damage = 0.;
     }
-    for (more_damage, parent) in &mut affixes {
+    for (more_damage, parent) in &affixes {
         if let Ok(mut char_more_damage) = characters.get_mut(**parent) {
             **char_more_damage += **more_damage;
         }
@@ -210,14 +274,14 @@ fn update_more_damage(
 }
 
 /// [IncreaseDamage] = sum([IncreaseDamage])
-fn update_increase_damage(
+fn update_character_increase_damage(
     mut characters: Query<&mut IncreaseDamage, With<Character>>,
-    mut affixes: Query<(&mut IncreaseDamage, &Parent), Without<Character>>,
+    affixes: Query<(&IncreaseDamage, &Parent), Without<Character>>,
 ) {
     for mut incr_damage in &mut characters {
         **incr_damage = 0.;
     }
-    for (incr_damage, parent) in &mut affixes {
+    for (incr_damage, parent) in &affixes {
         if let Ok(mut char_incr_damage) = characters.get_mut(**parent) {
             **char_incr_damage += **incr_damage;
         }
@@ -227,41 +291,19 @@ fn update_increase_damage(
 /// [IncreaseAreaOfEffect] = sum([IncreaseAreaOfEffect])
 fn update_increase_area_of_effect(
     mut characters: Query<&mut IncreaseAreaOfEffect, With<Character>>,
-    mut affixes: Query<(&mut IncreaseAreaOfEffect, &Parent), Without<Character>>,
+    affixes: Query<(&IncreaseAreaOfEffect, &Parent), Without<Character>>,
 ) {
     for mut incr_aoe in &mut characters {
         **incr_aoe = 0.;
     }
-    for (incr_aoe, parent) in &mut affixes {
+    for (incr_aoe, parent) in &affixes {
         if let Ok(mut char_incr_aoe) = characters.get_mut(**parent) {
             **char_incr_aoe += **incr_aoe;
         }
     }
 }
 
-/// Weapon [AttackSpeed] = [BaseAttackSpeed] * sum([IncreaseAttackSpeed])
-///
-/// Update also the [AttackTimer] based on the new [AttackSpeed].
-fn update_weapon_attack_speed(
-    mut weapons: Query<
-        (
-            &mut AttackTimer,
-            &mut AttackSpeed,
-            &BaseAttackSpeed,
-            &Parent,
-        ),
-        Or<(With<Skill>, With<Weapon>)>,
-    >,
-    characters: Query<&IncreaseAttackSpeed, With<Character>>,
-) {
-    for (mut timer, mut attack_speed, base_attack_speed, parent) in &mut weapons {
-        if let Ok(increase) = characters.get(**parent) {
-            *attack_speed = base_attack_speed.attack_speed(increase);
-            timer.set_attack_speed(*attack_speed);
-        }
-    }
-}
-
+// TODO: move elsewhere ???
 fn tick_weapon(mut weapons: Query<&mut AttackTimer, With<Weapon>>, time: Res<Time>) {
     for mut timer in &mut weapons {
         timer.tick(time.delta());
@@ -279,16 +321,37 @@ fn update_weapon_hit_damage_range(
     }
 }
 
-fn update_weapon_damage_over_time(
-    mut weapons: Query<
-        (&mut DamageOverTime, &BaseDamageOverTime, &Parent),
-        Or<(With<Skill>, With<Weapon>)>, // TODO: move skill ?
-    >,
+fn update_skill_damage_over_time(
+    mut weapons: Query<(&mut DamageOverTime, &BaseDamageOverTime, &Parent), With<Skill>>,
     characters: Query<(&MoreDamage, &IncreaseDamage), With<Character>>,
 ) {
     for (mut damage_over_time, base, parent) in &mut weapons {
         if let Ok((more, increase)) = characters.get(**parent) {
             *damage_over_time = base.damage_over_time(more, increase);
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_update_equipment_armour() {
+        let mut app = App::new();
+        app.add_systems(PreUpdate, update_equipment_armour);
+
+        let helmet = app
+            .world_mut()
+            .spawn((Helmet, BaseArmour(1.), MoreArmour(3.), IncreaseArmour(50.)))
+            .id();
+
+        // Run systems
+        app.update();
+
+        // Check resulting changes
+        let armour = app.world().get::<Armour>(helmet);
+        assert!(armour.is_some());
+        assert_eq!(armour.unwrap().0, 6.);
     }
 }
