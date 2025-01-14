@@ -25,15 +25,6 @@ impl BaseHitDamageRange {
     pub fn new(min: f32, max: f32) -> Self {
         BaseHitDamageRange(HitDamageRange { min, max })
     }
-
-    /// Return the real [HitDamageRange] after applying [MoreDamage] and [IncreaseDamage]
-    pub fn damage_range(&self, more: &MoreDamage, increase: &IncreaseDamage) -> HitDamageRange {
-        let multiplier = 1. + **increase / 100.;
-        HitDamageRange {
-            min: (self.0.min + **more) * multiplier,
-            max: (self.0.max + **more) * multiplier,
-        }
-    }
 }
 
 ///
@@ -57,6 +48,11 @@ impl HitDamageRange {
             rng.gen_range(self.min..=self.max)
         };
         Damage(damage)
+    }
+
+    pub fn init(&mut self, base: &BaseHitDamageRange) {
+        self.min = base.0.min;
+        self.max = base.0.max;
     }
 
     pub fn add(&mut self, more: &MoreDamage) {
@@ -123,17 +119,15 @@ impl std::ops::Sub<f32> for Damage {
 #[require(AttackSpeed, AttackTimer)]
 pub struct BaseAttackSpeed(pub f32);
 
-impl BaseAttackSpeed {
-    pub fn attack_speed(&self, increase: &IncreaseAttackSpeed) -> AttackSpeed {
-        AttackSpeed(self.0 * (1. + increase.0 / 100.))
-    }
-}
-
 /// Attack per second
 #[derive(Component, Default, Clone, Copy, Deref, DerefMut, Reflect)]
 pub struct AttackSpeed(pub f32);
 
 impl AttackSpeed {
+    pub fn init(&mut self, base: &BaseAttackSpeed) {
+        self.0 = base.0;
+    }
+
     pub fn increase(&mut self, increase: &IncreaseAttackSpeed) {
         self.0 *= 1. + **increase / 100.;
     }

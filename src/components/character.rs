@@ -86,6 +86,20 @@ impl Life {
 #[derive(Component, Default, Deref, DerefMut, Clone, Copy, Reflect)]
 pub struct MaxLife(pub f32);
 
+impl MaxLife {
+    pub fn init(&mut self, base: &BaseLife) {
+        self.0 = base.0;
+    }
+
+    pub fn more(&mut self, more: &MoreLife) {
+        self.0 += more.0;
+    }
+
+    pub fn increase(&mut self, increase: &IncreaseMaxLife) {
+        self.0 *= 1. + increase.0 / 100.;
+    }
+}
+
 impl std::fmt::Display for MaxLife {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:.0} life", self.0)
@@ -106,6 +120,16 @@ pub struct BaseMovementSpeed(pub f32);
 /// Caculated movement speed, based on [BaseMovementSpeed] and [IncreaseMovementSpeed]
 #[derive(Component, Default, Deref, DerefMut, Reflect)]
 pub struct MovementSpeed(pub f32);
+
+impl MovementSpeed {
+    pub fn init(&mut self, base: &BaseMovementSpeed) {
+        self.0 = base.0;
+    }
+
+    pub fn increase(&mut self, increase: &IncreaseMovementSpeed) {
+        self.0 *= 1. + increase.0 / 100.;
+    }
+}
 
 /// Event to notify a character loose life
 #[derive(Event, Deref)]

@@ -22,6 +22,16 @@ impl From<u16> for MoreLife {
 #[derive(Component, Default, Clone, Copy, Deref, DerefMut, Debug, Reflect)]
 pub struct IncreaseMaxLife(pub f32);
 
+impl IncreaseMaxLife {
+    pub fn reset(&mut self) {
+        self.0 = 0.;
+    }
+
+    pub fn add(&mut self, incr: &IncreaseMaxLife) {
+        self.0 += incr.0;
+    }
+}
+
 impl std::fmt::Display for IncreaseMaxLife {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "Increase {:.0}% maximum life", self.0)
@@ -31,6 +41,16 @@ impl std::fmt::Display for IncreaseMaxLife {
 /// Life regenration per second
 #[derive(Component, Default, Clone, Copy, Deref, DerefMut, Debug, Reflect)]
 pub struct LifeRegen(pub f32);
+
+impl LifeRegen {
+    pub fn reset(&mut self) {
+        self.0 = 0.;
+    }
+
+    pub fn add(&mut self, regen: &LifeRegen) {
+        self.0 += regen.0;
+    }
+}
 
 impl std::fmt::Display for LifeRegen {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -55,7 +75,19 @@ impl From<u16> for Armour {
 }
 
 impl Armour {
-    pub fn add(&mut self, more: &MoreArmour) {
+    pub fn reset(&mut self) {
+        self.0 = 0.;
+    }
+
+    pub fn init(&mut self, base: &BaseArmour) {
+        self.0 = base.0;
+    }
+
+    pub fn add(&mut self, armour: &Armour) {
+        self.0 += armour.0;
+    }
+
+    pub fn more(&mut self, more: &MoreArmour) {
         self.0 += more.0;
     }
 
@@ -86,6 +118,16 @@ pub struct IncreaseArmour(pub f32);
 #[derive(Component, Default, Clone, Copy, Deref, DerefMut, Debug, Reflect)]
 pub struct IncreaseMovementSpeed(pub f32);
 
+impl IncreaseMovementSpeed {
+    pub fn reset(&mut self) {
+        self.0 = 0.;
+    }
+
+    pub fn add(&mut self, increase: &IncreaseMovementSpeed) {
+        self.0 += increase.0;
+    }
+}
+
 impl std::fmt::Display for IncreaseMovementSpeed {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "+{:.0}% movement speed", self.0)
@@ -100,6 +142,16 @@ impl From<u16> for IncreaseMovementSpeed {
 
 #[derive(Component, Default, Clone, Copy, Debug, Deref, DerefMut, Reflect)]
 pub struct IncreaseAttackSpeed(pub f32);
+
+impl IncreaseAttackSpeed {
+    pub fn reset(&mut self) {
+        self.0 = 0.;
+    }
+
+    pub fn add(&mut self, increase: &IncreaseAttackSpeed) {
+        self.0 += increase.0;
+    }
+}
 
 impl std::fmt::Display for IncreaseAttackSpeed {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -124,6 +176,14 @@ impl From<u16> for PierceChance {
 }
 
 impl PierceChance {
+    pub fn reset(&mut self) {
+        self.0 = 0.;
+    }
+
+    pub fn add(&mut self, pierce: &PierceChance) {
+        self.0 += pierce.0;
+    }
+
     pub fn try_pierce(&mut self, rng: &mut ThreadRng) -> bool {
         if rng.gen_range(0. ..100.) < **self {
             self.0 -= 100.;
@@ -144,6 +204,16 @@ impl std::fmt::Display for PierceChance {
 #[derive(Component, Default, Deref, DerefMut, Reflect)]
 pub struct MoreDamage(pub f32);
 
+impl MoreDamage {
+    pub fn reset(&mut self) {
+        self.0 = 0.;
+    }
+
+    pub fn add(&mut self, damage: &MoreDamage) {
+        self.0 += damage.0;
+    }
+}
+
 impl std::fmt::Display for MoreDamage {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "+{:.0} more damage", **self)
@@ -160,6 +230,16 @@ impl From<u16> for MoreDamage {
 #[derive(Component, Default, Deref, DerefMut, Reflect)]
 pub struct IncreaseDamage(pub f32);
 
+impl IncreaseDamage {
+    pub fn reset(&mut self) {
+        self.0 = 0.;
+    }
+
+    pub fn add(&mut self, increase: &IncreaseDamage) {
+        self.0 += increase.0;
+    }
+}
+
 impl std::fmt::Display for IncreaseDamage {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "+{:.0}% increase damage", **self)
@@ -175,6 +255,16 @@ impl From<u16> for IncreaseDamage {
 /// Increase area of effect
 #[derive(Component, Default, Clone, Copy, Deref, DerefMut, Reflect)]
 pub struct IncreaseAreaOfEffect(pub f32);
+
+impl IncreaseAreaOfEffect {
+    pub fn reset(&mut self) {
+        self.0 = 0.;
+    }
+
+    pub fn add(&mut self, increase: &IncreaseAreaOfEffect) {
+        self.0 += increase.0;
+    }
+}
 
 impl std::fmt::Display for IncreaseAreaOfEffect {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
