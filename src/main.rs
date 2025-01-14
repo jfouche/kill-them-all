@@ -7,6 +7,9 @@ mod splash;
 mod ui;
 mod utils;
 
+#[cfg(test)]
+mod test;
+
 #[cfg(feature = "dev")]
 mod debug;
 

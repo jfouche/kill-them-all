@@ -6,7 +6,6 @@ use bevy::prelude::*;
 enum PreUpdateAffixes {
     LocalEquipment,
     Characters,
-    Weapons,
     Skills,
 }
 
@@ -20,7 +19,6 @@ impl Plugin for AffixUpdatesPlugin {
             (
                 PreUpdateAffixes::LocalEquipment,
                 PreUpdateAffixes::Characters,
-                PreUpdateAffixes::Weapons,
                 PreUpdateAffixes::Skills,
             )
                 .chain()
@@ -29,48 +27,61 @@ impl Plugin for AffixUpdatesPlugin {
         .add_systems(
             PreUpdate,
             (
-                (update_equipment_armour, update_weapon_attack_speed)
+                (
+                    update_equipment_armour,
+                    update_weapon_attack_speed,
+                    update_weapon_hit_damage_range,
+                )
                     .in_set(PreUpdateAffixes::LocalEquipment),
                 (
-                    (update_character_max_life, update_life_regen).chain(),
+                    (update_max_life, update_life_regen).chain(),
                     update_character_armour,
                     update_character_movement_speed,
-                    // update_increase_attack_speed,
+                    update_character_increase_attack_speed,
                     update_character_pierce_chance,
                     update_character_more_damage,
                     update_character_increase_damage,
                     update_increase_area_of_effect,
                 )
                     .in_set(PreUpdateAffixes::Characters),
-                update_skill_damage_over_time.in_set(PreUpdateAffixes::Skills),
+                (
+                    update_skill_damage_over_time,
+                    update_skill_attack_speed,
+                    update_skill_hit_damage_range,
+                )
+                    .in_set(PreUpdateAffixes::Skills),
                 tick_weapon.after(PreUpdateAffixes::Skills),
-                (
-                    (update_increase_attack_speed, update_weapon_attack_speed).chain(),
-                    update_character_pierce_chance,
-                    update_increase_area_of_effect,
-                    (
-                        update_character_more_damage,
-                        update_character_increase_damage,
-                    )
-                        .chain(),
-                )
-                    .in_set(PreUpdateAffixes::Characters),
-                (
-                    (update_character_max_life, update_life_regen).chain(),
-                    update_character_movement_speed,
-                )
-                    .run_if(game_is_running),
+                // (
+                //     (
+                //         update_character_increase_attack_speed,
+                //         update_weapon_attack_speed,
+                //     )
+                //         .chain(),
+                //     update_character_pierce_chance,
+                //     update_increase_area_of_effect,
+                //     (
+                //         update_character_more_damage,
+                //         update_character_increase_damage,
+                //     )
+                //         .chain(),
+                // )
+                //     .in_set(PreUpdateAffixes::Characters),
+                // (
+                //     (update_max_life, update_life_regen).chain(),
+                //     update_character_movement_speed,
+                // )
+                //     .run_if(game_is_running),
             ),
         )
-        .add_systems(
-            PreUpdate,
-            (
-                (update_weapon_attack_speed, tick_weapon).chain(),
-                update_weapon_hit_damage_range,
-                update_skill_damage_over_time,
-            )
-                .in_set(PreUpdateAffixes::Weapons),
-        )
+        // .add_systems(
+        //     PreUpdate,
+        //     (
+        //         (update_weapon_attack_speed, tick_weapon).chain(),
+        //         update_weapon_hit_damage_range,
+        //         update_skill_damage_over_time,
+        //     )
+        //         .in_set(PreUpdateAffixes::Weapons),
+        // )
         .add_observer(fix_life);
     }
 }
@@ -159,7 +170,7 @@ fn update_character_armour(
 }
 
 /// [MaxLife] = ([BaseLife] + sum([MoreLife])) * sum([IncreaseMaxLife]) %
-fn update_character_max_life(
+fn update_max_life(
     mut characters: Query<(&BaseLife, &mut MaxLife, &mut IncreaseMaxLife), With<Character>>,
     more_affixes: Query<(&MoreLife, &Parent), Without<Character>>,
     incr_affixes: Query<(&IncreaseMaxLife, &Parent), Without<Character>>,
@@ -226,13 +237,11 @@ fn update_character_movement_speed(
 }
 
 /// [IncreaseAttackSpeed] = sum([IncreaseAttackSpeed])
-/// TODO: usefull ???
-fn update_increase_attack_speed(
+fn update_character_increase_attack_speed(
     mut characters: Query<&mut IncreaseAttackSpeed, With<Character>>,
-    affixes: Query<(&IncreaseAttackSpeed, &Parent), Without<Character>>,
+    affixes: Query<(&IncreaseAttackSpeed, &Parent), (Without<Character>, Without<Weapon>)>,
 ) {
     for mut character_incr_attack_speed in &mut characters {
-        // Attack speed
         **character_incr_attack_speed = 0.;
     }
     for (incr_attack_speed, parent) in &affixes {
@@ -261,7 +270,7 @@ fn update_character_pierce_chance(
 /// [MoreDamage] = sum([MoreDamage])
 fn update_character_more_damage(
     mut characters: Query<&mut MoreDamage, With<Character>>,
-    affixes: Query<(&MoreDamage, &Parent), Without<Character>>,
+    affixes: Query<(&MoreDamage, &Parent), (Without<Character>, Without<Weapon>)>,
 ) {
     for mut more_damage in &mut characters {
         **more_damage = 0.;
@@ -276,7 +285,7 @@ fn update_character_more_damage(
 /// [IncreaseDamage] = sum([IncreaseDamage])
 fn update_character_increase_damage(
     mut characters: Query<&mut IncreaseDamage, With<Character>>,
-    affixes: Query<(&IncreaseDamage, &Parent), Without<Character>>,
+    affixes: Query<(&IncreaseDamage, &Parent), (Without<Character>, Without<Weapon>)>,
 ) {
     for mut incr_damage in &mut characters {
         **incr_damage = 0.;
@@ -310,14 +319,20 @@ fn tick_weapon(mut weapons: Query<&mut AttackTimer, With<Weapon>>, time: Res<Tim
     }
 }
 
+///
 fn update_weapon_hit_damage_range(
-    mut weapons: Query<(&mut HitDamageRange, &BaseHitDamageRange, &Parent), With<Weapon>>,
-    characters: Query<(&MoreDamage, &IncreaseDamage), With<Character>>,
+    mut weapons: Query<
+        (
+            &mut HitDamageRange,
+            &BaseHitDamageRange,
+            &MoreDamage,
+            &IncreaseDamage,
+        ),
+        With<Weapon>,
+    >,
 ) {
-    for (mut damage_range, base_hit_damage_range, parent) in &mut weapons {
-        if let Ok((more, increase)) = characters.get(**parent) {
-            *damage_range = base_hit_damage_range.damage_range(more, increase);
-        }
+    for (mut damage_range, base, more, increase) in &mut weapons {
+        *damage_range = base.damage_range(more, increase);
     }
 }
 
@@ -332,28 +347,43 @@ fn update_skill_damage_over_time(
     }
 }
 
-#[cfg(test)]
-mod test {
-    use super::*;
-    use crate::in_game::{GameState, InGameState};
-    use bevy::state::app::StatesPlugin;
+/// [Skill]'s [AttackSpeed] = [Weapon]'s [AttackSpeed] * [Character] [IncreaseAttackSpeed]
+fn update_skill_attack_speed(
+    mut skills: Query<(&mut AttackSpeed, &Parent), With<Skill>>,
+    weapons: Query<(&AttackSpeed, &Parent), (With<Weapon>, Without<Skill>)>,
+    characters: Query<&IncreaseAttackSpeed, With<Character>>,
+) {
+    for (mut skill_attack_speed, parent) in &mut skills {
+        if let Some(weapon_attack_speed) = weapons
+            .iter()
+            .find(|(_, p)| ***p == **parent)
+            .map(|(val, _)| val)
+        {
+            if let Ok(character_inc_attack_speed) = characters.get(**parent) {
+                *skill_attack_speed = *weapon_attack_speed;
+                skill_attack_speed.increase(character_inc_attack_speed);
+            }
+        }
+    }
+}
 
-    #[test]
-    fn test_update_equipment_armour() {
-        let mut app = App::new();
-        app.add_plugins((MinimalPlugins, StatesPlugin, AffixUpdatesPlugin))
-            .insert_state(GameState::InGame)
-            .insert_state(InGameState::Running);
-
-        let helmet = app
-            .world_mut()
-            .spawn((Helmet, BaseArmour(1.), MoreArmour(3.), IncreaseArmour(50.)))
-            .id();
-
-        app.update();
-
-        let armour = app.world().get::<Armour>(helmet);
-        assert!(armour.is_some());
-        assert_eq!(armour.unwrap().0, 6.);
+/// [Skill]'s [HitDamageRange] = ([Weapon]'s [HitDamageRange] + [Character]'s [MoreDamage]) * [Character]'s [IncreaseDamage]
+fn update_skill_hit_damage_range(
+    mut skills: Query<(&mut HitDamageRange, &Parent), With<Skill>>,
+    weapons: Query<(&HitDamageRange, &Parent), (With<Weapon>, Without<Skill>)>,
+    characters: Query<(&MoreDamage, &IncreaseDamage), With<Character>>,
+) {
+    for (mut skill_damage_range, parent) in &mut skills {
+        if let Some(weapon_damage_range) = weapons
+            .iter()
+            .find(|(_, p)| ***p == **parent)
+            .map(|(val, _)| val)
+        {
+            if let Ok((more, increase)) = characters.get(**parent) {
+                *skill_damage_range = *weapon_damage_range;
+                skill_damage_range.add(more);
+                skill_damage_range.increase(increase);
+            }
+        }
     }
 }

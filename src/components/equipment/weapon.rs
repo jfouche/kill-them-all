@@ -58,6 +58,17 @@ impl HitDamageRange {
         };
         Damage(damage)
     }
+
+    pub fn add(&mut self, more: &MoreDamage) {
+        self.min += more.0;
+        self.max += more.0;
+    }
+
+    pub fn increase(&mut self, increase: &IncreaseDamage) {
+        let multiplier = 1. + increase.0 / 100.;
+        self.min *= multiplier;
+        self.max *= multiplier;
+    }
 }
 
 ///
@@ -121,6 +132,12 @@ impl BaseAttackSpeed {
 /// Attack per second
 #[derive(Component, Default, Clone, Copy, Deref, DerefMut, Reflect)]
 pub struct AttackSpeed(pub f32);
+
+impl AttackSpeed {
+    pub fn increase(&mut self, increase: &IncreaseAttackSpeed) {
+        self.0 *= 1. + **increase / 100.;
+    }
+}
 
 #[derive(Component, Deref, DerefMut, Reflect)]
 pub struct AttackTimer(pub Timer);
