@@ -55,13 +55,21 @@ impl From<u16> for Armour {
 }
 
 impl Armour {
+    pub fn add(&mut self, more: &MoreArmour) {
+        self.0 += more.0;
+    }
+
+    pub fn increase(&mut self, increase: &IncreaseArmour) {
+        self.0 *= 1. + increase.0 / 100.;
+    }
+
     pub fn mitigate(&self, damage: Damage) -> Damage {
         let d = (5. * *damage * *damage) / (self.0 + 5. * *damage);
         Damage(d)
     }
 }
 
-/// Base equipment [Armour] 
+/// Base equipment [Armour]
 #[derive(Component, Default, Deref, Reflect)]
 #[require(Armour)]
 pub struct BaseArmour(pub f32);
@@ -69,7 +77,6 @@ pub struct BaseArmour(pub f32);
 /// Add armour to base [BaseArmour]
 #[derive(Component, Default, Clone, Copy, Deref, DerefMut, Debug, Reflect)]
 pub struct MoreArmour(pub f32);
-
 
 /// Increase armour to base [BaseArmour], after applying [MoreArmour]
 #[derive(Component, Default, Clone, Copy, Deref, DerefMut, Debug, Reflect)]

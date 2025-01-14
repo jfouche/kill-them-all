@@ -109,10 +109,10 @@ fn update_equipment_armour(
     for (mut armour, base, more, incr) in &mut equipments {
         **armour = **base;
         if let Some(more) = more {
-            **armour += **more
+            armour.add(more);
         }
         if let Some(incr) = incr {
-            **armour += 1. + **incr / 100.;
+            armour.increase(incr);
         }
     }
 }
@@ -335,21 +335,23 @@ fn update_skill_damage_over_time(
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::in_game::{GameState, InGameState};
+    use bevy::state::app::StatesPlugin;
 
     #[test]
     fn test_update_equipment_armour() {
         let mut app = App::new();
-        app.add_systems(PreUpdate, update_equipment_armour);
+        app.add_plugins((MinimalPlugins, StatesPlugin, AffixUpdatesPlugin))
+            .insert_state(GameState::InGame)
+            .insert_state(InGameState::Running);
 
         let helmet = app
             .world_mut()
             .spawn((Helmet, BaseArmour(1.), MoreArmour(3.), IncreaseArmour(50.)))
             .id();
 
-        // Run systems
         app.update();
 
-        // Check resulting changes
         let armour = app.world().get::<Armour>(helmet);
         assert!(armour.is_some());
         assert_eq!(armour.unwrap().0, 6.);
