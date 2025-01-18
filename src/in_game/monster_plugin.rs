@@ -28,7 +28,6 @@ fn spawn_monsters(
 ) {
     let mut rng = rand::thread_rng();
     for (pos, count) in trigger.event().iter() {
-        warn!("spawn {count} monsters at {pos}");
         for i in 0..*count {
             let angle = 2. * PI * f32::from(i) / f32::from(*count);
             let dist = 20.;

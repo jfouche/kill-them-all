@@ -181,7 +181,6 @@ fn update_equipments(
     assets: Res<EquipmentAssets>,
 ) {
     for panel in &panels {
-        warn!("update_equipments");
         commands.entity(panel).despawn_descendants();
         commands.entity(panel).with_children(|panel| {
             show_all_equipments(

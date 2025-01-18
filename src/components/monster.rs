@@ -71,7 +71,7 @@ pub struct ViewRange(pub f32);
 
 impl Default for ViewRange {
     fn default() -> Self {
-        ViewRange(300.)
+        ViewRange(250.)
     }
 }
 

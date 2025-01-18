@@ -1,7 +1,9 @@
 use super::Hud;
-use crate::in_game::{GameRunningSet, GameState};
+use crate::{
+    components::CurrentMapLevel,
+    in_game::{GameRunningSet, GameState},
+};
 use bevy::prelude::*;
-use bevy_ecs_ldtk::prelude::*;
 
 pub struct MapLevelPlugin;
 
@@ -40,19 +42,14 @@ fn spawn_panel(mut commands: Commands) {
 }
 
 fn update_panel(
-    levels: Query<(&LevelIid, &Name)>,
     mut texts: Query<&mut Text, With<MapLevelText>>,
-    current_level: Res<LevelSelection>,
+    current_map_level: Res<CurrentMapLevel>,
 ) {
-    if let LevelSelection::Iid(ref iid) = *current_level {
-        if let Some(name) = levels
-            .iter()
-            .find(|(liid, _name)| iid.as_str() == liid.as_str())
-            .map(|(_liid, name)| name)
-        {
-            for mut text in &mut texts {
-                *text = Text(name.into());
-            }
-        }
+    for mut text in &mut texts {
+        let info = format!(
+            "{}\nmonster_level: {}",
+            current_map_level.name, current_map_level.monster_level
+        );
+        *text = Text(info);
     }
 }

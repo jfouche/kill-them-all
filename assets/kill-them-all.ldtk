@@ -11,7 +11,7 @@
 	"iid": "329eefc0-4ce0-11ef-9568-970d3322001f",
 	"jsonVersion": "1.5.3",
 	"appBuildId": 473703,
-	"nextUid": 101,
+	"nextUid": 105,
 	"identifierStyle": "Capitalize",
 	"toc": [],
 	"worldLayout": "Free",
@@ -1624,6 +1624,116 @@
 					"tilesetUid": null
 				}
 			]
+		},
+		{
+			"identifier": "LevelConfig",
+			"uid": 102,
+			"tags": [],
+			"exportToToc": false,
+			"allowOutOfBounds": false,
+			"doc": null,
+			"width": 16,
+			"height": 16,
+			"resizableX": false,
+			"resizableY": false,
+			"minWidth": null,
+			"maxWidth": null,
+			"minHeight": null,
+			"maxHeight": null,
+			"keepAspectRatio": false,
+			"tileOpacity": 1,
+			"fillOpacity": 1,
+			"lineOpacity": 1,
+			"hollow": false,
+			"color": "#D77643",
+			"renderMode": "Rectangle",
+			"showName": true,
+			"tilesetId": null,
+			"tileRenderMode": "FitInside",
+			"tileRect": null,
+			"uiTileRect": null,
+			"nineSliceBorders": [],
+			"maxCount": 1,
+			"limitScope": "PerLevel",
+			"limitBehavior": "MoveLastOne",
+			"pivotX": 0,
+			"pivotY": 0,
+			"fieldDefs": [
+				{
+					"identifier": "monster_level",
+					"doc": null,
+					"__type": "Int",
+					"uid": 103,
+					"type": "F_Int",
+					"isArray": false,
+					"canBeNull": false,
+					"arrayMinLength": null,
+					"arrayMaxLength": null,
+					"editorDisplayMode": "NameAndValue",
+					"editorDisplayScale": 1,
+					"editorDisplayPos": "Above",
+					"editorLinkStyle": "StraightArrow",
+					"editorDisplayColor": "#000000",
+					"editorAlwaysShow": false,
+					"editorShowInWorld": true,
+					"editorCutLongValues": true,
+					"editorTextSuffix": null,
+					"editorTextPrefix": null,
+					"useForSmartColor": false,
+					"exportToToc": false,
+					"searchable": false,
+					"min": 0,
+					"max": 85,
+					"regex": null,
+					"acceptFileTypes": null,
+					"defaultOverride": null,
+					"textLanguageMode": null,
+					"symmetricalRef": false,
+					"autoChainRef": true,
+					"allowOutOfLevelRef": true,
+					"allowedRefs": "OnlySame",
+					"allowedRefsEntityUid": null,
+					"allowedRefTags": [],
+					"tilesetUid": null
+				},
+				{
+					"identifier": "name",
+					"doc": null,
+					"__type": "String",
+					"uid": 104,
+					"type": "F_String",
+					"isArray": false,
+					"canBeNull": false,
+					"arrayMinLength": null,
+					"arrayMaxLength": null,
+					"editorDisplayMode": "NameAndValue",
+					"editorDisplayScale": 1,
+					"editorDisplayPos": "Above",
+					"editorLinkStyle": "StraightArrow",
+					"editorDisplayColor": null,
+					"editorAlwaysShow": false,
+					"editorShowInWorld": true,
+					"editorCutLongValues": true,
+					"editorTextSuffix": null,
+					"editorTextPrefix": null,
+					"useForSmartColor": false,
+					"exportToToc": false,
+					"searchable": false,
+					"min": null,
+					"max": null,
+					"regex": null,
+					"acceptFileTypes": null,
+					"defaultOverride": null,
+					"textLanguageMode": null,
+					"symmetricalRef": false,
+					"autoChainRef": true,
+					"allowOutOfLevelRef": true,
+					"allowedRefs": "OnlySame",
+					"allowedRefsEntityUid": null,
+					"allowedRefTags": [],
+					"tilesetUid": null
+				}
+			]
 		}
 	], "tilesets": [
 		{
@@ -1878,7 +1988,7 @@
 						},
 						{
 							"__identifier": "MonsterInitialPosition",
-							"__grid": [61,30],
+							"__grid": [62,32],
 							"__pivot": [0.5,0.5],
 							"__tags": [],
 							"__tile": null,
@@ -1887,10 +1997,10 @@
 							"width": 16,
 							"height": 16,
 							"defUid": 99,
-							"px": [984,488],
-							"fieldInstances": [{ "__identifier": "count", "__type": "Int", "__value": 18, "__tile": null, "defUid": 100, "realEditorValues": [{ "id": "V_Int", "params": [18] }] }],
-							"__worldX": 1000,
-							"__worldY": -120
+							"px": [1000,520],
+							"fieldInstances": [{ "__identifier": "count", "__type": "Int", "__value": 12, "__tile": null, "defUid": 100, "realEditorValues": [{ "id": "V_Int", "params": [12] }] }],
+							"__worldX": 1016,
+							"__worldY": -88
 						},
 						{
 							"__identifier": "MonsterInitialPosition",
@@ -1907,6 +2017,28 @@
 							"fieldInstances": [{ "__identifier": "count", "__type": "Int", "__value": 0, "__tile": null, "defUid": 100, "realEditorValues": [] }],
 							"__worldX": 712,
 							"__worldY": -424
+						},
+						{
+							"__identifier": "LevelConfig",
+							"__grid": [0,0],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#D77643",
+							"iid": "357c43a0-c210-11ef-a9a5-cdef96aafddf",
+							"width": 16,
+							"height": 16,
+							"defUid": 102,
+							"px": [0,0],
+							"fieldInstances": [
+								{ "__identifier": "monster_level", "__type": "Int", "__value": 0, "__tile": null, "defUid": 103, "realEditorValues": [{ "id": "V_Int", "params": [0] }] },
+								{ "__identifier": "name", "__type": "String", "__value": "The begining", "__tile": null, "defUid": 104, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["The begining"]
+								}] }
+							],
+							"__worldX": 16,
+							"__worldY": -608
 						}
 					]
 				},
@@ -4377,6 +4509,28 @@
 							"fieldInstances": [{ "__identifier": "count", "__type": "Int", "__value": 15, "__tile": null, "defUid": 100, "realEditorValues": [{ "id": "V_Int", "params": [15] }] }],
 							"__worldX": 1944,
 							"__worldY": -56
+						},
+						{
+							"__identifier": "LevelConfig",
+							"__grid": [0,0],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#D77643",
+							"iid": "3b3cbcc0-c210-11ef-a9a5-75887ce0ddb1",
+							"width": 16,
+							"height": 16,
+							"defUid": 102,
+							"px": [0,0],
+							"fieldInstances": [
+								{ "__identifier": "monster_level", "__type": "Int", "__value": 1, "__tile": null, "defUid": 103, "realEditorValues": [{ "id": "V_Int", "params": [1] }] },
+								{ "__identifier": "name", "__type": "String", "__value": "The cross", "__tile": null, "defUid": 104, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["The cross"]
+								}] }
+							],
+							"__worldX": 1056,
+							"__worldY": -608
 						}
 					]
 				},

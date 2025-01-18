@@ -98,7 +98,6 @@ pub struct AddToInventoryCommand(pub Entity);
 
 impl Command for AddToInventoryCommand {
     fn apply(self, world: &mut World) {
-        warn!("AddToInventoryCommand({})", self.0);
         let (inventory_entity, mut inventory) =
             world.query::<(Entity, &mut Inventory)>().single_mut(world);
 
@@ -116,7 +115,6 @@ pub struct RemoveFromInventoryCommand(pub Entity);
 
 impl Command for RemoveFromInventoryCommand {
     fn apply(self, world: &mut World) {
-        warn!("RemoveFromInventoryCommand({})", self.0);
         let (inventory_entity, mut inventory) =
             world.query::<(Entity, &mut Inventory)>().single_mut(world);
 
@@ -139,8 +137,6 @@ pub struct EquipItemCommand(pub Entity);
 
 impl Command for EquipItemCommand {
     fn apply(self, world: &mut World) {
-        warn!("EquipItemCommand({})", self.0);
-
         let mut equipments = world.query::<(Entity, &Equipment, &Parent)>();
         let Ok(equipment_to_equip) = equipments.get(world, self.0).map(|(_, eqp, _)| *eqp) else {
             warn!("Can't equip {} as it's not an Equipment", self.0);
@@ -230,7 +226,6 @@ pub struct TakeBonusCommand(pub Entity);
 impl Command for TakeBonusCommand {
     fn apply(self, world: &mut World) {
         let bonus_entity = self.0;
-        warn!("TakeBonusCommand({bonus_entity})");
         let Ok(bonus) = world.query::<&Bonus>().get(world, bonus_entity).cloned() else {
             warn!("Can't take bonus from {bonus_entity} as it's not a [Bonus]");
             return;

@@ -73,7 +73,6 @@ fn create_panel(
     items: Query<&EquipmentInfo>,
     assets: Res<EquipmentAssets>,
 ) {
-    warn!("create_panel()");
     let panel = trigger.entity();
     commands.entity(panel).with_children(|cmd| {
         add_items(cmd, *inventory, items, &assets);
@@ -88,7 +87,6 @@ fn update_inventory(
     mut items: Query<&EquipmentInfo>,
     assets: Res<EquipmentAssets>,
 ) {
-    warn!("update_inventory()");
     for panel in &panels {
         commands.entity(panel).despawn_descendants();
         commands.entity(panel).with_children(|cmd| {

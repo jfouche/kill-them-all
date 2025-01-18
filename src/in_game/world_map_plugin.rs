@@ -18,25 +18,32 @@ pub struct WorldMapPlugin;
 impl Plugin for WorldMapPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(LdtkPlugin)
+            .register_type::<MapLevelConfig>()
+            .register_ldtk_int_cell::<WaterLdtkBundle>(WaterTile::ID)
+            .register_ldtk_int_cell::<ColliderLdtkBundle>(ColliderTile::ID)
+            .register_ldtk_entity::<LevelConfigLdtkBundle>("LevelConfig")
+            .register_ldtk_entity::<PlayerInitialPositionLdtkBundle>("PlayerInitialPosition")
+            .register_ldtk_entity::<MonsterInitialPositionLdtkBundle>("MonsterInitialPosition")
             .init_resource::<WorldMapAssets>()
-            .insert_resource(LevelSelection::index(0))
+            .init_resource::<CurrentMapLevel>()
             .insert_resource(LdtkSettings {
                 level_spawn_behavior: LevelSpawnBehavior::UseWorldTranslation {
                     load_level_neighbors: true,
                 },
                 ..default()
             })
-            .register_ldtk_int_cell::<WaterLdtkBundle>(WaterTile::ID)
-            .register_ldtk_int_cell::<ColliderLdtkBundle>(ColliderTile::ID)
-            .register_ldtk_entity::<PlayerInitialPositionLdtkBundle>("PlayerInitialPosition")
-            .register_ldtk_entity::<MonsterInitialPositionLdtkBundle>("MonsterInitialPosition")
             .add_systems(OnEnter(GameState::InGame), spawn_worldmap)
             .add_systems(OnExit(GameState::InGame), despawn_all::<WorldMap>)
-            .add_systems(PreUpdate, world_map_picking.in_set(PickSet::Backend))
+            .add_systems(
+                PreUpdate,
+                (
+                    level_selection_follow_player,
+                    world_map_picking.in_set(PickSet::Backend),
+                ),
+            )
             .add_systems(
                 Update,
-                (pwet, spawn_colliders, level_selection_follow_player)
-                    .in_set(GameRunningSet::EntityUpdate),
+                (pwet, spawn_colliders).in_set(GameRunningSet::EntityUpdate),
             );
     }
 }
@@ -260,17 +267,19 @@ fn spawn_colliders(
 
 fn level_selection_follow_player(
     players: Query<&GlobalTransform, With<Player>>,
-    levels: Query<(&LevelIid, &GlobalTransform)>,
+    levels: Query<(Entity, &LevelIid, &GlobalTransform)>,
     ldtk_projects: Query<&LdtkProjectHandle>,
+    configs: Query<(Entity, &MapLevelConfig)>,
+    parents: Query<&Parent>,
     ldtk_project_assets: Res<Assets<LdtkProject>>,
-    mut level_selection: ResMut<LevelSelection>,
+    mut current_map_level: ResMut<CurrentMapLevel>,
 ) {
     if let Ok(player_transform) = players.get_single() {
         let ldtk_project = ldtk_project_assets
             .get(ldtk_projects.single())
             .expect("ldtk project should be loaded before player is spawned");
 
-        for (level_iid, level_transform) in levels.iter() {
+        for (level_entity, level_iid, level_transform) in levels.iter() {
             let level = ldtk_project
                 .get_raw_level_by_iid(level_iid.get())
                 .expect("level should exist in only project");
@@ -286,13 +295,24 @@ fn level_selection_follow_player(
                 ),
             };
 
-            if level_bounds.contains(player_transform.translation().truncate()) {
-                if let LevelSelection::Iid(ref iid) = *level_selection {
-                    if level_iid != iid {
-                        info!("Player change level to {level_iid}");
+            if level_bounds.contains(player_transform.translation().xy()) {
+                if *level_iid != current_map_level.level_iid {
+                    info!("Player change level to {level_iid}");
+                    current_map_level.level_iid = level_iid.clone();
+                    let config = configs.iter().find_map(|(entity, config)| {
+                        parents
+                            .iter_ancestors(entity)
+                            .find(|p| *p == level_entity)
+                            .map(|_| config)
+                    });
+
+                    if let Some(config) = config {
+                        current_map_level.name = config.name.clone();
+                        current_map_level.monster_level = config.monster_level;
+                    } else {
+                        error!("Can't find MapLevelConfig for level {level_iid:?}");
                     }
                 }
-                *level_selection = LevelSelection::Iid(level_iid.clone());
             }
         }
     }

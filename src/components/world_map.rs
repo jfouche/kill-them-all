@@ -15,30 +15,27 @@ impl FromWorld for WorldMapAssets {
     }
 }
 
+/// The world map
 #[derive(Component, Copy, Clone)]
 #[require(Name(|| Name::new("WorldMap")))]
 pub struct WorldMap;
 
+/// The player initial position tag
 #[derive(Component, Default)]
 pub struct PlayerInitialPosition;
 
 #[derive(Bundle, Default, LdtkEntity)]
 pub struct PlayerInitialPositionLdtkBundle {
     tag: PlayerInitialPosition,
-    initial_pos: InitialPosition,
-    #[grid_coords]
-    grid_coords: GridCoords,
 }
 
+/// Monsters initial positions tag
 #[derive(Component, Default)]
 pub struct MonsterInitialPosition;
 
 #[derive(Bundle, Default, LdtkEntity)]
 pub struct MonsterInitialPositionLdtkBundle {
     tag: MonsterInitialPosition,
-    initial_pos: InitialPosition,
-    #[grid_coords]
-    grid_coords: GridCoords,
     #[from_entity_instance]
     count: MonsterCount,
 }
@@ -64,9 +61,7 @@ impl From<&EntityInstance> for MonsterCount {
     }
 }
 
-#[derive(Component, Default)]
-pub struct InitialPosition;
-
+/// Map colliders
 #[derive(Bundle, Default, LdtkIntCell)]
 pub struct ColliderLdtkBundle {
     collider: ColliderTile,
@@ -108,11 +103,51 @@ impl ColliderTile {
 )]
 pub struct MapCollider;
 
+/// Map level configuration
+#[derive(Component, Reflect)]
+pub struct MapLevelConfig {
+    pub name: String,
+    pub monster_level: u16,
+}
+
+#[derive(Bundle, LdtkEntity)]
+pub struct LevelConfigLdtkBundle {
+    #[from_entity_instance]
+    config: MapLevelConfig,
+}
+
+impl From<&EntityInstance> for MapLevelConfig {
+    fn from(value: &EntityInstance) -> Self {
+        let name = value
+            .get_string_field("name")
+            .cloned()
+            .expect("[name] should be defined for each LDtk level.");
+        let monster_level = value
+            .get_int_field("monster_level")
+            .map(|v| u16::try_from(*v).unwrap_or(0))
+            .expect("[monster_level] should be defined for each LDtk level.");
+        MapLevelConfig {
+            name,
+            monster_level,
+        }
+    }
+}
+
+/// A resource to store the current map level informations
+#[derive(Resource, Default)]
+pub struct CurrentMapLevel {
+    pub level_iid: LevelIid,
+    pub name: String,
+    pub monster_level: u16,
+}
+
+/// Event triggered when the player can be spawn
 #[derive(Event)]
 pub struct SpawnPlayerEvent {
     pub translation: Vec2,
 }
 
+/// Event triggered when the monsters can be spawn
 #[derive(Event, Default, Deref, DerefMut)]
 pub struct SpawnMonstersEvent(Vec<(Vec2, u16)>);
 
