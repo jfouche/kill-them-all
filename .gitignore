@@ -1,3 +1,4 @@
 /target
 /website/**
 !/website/index.html
+*.tracy
