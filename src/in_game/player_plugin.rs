@@ -21,7 +21,6 @@ impl Plugin for PlayerPlugin {
             .register_type::<Experience>()
             .register_type::<Inventory>()
             .register_type::<InventoryPos>()
-            .add_systems(OnEnter(GameState::InGame), spawn_player)
             .add_systems(
                 OnExit(GameState::InGame),
                 (despawn_all::<Player>, despawn_all::<Inventory>),
@@ -38,6 +37,7 @@ impl Plugin for PlayerPlugin {
                 )
                     .in_set(GameRunningSet::EntityUpdate),
             )
+            .add_observer(spawn_player)
             .add_observer(manage_player_movement_with_mouse);
     }
 }
@@ -87,11 +87,19 @@ fn manage_player_movement_with_mouse(trigger: Trigger<OnAdd, WorldMap>, mut comm
         );
 }
 
-fn spawn_player(mut commands: Commands, assets: Res<PlayerAssets>) {
+fn spawn_player(
+    trigger: Trigger<SpawnPlayerEvent>,
+    mut commands: Commands,
+    assets: Res<PlayerAssets>,
+) {
     commands.spawn(Inventory::default());
 
     commands
-        .spawn((Player, Player::sprite(&assets)))
+        .spawn((
+            Player,
+            Transform::from_translation(trigger.event().translation.extend(LAYER_PLAYER)),
+            Player::sprite(&assets),
+        ))
         .with_children(|player| {
             player.spawn(DeathAura);
             player.spawn(IncreaseAreaOfEffect(50.));

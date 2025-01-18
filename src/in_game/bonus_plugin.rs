@@ -21,10 +21,11 @@ fn spawn_bonus(
     let mut rng = thread_rng();
     for event in monster_death_events.read() {
         if let Some(equipment_info) = BonusProvider::spawn(&mut commands, &mut rng) {
+            let translation = event.pos.with_z(LAYER_ITEM);
             commands.spawn((
                 Bonus(equipment_info.entity),
                 assets.sprite(equipment_info.info.tile_index),
-                Transform::from_translation(event.pos).with_scale(Vec3::splat(0.3)),
+                Transform::from_translation(translation).with_scale(Vec3::splat(0.3)),
             ));
         }
     }

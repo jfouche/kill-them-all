@@ -107,3 +107,15 @@ impl ColliderTile {
 
 )]
 pub struct MapCollider;
+
+#[derive(Event)]
+pub struct SpawnPlayerEvent {
+    pub translation: Vec2,
+}
+
+#[derive(Event, Default, Deref, DerefMut)]
+pub struct SpawnMonstersEvent(Vec<(Vec2, u16)>);
+
+pub const LAYER_PLAYER: f32 = 10.;
+pub const LAYER_MONSTER: f32 = 9.;
+pub const LAYER_ITEM: f32 = 8.;

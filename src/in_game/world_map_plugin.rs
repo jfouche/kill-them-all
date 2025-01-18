@@ -1,7 +1,6 @@
 use super::GameRunningSet;
 use crate::{camera::MainCamera, components::*, schedule::GameState};
 use bevy::{
-    math::vec2,
     picking::{
         backend::{HitData, PointerHits},
         pointer::{PointerId, PointerLocation},
@@ -10,9 +9,9 @@ use bevy::{
     prelude::*,
     utils::HashMap,
 };
-use bevy_ecs_ldtk::{prelude::*, utils::grid_coords_to_translation};
+use bevy_ecs_ldtk::prelude::*;
 use bevy_rapier2d::prelude::*;
-use std::{collections::HashSet, f32::consts::PI};
+use std::collections::HashSet;
 
 pub struct WorldMapPlugin;
 
@@ -36,12 +35,7 @@ impl Plugin for WorldMapPlugin {
             .add_systems(PreUpdate, world_map_picking.in_set(PickSet::Backend))
             .add_systems(
                 Update,
-                (
-                    spawn_colliders,
-                    level_selection_follow_player,
-                    init_player_position,
-                    init_monsters_position,
-                )
+                (pwet, spawn_colliders, level_selection_follow_player)
                     .in_set(GameRunningSet::EntityUpdate),
             );
     }
@@ -56,6 +50,43 @@ fn spawn_worldmap(mut commands: Commands, assets: Res<WorldMapAssets>) {
             ..Default::default()
         },
     ));
+}
+
+fn pwet(
+    mut commands: Commands,
+    mut events: EventReader<LevelEvent>,
+    levels: Query<(Entity, &LevelIid)>,
+    parents: Query<&Parent>,
+    players: Query<(Entity, &GlobalTransform), With<PlayerInitialPosition>>,
+    monsters: Query<(Entity, &GlobalTransform, &MonsterCount), With<MonsterInitialPosition>>,
+) {
+    for level_entity in events.read().filter_map(|e| {
+        if let LevelEvent::Transformed(liid) = e {
+            levels.iter().find(|(_, l)| *l == liid).map(|(e, _)| e)
+        } else {
+            None
+        }
+    }) {
+        if let Ok((entity, transform)) = players.get_single() {
+            if parents.iter_ancestors(entity).any(|e| e == level_entity) {
+                commands.trigger(SpawnPlayerEvent {
+                    translation: transform.translation().xy(),
+                });
+                commands.entity(entity).despawn();
+            }
+        }
+
+        let mut spawn_monsters_event = SpawnMonstersEvent::default();
+        for (entity, transform, count) in &monsters {
+            if parents.iter_ancestors(entity).any(|e| e == level_entity) {
+                spawn_monsters_event.push((transform.translation().xy(), **count));
+                commands.entity(entity).despawn();
+            }
+        }
+        if !spawn_monsters_event.is_empty() {
+            commands.trigger(spawn_monsters_event);
+        }
+    }
 }
 
 /// Spawns colliders of a level
@@ -224,66 +255,6 @@ fn spawn_colliders(
                 });
             }
         });
-    }
-}
-
-fn init_player_position(
-    mut commands: Commands,
-    mut players: Query<&mut Transform, With<Player>>,
-    initial_positions: Query<(Entity, &GridCoords), With<PlayerInitialPosition>>,
-) {
-    if let Ok(mut player_transform) = players.get_single_mut() {
-        for (entity, coord) in &initial_positions {
-            player_transform.translation =
-                grid_coords_to_translation(*coord, IVec2::splat(16)).extend(4.);
-            info!(
-                "init_player_position({})",
-                player_transform.translation.xy()
-            );
-            commands.entity(entity).despawn_recursive();
-        }
-    }
-}
-
-fn init_monsters_position(
-    mut commands: Commands,
-    monsters: Query<(Entity, &GridCoords, &MonsterCount), With<MonsterInitialPosition>>,
-    assets: Res<AllMonsterAssets>,
-) {
-    let mut rng = rand::thread_rng();
-    for (entity, coord, count) in &monsters {
-        let pos = grid_coords_to_translation(*coord, IVec2::splat(16));
-        for i in 0..**count {
-            let angle = 2. * PI * f32::from(i) / f32::from(**count);
-            let dist = 20.;
-            let translation = pos + dist * vec2(angle.cos(), angle.sin());
-            let translation = translation.extend(4.);
-
-            let params = MonsterSpawnParams::generate(1, &mut rng);
-            let scale = params.scale();
-
-            let monster_components = (
-                params.rarity,
-                assets.sprite(params.kind),
-                Transform::from_translation(translation).with_scale(scale),
-                XpOnDeath::from(&params),
-                HitDamageRange::from(&params),
-            );
-
-            match params.kind {
-                0 => {
-                    commands.spawn((MonsterType1, monster_components));
-                }
-                1 => {
-                    commands.spawn((MonsterType2, monster_components));
-                }
-                2 => {
-                    commands.spawn((MonsterType3, monster_components));
-                }
-                _ => unreachable!(),
-            }
-        }
-        commands.entity(entity).despawn_recursive();
     }
 }
 

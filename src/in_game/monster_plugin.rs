@@ -1,6 +1,7 @@
 use crate::{components::*, schedule::*};
-use bevy::prelude::*;
+use bevy::{math::vec2, prelude::*};
 use bevy_rapier2d::prelude::*;
+use std::f32::consts::PI;
 
 pub struct MonsterPlugin;
 
@@ -15,7 +16,49 @@ impl Plugin for MonsterPlugin {
                 Update,
                 (monsters_moves, animate_sprite).in_set(GameRunningSet::EntityUpdate),
             )
+            .add_observer(spawn_monsters)
             .add_observer(update_monster);
+    }
+}
+
+fn spawn_monsters(
+    trigger: Trigger<SpawnMonstersEvent>,
+    mut commands: Commands,
+    assets: Res<AllMonsterAssets>,
+) {
+    let mut rng = rand::thread_rng();
+    for (pos, count) in trigger.event().iter() {
+        warn!("spawn {count} monsters at {pos}");
+        for i in 0..*count {
+            let angle = 2. * PI * f32::from(i) / f32::from(*count);
+            let dist = 20.;
+            let translation = pos + dist * vec2(angle.cos(), angle.sin());
+            let translation = translation.extend(LAYER_MONSTER);
+
+            let params = MonsterSpawnParams::generate(1, &mut rng);
+            let scale = params.scale();
+
+            let monster_components = (
+                params.rarity,
+                assets.sprite(params.kind),
+                Transform::from_translation(translation).with_scale(scale),
+                XpOnDeath::from(&params),
+                HitDamageRange::from(&params),
+            );
+
+            match params.kind {
+                0 => {
+                    commands.spawn((MonsterType1, monster_components));
+                }
+                1 => {
+                    commands.spawn((MonsterType2, monster_components));
+                }
+                2 => {
+                    commands.spawn((MonsterType3, monster_components));
+                }
+                _ => unreachable!(),
+            }
+        }
     }
 }
 
