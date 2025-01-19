@@ -1,6 +1,12 @@
 use super::GameRunningSet;
-use crate::{camera::MainCamera, components::*, schedule::GameState};
+use crate::{
+    camera::MainCamera,
+    components::*,
+    schedule::GameState,
+    utils::picking::{WorldPosition, MAP_DEPTH},
+};
 use bevy::{
+    math::vec2,
     picking::{
         backend::{HitData, PointerHits},
         pointer::{PointerId, PointerLocation},
@@ -38,12 +44,12 @@ impl Plugin for WorldMapPlugin {
                 PreUpdate,
                 (
                     level_selection_follow_player,
-                    world_map_picking.in_set(PickSet::Backend),
+                    world_map_picking_backend.in_set(PickSet::Backend),
                 ),
             )
             .add_systems(
                 Update,
-                (pwet, spawn_colliders).in_set(GameRunningSet::EntityUpdate),
+                (spawn_characters, spawn_colliders).in_set(GameRunningSet::EntityUpdate),
             );
     }
 }
@@ -59,7 +65,7 @@ fn spawn_worldmap(mut commands: Commands, assets: Res<WorldMapAssets>) {
     ));
 }
 
-fn pwet(
+fn spawn_characters(
     mut commands: Commands,
     mut events: EventReader<LevelEvent>,
     levels: Query<(Entity, &LevelIid)>,
@@ -331,10 +337,13 @@ fn level_selection_follow_player(
     }
 }
 
-fn world_map_picking(
+fn world_map_picking_backend(
     pointers: Query<(&PointerId, &PointerLocation)>,
     camera: Single<(Entity, &Camera, &GlobalTransform), With<MainCamera>>,
     worlds_maps: Query<Entity, With<WorldMap>>,
+    ldtk_projects: Query<&LdtkProjectHandle>,
+    levels: Query<(&LevelIid, &GlobalTransform)>,
+    ldtk_project_assets: Res<Assets<LdtkProject>>,
     mut output: EventWriter<PointerHits>,
 ) {
     let Ok(world_map) = worlds_maps.get_single() else {
@@ -342,19 +351,36 @@ fn world_map_picking(
     };
     let (camera_entity, camera, camera_transform) = *camera;
     for (pointer_id, pointer_location) in &pointers {
-        let Some(ref location) = pointer_location.location else {
+        let Some(pointer_world_pos) = pointer_location.world_position(camera, camera_transform)
+        else {
             continue;
         };
-        let Ok(world_pos) = camera.viewport_to_world_2d(camera_transform, location.position) else {
-            continue;
-        };
-        let depth = 0.;
-        let position = Some(world_pos.extend(0.));
-        let picks = vec![(
-            world_map,
-            HitData::new(camera_entity, depth, position, Some(Vec3::Z)),
-        )];
-        let order = camera.order as f32;
-        output.send(PointerHits::new(*pointer_id, picks, order));
+
+        let ldtk_project = ldtk_project_assets
+            .get(ldtk_projects.single())
+            .expect("ldtk project should be loaded before player is spawned");
+        let in_world_map = levels.iter().any(|(liid, lvl_transform)| {
+            let level = ldtk_project
+                .get_raw_level_by_iid(liid.get())
+                .expect("level should exist in only project");
+
+            let level_bounds = Rect {
+                min: lvl_transform.translation().xy(),
+                max: lvl_transform.translation().xy()
+                    + vec2(level.px_wid as f32, level.px_hei as f32),
+            };
+
+            level_bounds.contains(pointer_world_pos)
+        });
+        if in_world_map {
+            let depth = MAP_DEPTH;
+            let position = Some(pointer_world_pos.extend(0.));
+            let picks = vec![(
+                world_map,
+                HitData::new(camera_entity, depth, position, Some(Vec3::Z)),
+            )];
+            let order = camera.order as f32;
+            output.send(PointerHits::new(*pointer_id, picks, order));
+        }
     }
 }

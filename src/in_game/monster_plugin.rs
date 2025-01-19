@@ -101,17 +101,17 @@ fn update_monster(
 /// Monsters moves in direction of the Player
 ///
 fn monsters_moves(
-    mut monsters: Query<(&mut NextPosition, &Transform, &ViewRange), With<Monster>>,
+    mut monsters: Query<(&mut CharacterAction, &Transform, &ViewRange), With<Monster>>,
     players: Query<&Transform, With<Player>>,
 ) {
     if let Ok(player_pos) = players.get_single().map(|t| t.translation.xy()) {
-        for (mut next_pos, monster_transform, view_range) in &mut monsters {
+        for (mut action, monster_transform, view_range) in &mut monsters {
             let distance = (monster_transform.translation.xy() - player_pos).length();
             // warn!("distance={distance}");
             if distance < **view_range {
-                next_pos.goto(player_pos);
+                action.goto(player_pos);
             } else {
-                next_pos.stop();
+                action.stop();
             }
         }
     }

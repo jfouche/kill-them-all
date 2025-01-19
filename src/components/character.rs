@@ -6,7 +6,7 @@ use bevy_rapier2d::prelude::*;
 #[derive(Component, Default)]
 #[require(
     Target,
-    NextPosition,
+    CharacterAction,
     CharacterLevel,
     BaseLife,
     BaseMovementSpeed,
@@ -33,17 +33,26 @@ pub enum Target {
     Player,
 }
 
-/// Position the character should move to
-#[derive(Component, Default, Clone, Copy, Deref, DerefMut, Reflect)]
-pub struct NextPosition(pub Option<Vec2>);
+/// Action the character should do
+#[derive(Component, Default, Clone, Copy, Reflect)]
+pub enum CharacterAction {
+    #[default]
+    Stop,
+    GoTo(Vec2),
+    TakeItem(Entity),
+}
 
-impl NextPosition {
+impl CharacterAction {
     pub fn stop(&mut self) {
-        self.0 = None;
+        *self = CharacterAction::Stop;
     }
 
     pub fn goto(&mut self, pos: Vec2) {
-        self.0 = Some(pos);
+        *self = CharacterAction::GoTo(pos);
+    }
+
+    pub fn take_item(&mut self, entity: Entity) {
+        *self = CharacterAction::TakeItem(entity)
     }
 }
 

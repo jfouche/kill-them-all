@@ -20,7 +20,7 @@ use std::fmt::Display;
 // ==================================================================
 // EquipmentAssets
 
-pub const EQUIPMENT_SIZE: UVec2 = UVec2::new(48, 48);
+pub const BONUS_ITEM_SIZE: UVec2 = UVec2::new(48, 48);
 
 #[derive(Resource)]
 pub struct EquipmentAssets {
@@ -35,7 +35,7 @@ impl FromWorld for EquipmentAssets {
                 "items/Kyrise's 16x16 RPG Icon Pack - V1.3/spritesheet/spritesheet_48x48.png",
             ),
             atlas_layout: world.add_asset(TextureAtlasLayout::from_grid(
-                EQUIPMENT_SIZE,
+                BONUS_ITEM_SIZE,
                 16,
                 22,
                 None,

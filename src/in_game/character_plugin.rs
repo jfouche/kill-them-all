@@ -30,7 +30,7 @@ impl Plugin for CharacterPlugin {
             .register_type::<DamageOverTime>()
             .register_type::<AttackTimer>()
             .register_type::<Target>()
-            .register_type::<NextPosition>()
+            .register_type::<CharacterAction>()
             .register_type::<AnimationTimer>()
             .register_type::<EquipmentInfo>()
             .register_type::<Equipment>()
@@ -126,32 +126,51 @@ fn regen_life(mut query: Query<(&mut Life, &MaxLife, &LifeRegen)>, time: Res<Tim
 }
 
 fn move_character(
+    mut commands: Commands,
     mut characters: Query<
         (
             &mut Transform,
             &MovementSpeed,
-            &mut NextPosition,
+            &mut CharacterAction,
             &mut Velocity,
         ),
         With<Character>,
     >,
+    bonuses: Query<(Entity, &GlobalTransform), With<Bonus>>,
     time: Res<Time>,
 ) {
-    for (mut transform, movement_speed, mut next_pos, mut velocity) in &mut characters {
-        if let Some(target) = **next_pos {
+    for (mut transform, movement_speed, mut action, mut velocity) in &mut characters {
+        let mut move_to = |target: Vec2| {
             let direction = target - transform.translation.xy();
             let linvel = direction.normalize_or_zero() * **movement_speed;
             if direction.length() > linvel.length() * time.delta_secs() {
                 velocity.linvel = linvel;
+                false
             } else {
                 // Player is next to target, position it at the target and stop moving
                 transform.translation.x = target.x;
                 transform.translation.y = target.y;
                 velocity.linvel = Vec2::ZERO;
-                next_pos.stop();
+                true
             }
-        } else {
-            velocity.linvel = Vec2::ZERO;
-        }
+        };
+
+        match *action {
+            CharacterAction::GoTo(target) => {
+                if move_to(target) {
+                    action.stop();
+                }
+            }
+            CharacterAction::TakeItem(entity) => match bonuses.get(entity) {
+                Ok((entity, transform)) => {
+                    if move_to(transform.translation().xy()) {
+                        action.stop();
+                        commands.queue(TakeBonusCommand(entity));
+                    }
+                }
+                _ => action.stop(),
+            },
+            CharacterAction::Stop => velocity.linvel = Vec2::ZERO,
+        };
     }
 }

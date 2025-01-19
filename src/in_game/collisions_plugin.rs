@@ -16,7 +16,6 @@ impl Plugin for CollisionsPlugin {
                 check_if_character_is_hit,
                 check_if_character_is_in_damage_over_time_zone,
                 player_touched_by_monster,
-                player_takes_bonus,
                 stop_move_on_collision,
             )
                 .in_set(GameRunningSet::EntityUpdate),
@@ -118,38 +117,17 @@ fn player_touched_by_monster(
         });
 }
 
-///
-/// Player takes bonus
-///
-fn player_takes_bonus(
-    mut commands: Commands,
-    mut collisions: EventReader<CollisionEvent>,
-    mut players: Query<(), With<Player>>,
-    bonuses: Query<&Bonus>,
-) {
-    collisions
-        .read()
-        .filter_map(start_event_filter)
-        .filter_map(|(&e1, &e2)| {
-            let (_, bonus_entity, other_entity) = bonuses.get_either(e1, e2)?;
-            players.get_mut(other_entity).map(|_| bonus_entity).ok()
-        })
-        .for_each(|bonus_entity| {
-            commands.queue(TakeBonusCommand(bonus_entity));
-        });
-}
-
 fn stop_move_on_collision(
-    mut characters: Query<(Entity, &mut NextPosition), With<Character>>,
+    mut characters: Query<(Entity, &mut CharacterAction), With<Character>>,
     mut collisions: EventReader<CollisionEvent>,
 ) {
-    for (character, mut next_pos) in &mut characters {
+    for (character, mut action) in &mut characters {
         if collisions
             .read()
             .filter_map(start_event_filter)
             .any(|(e1, e2)| character == *e1 || character == *e2)
         {
-            next_pos.stop();
+            action.stop();
         }
     }
 }

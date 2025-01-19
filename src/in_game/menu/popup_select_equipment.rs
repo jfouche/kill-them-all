@@ -7,14 +7,14 @@ use bevy::{
 /// Show a popup that allow the user to equip or dismiss an equipment
 /// when the user click on the attached entity.
 #[derive(Component, Clone)]
-#[component(on_add = init)]
+#[component(on_add = init_mouse_over)]
 pub struct ShowEquipmentActionsOnMouseOver {
     pub text: String,
     pub image: Option<ImageNode>,
     pub item: Entity,
 }
 
-fn init(mut world: DeferredWorld, entity: Entity, _: ComponentId) {
+fn init_mouse_over(mut world: DeferredWorld, entity: Entity, _: ComponentId) {
     world.commands().entity(entity).observe(spawn_popup);
 }
 
@@ -22,17 +22,51 @@ fn spawn_popup(
     trigger: Trigger<Pointer<Click>>,
     mut commands: Commands,
     contents: Query<&ShowEquipmentActionsOnMouseOver>,
+    popups: Query<Entity, With<EquipmentPopup>>,
 ) {
     if let Ok(content) = contents.get(trigger.entity()) {
-        commands.spawn(EquipmentPopup {
-            content: content.clone(),
+        // Allow only one EquipmentPopup
+        for entity in &popups {
+            commands.entity(entity).despawn_recursive();
+        }
+        commands.spawn(EquipmentPopup).with_children(|parent| {
+            let popup_entity = parent.parent_entity();
+            if let Some(image_node) = &content.image {
+                parent.spawn(image_node.clone());
+            }
+            parent.spawn((Text(content.text.clone()), TextFont::from_font_size(12.)));
+            parent.spawn(HSizer).with_children(|hsizer| {
+                hsizer
+                    .spawn((
+                        TextButton::small("Equip"),
+                        ItemAction::Equip(ItemAndPopup {
+                            item: content.item,
+                            popup: popup_entity,
+                        }),
+                    ))
+                    .observe(item_action);
+                hsizer
+                    .spawn((
+                        TextButton::small("Drop"),
+                        ItemAction::Drop(ItemAndPopup {
+                            item: content.item,
+                            popup: popup_entity,
+                        }),
+                    ))
+                    .observe(item_action);
+                hsizer
+                    .spawn((
+                        TextButton::small("Cancel"),
+                        ItemAction::DespawnPopup(popup_entity),
+                    ))
+                    .observe(item_action);
+            });
         });
     }
 }
 
 /// The popup
 #[derive(Component, Clone)]
-#[component(on_add = create_popup)]
 #[require(
     Name(|| Name::new("EquipmentPopup")),
     Popup,
@@ -43,56 +77,7 @@ fn spawn_popup(
     }),
     ZIndex(|| ZIndex(1))
 )]
-struct EquipmentPopup {
-    content: ShowEquipmentActionsOnMouseOver,
-}
-
-fn create_popup(mut world: DeferredWorld, entity: Entity, _: ComponentId) {
-    world.commands().queue(CreatePopupCommand(entity));
-}
-
-struct CreatePopupCommand(Entity);
-
-impl Command for CreatePopupCommand {
-    fn apply(self, world: &mut World) {
-        let popup = world
-            .get::<EquipmentPopup>(self.0)
-            .expect("EquipmentPopup added")
-            .clone();
-        world.entity_mut(self.0).with_children(|parent| {
-            if let Some(image_node) = popup.content.image {
-                parent.spawn(image_node);
-            }
-            parent.spawn((Text(popup.content.text), TextFont::from_font_size(12.)));
-            parent.spawn(HSizer).with_children(|hsizer| {
-                hsizer
-                    .spawn((
-                        TextButton::small("Equip"),
-                        ItemAction::Equip(ItemAndPopup {
-                            item: popup.content.item,
-                            popup: self.0,
-                        }),
-                    ))
-                    .observe(item_action);
-                hsizer
-                    .spawn((
-                        TextButton::small("Drop"),
-                        ItemAction::Drop(ItemAndPopup {
-                            item: popup.content.item,
-                            popup: self.0,
-                        }),
-                    ))
-                    .observe(item_action);
-                hsizer
-                    .spawn((
-                        TextButton::small("Cancel"),
-                        ItemAction::DespawnPopup(self.0),
-                    ))
-                    .observe(item_action);
-            });
-        });
-    }
-}
+struct EquipmentPopup;
 
 #[derive(Component)]
 enum ItemAction {
