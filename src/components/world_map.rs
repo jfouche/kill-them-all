@@ -148,8 +148,11 @@ pub struct SpawnPlayerEvent {
 }
 
 /// Event triggered when the monsters can be spawn
-#[derive(Event, Default, Deref, DerefMut)]
-pub struct SpawnMonstersEvent(Vec<(Vec2, u16)>);
+#[derive(Event, Default)]
+pub struct SpawnMonstersEvent {
+    pub mlevel: u16,
+    pub monsters: Vec<(Vec2, u16)>,
+}
 
 pub const LAYER_PLAYER: f32 = 10.;
 pub const LAYER_MONSTER: f32 = 9.;

@@ -76,6 +76,7 @@ pub struct Experience(u32);
 impl Experience {
     const LEVELS: [u32; 6] = [4, 10, 30, 80, 170, 300];
 
+    /// Add xp
     pub fn add(&mut self, xp: u32) {
         self.0 += xp;
     }
@@ -85,7 +86,7 @@ impl Experience {
     }
 
     /// Level starting at 0
-    pub fn level(&self) -> u8 {
+    pub fn level(&self) -> u16 {
         let mut level = 0;
         for xp in Experience::LEVELS.iter() {
             if self.0 >= *xp {

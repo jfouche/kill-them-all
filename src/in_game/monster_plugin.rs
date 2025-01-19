@@ -27,14 +27,15 @@ fn spawn_monsters(
     assets: Res<AllMonsterAssets>,
 ) {
     let mut rng = rand::thread_rng();
-    for (pos, count) in trigger.event().iter() {
+    let mlevel = trigger.event().mlevel;
+    for (pos, count) in trigger.event().monsters.iter() {
         for i in 0..*count {
             let angle = 2. * PI * f32::from(i) / f32::from(*count);
             let dist = 20.;
             let translation = pos + dist * vec2(angle.cos(), angle.sin());
             let translation = translation.extend(LAYER_MONSTER);
 
-            let params = MonsterSpawnParams::generate(1, &mut rng);
+            let params = MonsterSpawnParams::generate(mlevel, &mut rng);
             let scale = params.scale();
 
             let monster_components = (

@@ -7,6 +7,7 @@ use bevy_rapier2d::prelude::*;
 #[require(
     Target,
     NextPosition,
+    CharacterLevel,
     BaseLife,
     BaseMovementSpeed,
     IncreaseAttackSpeed,
@@ -130,6 +131,10 @@ impl MovementSpeed {
         self.0 *= 1. + increase.0 / 100.;
     }
 }
+
+/// Character level
+#[derive(Component, Default, Deref, DerefMut, Reflect)]
+pub struct CharacterLevel(pub u16);
 
 /// Event to notify a character loose life
 #[derive(Event, Deref)]

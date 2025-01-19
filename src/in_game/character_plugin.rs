@@ -36,6 +36,7 @@ impl Plugin for CharacterPlugin {
             .register_type::<Equipment>()
             .register_type::<EquipmentRarity>()
             .register_type::<BaseArmour>()
+            .register_type::<CharacterLevel>()
             .add_event::<HitEvent>()
             .add_event::<LooseLifeEvent>()
             .add_event::<CharacterDiedEvent>()

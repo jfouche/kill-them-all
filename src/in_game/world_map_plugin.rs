@@ -66,6 +66,7 @@ fn pwet(
     parents: Query<&Parent>,
     players: Query<(Entity, &GlobalTransform), With<PlayerInitialPosition>>,
     monsters: Query<(Entity, &GlobalTransform, &MonsterCount), With<MonsterInitialPosition>>,
+    configs: Query<(Entity, &MapLevelConfig)>,
 ) {
     for level_entity in events.read().filter_map(|e| {
         if let LevelEvent::Transformed(liid) = e {
@@ -79,19 +80,31 @@ fn pwet(
                 commands.trigger(SpawnPlayerEvent {
                     translation: transform.translation().xy(),
                 });
-                commands.entity(entity).despawn();
+                commands.entity(entity).remove_parent().despawn();
             }
         }
 
-        let mut spawn_monsters_event = SpawnMonstersEvent::default();
+        let mut monsters_to_spawn = Vec::new();
         for (entity, transform, count) in &monsters {
             if parents.iter_ancestors(entity).any(|e| e == level_entity) {
-                spawn_monsters_event.push((transform.translation().xy(), **count));
-                commands.entity(entity).despawn();
+                monsters_to_spawn.push((transform.translation().xy(), **count));
+                commands.entity(entity).remove_parent().despawn();
             }
         }
-        if !spawn_monsters_event.is_empty() {
-            commands.trigger(spawn_monsters_event);
+        if !monsters.is_empty() {
+            let mlevel = configs
+                .iter()
+                .find_map(|(entity, config)| {
+                    parents
+                        .iter_ancestors(entity)
+                        .find(|p| *p == level_entity)
+                        .map(|_| config.monster_level)
+                })
+                .expect("A LevelConfig should be present for each level");
+            commands.trigger(SpawnMonstersEvent {
+                mlevel,
+                monsters: monsters_to_spawn,
+            });
         }
     }
 }

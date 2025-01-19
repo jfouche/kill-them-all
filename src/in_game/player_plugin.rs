@@ -33,7 +33,7 @@ impl Plugin for PlayerPlugin {
                     animate_player_sprite,
                     player_invulnerability_finished,
                     increment_player_experience,
-                    level_up,
+                    refill_life_on_level_up,
                 )
                     .in_set(GameRunningSet::EntityUpdate),
             )
@@ -194,29 +194,29 @@ fn player_invulnerability_finished(
 ///
 fn increment_player_experience(
     mut monster_death_reader: EventReader<MonsterDeathEvent>,
-    mut q_player: Query<&mut Experience, With<Player>>,
+    mut q_player: Query<(&mut Experience, &mut CharacterLevel), With<Player>>,
     mut level_up_sender: EventWriter<LevelUpEvent>,
 ) {
-    if let Ok(mut experience) = q_player.get_single_mut() {
+    if let Ok((mut experience, mut level)) = q_player.get_single_mut() {
         for monster_death_ev in monster_death_reader.read() {
-            // info!("increment_player_experience");
-            let level_before = experience.level();
             experience.add(monster_death_ev.xp);
-            if experience.level() > level_before {
+            let current_level = experience.level();
+            if current_level > **level {
                 // LEVEL UP !
+                **level = current_level;
+                info!("Level up : {current_level}");
                 level_up_sender.send(LevelUpEvent);
             }
         }
     }
 }
 
-fn level_up(
+fn refill_life_on_level_up(
     mut q_player: Query<(&mut Life, &MaxLife), With<Player>>,
     mut level_up_rcv: EventReader<LevelUpEvent>,
 ) {
     if let Ok((mut life, max_life)) = q_player.get_single_mut() {
         for _ in level_up_rcv.read() {
-            info!("level_up");
             // Regen life
             life.regenerate(**max_life);
         }
