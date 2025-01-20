@@ -42,7 +42,7 @@ impl Plugin for CharacterPlugin {
             .add_event::<CharacterDiedEvent>()
             .add_systems(
                 Update,
-                (regen_life, mitigate_damage_over_time, move_character)
+                (regen_life, mitigate_damage_over_time, do_character_action)
                     .in_set(GameRunningSet::EntityUpdate),
             )
             .add_systems(
@@ -125,7 +125,7 @@ fn regen_life(mut query: Query<(&mut Life, &MaxLife, &LifeRegen)>, time: Res<Tim
     }
 }
 
-fn move_character(
+fn do_character_action(
     mut commands: Commands,
     mut characters: Query<
         (

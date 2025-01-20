@@ -4,6 +4,7 @@ mod bonus;
 mod character;
 mod equipment;
 mod inventory;
+mod item;
 mod monster;
 mod player;
 mod rng_provider;
