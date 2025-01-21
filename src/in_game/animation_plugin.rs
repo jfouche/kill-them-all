@@ -1,4 +1,4 @@
-use crate::components::{AnimationTimer, CyclicAnimation, OneShotAnimation};
+use crate::components::animation::{AnimationTimer, CyclicAnimation, OneShotAnimation};
 use bevy::prelude::*;
 
 pub struct AnimationPlugin;

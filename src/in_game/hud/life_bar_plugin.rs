@@ -1,8 +1,11 @@
 use super::Hud;
 use crate::{
-    components::*,
-    in_game::{GameRunningSet, GameState},
-    ui::{ProgressBar, ProgressBarColor},
+    components::{
+        character::{Life, MaxLife},
+        player::{Player, PlayerDeathEvent},
+    },
+    schedule::{GameRunningSet, GameState},
+    ui::progressbar::{ProgressBar, ProgressBarColor},
 };
 use bevy::{color::palettes::css::RED, prelude::*};
 

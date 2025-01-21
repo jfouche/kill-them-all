@@ -1,6 +1,7 @@
-use super::{rng_provider::RngKindProvider, EquipmentProvider};
 use bevy::prelude::*;
 use rand::{rngs::ThreadRng, seq::SliceRandom, Rng};
+
+use super::{equipment::EquipmentProvider, rng_provider::RngKindProvider};
 
 #[derive(Component, Default)]
 pub struct Item;

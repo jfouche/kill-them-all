@@ -1,5 +1,11 @@
+use crate::components::{
+    equipment::{Amulet, BodyArmour, Boots, EquipmentAssets, Helmet, Weapon},
+    inventory::PlayerEquipmentChanged,
+    item::ItemInfo,
+    player::Player,
+};
+
 use super::popup_info::ShowPopupOnMouseOver;
-use crate::components::*;
 use bevy::{ecs::query::QueryFilter, prelude::*};
 
 ///

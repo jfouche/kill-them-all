@@ -1,5 +1,9 @@
-use super::*;
-use crate::components::{rng_provider::*, *};
+use super::{AffixesInserter, Equipment, EquipmentUI};
+use crate::components::{
+    affix::{Armour, IncreaseMovementSpeed, MoreLife},
+    item::{AffixConfigGenerator, ItemEntityInfo, ItemLevel, ItemRarity},
+    rng_provider::RngKindProvider,
+};
 use bevy::prelude::*;
 use rand::rngs::ThreadRng;
 

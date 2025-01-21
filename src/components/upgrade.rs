@@ -1,4 +1,10 @@
-use super::{rng_provider::RngKindProvider, *};
+use super::{
+    affix::{
+        IncreaseAreaOfEffect, IncreaseAttackSpeed, IncreaseDamage, IncreaseMaxLife,
+        IncreaseMovementSpeed, LifeRegen, MoreDamage, MoreLife, PierceChance,
+    },
+    rng_provider::RngKindProvider,
+};
 use bevy::prelude::*;
 use rand::{rngs::ThreadRng, Rng};
 

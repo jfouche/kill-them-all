@@ -1,7 +1,11 @@
-use crate::{components::*, ui::*};
 use bevy::{
     ecs::{component::ComponentId, world::DeferredWorld},
     prelude::*,
+};
+
+use crate::{
+    components::inventory::{DropItemCommand, EquipItemCommand},
+    ui::{button::TextButton, popup::Popup, HSizer},
 };
 
 /// Show a popup that allow the user to equip or dismiss an equipment

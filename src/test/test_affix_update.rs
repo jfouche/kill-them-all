@@ -1,5 +1,17 @@
-use crate::components::*;
-use crate::in_game::AffixUpdatesPlugin;
+use crate::components::{
+    affix::{
+        Armour, BaseArmour, IncreaseArmour, IncreaseAttackSpeed, IncreaseDamage, MoreArmour,
+        MoreDamage,
+    },
+    character::Character,
+    damage::HitDamageRange,
+    equipment::{
+        weapon::{AttackSpeed, AttackTimer},
+        Helmet, Wand,
+    },
+    skills::fireball::FireBallLauncher,
+};
+use crate::in_game::affix_updates_plugin::AffixUpdatesPlugin;
 use crate::schedule::{GameState, InGameState};
 use bevy::prelude::*;
 use bevy::state::app::StatesPlugin;

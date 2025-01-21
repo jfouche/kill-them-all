@@ -1,5 +1,6 @@
-use crate::components::*;
 use bevy::prelude::*;
+
+use super::{equipment::Equipment, item::DroppedItem, player::Player};
 
 ///
 /// The [Inventory] contains all items that carry the [Player] as children

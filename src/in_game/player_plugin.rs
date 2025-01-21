@@ -1,8 +1,26 @@
-use crate::camera::MainCamera;
-use crate::components::*;
-use crate::schedule::*;
-use crate::utils::blink::Blink;
-use crate::utils::invulnerable::Invulnerable;
+use crate::{
+    camera::MainCamera,
+    components::{
+        affix::IncreaseAreaOfEffect,
+        animation::AnimationTimer,
+        character::{
+            CharacterAction, CharacterDiedEvent, CharacterDyingEvent, CharacterLevel, Life,
+            LooseLifeEvent, MaxLife,
+        },
+        despawn_all,
+        inventory::{Inventory, InventoryChanged, InventoryPos, PlayerEquipmentChanged},
+        monster::MonsterDeathEvent,
+        player::{
+            Experience, LevelUpEvent, NextPositionIndicator, NextPositionIndicatorAssets, Player,
+            PlayerAssets, PlayerDeathEvent, Score,
+        },
+        skills::death_aura::DeathAura,
+        world_map::{SpawnPlayerEvent, WorldMap, LAYER_PLAYER},
+        GROUP_ENEMY,
+    },
+    schedule::{GameRunningSet, GameState},
+    utils::{blink::Blink, invulnerable::Invulnerable},
+};
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 use std::time::Duration;
@@ -14,7 +32,6 @@ impl Plugin for PlayerPlugin {
         app.init_resource::<PlayerAssets>()
             .init_resource::<NextPositionIndicatorAssets>()
             .init_resource::<Score>()
-            // .init_resource::<AllowMouseHandling>()
             .add_event::<PlayerDeathEvent>()
             .add_event::<InventoryChanged>()
             .add_event::<PlayerEquipmentChanged>()

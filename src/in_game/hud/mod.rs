@@ -2,8 +2,7 @@ mod life_bar_plugin;
 mod map_level_plugin;
 mod xp_bar_plugin;
 
-use super::GameState;
-use crate::components::despawn_all;
+use crate::{components::despawn_all, schedule::GameState};
 use bevy::prelude::*;
 
 /// Component to add to HUD entities

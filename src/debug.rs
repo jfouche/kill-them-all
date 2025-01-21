@@ -1,6 +1,9 @@
 #![allow(unused)]
 
-use crate::{components::*, schedule::*};
+use crate::{
+    components::{monster::Monster, player::Player},
+    schedule::*,
+};
 use bevy::{
     dev_tools::{fps_overlay::*, states::log_transitions, ui_debug_overlay::*},
     input::common_conditions::input_just_pressed,

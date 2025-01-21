@@ -2,8 +2,13 @@ use crate::{
     components::*,
     in_game::{GameRunningSet, GameState},
 };
+use affix::PierceChance;
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
+use character::{Character, Target};
+use damage::{Damager, DamagerParams, HitDamageRange, ProjectileParams};
+use equipment::weapon::AttackTimer;
+use skills::shuriken::{Shuriken, ShurikenAssets, ShurikenLauncher};
 use std::f32::consts::PI;
 
 const SHURIKEN_SPEED: f32 = 100.0;

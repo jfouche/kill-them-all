@@ -1,4 +1,8 @@
-use super::*;
+use super::{
+    animation::AnimationTimer,
+    character::{BaseLife, BaseMovementSpeed, Character, Target},
+    GROUP_ALL, GROUP_PLAYER,
+};
 use crate::utils::despawn_after::DespawnAfter;
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;

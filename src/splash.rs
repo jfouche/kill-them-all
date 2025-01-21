@@ -1,6 +1,6 @@
-use crate::components::*;
-use crate::schedule::*;
 use bevy::prelude::*;
+
+use crate::{components::despawn_all, schedule::GameState};
 
 #[derive(Component)]
 #[require(

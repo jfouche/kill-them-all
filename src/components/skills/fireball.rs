@@ -1,5 +1,5 @@
-use super::Skill;
-use crate::components::*;
+use super::{Skill, SkillUI};
+use crate::components::{damage::BaseHitDamageRange, equipment::weapon::BaseAttackSpeed};
 use bevy::prelude::*;
 
 #[derive(Component)]

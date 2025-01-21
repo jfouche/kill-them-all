@@ -1,5 +1,11 @@
 use super::popup_info::ShowPopupOnMouseOver;
-use crate::components::*;
+use crate::components::{
+    player::Player,
+    skills::{
+        death_aura::DeathAura, fireball::FireBallLauncher, mine::MineDropper,
+        shuriken::ShurikenLauncher, SkillAssets, SkillUI,
+    },
+};
 use bevy::prelude::*;
 
 #[derive(Component)]

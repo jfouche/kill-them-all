@@ -1,26 +1,25 @@
-mod affix_updates_plugin;
-mod animation_plugin;
-mod character_plugin;
-mod collisions_plugin;
-mod hud;
-mod item_plugin;
-mod life_bar_plugin;
-mod menu;
-mod monster_plugin;
-mod player_plugin;
-mod skill_plugin;
-mod world_map_plugin;
+pub mod affix_updates_plugin;
+pub mod animation_plugin;
+pub mod character_plugin;
+pub mod collisions_plugin;
+pub mod hud;
+pub mod item_plugin;
+pub mod life_bar_plugin;
+pub mod menu;
+pub mod monster_plugin;
+pub mod player_plugin;
+pub mod skill_plugin;
+pub mod world_map_plugin;
 
-use crate::components::{LifeTime, PlayerDeathEvent};
-use crate::schedule::*;
+use crate::components::player::PlayerDeathEvent;
+use crate::components::LifeTime;
+use crate::schedule::{GameRunningSet, GameState, InGameState};
 use crate::utils::blink::Blink;
 use crate::utils::despawn_after::DespawnAfter;
 use crate::utils::invulnerable::Invulnerable;
 use bevy::app::PluginGroupBuilder;
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
-
-pub use affix_updates_plugin::AffixUpdatesPlugin;
 
 pub struct InGamePluginsGroup;
 
@@ -31,7 +30,7 @@ impl PluginGroup for InGamePluginsGroup {
             .add(item_plugin::ItemPlugin)
             .add(collisions_plugin::CollisionsPlugin)
             .add(character_plugin::CharacterPlugin)
-            .add(AffixUpdatesPlugin)
+            .add(affix_updates_plugin::AffixUpdatesPlugin)
             .add(monster_plugin::MonsterPlugin)
             .add(player_plugin::PlayerPlugin)
             .add(world_map_plugin::WorldMapPlugin)

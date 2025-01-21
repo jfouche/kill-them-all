@@ -1,7 +1,13 @@
-use crate::components::*;
-use crate::schedule::*;
-use crate::ui::*;
 use bevy::prelude::*;
+
+use crate::{
+    components::despawn_all,
+    in_game::{GameState, InGameState},
+    ui::{
+        button::{SelectedOption, TextButton},
+        popup::Popup,
+    },
+};
 
 pub struct PlayerDiedMenuPlugin;
 

@@ -1,24 +1,25 @@
-mod amulet;
-mod body_armour;
-mod boots;
-mod helmet;
-mod wand;
-mod weapon;
+pub mod amulet;
+pub mod body_armour;
+pub mod boots;
+pub mod helmet;
+pub mod wand;
+pub mod weapon;
 
 pub use amulet::Amulet;
 pub use body_armour::BodyArmour;
 pub use boots::Boots;
 pub use helmet::Helmet;
 pub use wand::Wand;
-pub use weapon::*;
+pub use weapon::Weapon;
 
-use super::{
-    rng_provider::RngKindProvider, ItemEntityInfo, ItemInfo, ItemLevel, ItemRarity,
-    ItemRarityProvider,
-};
 use bevy::prelude::*;
 use rand::rngs::ThreadRng;
 use std::fmt::Display;
+
+use super::{
+    item::{ItemEntityInfo, ItemInfo, ItemLevel, ItemRarity, ItemRarityProvider},
+    rng_provider::RngKindProvider,
+};
 
 // ==================================================================
 // EquipmentAssets

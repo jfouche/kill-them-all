@@ -1,7 +1,13 @@
-use super::*;
-use crate::components::{rng_provider::*, *};
 use bevy::prelude::*;
 use rand::rngs::ThreadRng;
+
+use crate::components::{
+    affix::{Armour, MoreLife},
+    item::{AffixConfigGenerator, ItemEntityInfo, ItemLevel, ItemRarity},
+    rng_provider::RngKindProvider,
+};
+
+use super::{AffixesInserter, Equipment, EquipmentUI};
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 enum HelmetAffixKind {

@@ -8,12 +8,9 @@ mod popup_select_equipment;
 mod window_inventory;
 mod window_statistics;
 
-use super::{pause, unpause, InGameState};
-use crate::components::EquipmentAssets;
+use super::{pause, unpause};
+use crate::{components::equipment::EquipmentAssets, schedule::InGameState};
 use bevy::prelude::*;
-use panel_equipments::EquipmentsPanel;
-use popup_info::ShowPopupOnMouseOver;
-use popup_select_equipment::ShowEquipmentActionsOnMouseOver;
 
 pub struct InGameMenuPlugin;
 

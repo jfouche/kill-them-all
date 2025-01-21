@@ -1,7 +1,7 @@
 use super::Hud;
 use crate::{
-    components::CurrentMapLevel,
-    in_game::{GameRunningSet, GameState},
+    components::world_map::CurrentMapLevel,
+    schedule::{GameRunningSet, GameState},
 };
 use bevy::prelude::*;
 

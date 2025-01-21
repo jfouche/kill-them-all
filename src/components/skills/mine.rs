@@ -1,7 +1,12 @@
-use crate::components::*;
+use crate::components::{
+    animation::{CyclicAnimation, OneShotAnimation},
+    damage::{Damager, HitDamageRange},
+    equipment::weapon::BaseAttackSpeed,
+};
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
-use skills::{Skill, SkillUI};
+
+use super::{Skill, SkillUI};
 
 ///
 /// |Skill] that drop a mine regularly

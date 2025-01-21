@@ -1,4 +1,10 @@
-use super::*;
+use super::{
+    affix::{
+        Armour, IncreaseAreaOfEffect, IncreaseAttackSpeed, IncreaseDamage, IncreaseMaxLife,
+        IncreaseMovementSpeed, LifeRegen, MoreDamage, MoreLife, PierceChance,
+    },
+    damage::Damage,
+};
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 

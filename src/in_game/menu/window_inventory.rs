@@ -1,8 +1,14 @@
 use super::{
-    panel_equipments::EquipmentsPanel, ShowEquipmentActionsOnMouseOver, ShowPopupOnMouseOver,
+    panel_equipments::EquipmentsPanel, popup_info::ShowPopupOnMouseOver,
+    popup_select_equipment::ShowEquipmentActionsOnMouseOver,
 };
 use crate::{
-    components::*,
+    components::{
+        despawn_all,
+        equipment::EquipmentAssets,
+        inventory::{Inventory, InventoryChanged},
+        item::ItemInfo,
+    },
     in_game::{GameRunningSet, GameState},
 };
 use bevy::{input::common_conditions::input_just_pressed, prelude::*};

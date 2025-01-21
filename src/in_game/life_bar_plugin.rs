@@ -1,8 +1,11 @@
 use super::{GameRunningSet, GameState};
 use crate::{
     camera::MainCamera,
-    components::{CharacterDyingEvent, Life, MaxLife, Monster},
-    ui::{ProgressBar, ProgressBarColor},
+    components::{
+        character::{CharacterDyingEvent, Life, MaxLife},
+        monster::Monster,
+    },
+    ui::progressbar::{ProgressBar, ProgressBarColor},
 };
 use bevy::prelude::*;
 use std::collections::HashMap;

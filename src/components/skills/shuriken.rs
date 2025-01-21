@@ -1,7 +1,10 @@
-use crate::components::*;
+use super::{Skill, SkillUI};
+use crate::components::{
+    damage::{BaseHitDamageRange, Projectile},
+    equipment::weapon::BaseAttackSpeed,
+};
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
-use skills::Skill;
 
 #[derive(Resource)]
 pub struct ShurikenAssets {

@@ -1,6 +1,10 @@
-use crate::components::{rng_provider::RngKindProvider, *};
+use super::{AffixesInserter, Equipment, EquipmentUI};
+use crate::components::{
+    affix::{Armour, MoreLife, PierceChance},
+    item::{AffixConfigGenerator, ItemEntityInfo, ItemLevel, ItemRarity},
+    rng_provider::RngKindProvider,
+};
 use bevy::prelude::*;
-use equipment::{AffixesInserter, EquipmentUI};
 use rand::rngs::ThreadRng;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]

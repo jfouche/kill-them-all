@@ -1,8 +1,18 @@
-use super::EquipmentsPanel;
-use crate::components::*;
-use crate::in_game::back_to_game;
-use crate::schedule::*;
-use crate::ui::*;
+use super::panel_equipments::EquipmentsPanel;
+use crate::{
+    components::{
+        despawn_all,
+        player::{LevelUpEvent, Player},
+        upgrade::UpgradeProvider,
+    },
+    in_game::back_to_game,
+    schedule::{GameRunningSet, InGameState},
+    ui::{
+        button::{button_keyboard_nav, SelectedOption, TextButton},
+        popup::Popup,
+        HSizer, VSizer,
+    },
+};
 use bevy::prelude::*;
 
 #[derive(Component)]

@@ -1,12 +1,7 @@
-mod death_aura;
-mod fireball;
-mod mine;
-mod shuriken;
-
-pub use death_aura::*;
-pub use fireball::*;
-pub use mine::*;
-pub use shuriken::*;
+pub mod death_aura;
+pub mod fireball;
+pub mod mine;
+pub mod shuriken;
 
 use bevy::prelude::*;
 

@@ -1,4 +1,4 @@
-use super::Damage;
+use super::damage::Damage;
 use bevy::prelude::*;
 use rand::{rngs::ThreadRng, Rng};
 

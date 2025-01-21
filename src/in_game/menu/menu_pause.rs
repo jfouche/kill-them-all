@@ -1,7 +1,9 @@
-use crate::components::*;
-use crate::in_game::back_to_game;
-use crate::schedule::*;
-use crate::ui::*;
+use crate::{
+    components::despawn_all,
+    in_game::back_to_game,
+    schedule::{GameState, InGameState},
+    ui::{button::TextButton, popup::Popup},
+};
 use bevy::prelude::*;
 
 pub struct PausePlugin;

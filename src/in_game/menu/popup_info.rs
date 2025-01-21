@@ -1,4 +1,4 @@
-use crate::ui::Popup;
+use crate::ui::popup::Popup;
 use bevy::{
     ecs::{component::ComponentId, world::DeferredWorld},
     prelude::*,

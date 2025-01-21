@@ -1,5 +1,13 @@
 use crate::{
-    components::*,
+    components::{
+        affix::{
+            Armour, IncreaseAttackSpeed, IncreaseDamage, IncreaseMovementSpeed, LifeRegen,
+            MoreDamage, PierceChance,
+        },
+        character::MaxLife,
+        despawn_all,
+        player::Player,
+    },
     in_game::{GameRunningSet, GameState},
 };
 use bevy::prelude::*;

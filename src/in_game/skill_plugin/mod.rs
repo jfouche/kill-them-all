@@ -3,8 +3,14 @@ mod fireball_plugin;
 mod mine_plugin;
 mod shuriken_plugin;
 
+use crate::components::{
+    affix::{IncreaseAreaOfEffect, PierceChance},
+    character::{Character, HitEvent},
+    damage::Projectile,
+    skills::{AffectedByAreaOfEffect, Skill, SkillAssets},
+};
+
 use super::GameRunningSet;
-use crate::components::*;
 use bevy::prelude::*;
 
 pub struct SkillsPlugin;

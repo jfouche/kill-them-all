@@ -1,4 +1,4 @@
-use crate::{components::*, schedule::GameRunningSet};
+use crate::{components::player::Player, schedule::GameRunningSet};
 use bevy::prelude::*;
 
 pub fn camera_plugin(app: &mut App) {
