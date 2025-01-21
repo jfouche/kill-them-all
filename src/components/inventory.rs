@@ -18,7 +18,7 @@ impl Inventory {
 
     fn add(&mut self, item: Entity) -> bool {
         if self.0.iter().any(|o| *o == Some(item)) {
-            warn!("Item {item} alraedy in inventory");
+            warn!("Item {item} already in inventory");
             return false;
         }
         let Some(index) = self.0.iter().position(|o| o.is_none()) else {
@@ -218,24 +218,28 @@ impl Command for DropItemCommand {
     }
 }
 
-/// Try to add a [Bonus] item to the [inventory].
+/// Try to add a [DroppedItem] item to the [inventory].
 ///
 /// If it succed, it will trigger an [InventoryChanged] event.
-pub struct TakeBonusCommand(pub Entity);
+pub struct TakeDroppedItemCommand(pub Entity);
 
-impl Command for TakeBonusCommand {
+impl Command for TakeDroppedItemCommand {
     fn apply(self, world: &mut World) {
-        let bonus_entity = self.0;
-        let Ok(bonus) = world.query::<&Bonus>().get(world, bonus_entity).cloned() else {
-            warn!("Can't take bonus from {bonus_entity} as it's not a [Bonus]");
+        let item_entity = self.0;
+        let Ok(item) = world
+            .query::<&DroppedItem>()
+            .get(world, item_entity)
+            .cloned()
+        else {
+            warn!("Can't take item from {item_entity} as it's not a [DroppedItem]");
             return;
         };
         let (inventory_entity, mut inventory) =
             world.query::<(Entity, &mut Inventory)>().single_mut(world);
 
-        if inventory.add(*bonus) {
-            world.entity_mut(inventory_entity).add_child(*bonus);
-            world.entity_mut(bonus_entity).despawn();
+        if inventory.add(*item) {
+            world.entity_mut(inventory_entity).add_child(*item);
+            world.entity_mut(item_entity).despawn();
             world.trigger(InventoryChanged);
         }
     }

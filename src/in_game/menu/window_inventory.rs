@@ -70,7 +70,7 @@ fn create_panel(
     trigger: Trigger<OnAdd, InventoryPanel>,
     mut commands: Commands,
     inventory: Single<&Inventory>,
-    items: Query<&EquipmentInfo>,
+    items: Query<&ItemInfo>,
     assets: Res<EquipmentAssets>,
 ) {
     let panel = trigger.entity();
@@ -84,7 +84,7 @@ fn update_inventory(
     mut commands: Commands,
     panels: Query<Entity, With<InventoryPanel>>,
     inventory: Single<&Inventory>,
-    mut items: Query<&EquipmentInfo>,
+    mut items: Query<&ItemInfo>,
     assets: Res<EquipmentAssets>,
 ) {
     for panel in &panels {
@@ -98,7 +98,7 @@ fn update_inventory(
 fn add_items(
     panel: &mut ChildBuilder,
     inventory: &Inventory,
-    items: Query<&EquipmentInfo>,
+    items: Query<&ItemInfo>,
     assets: &EquipmentAssets,
 ) {
     for (item, pos) in inventory.iter() {

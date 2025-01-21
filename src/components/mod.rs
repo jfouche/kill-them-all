@@ -1,6 +1,5 @@
 mod affix;
 mod animation;
-mod bonus;
 mod character;
 mod equipment;
 mod inventory;
@@ -14,10 +13,10 @@ mod world_map;
 
 pub use affix::*;
 pub use animation::*;
-pub use bonus::*;
 pub use character::*;
 pub use equipment::*;
 pub use inventory::*;
+pub use item::*;
 pub use monster::*;
 pub use player::*;
 pub use skills::*;
@@ -29,7 +28,7 @@ use bevy_rapier2d::prelude::Group;
 
 pub const GROUP_PLAYER: Group = Group::GROUP_1;
 pub const GROUP_ENEMY: Group = Group::GROUP_2;
-pub const GROUP_BONUS: Group = Group::GROUP_3;
+pub const GROUP_ITEM: Group = Group::GROUP_3;
 pub const GROUP_DAMAGER: Group = Group::GROUP_4;
 pub const GROUP_ALL: Group = Group::ALL;
 

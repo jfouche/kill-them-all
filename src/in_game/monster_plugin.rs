@@ -8,6 +8,7 @@ pub struct MonsterPlugin;
 impl Plugin for MonsterPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<AllMonsterAssets>()
+            .register_type::<MonsterLevel>()
             .register_type::<ViewRange>()
             .register_type::<MonsterSpawnParams>()
             .add_event::<MonsterDeathEvent>()
@@ -39,6 +40,7 @@ fn spawn_monsters(
             let scale = params.scale();
 
             let monster_components = (
+                MonsterLevel(mlevel),
                 params.rarity,
                 assets.sprite(params.kind),
                 Transform::from_translation(translation).with_scale(scale),
@@ -119,15 +121,16 @@ fn monsters_moves(
 
 fn monster_dying(
     trigger: Trigger<CharacterDyingEvent>,
-    monsters: Query<(&Transform, &XpOnDeath), With<Monster>>,
+    monsters: Query<(&Transform, &MonsterLevel, &XpOnDeath), With<Monster>>,
     mut monster_death_events: EventWriter<MonsterDeathEvent>,
     mut character_died_events: EventWriter<CharacterDiedEvent>,
 ) {
     info!("monster_dying");
-    if let Ok((transform, xp)) = monsters.get(trigger.entity()) {
+    if let Ok((transform, mlevel, xp)) = monsters.get(trigger.entity()) {
         monster_death_events.send(MonsterDeathEvent {
             pos: transform.translation,
             xp: **xp,
+            mlevel: **mlevel,
         });
 
         character_died_events.send(CharacterDiedEvent(trigger.entity()));

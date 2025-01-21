@@ -18,4 +18,4 @@ impl WorldPosition for &PointerLocation {
 }
 
 pub const MAP_DEPTH: f32 = 100.;
-pub const BONUS_ITEM_DEPTH: f32 = 90.;
+pub const ITEM_DEPTH: f32 = 90.;

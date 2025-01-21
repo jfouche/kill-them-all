@@ -12,7 +12,10 @@ pub use helmet::Helmet;
 pub use wand::Wand;
 pub use weapon::*;
 
-use super::rng_provider::RngKindProvider;
+use super::{
+    rng_provider::RngKindProvider, ItemEntityInfo, ItemInfo, ItemLevel, ItemRarity,
+    ItemRarityProvider,
+};
 use bevy::prelude::*;
 use rand::rngs::ThreadRng;
 use std::fmt::Display;
@@ -20,7 +23,7 @@ use std::fmt::Display;
 // ==================================================================
 // EquipmentAssets
 
-pub const BONUS_ITEM_SIZE: UVec2 = UVec2::new(48, 48);
+pub const ITEM_SIZE: UVec2 = UVec2::new(48, 48);
 
 #[derive(Resource)]
 pub struct EquipmentAssets {
@@ -34,13 +37,8 @@ impl FromWorld for EquipmentAssets {
             texture: world.load_asset(
                 "items/Kyrise's 16x16 RPG Icon Pack - V1.3/spritesheet/spritesheet_48x48.png",
             ),
-            atlas_layout: world.add_asset(TextureAtlasLayout::from_grid(
-                BONUS_ITEM_SIZE,
-                16,
-                22,
-                None,
-                None,
-            )),
+            atlas_layout: world
+                .add_asset(TextureAtlasLayout::from_grid(ITEM_SIZE, 16, 22, None, None)),
         }
     }
 }
@@ -71,49 +69,13 @@ impl EquipmentAssets {
 }
 
 /// Equiment type
-#[derive(Component, Clone, Copy, Debug, PartialEq, Reflect)]
+#[derive(Component, Clone, Copy, Debug, PartialEq, Eq, Hash, Reflect)]
 pub enum Equipment {
     Helmet,
     BodyArmour,
     Boots,
     Amulet,
     Weapon,
-}
-
-/// Equipment Rarity
-#[derive(Component, Clone, Copy, PartialEq, Eq, Hash, Reflect)]
-pub enum EquipmentRarity {
-    Normal,
-    Magic,
-    Rare,
-}
-
-impl EquipmentRarity {
-    pub fn n_affix(&self) -> u16 {
-        match self {
-            EquipmentRarity::Normal => 1,
-            EquipmentRarity::Magic => 2,
-            EquipmentRarity::Rare => 3,
-        }
-    }
-}
-
-#[derive(Deref, DerefMut)]
-struct EquipmentRarityProvider(RngKindProvider<EquipmentRarity>);
-
-impl EquipmentRarityProvider {
-    fn new() -> Self {
-        let mut provider = RngKindProvider::default();
-        provider.add(EquipmentRarity::Normal, 10);
-        provider.add(EquipmentRarity::Magic, 8);
-        provider.add(EquipmentRarity::Rare, 5);
-        EquipmentRarityProvider(provider)
-    }
-}
-
-pub struct EquipmentEntityInfo {
-    pub entity: Entity,
-    pub info: EquipmentInfo,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
@@ -126,57 +88,45 @@ pub enum EquipmentKind {
 }
 
 impl EquipmentKind {
-    pub fn spawn(&self, commands: &mut Commands, rng: &mut ThreadRng) -> EquipmentEntityInfo {
+    fn spawn(&self, commands: &mut Commands, ilevel: u16, rng: &mut ThreadRng) -> ItemEntityInfo {
         match self {
-            EquipmentKind::Amulet => Amulet::spawn(commands, rng),
-            EquipmentKind::BodyArmour => BodyArmour::spawn(commands, rng),
-            EquipmentKind::Boots => Boots::spawn(commands, rng),
-            EquipmentKind::Helmet => Helmet::spawn(commands, rng),
-            EquipmentKind::Wand => Wand::spawn(commands, rng),
+            EquipmentKind::Amulet => Amulet::spawn(commands, ilevel, rng),
+            EquipmentKind::BodyArmour => BodyArmour::spawn(commands, ilevel, rng),
+            EquipmentKind::Boots => Boots::spawn(commands, ilevel, rng),
+            EquipmentKind::Helmet => Helmet::spawn(commands, ilevel, rng),
+            EquipmentKind::Wand => Wand::spawn(commands, ilevel, rng),
         }
     }
 }
 
-#[derive(Deref, DerefMut)]
-pub struct EquipmentProvider(RngKindProvider<EquipmentKind>);
+pub struct EquipmentProvider {
+    ilevel: u16,
+    provider: RngKindProvider<EquipmentKind>,
+}
 
 impl EquipmentProvider {
-    pub fn new() -> Self {
+    pub fn new(ilevel: u16) -> Self {
         let mut provider = RngKindProvider::default();
         provider.add(EquipmentKind::Amulet, 40);
         provider.add(EquipmentKind::BodyArmour, 40);
         provider.add(EquipmentKind::Boots, 40);
         provider.add(EquipmentKind::Helmet, 40);
         provider.add(EquipmentKind::Wand, 40);
-        EquipmentProvider(provider)
+        EquipmentProvider { ilevel, provider }
     }
 
     pub fn spawn(
         &mut self,
         commands: &mut Commands,
         rng: &mut ThreadRng,
-    ) -> Option<EquipmentEntityInfo> {
-        Some(self.gen(rng)?.spawn(commands, rng))
-    }
-}
-
-/// Util component to store all equipments informations, e.g. image and affixes
-
-#[derive(Component, Default, Clone, Reflect)]
-pub struct EquipmentInfo {
-    pub tile_index: usize,
-    pub text: String,
-}
-
-impl From<&EquipmentInfo> for Text {
-    fn from(value: &EquipmentInfo) -> Self {
-        Text(value.text.clone())
+    ) -> Option<ItemEntityInfo> {
+        Some(self.provider.gen(rng)?.spawn(commands, self.ilevel, rng))
     }
 }
 
 trait EquipmentUI {
     fn title() -> String;
-    fn tile_index(rarity: EquipmentRarity) -> usize;
+    fn tile_index(rarity: ItemRarity) -> usize;
 }
 
 /// Helper to insert affix to an equipment
@@ -184,21 +134,21 @@ struct AffixesInserter<'a> {
     labels: Vec<String>,
     commands: EntityCommands<'a>,
     tile_index: usize,
-    rarity: EquipmentRarity,
+    rarity: ItemRarity,
 }
 
 impl<'a> AffixesInserter<'a> {
-    fn spawn<T>(commands: &'a mut Commands, equipment: T, rng: &mut ThreadRng) -> Self
+    fn spawn<T>(commands: &'a mut Commands, equipment: T, ilevel: u16, rng: &mut ThreadRng) -> Self
     where
         T: Component + EquipmentUI,
     {
-        let rarity = EquipmentRarityProvider::new()
+        let rarity = ItemRarityProvider::new()
             .gen(rng)
             .expect("At least one rarity");
         let tile_index = T::tile_index(rarity);
         AffixesInserter {
             labels: vec![T::title()],
-            commands: commands.spawn((equipment, rarity)),
+            commands: commands.spawn((equipment, ItemLevel(ilevel), rarity)),
             tile_index,
             rarity,
         }
@@ -217,13 +167,13 @@ impl<'a> AffixesInserter<'a> {
         self.commands.insert(affix);
     }
 
-    fn equipment_entity(mut self) -> EquipmentEntityInfo {
-        let equipment_info = EquipmentInfo {
+    fn equipment_entity(mut self) -> ItemEntityInfo {
+        let equipment_info = ItemInfo {
             text: self.labels.join("\n"),
             tile_index: self.tile_index,
         };
         self.commands.insert(equipment_info.clone());
-        EquipmentEntityInfo {
+        ItemEntityInfo {
             entity: self.commands.id(),
             info: equipment_info,
         }

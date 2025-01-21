@@ -81,7 +81,7 @@ impl EquipmentPos for Weapon {
     }
 }
 
-fn spawn_equipment<T>(panel: &mut ChildBuilder, info: EquipmentInfo, assets: &EquipmentAssets)
+fn spawn_equipment<T>(panel: &mut ChildBuilder, info: ItemInfo, assets: &EquipmentAssets)
 where
     T: Component + EquipmentPos,
 {
@@ -104,11 +104,11 @@ where
 
 fn show_all_equipments(
     panel: &mut ChildBuilder,
-    helmets: Query<(&EquipmentInfo, &Parent), With<Helmet>>,
-    body_armours: Query<(&EquipmentInfo, &Parent), With<BodyArmour>>,
-    boots: Query<(&EquipmentInfo, &Parent), With<Boots>>,
-    amulets: Query<(&EquipmentInfo, &Parent), With<Amulet>>,
-    weapons: Query<(&EquipmentInfo, &Parent), With<Weapon>>,
+    helmets: Query<(&ItemInfo, &Parent), With<Helmet>>,
+    body_armours: Query<(&ItemInfo, &Parent), With<BodyArmour>>,
+    boots: Query<(&ItemInfo, &Parent), With<Boots>>,
+    amulets: Query<(&ItemInfo, &Parent), With<Amulet>>,
+    weapons: Query<(&ItemInfo, &Parent), With<Weapon>>,
     player: Entity,
     assets: &EquipmentAssets,
 ) {
@@ -129,10 +129,7 @@ fn show_all_equipments(
     }
 }
 
-fn get_equipment<F>(
-    query: Query<(&EquipmentInfo, &Parent), F>,
-    player: Entity,
-) -> Option<EquipmentInfo>
+fn get_equipment<F>(query: Query<(&ItemInfo, &Parent), F>, player: Entity) -> Option<ItemInfo>
 where
     F: QueryFilter,
 {
@@ -146,11 +143,11 @@ where
 fn show_equipments(
     trigger: Trigger<OnAdd, EquipmentsPanel>,
     mut commands: Commands,
-    helmets: Query<(&EquipmentInfo, &Parent), With<Helmet>>,
-    body_armours: Query<(&EquipmentInfo, &Parent), With<BodyArmour>>,
-    boots: Query<(&EquipmentInfo, &Parent), With<Boots>>,
-    amulets: Query<(&EquipmentInfo, &Parent), With<Amulet>>,
-    weapons: Query<(&EquipmentInfo, &Parent), With<Weapon>>,
+    helmets: Query<(&ItemInfo, &Parent), With<Helmet>>,
+    body_armours: Query<(&ItemInfo, &Parent), With<BodyArmour>>,
+    boots: Query<(&ItemInfo, &Parent), With<Boots>>,
+    amulets: Query<(&ItemInfo, &Parent), With<Amulet>>,
+    weapons: Query<(&ItemInfo, &Parent), With<Weapon>>,
     player: Single<Entity, With<Player>>,
     assets: Res<EquipmentAssets>,
 ) {
@@ -172,11 +169,11 @@ fn update_equipments(
     _trigger: Trigger<PlayerEquipmentChanged>,
     mut commands: Commands,
     panels: Query<Entity, With<EquipmentsPanel>>,
-    mut helmets: Query<(&EquipmentInfo, &Parent), With<Helmet>>,
-    mut body_armours: Query<(&EquipmentInfo, &Parent), With<BodyArmour>>,
-    mut boots: Query<(&EquipmentInfo, &Parent), With<Boots>>,
-    mut amulets: Query<(&EquipmentInfo, &Parent), With<Amulet>>,
-    mut weapons: Query<(&EquipmentInfo, &Parent), With<Weapon>>,
+    mut helmets: Query<(&ItemInfo, &Parent), With<Helmet>>,
+    mut body_armours: Query<(&ItemInfo, &Parent), With<BodyArmour>>,
+    mut boots: Query<(&ItemInfo, &Parent), With<Boots>>,
+    mut amulets: Query<(&ItemInfo, &Parent), With<Amulet>>,
+    mut weapons: Query<(&ItemInfo, &Parent), With<Weapon>>,
     player: Single<Entity, With<Player>>,
     assets: Res<EquipmentAssets>,
 ) {

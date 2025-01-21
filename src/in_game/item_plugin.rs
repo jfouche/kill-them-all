@@ -3,7 +3,7 @@ use crate::{
     camera::MainCamera,
     components::*,
     schedule::GameRunningSet,
-    utils::picking::{WorldPosition, BONUS_ITEM_DEPTH},
+    utils::picking::{WorldPosition, ITEM_DEPTH},
 };
 use bevy::{
     math::vec2,
@@ -16,32 +16,38 @@ use bevy::{
 };
 use rand::thread_rng;
 
-pub struct BonusPlugin;
+pub struct ItemPlugin;
 
-impl Plugin for BonusPlugin {
+impl Plugin for ItemPlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<Bonus>()
-            .add_systems(OnExit(GameState::InGame), despawn_all::<Bonus>)
+        app.register_type::<ItemRarity>()
+            .register_type::<ItemLevel>()
+            .register_type::<DroppedItem>()
+            .register_type::<ItemInfo>()
+            .add_systems(OnExit(GameState::InGame), despawn_all::<DroppedItem>)
             .add_systems(
                 PreUpdate,
-                bonus_picking_backend
+                item_picking_backend
                     .in_set(PickSet::Backend)
                     .run_if(game_is_running),
             )
-            .add_systems(Update, spawn_bonus.in_set(GameRunningSet::EntityUpdate));
+            .add_systems(
+                Update,
+                spawn_dropped_item.in_set(GameRunningSet::EntityUpdate),
+            );
     }
 }
 
-const BONUS_SCALE: f32 = 0.3;
-const BONUS_SIZE: Vec2 = vec2(
-    BONUS_ITEM_SIZE.x as f32 * BONUS_SCALE,
-    BONUS_ITEM_SIZE.y as f32 * BONUS_SCALE,
+const ITEM_WORLD_SCALE: f32 = 0.3;
+const ITEM_WORLD_SIZE: Vec2 = vec2(
+    ITEM_SIZE.x as f32 * ITEM_WORLD_SCALE,
+    ITEM_SIZE.y as f32 * ITEM_WORLD_SCALE,
 );
 
-fn bonus_picking_backend(
+fn item_picking_backend(
     pointers: Query<(&PointerId, &PointerLocation)>,
     camera: Single<(Entity, &Camera, &GlobalTransform), With<MainCamera>>,
-    bonuses: Query<(Entity, &GlobalTransform), With<Bonus>>,
+    items: Query<(Entity, &GlobalTransform), With<DroppedItem>>,
     mut output: EventWriter<PointerHits>,
 ) {
     let (camera_entity, camera, camera_transform) = *camera;
@@ -52,12 +58,12 @@ fn bonus_picking_backend(
         else {
             continue;
         };
-        for (bonus_entity, transform) in &bonuses {
-            let bounds = Rect::from_center_size(transform.translation().xy(), BONUS_SIZE);
+        for (item_entity, transform) in &items {
+            let bounds = Rect::from_center_size(transform.translation().xy(), ITEM_WORLD_SIZE);
             if bounds.contains(pointer_world_pos) {
                 picks.push((
-                    bonus_entity,
-                    HitData::new(camera_entity, BONUS_ITEM_DEPTH, None, None),
+                    item_entity,
+                    HitData::new(camera_entity, ITEM_DEPTH, None, None),
                 ));
             }
         }
@@ -68,27 +74,29 @@ fn bonus_picking_backend(
     }
 }
 
-fn spawn_bonus(
+fn spawn_dropped_item(
     mut commands: Commands,
     mut monster_death_events: EventReader<MonsterDeathEvent>,
     assets: Res<EquipmentAssets>,
 ) {
     let mut rng = thread_rng();
     for event in monster_death_events.read() {
-        if let Some(equipment_info) = BonusProvider::spawn(&mut commands, &mut rng) {
+        let provider = ItemProvider(event.mlevel);
+        if let Some(item_info) = provider.spawn(&mut commands, &mut rng) {
             let translation = event.pos.with_z(LAYER_ITEM);
             commands
                 .spawn((
-                    Bonus(equipment_info.entity),
-                    assets.sprite(equipment_info.info.tile_index),
-                    Transform::from_translation(translation).with_scale(Vec3::splat(BONUS_SCALE)),
+                    DroppedItem(item_info.entity),
+                    assets.sprite(item_info.info.tile_index),
+                    Transform::from_translation(translation)
+                        .with_scale(Vec3::splat(ITEM_WORLD_SCALE)),
                 ))
-                .observe(take_bonus);
+                .observe(take_dropped_item);
         }
     }
 }
 
-fn take_bonus(
+fn take_dropped_item(
     mut trigger: Trigger<Pointer<Click>>,
     mut player: Single<&mut CharacterAction, With<Player>>,
 ) {

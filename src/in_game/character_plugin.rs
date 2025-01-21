@@ -32,9 +32,7 @@ impl Plugin for CharacterPlugin {
             .register_type::<Target>()
             .register_type::<CharacterAction>()
             .register_type::<AnimationTimer>()
-            .register_type::<EquipmentInfo>()
             .register_type::<Equipment>()
-            .register_type::<EquipmentRarity>()
             .register_type::<BaseArmour>()
             .register_type::<CharacterLevel>()
             .add_event::<HitEvent>()
@@ -136,7 +134,7 @@ fn do_character_action(
         ),
         With<Character>,
     >,
-    bonuses: Query<(Entity, &GlobalTransform), With<Bonus>>,
+    items: Query<(Entity, &GlobalTransform), With<DroppedItem>>,
     time: Res<Time>,
 ) {
     for (mut transform, movement_speed, mut action, mut velocity) in &mut characters {
@@ -161,11 +159,11 @@ fn do_character_action(
                     action.stop();
                 }
             }
-            CharacterAction::TakeItem(entity) => match bonuses.get(entity) {
+            CharacterAction::TakeItem(entity) => match items.get(entity) {
                 Ok((entity, transform)) => {
                     if move_to(transform.translation().xy()) {
                         action.stop();
-                        commands.queue(TakeBonusCommand(entity));
+                        commands.queue(TakeDroppedItemCommand(entity));
                     }
                 }
                 _ => action.stop(),

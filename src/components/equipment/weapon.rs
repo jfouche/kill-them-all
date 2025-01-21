@@ -172,8 +172,8 @@ pub struct Damager;
 impl Damager {
     pub fn collision_groups(target: Target) -> CollisionGroups {
         let filter = match target {
-            Target::Player => GROUP_BONUS | GROUP_ENEMY,
-            Target::Monster => GROUP_BONUS | GROUP_PLAYER,
+            Target::Player => GROUP_ITEM | GROUP_ENEMY,
+            Target::Monster => GROUP_ITEM | GROUP_PLAYER,
         };
         CollisionGroups::new(GROUP_DAMAGER, GROUP_ALL & !filter)
     }

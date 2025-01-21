@@ -1,7 +1,7 @@
 use crate::components::*;
 use bevy::prelude::*;
 use equipment::{AffixesInserter, EquipmentUI};
-use rand::{rngs::ThreadRng, Rng};
+use rand::rngs::ThreadRng;
 use rng_provider::RngKindProvider;
 
 /// A [Wand]
@@ -9,6 +9,7 @@ use rng_provider::RngKindProvider;
 #[require(
     Weapon,
     Name(|| Name::new("Wand")),
+    ItemLevel,
     BaseHitDamageRange(|| BaseHitDamageRange::new(1., 2.)),
     BaseAttackSpeed(|| BaseAttackSpeed(1.2))
 )]
@@ -23,16 +24,40 @@ enum WandAffixKind {
     IncreaseAttackSpeed,
 }
 
+const WAND_MORE_DAMAGE_RANGES: &[(u16, (u16, u16), usize); 3] =
+    &[(4, (3, 9), 20), (10, (10, 24), 20), (17, (25, 29), 20)];
+
+const WAND_INCR_DAMAGE_RANGES: &[(u16, (u16, u16), usize); 3] =
+    &[(4, (3, 9), 20), (10, (10, 24), 20), (17, (25, 29), 20)];
+
+const WAND_PIERCE_CHANCE_RANGES: &[(u16, (u16, u16), usize); 3] =
+    &[(4, (3, 9), 10), (10, (10, 24), 10), (17, (25, 29), 10)];
+
+const WAND_INCR_ATTACK_SPEED_RANGES: &[(u16, (u16, u16), usize); 3] =
+    &[(4, (3, 9), 10), (10, (10, 24), 10), (17, (25, 29), 10)];
+
 #[derive(Deref, DerefMut)]
 struct WandAffixProvider(RngKindProvider<WandAffixKind>);
 
 impl WandAffixProvider {
-    pub fn new() -> Self {
+    pub fn new(ilevel: u16) -> Self {
         let mut provider = RngKindProvider::default();
-        provider.add(WandAffixKind::MoreDamage, 20);
-        provider.add(WandAffixKind::IncreaseDamage, 20);
-        provider.add(WandAffixKind::PierceChance, 10);
-        provider.add(WandAffixKind::IncreaseAttackSpeed, 10);
+        provider.add(
+            WandAffixKind::MoreDamage,
+            WAND_MORE_DAMAGE_RANGES.weight(ilevel),
+        );
+        provider.add(
+            WandAffixKind::IncreaseDamage,
+            WAND_INCR_DAMAGE_RANGES.weight(ilevel),
+        );
+        provider.add(
+            WandAffixKind::PierceChance,
+            WAND_PIERCE_CHANCE_RANGES.weight(ilevel),
+        );
+        provider.add(
+            WandAffixKind::IncreaseAttackSpeed,
+            WAND_INCR_ATTACK_SPEED_RANGES.weight(ilevel),
+        );
         WandAffixProvider(provider)
     }
 }
@@ -42,32 +67,38 @@ impl EquipmentUI for Wand {
         "Wand".into()
     }
 
-    fn tile_index(rarity: EquipmentRarity) -> usize {
+    fn tile_index(rarity: ItemRarity) -> usize {
         match rarity {
-            EquipmentRarity::Normal => 318,
-            EquipmentRarity::Magic => 320,
-            EquipmentRarity::Rare => 321,
+            ItemRarity::Normal => 318,
+            ItemRarity::Magic => 320,
+            ItemRarity::Rare => 321,
         }
     }
 }
 
 impl Wand {
-    pub fn spawn(commands: &mut Commands, rng: &mut ThreadRng) -> EquipmentEntityInfo {
-        let mut provider = WandAffixProvider::new();
-        let mut wand = AffixesInserter::spawn(commands, Wand, rng);
+    pub fn spawn(commands: &mut Commands, ilevel: u16, rng: &mut ThreadRng) -> ItemEntityInfo {
+        let mut provider = WandAffixProvider::new(ilevel);
+        let mut wand = AffixesInserter::spawn(commands, Wand, ilevel, rng);
         for _ in 0..wand.n_affix() {
             match provider.gen(rng) {
                 Some(WandAffixKind::MoreDamage) => {
-                    wand.insert::<MoreDamage, u16>(rng.gen_range(1..=3));
+                    wand.insert::<MoreDamage, u16>(WAND_MORE_DAMAGE_RANGES.generate(ilevel, rng));
                 }
                 Some(WandAffixKind::IncreaseDamage) => {
-                    wand.insert::<IncreaseDamage, u16>(rng.gen_range(5..=10));
+                    wand.insert::<IncreaseDamage, u16>(
+                        WAND_INCR_DAMAGE_RANGES.generate(ilevel, rng),
+                    );
                 }
                 Some(WandAffixKind::PierceChance) => {
-                    wand.insert::<PierceChance, u16>(rng.gen_range(5..=10));
+                    wand.insert::<PierceChance, u16>(
+                        WAND_PIERCE_CHANCE_RANGES.generate(ilevel, rng),
+                    );
                 }
                 Some(WandAffixKind::IncreaseAttackSpeed) => {
-                    wand.insert::<IncreaseAttackSpeed, u16>(rng.gen_range(5..=15));
+                    wand.insert::<IncreaseAttackSpeed, u16>(
+                        WAND_INCR_ATTACK_SPEED_RANGES.generate(ilevel, rng),
+                    );
                 }
                 None => {}
             }

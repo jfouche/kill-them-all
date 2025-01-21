@@ -1,9 +1,9 @@
 mod affix_updates_plugin;
 mod animation_plugin;
-mod bonus_plugin;
 mod character_plugin;
 mod collisions_plugin;
 mod hud;
+mod item_plugin;
 mod life_bar_plugin;
 mod menu;
 mod monster_plugin;
@@ -28,7 +28,7 @@ impl PluginGroup for InGamePluginsGroup {
     fn build(self) -> PluginGroupBuilder {
         PluginGroupBuilder::start::<Self>()
             .add(hud::HudPlugin)
-            .add(bonus_plugin::BonusPlugin)
+            .add(item_plugin::ItemPlugin)
             .add(collisions_plugin::CollisionsPlugin)
             .add(character_plugin::CharacterPlugin)
             .add(AffixUpdatesPlugin)

@@ -75,6 +75,10 @@ impl Default for ViewRange {
     }
 }
 
+/// Monster level
+#[derive(Component, Default, Clone, Copy, Deref, Reflect)]
+pub struct MonsterLevel(pub u16);
+
 ///
 /// Generic Monster component
 ///
@@ -89,7 +93,7 @@ impl Default for ViewRange {
     Sprite,
     AnimationTimer,
     Collider(|| Collider::cuboid(8., 8.)),
-    CollisionGroups(|| CollisionGroups::new(GROUP_ENEMY, GROUP_ALL & !GROUP_BONUS))
+    CollisionGroups(|| CollisionGroups::new(GROUP_ENEMY, GROUP_ALL & !GROUP_ITEM))
 )]
 pub struct Monster;
 
@@ -239,4 +243,5 @@ impl Default for MonsterSpawnTimer {
 pub struct MonsterDeathEvent {
     pub pos: Vec3,
     pub xp: u32,
+    pub mlevel: u16,
 }

@@ -1,7 +1,7 @@
 use super::*;
 use crate::components::{rng_provider::*, *};
 use bevy::prelude::*;
-use rand::{rngs::ThreadRng, Rng};
+use rand::rngs::ThreadRng;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 enum BootsAffixKind {
@@ -10,15 +10,33 @@ enum BootsAffixKind {
     IncreaseMovementSpeed,
 }
 
+const BOOTS_MORE_ARMOUR_RANGES: &[(u16, (u16, u16), usize); 3] =
+    &[(4, (3, 9), 20), (10, (10, 24), 20), (17, (25, 29), 20)];
+
+const BOOTS_MORE_LIFE_RANGES: &[(u16, (u16, u16), usize); 3] =
+    &[(4, (3, 9), 20), (10, (10, 24), 20), (17, (25, 29), 20)];
+
+const BOOTS_INCR_MOVEMENT_SPEED_RANGES: &[(u16, (u16, u16), usize); 3] =
+    &[(4, (3, 9), 20), (10, (10, 24), 20), (17, (25, 29), 20)];
+
 #[derive(Deref, DerefMut)]
 struct BootsAffixProvider(RngKindProvider<BootsAffixKind>);
 
 impl BootsAffixProvider {
-    pub fn new() -> Self {
+    pub fn new(ilevel: u16) -> Self {
         let mut provider = RngKindProvider::default();
-        provider.add(BootsAffixKind::AddArmour, 20);
-        provider.add(BootsAffixKind::AddLife, 20);
-        provider.add(BootsAffixKind::IncreaseMovementSpeed, 20);
+        provider.add(
+            BootsAffixKind::AddArmour,
+            BOOTS_MORE_ARMOUR_RANGES.weight(ilevel),
+        );
+        provider.add(
+            BootsAffixKind::AddLife,
+            BOOTS_MORE_LIFE_RANGES.weight(ilevel),
+        );
+        provider.add(
+            BootsAffixKind::IncreaseMovementSpeed,
+            BOOTS_INCR_MOVEMENT_SPEED_RANGES.weight(ilevel),
+        );
         BootsAffixProvider(provider)
     }
 }
@@ -26,7 +44,8 @@ impl BootsAffixProvider {
 #[derive(Component)]
 #[require(
     Name(|| Name::new("Boots")),
-    Equipment(|| Equipment::Boots)
+    Equipment(|| Equipment::Boots),
+    ItemLevel
 )]
 pub struct Boots;
 
@@ -35,29 +54,31 @@ impl EquipmentUI for Boots {
         "Boots".into()
     }
 
-    fn tile_index(rarity: EquipmentRarity) -> usize {
+    fn tile_index(rarity: ItemRarity) -> usize {
         match rarity {
-            EquipmentRarity::Normal => 63,
-            EquipmentRarity::Magic => 65,
-            EquipmentRarity::Rare => 66,
+            ItemRarity::Normal => 63,
+            ItemRarity::Magic => 65,
+            ItemRarity::Rare => 66,
         }
     }
 }
 
 impl Boots {
-    pub fn spawn(commands: &mut Commands, rng: &mut ThreadRng) -> EquipmentEntityInfo {
-        let mut provider = BootsAffixProvider::new();
-        let mut boots = AffixesInserter::spawn(commands, Boots, rng);
+    pub fn spawn(commands: &mut Commands, ilevel: u16, rng: &mut ThreadRng) -> ItemEntityInfo {
+        let mut provider = BootsAffixProvider::new(ilevel);
+        let mut boots = AffixesInserter::spawn(commands, Boots, ilevel, rng);
         for _ in 0..boots.n_affix() {
             match provider.gen(rng) {
                 Some(BootsAffixKind::AddArmour) => {
-                    boots.insert::<Armour, u16>(rng.gen_range(1..=3));
+                    boots.insert::<Armour, _>(BOOTS_MORE_ARMOUR_RANGES.generate(ilevel, rng));
                 }
                 Some(BootsAffixKind::AddLife) => {
-                    boots.insert::<MoreLife, u16>(rng.gen_range(5..=10));
+                    boots.insert::<MoreLife, _>(BOOTS_MORE_LIFE_RANGES.generate(ilevel, rng));
                 }
                 Some(BootsAffixKind::IncreaseMovementSpeed) => {
-                    boots.insert::<IncreaseMovementSpeed, u16>(rng.gen_range(5..=30));
+                    boots.insert::<IncreaseMovementSpeed, _>(
+                        BOOTS_INCR_MOVEMENT_SPEED_RANGES.generate(ilevel, rng),
+                    );
                 }
                 None => {}
             }

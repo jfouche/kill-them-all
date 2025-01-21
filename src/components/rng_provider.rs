@@ -23,7 +23,14 @@ where
     /// Add an kind based on its weigh.
     /// The hight the weight is, the most probable it will appear.
     pub fn add(&mut self, kind: T, weight: usize) -> &mut Self {
-        self.weights.insert(kind, weight);
+        match self.weights.get_mut(&kind) {
+            Some(v) => {
+                *v += weight;
+            }
+            None => {
+                self.weights.insert(kind, weight);
+            }
+        }
         self
     }
 
