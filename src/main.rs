@@ -33,6 +33,7 @@ fn main() {
     let window = Window {
         title: APP_TITLE.into(),
         mode: WindowMode::BorderlessFullscreen(MonitorSelection::Primary),
+        resizable: false,
         ..Default::default()
     };
 

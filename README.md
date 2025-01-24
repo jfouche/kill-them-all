@@ -7,8 +7,9 @@
 
 ## Player affixes
 
+TODO
 
-## How to build {#build}
+## How to build
 
 You need [Rust](https://www.rust-lang.org/) to build this game.
 
@@ -20,6 +21,19 @@ cargo run --release
 ### run with debug features
 ```shell
 cargo run --features=dev
+```
+
+### run with tracy features
+
+see https://github.com/bevyengine/bevy/blob/main/docs/profiling.md
+
+In a terminal run
+```shell
+c:\apps\tracy\tracy-capture.exe -o my_capture.tracy
+```
+In an other terminal run
+```shell
+cargo run --release --features bevy/trace_tracy
 ```
 
 # WEB
@@ -61,6 +75,8 @@ simple-http-server ./website
 
 and open a browser with the url : `http://localhost:8000/index.html`
 
+## Produce a web site
+
 # Assets
 
-- 
+- TODO
