@@ -13,7 +13,7 @@ pub use wand::Wand;
 pub use weapon::Weapon;
 
 use super::{
-    item::{ItemEntityInfo, ItemInfo, ItemLevel, ItemRarity, ItemRarityProvider},
+    item::{ItemEntityInfo, ItemInfo, ItemLevel, ItemRarity, ItemRarityProvider, ValueAndTier},
     rng_provider::RngKindProvider,
 };
 use bevy::prelude::*;
@@ -98,8 +98,9 @@ impl<'a> AffixesInserter<'a> {
             .gen(rng)
             .expect("At least one rarity");
         let tile_index = T::tile_index(rarity);
+        let title = format!("{} ({})", ilevel + 1, T::title());
         AffixesInserter {
-            labels: vec![T::title()],
+            labels: vec![title],
             commands: commands.spawn((equipment, ItemLevel(ilevel), rarity)),
             tile_index,
             rarity,
@@ -110,12 +111,12 @@ impl<'a> AffixesInserter<'a> {
         self.rarity.n_affix()
     }
 
-    fn insert<A, V>(&mut self, value: V)
+    fn insert<A>(&mut self, value: ValueAndTier)
     where
-        A: Component + fmt::Display + From<V>,
+        A: Component + fmt::Display + From<u16>,
     {
-        let affix = A::from(value);
-        self.labels.push(affix.to_string());
+        let affix = A::from(value.0);
+        self.labels.push(format!("{affix} ({})", value.1));
         self.commands.insert(affix);
     }
 

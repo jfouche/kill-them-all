@@ -76,15 +76,14 @@ impl Amulet {
         for _ in 0..amulet.n_affix() {
             match provider.gen(rng) {
                 Some(AmuletAffixKind::AddArmour) => {
-                    amulet.insert::<Armour, _>(AMULET_MORE_ARMOUR_RANGES.generate(ilevel, rng));
+                    amulet.insert::<Armour>(AMULET_MORE_ARMOUR_RANGES.generate(ilevel, rng));
                 }
                 Some(AmuletAffixKind::MoreLife) => {
-                    amulet.insert::<MoreLife, _>(AMULET_MORE_LIFE_RANGES.generate(ilevel, rng));
+                    amulet.insert::<MoreLife>(AMULET_MORE_LIFE_RANGES.generate(ilevel, rng));
                 }
                 Some(AmuletAffixKind::PierceChance) => {
-                    amulet.insert::<PierceChance, _>(
-                        AMULET_PIERCE_CHANCE_RANGES.generate(ilevel, rng),
-                    );
+                    amulet
+                        .insert::<PierceChance>(AMULET_PIERCE_CHANCE_RANGES.generate(ilevel, rng));
                 }
                 None => {}
             }

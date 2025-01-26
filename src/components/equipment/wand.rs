@@ -88,20 +88,16 @@ impl Wand {
         for _ in 0..wand.n_affix() {
             match provider.gen(rng) {
                 Some(WandAffixKind::MoreDamage) => {
-                    wand.insert::<MoreDamage, u16>(WAND_MORE_DAMAGE_RANGES.generate(ilevel, rng));
+                    wand.insert::<MoreDamage>(WAND_MORE_DAMAGE_RANGES.generate(ilevel, rng));
                 }
                 Some(WandAffixKind::IncreaseDamage) => {
-                    wand.insert::<IncreaseDamage, u16>(
-                        WAND_INCR_DAMAGE_RANGES.generate(ilevel, rng),
-                    );
+                    wand.insert::<IncreaseDamage>(WAND_INCR_DAMAGE_RANGES.generate(ilevel, rng));
                 }
                 Some(WandAffixKind::PierceChance) => {
-                    wand.insert::<PierceChance, u16>(
-                        WAND_PIERCE_CHANCE_RANGES.generate(ilevel, rng),
-                    );
+                    wand.insert::<PierceChance>(WAND_PIERCE_CHANCE_RANGES.generate(ilevel, rng));
                 }
                 Some(WandAffixKind::IncreaseAttackSpeed) => {
-                    wand.insert::<IncreaseAttackSpeed, u16>(
+                    wand.insert::<IncreaseAttackSpeed>(
                         WAND_INCR_ATTACK_SPEED_RANGES.generate(ilevel, rng),
                     );
                 }

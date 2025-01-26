@@ -137,8 +137,7 @@ fn create_panel(
     orbs: Query<&ItemInfo, With<Orb>>,
     assets: Res<ItemAssets>,
 ) {
-    let panel = trigger.entity();
-    commands.entity(panel).with_children(|cmd| {
+    commands.entity(trigger.entity()).with_children(|cmd| {
         for (item, pos) in inventory.iter() {
             if let Ok(info) = equipments.get(item) {
                 cmd.spawn(InventoryEquipmentBundle::new(item, pos, info, &assets));
@@ -161,7 +160,6 @@ fn update_inventory(
     for panel in &panels {
         commands.entity(panel).despawn_descendants();
         commands.entity(panel).with_children(|cmd| {
-            // add_items(cmd, *inventory, items.reborrow(), &assets);
             for (item, pos) in inventory.iter() {
                 if let Ok(info) = equipments.get(item) {
                     cmd.spawn(InventoryEquipmentBundle::new(item, pos, info, &assets));
