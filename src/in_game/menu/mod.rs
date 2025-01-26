@@ -5,17 +5,19 @@ mod panel_equipments;
 mod panel_skills;
 mod popup_info;
 mod popup_select_equipment;
+// mod popup_select_orb;
 mod window_inventory;
 mod window_statistics;
 
-use super::{pause, unpause};
-use crate::{components::equipment::EquipmentAssets, schedule::InGameState};
-use bevy::prelude::*;
+use bevy::prelude::{App, OnEnter, OnExit, Plugin};
 
 pub struct InGameMenuPlugin;
 
 impl Plugin for InGameMenuPlugin {
     fn build(&self, app: &mut App) {
+        use super::{pause, unpause};
+        use crate::{components::item::ItemAssets, schedule::InGameState};
+
         app.add_plugins((
             menu_pause::PausePlugin,
             menu_level_up::LevelUpMenuPlugin,
@@ -25,7 +27,7 @@ impl Plugin for InGameMenuPlugin {
             window_statistics::StatsWindowPlugin,
             window_inventory::InventoryPanelPlugin,
         ))
-        .init_resource::<EquipmentAssets>()
+        .init_resource::<ItemAssets>()
         .add_systems(OnEnter(InGameState::Pause), pause)
         .add_systems(OnExit(InGameState::Pause), unpause)
         .add_systems(OnEnter(InGameState::LevelUp), pause)

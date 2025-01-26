@@ -1,13 +1,14 @@
 use super::{
     panel_equipments::EquipmentsPanel, popup_info::ShowPopupOnMouseOver,
-    popup_select_equipment::ShowEquipmentActionsOnMouseOver,
+    popup_select_equipment::ShowEquipmentActionsOnClick,
 };
 use crate::{
     components::{
         despawn_all,
-        equipment::EquipmentAssets,
-        inventory::{Inventory, InventoryChanged},
-        item::ItemInfo,
+        equipment::Equipment,
+        inventory::{Inventory, InventoryChanged, InventoryPos},
+        item::{ItemAssets, ItemInfo},
+        orb::Orb,
     },
     in_game::{GameRunningSet, GameState},
 };
@@ -45,6 +46,62 @@ pub struct InventoryWindow;
 )]
 pub struct InventoryPanel;
 
+#[derive(Bundle)]
+struct InventoryItemBundle {
+    image_node: ImageNode,
+    node: Node,
+    on_over: ShowPopupOnMouseOver,
+}
+
+impl InventoryItemBundle {
+    fn new(pos: InventoryPos, info: &ItemInfo, assets: &ItemAssets) -> Self {
+        InventoryItemBundle {
+            image_node: assets.image_node(info.tile_index),
+            node: Node {
+                grid_column: GridPlacement::start(pos.col + 1),
+                grid_row: GridPlacement::start(pos.row + 1),
+                ..Default::default()
+            },
+            on_over: ShowPopupOnMouseOver {
+                text: info.text.clone(),
+                image: Some(assets.image_node(info.tile_index)),
+            },
+        }
+    }
+}
+
+#[derive(Bundle)]
+struct InventoryEquipmentBundle {
+    base: InventoryItemBundle,
+    on_click: ShowEquipmentActionsOnClick,
+}
+
+impl InventoryEquipmentBundle {
+    fn new(item: Entity, pos: InventoryPos, info: &ItemInfo, assets: &ItemAssets) -> Self {
+        InventoryEquipmentBundle {
+            base: InventoryItemBundle::new(pos, info, assets),
+            on_click: ShowEquipmentActionsOnClick {
+                text: info.text.clone(),
+                image: Some(assets.image_node(info.tile_index)),
+                item,
+            },
+        }
+    }
+}
+
+#[derive(Bundle)]
+struct InventoryOrbBundle {
+    base: InventoryItemBundle,
+}
+
+impl InventoryOrbBundle {
+    fn new(pos: InventoryPos, info: &ItemInfo, assets: &ItemAssets) -> Self {
+        InventoryOrbBundle {
+            base: InventoryItemBundle::new(pos, info, assets),
+        }
+    }
+}
+
 pub struct InventoryPanelPlugin;
 
 impl Plugin for InventoryPanelPlugin {
@@ -76,12 +133,19 @@ fn create_panel(
     trigger: Trigger<OnAdd, InventoryPanel>,
     mut commands: Commands,
     inventory: Single<&Inventory>,
-    items: Query<&ItemInfo>,
-    assets: Res<EquipmentAssets>,
+    equipments: Query<&ItemInfo, With<Equipment>>,
+    orbs: Query<&ItemInfo, With<Orb>>,
+    assets: Res<ItemAssets>,
 ) {
     let panel = trigger.entity();
     commands.entity(panel).with_children(|cmd| {
-        add_items(cmd, *inventory, items, &assets);
+        for (item, pos) in inventory.iter() {
+            if let Ok(info) = equipments.get(item) {
+                cmd.spawn(InventoryEquipmentBundle::new(item, pos, info, &assets));
+            } else if let Ok(info) = orbs.get(item) {
+                cmd.spawn(InventoryOrbBundle::new(pos, info, &assets));
+            }
+        }
     });
 }
 
@@ -90,42 +154,21 @@ fn update_inventory(
     mut commands: Commands,
     panels: Query<Entity, With<InventoryPanel>>,
     inventory: Single<&Inventory>,
-    mut items: Query<&ItemInfo>,
-    assets: Res<EquipmentAssets>,
+    equipments: Query<&ItemInfo, With<Equipment>>,
+    orbs: Query<&ItemInfo, With<Orb>>,
+    assets: Res<ItemAssets>,
 ) {
     for panel in &panels {
         commands.entity(panel).despawn_descendants();
         commands.entity(panel).with_children(|cmd| {
-            add_items(cmd, *inventory, items.reborrow(), &assets);
+            // add_items(cmd, *inventory, items.reborrow(), &assets);
+            for (item, pos) in inventory.iter() {
+                if let Ok(info) = equipments.get(item) {
+                    cmd.spawn(InventoryEquipmentBundle::new(item, pos, info, &assets));
+                } else if let Ok(info) = orbs.get(item) {
+                    cmd.spawn(InventoryOrbBundle::new(pos, info, &assets));
+                }
+            }
         });
-    }
-}
-
-fn add_items(
-    panel: &mut ChildBuilder,
-    inventory: &Inventory,
-    items: Query<&ItemInfo>,
-    assets: &EquipmentAssets,
-) {
-    for (item, pos) in inventory.iter() {
-        if let Ok(info) = items.get(item) {
-            panel.spawn((
-                assets.image_node(info.tile_index),
-                Node {
-                    grid_column: GridPlacement::start(pos.col + 1),
-                    grid_row: GridPlacement::start(pos.row + 1),
-                    ..Default::default()
-                },
-                ShowPopupOnMouseOver {
-                    text: info.text.clone(),
-                    image: Some(assets.image_node(info.tile_index)),
-                },
-                ShowEquipmentActionsOnMouseOver {
-                    text: info.text.clone(),
-                    image: Some(assets.image_node(info.tile_index)),
-                    item,
-                },
-            ));
-        }
     }
 }

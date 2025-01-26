@@ -1,7 +1,51 @@
+use super::{equipment::EquipmentProvider, orb::OrbProvider, rng_provider::RngKindProvider};
 use bevy::prelude::*;
 use rand::{rngs::ThreadRng, seq::SliceRandom, Rng};
 
-use super::{equipment::EquipmentProvider, rng_provider::RngKindProvider};
+pub const ITEM_SIZE: UVec2 = UVec2::new(48, 48);
+
+#[derive(Resource)]
+pub struct ItemAssets {
+    texture: Handle<Image>,
+    atlas_layout: Handle<TextureAtlasLayout>,
+}
+
+impl FromWorld for ItemAssets {
+    fn from_world(world: &mut World) -> Self {
+        ItemAssets {
+            texture: world.load_asset(
+                "items/Kyrise's 16x16 RPG Icon Pack - V1.3/spritesheet/spritesheet_48x48.png",
+            ),
+            atlas_layout: world
+                .add_asset(TextureAtlasLayout::from_grid(ITEM_SIZE, 16, 22, None, None)),
+        }
+    }
+}
+
+impl ItemAssets {
+    pub fn image(&self) -> Handle<Image> {
+        self.texture.clone()
+    }
+
+    pub fn texture_atlas(&self, index: usize) -> TextureAtlas {
+        TextureAtlas {
+            layout: self.atlas_layout.clone(),
+            index,
+        }
+    }
+
+    pub fn image_node(&self, index: usize) -> ImageNode {
+        ImageNode::from_atlas_image(self.image(), self.texture_atlas(index))
+    }
+
+    pub fn sprite(&self, index: usize) -> Sprite {
+        Sprite {
+            image: self.image(),
+            texture_atlas: Some(self.texture_atlas(index)),
+            ..Default::default()
+        }
+    }
+}
 
 #[derive(Component, Default)]
 pub struct Item;
@@ -27,6 +71,7 @@ impl ItemProvider {
     pub fn spawn(&self, commands: &mut Commands, rng: &mut ThreadRng) -> Option<ItemEntityInfo> {
         match rng.gen_range(0..100) {
             0..40 => EquipmentProvider::new(self.0).spawn(commands, rng),
+            40..80 => OrbProvider::new().spawn(commands, rng),
             _ => None,
         }
     }

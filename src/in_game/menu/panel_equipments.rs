@@ -1,7 +1,7 @@
 use crate::components::{
-    equipment::{Amulet, BodyArmour, Boots, EquipmentAssets, Helmet, Weapon},
+    equipment::{Amulet, BodyArmour, Boots, Helmet, Weapon},
     inventory::PlayerEquipmentChanged,
-    item::ItemInfo,
+    item::{ItemAssets, ItemInfo},
     player::Player,
 };
 
@@ -87,7 +87,7 @@ impl EquipmentPos for Weapon {
     }
 }
 
-fn spawn_equipment<T>(panel: &mut ChildBuilder, info: ItemInfo, assets: &EquipmentAssets)
+fn spawn_equipment<T>(panel: &mut ChildBuilder, info: ItemInfo, assets: &ItemAssets)
 where
     T: Component + EquipmentPos,
 {
@@ -116,7 +116,7 @@ fn show_all_equipments(
     amulets: Query<(&ItemInfo, &Parent), With<Amulet>>,
     weapons: Query<(&ItemInfo, &Parent), With<Weapon>>,
     player: Entity,
-    assets: &EquipmentAssets,
+    assets: &ItemAssets,
 ) {
     if let Some(info) = get_equipment(helmets, player) {
         spawn_equipment::<Helmet>(panel, info, assets);
@@ -155,7 +155,7 @@ fn show_equipments(
     amulets: Query<(&ItemInfo, &Parent), With<Amulet>>,
     weapons: Query<(&ItemInfo, &Parent), With<Weapon>>,
     player: Single<Entity, With<Player>>,
-    assets: Res<EquipmentAssets>,
+    assets: Res<ItemAssets>,
 ) {
     commands.entity(trigger.entity()).with_children(|panel| {
         show_all_equipments(
@@ -181,7 +181,7 @@ fn update_equipments(
     mut amulets: Query<(&ItemInfo, &Parent), With<Amulet>>,
     mut weapons: Query<(&ItemInfo, &Parent), With<Weapon>>,
     player: Single<Entity, With<Player>>,
-    assets: Res<EquipmentAssets>,
+    assets: Res<ItemAssets>,
 ) {
     for panel in &panels {
         commands.entity(panel).despawn_descendants();

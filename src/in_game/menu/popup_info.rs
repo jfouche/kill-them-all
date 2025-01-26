@@ -80,8 +80,7 @@ fn despawn_popup_on_removed(
     Name(|| Name::new("InfoPopup")),
     Popup,
     Node(|| Node {
-        width: Val::Auto,
-        height: Val::Auto,
+        max_width: Val::Px(180.),
         margin: UiRect::all(Val::Px(0.)),
         padding: UiRect::all(Val::Px(5.)),
         ..Popup::default_node()

@@ -14,8 +14,7 @@ use bevy::{
     prelude::*,
 };
 use character::CharacterAction;
-use equipment::{EquipmentAssets, ITEM_SIZE};
-use item::{DroppedItem, ItemInfo, ItemLevel, ItemProvider, ItemRarity};
+use item::{DroppedItem, ItemAssets, ItemInfo, ItemLevel, ItemProvider, ItemRarity, ITEM_SIZE};
 use monster::MonsterDeathEvent;
 use player::Player;
 use rand::thread_rng;
@@ -82,7 +81,7 @@ fn item_picking_backend(
 fn spawn_dropped_item(
     mut commands: Commands,
     mut monster_death_events: EventReader<MonsterDeathEvent>,
-    assets: Res<EquipmentAssets>,
+    assets: Res<ItemAssets>,
 ) {
     let mut rng = thread_rng();
     for event in monster_death_events.read() {

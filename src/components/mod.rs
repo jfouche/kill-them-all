@@ -6,6 +6,7 @@ pub mod equipment;
 pub mod inventory;
 pub mod item;
 pub mod monster;
+pub mod orb;
 pub mod player;
 pub mod rng_provider;
 pub mod skills;

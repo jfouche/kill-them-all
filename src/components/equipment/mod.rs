@@ -12,62 +12,13 @@ pub use helmet::Helmet;
 pub use wand::Wand;
 pub use weapon::Weapon;
 
-use bevy::prelude::*;
-use rand::rngs::ThreadRng;
-use std::fmt::Display;
-
 use super::{
     item::{ItemEntityInfo, ItemInfo, ItemLevel, ItemRarity, ItemRarityProvider},
     rng_provider::RngKindProvider,
 };
-
-// ==================================================================
-// EquipmentAssets
-
-pub const ITEM_SIZE: UVec2 = UVec2::new(48, 48);
-
-#[derive(Resource)]
-pub struct EquipmentAssets {
-    texture: Handle<Image>,
-    atlas_layout: Handle<TextureAtlasLayout>,
-}
-
-impl FromWorld for EquipmentAssets {
-    fn from_world(world: &mut World) -> Self {
-        EquipmentAssets {
-            texture: world.load_asset(
-                "items/Kyrise's 16x16 RPG Icon Pack - V1.3/spritesheet/spritesheet_48x48.png",
-            ),
-            atlas_layout: world
-                .add_asset(TextureAtlasLayout::from_grid(ITEM_SIZE, 16, 22, None, None)),
-        }
-    }
-}
-
-impl EquipmentAssets {
-    pub fn image(&self) -> Handle<Image> {
-        self.texture.clone()
-    }
-
-    pub fn texture_atlas(&self, index: usize) -> TextureAtlas {
-        TextureAtlas {
-            layout: self.atlas_layout.clone(),
-            index,
-        }
-    }
-
-    pub fn image_node(&self, index: usize) -> ImageNode {
-        ImageNode::from_atlas_image(self.image(), self.texture_atlas(index))
-    }
-
-    pub fn sprite(&self, index: usize) -> Sprite {
-        Sprite {
-            image: self.image(),
-            texture_atlas: Some(self.texture_atlas(index)),
-            ..Default::default()
-        }
-    }
-}
+use bevy::prelude::*;
+use rand::rngs::ThreadRng;
+use std::fmt;
 
 /// Equiment type
 #[derive(Component, Clone, Copy, Debug, PartialEq, Eq, Hash, Reflect)]
@@ -161,7 +112,7 @@ impl<'a> AffixesInserter<'a> {
 
     fn insert<A, V>(&mut self, value: V)
     where
-        A: Component + Display + From<V>,
+        A: Component + fmt::Display + From<V>,
     {
         let affix = A::from(value);
         self.labels.push(affix.to_string());
