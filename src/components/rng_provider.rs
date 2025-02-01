@@ -47,7 +47,7 @@ where
             // No more value possible
             return None;
         }
-        let sel = rng.gen_range(0..sum);
+        let sel = rng.random_range(0..sum);
 
         // find where is the value in the weights
         let mut i = 0;

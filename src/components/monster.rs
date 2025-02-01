@@ -153,13 +153,13 @@ pub struct MonsterSpawnParams {
 impl MonsterSpawnParams {
     pub fn generate(level: u16, rng: &mut ThreadRng) -> Self {
         // Rarity
-        let rarity = match rng.gen_range(0..35) {
+        let rarity = match rng.random_range(0..35) {
             0 => MonsterRarity::Rare,
             _ => MonsterRarity::Normal,
         };
 
         // Kind
-        let kind = rng.gen_range(0..MONSTER_KIND_COUNT);
+        let kind = rng.random_range(0..MONSTER_KIND_COUNT);
 
         // Create the params
         MonsterSpawnParams {

@@ -36,39 +36,39 @@ impl UpgradeKind {
     pub fn generate(&self, commands: &mut Commands, rng: &mut ThreadRng) -> UpgradeView {
         match self {
             UpgradeKind::MoreLife => {
-                let upgrade = MoreLife(rng.gen_range(2..5) as f32);
+                let upgrade = MoreLife(rng.random_range(2..5) as f32);
                 Self::spawn(commands, upgrade)
             }
             UpgradeKind::IncreaseMaxLife => {
-                let upgrade = IncreaseMaxLife(rng.gen_range(2..10) as f32);
+                let upgrade = IncreaseMaxLife(rng.random_range(2..10) as f32);
                 Self::spawn(commands, upgrade)
             }
             UpgradeKind::IncreaseLifeRegen => {
-                let upgrade = LifeRegen(rng.gen_range(2..10) as f32);
+                let upgrade = LifeRegen(rng.random_range(2..10) as f32);
                 Self::spawn(commands, upgrade)
             }
             UpgradeKind::IncreaseAttackSpeed => {
-                let upgrade = IncreaseAttackSpeed(rng.gen_range(2..20) as f32);
+                let upgrade = IncreaseAttackSpeed(rng.random_range(2..20) as f32);
                 Self::spawn(commands, upgrade)
             }
             UpgradeKind::IncreaseMovementSpeed => {
-                let upgrade = IncreaseMovementSpeed(rng.gen_range(2..20) as f32);
+                let upgrade = IncreaseMovementSpeed(rng.random_range(2..20) as f32);
                 Self::spawn(commands, upgrade)
             }
             UpgradeKind::PierceChance => {
-                let upgrade = PierceChance(rng.gen_range(2..20) as f32);
+                let upgrade = PierceChance(rng.random_range(2..20) as f32);
                 Self::spawn(commands, upgrade)
             }
             UpgradeKind::MoreDamage => {
-                let upgrade = MoreDamage(rng.gen_range(2..5) as f32);
+                let upgrade = MoreDamage(rng.random_range(2..5) as f32);
                 Self::spawn(commands, upgrade)
             }
             UpgradeKind::IncreaseDamage => {
-                let upgrade = IncreaseDamage(rng.gen_range(10..20) as f32);
+                let upgrade = IncreaseDamage(rng.random_range(10..20) as f32);
                 Self::spawn(commands, upgrade)
             }
             UpgradeKind::IncreaseAreaOfEffect => {
-                let upgrade = IncreaseAreaOfEffect(rng.gen_range(10..20) as f32);
+                let upgrade = IncreaseAreaOfEffect(rng.random_range(10..20) as f32);
                 Self::spawn(commands, upgrade)
             }
         }

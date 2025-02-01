@@ -92,7 +92,7 @@ pub struct InventoryChanged;
 #[derive(Event)]
 pub struct PlayerEquipmentChanged;
 
-/// Try to add an item to the [inventory].
+/// Try to add an item to the [Inventory].
 ///
 /// If it succed, it will trigger an [InventoryChanged] event.
 pub struct AddToInventoryCommand(pub Entity);
@@ -109,7 +109,7 @@ impl Command for AddToInventoryCommand {
     }
 }
 
-/// Try to remove an item to the [inventory].
+/// Try to remove an item to the [Inventory].
 ///
 /// If it succed, it will trigger an [InventoryChanged] event.
 pub struct RemoveFromInventoryCommand(pub Entity);
@@ -219,7 +219,7 @@ impl Command for DropItemCommand {
     }
 }
 
-/// Try to add a [DroppedItem] item to the [inventory].
+/// Try to add a [DroppedItem] item to the [crate::components::inventory::Inventory].
 ///
 /// If it succed, it will trigger an [InventoryChanged] event.
 pub struct TakeDroppedItemCommand(pub Entity);

@@ -55,6 +55,6 @@ pub trait SkillUI {
 }
 
 /// Tag to indicate that the [Skill] is affected by
-/// [crate::components::IncreaseAreaOfEffect] affixes
+/// [crate::components::affix::IncreaseAreaOfEffect] affixes
 #[derive(Component, Default)]
 pub struct AffectedByAreaOfEffect;

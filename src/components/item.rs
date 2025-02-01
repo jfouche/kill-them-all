@@ -1,6 +1,6 @@
 use super::{equipment::EquipmentProvider, orb::OrbProvider, rng_provider::RngKindProvider};
 use bevy::prelude::*;
-use rand::{rngs::ThreadRng, seq::SliceRandom, Rng};
+use rand::{rngs::ThreadRng, seq::IndexedRandom, Rng};
 
 pub const ITEM_SIZE: UVec2 = UVec2::new(48, 48);
 
@@ -69,7 +69,7 @@ pub struct ItemProvider(pub u16);
 
 impl ItemProvider {
     pub fn spawn(&self, commands: &mut Commands, rng: &mut ThreadRng) -> Option<ItemEntityInfo> {
-        match rng.gen_range(0..100) {
+        match rng.random_range(0..100) {
             0..40 => EquipmentProvider::new(self.0).spawn(commands, rng),
             40..80 => OrbProvider::new().spawn(commands, rng),
             _ => None,
@@ -153,7 +153,7 @@ impl<const N: usize> AffixConfigGenerator for [(u16, (u16, u16), usize); N] {
         let max_idx = self.max_affix_index(ilevel);
         self[0..=max_idx]
             .choose(rng)
-            .map(|(_, (min, max), _)| rng.gen_range(*min..=*max))
+            .map(|(_, (min, max), _)| rng.random_range(*min..=*max))
             .expect("Item affix levels must not be empty")
     }
 }

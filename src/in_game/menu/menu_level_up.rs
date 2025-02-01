@@ -79,7 +79,7 @@ fn spawn_level_up_menu(mut commands: Commands) {
 
     let mut level_up_nav = LevelUpMenuNav::default();
     let mut upgrade_provider = UpgradeProvider::new();
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     for _ in 0..3 {
         if let Some(upgrade) = upgrade_provider.gen(&mut rng) {

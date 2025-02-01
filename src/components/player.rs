@@ -135,7 +135,7 @@ impl std::fmt::Display for Experience {
 pub struct Score(pub u16);
 
 ///
-/// An indicator to show the [NextPosition] of the [Player] on the map
+/// An indicator to show the next position of the [Player] on the map
 ///
 #[derive(Component)]
 #[require(
