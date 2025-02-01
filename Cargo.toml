@@ -20,7 +20,7 @@ default = []
 dev = ["dep:bevy-inspector-egui", "bevy/bevy_dev_tools"]
 
 [dependencies]
-rand = "0.8"
+rand = "0.9"
 bevy = { version = "0.15", default-features = false, features = [
     "bevy_asset",
     "bevy_color",
@@ -42,7 +42,7 @@ bevy_ecs_tilemap = "0.15"
 bevy_ecs_ldtk = "0.11"
 
 # feature: dev
-bevy-inspector-egui = { version = "0.28", default-features = false, features = [
+bevy-inspector-egui = { version = "0.29", default-features = false, features = [
     "bevy_render",
 ], optional = true }
 

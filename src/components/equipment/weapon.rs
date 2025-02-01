@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use std::time::Duration;
 
 ///
-/// A [Weapon] should be a child of a [Character]
+/// A [Weapon] should be a child of a [crate::components::character::Character]
 ///
 #[derive(Component, Default)]
 #[require(

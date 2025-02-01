@@ -2,7 +2,7 @@ use super::damage::Damage;
 use bevy::prelude::*;
 use rand::{rngs::ThreadRng, Rng};
 
-/// Add life to the [crate::components::BaseLife]
+/// Add life to [crate::components::character::BaseLife]
 #[derive(Component, Default, Clone, Copy, Deref, Debug, Reflect)]
 pub struct MoreLife(pub f32);
 
@@ -18,7 +18,7 @@ impl From<u16> for MoreLife {
     }
 }
 
-/// Increase [crate::components::BaseLife] (after applying [MoreLife])
+/// Increase [crate::components::character::BaseLife] (after applying [MoreLife])
 #[derive(Component, Default, Clone, Copy, Deref, DerefMut, Debug, Reflect)]
 pub struct IncreaseMaxLife(pub f32);
 
@@ -114,7 +114,7 @@ pub struct MoreArmour(pub f32);
 #[derive(Component, Default, Clone, Copy, Deref, DerefMut, Debug, Reflect)]
 pub struct IncreaseArmour(pub f32);
 
-/// Increase [crate::components::BaseMovementSpeed]
+/// Increase [crate::components::character::BaseMovementSpeed]
 #[derive(Component, Default, Clone, Copy, Deref, DerefMut, Debug, Reflect)]
 pub struct IncreaseMovementSpeed(pub f32);
 
@@ -185,7 +185,7 @@ impl PierceChance {
     }
 
     pub fn try_pierce(&mut self, rng: &mut ThreadRng) -> bool {
-        if rng.gen_range(0. ..100.) < **self {
+        if rng.random_range(0. ..100.) < **self {
             self.0 -= 100.;
             true
         } else {
@@ -200,7 +200,8 @@ impl std::fmt::Display for PierceChance {
     }
 }
 
-/// Add damage to all [crate::components::Weapon]s of a [crate::components::Character]
+/// Add damage to all [crate::components::equipment::weapon::Weapon]s of a
+/// [crate::components::character::Character]
 #[derive(Component, Default, Deref, DerefMut, Reflect)]
 pub struct MoreDamage(pub f32);
 
@@ -226,7 +227,7 @@ impl From<u16> for MoreDamage {
     }
 }
 
-/// Increase damage to all [crate::components::Weapon]s, after applying [MoreDamage]
+/// Increase damage to all [crate::components::equipment::Weapon]s, after applying [MoreDamage]
 #[derive(Component, Default, Deref, DerefMut, Reflect)]
 pub struct IncreaseDamage(pub f32);
 

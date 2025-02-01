@@ -7,7 +7,6 @@ use crate::utils::collision::{start_event_filter, QueryEither};
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 use bevy_rapier2d::prelude::*;
-use rand::thread_rng;
 
 pub struct CollisionsPlugin;
 
@@ -36,7 +35,7 @@ fn check_if_character_is_hit(
     damagers: Query<&HitDamageRange, With<Damager>>,
 ) {
     let mut characters_hits = HashMap::new();
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     // apply damage
     collisions
@@ -102,7 +101,7 @@ fn player_touched_by_monster(
     q_monsters: Query<&HitDamageRange, With<Monster>>,
     q_player: Query<(), With<Player>>,
 ) {
-    let mut rng = thread_rng();
+    let mut rng = rand::rng();
     collisions
         .read()
         .filter_map(start_event_filter)

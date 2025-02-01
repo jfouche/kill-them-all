@@ -8,7 +8,7 @@ use bevy_rapier2d::prelude::*;
 use rand::{rngs::ThreadRng, Rng};
 
 ///
-/// Component which stores the base [HitDamageRange] of a [Weapon]
+/// Component which stores the base [HitDamageRange] of a [crate::components::equipment::Weapon]
 /// which damage on hit.
 ///
 #[derive(Component, Clone, Copy, Reflect)]
@@ -39,7 +39,7 @@ impl HitDamageRange {
         let damage = if self.min == self.max {
             self.min
         } else {
-            rng.gen_range(self.min..=self.max)
+            rng.random_range(self.min..=self.max)
         };
         Damage(damage)
     }
@@ -106,7 +106,7 @@ impl std::ops::Sub<f32> for Damage {
     }
 }
 
-/// A [Damager] is an entity which damages a [Character].
+/// A [Damager] is an entity which damages a [crate::components::character::Character].
 ///
 /// It requires:
 /// - At least one of [HitDamageRange] or [DamageOverTime]

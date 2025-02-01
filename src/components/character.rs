@@ -97,8 +97,8 @@ impl Life {
 
 /// Represent the max life of a character
 ///
-/// It's calculated with the [BaseLife], [crate::components::MoreLife]s
-/// and [crate::components::IncreaseMaxLife]s
+/// It's calculated with the [BaseLife], [crate::components::affix::MoreLife]s
+/// and [crate::components::affix::IncreaseMaxLife]s
 #[derive(Component, Default, Deref, DerefMut, Clone, Copy, Reflect)]
 pub struct MaxLife(pub f32);
 

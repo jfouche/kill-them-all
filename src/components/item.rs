@@ -69,7 +69,7 @@ pub struct ItemProvider(pub u16);
 
 impl ItemProvider {
     pub fn spawn(&self, commands: &mut Commands, rng: &mut ThreadRng) -> Option<ItemEntityInfo> {
-        match rng.gen_range(0..100) {
+        match rng.random_range(0..100) {
             0..40 => EquipmentProvider::new(self.0).spawn(commands, rng),
             40..80 => OrbProvider::new().spawn(commands, rng),
             _ => None,
@@ -154,11 +154,11 @@ impl<const N: usize> AffixConfigGenerator for [(u16, (u16, u16), usize); N] {
 
     fn generate(&self, ilevel: u16, rng: &mut ThreadRng) -> ValueAndTier {
         let max_idx = self.max_affix_index(ilevel);
-        let idx = rng.gen_range(0..=max_idx);
+        let idx = rng.random_range(0..=max_idx);
         let tier = u8::try_from(self.len() - idx).expect("tier should be compatible with u8");
         let value = self
             .get(idx)
-            .map(|(_, (min, max), _)| rng.gen_range(*min..=*max))
+            .map(|(_, (min, max), _)| rng.random_range(*min..=*max))
             .expect("Item affix levels must not be empty");
         ValueAndTier(value, tier)
     }

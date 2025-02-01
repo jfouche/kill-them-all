@@ -45,7 +45,7 @@ fn spawn_monsters(
     mut commands: Commands,
     assets: Res<AllMonsterAssets>,
 ) {
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let mlevel = trigger.event().mlevel;
     for (pos, count) in trigger.event().monsters.iter() {
         for i in 0..*count {
@@ -92,7 +92,7 @@ fn update_monster(
 ) {
     if let Ok(MonsterRarity::Rare) = rarities.get(trigger.entity()) {
         let mut upgrade_provider = UpgradeProvider::new();
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut entities = Vec::new();
 
         for _ in 0..3 {

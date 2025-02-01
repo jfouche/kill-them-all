@@ -42,7 +42,7 @@ fn try_pierce(
     mut projectiles: Query<&mut PierceChance, With<Projectile>>,
 ) {
     if let Ok(mut pierce_chance) = projectiles.get_mut(trigger.entity()) {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         if !pierce_chance.try_pierce(&mut rng) {
             // Didn't pierce => despawn projectile
             commands.entity(trigger.entity()).despawn();

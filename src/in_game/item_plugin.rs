@@ -17,7 +17,6 @@ use character::CharacterAction;
 use item::{DroppedItem, ItemAssets, ItemInfo, ItemLevel, ItemProvider, ItemRarity, ITEM_SIZE};
 use monster::MonsterDeathEvent;
 use player::Player;
-use rand::thread_rng;
 use world_map::LAYER_ITEM;
 
 pub struct ItemPlugin;
@@ -83,7 +82,7 @@ fn spawn_dropped_item(
     mut monster_death_events: EventReader<MonsterDeathEvent>,
     assets: Res<ItemAssets>,
 ) {
-    let mut rng = thread_rng();
+    let mut rng = rand::rng();
     for event in monster_death_events.read() {
         let provider = ItemProvider(event.mlevel);
         if let Some(item_info) = provider.spawn(&mut commands, &mut rng) {
