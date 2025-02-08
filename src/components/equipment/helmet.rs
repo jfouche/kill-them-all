@@ -68,10 +68,10 @@ impl Helmet {
         for _ in 0..helmet.n_affix() {
             match provider.gen(rng) {
                 Some(HelmetAffixKind::AddArmour) => {
-                    helmet.insert::<Armour, u16>(HELMET_MORE_ARMOUR_RANGES.generate(ilevel, rng));
+                    helmet.insert::<Armour>(HELMET_MORE_ARMOUR_RANGES.generate(ilevel, rng));
                 }
                 Some(HelmetAffixKind::MoreLife) => {
-                    helmet.insert::<MoreLife, u16>(HELMET_MORE_LIFE_RANGES.generate(ilevel, rng));
+                    helmet.insert::<MoreLife>(HELMET_MORE_LIFE_RANGES.generate(ilevel, rng));
                 }
                 None => {}
             }

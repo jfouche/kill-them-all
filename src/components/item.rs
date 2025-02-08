@@ -1,6 +1,6 @@
 use super::{equipment::EquipmentProvider, orb::OrbProvider, rng_provider::RngKindProvider};
 use bevy::prelude::*;
-use rand::{rngs::ThreadRng, seq::IndexedRandom, Rng};
+use rand::{rngs::ThreadRng, Rng};
 
 pub const ITEM_SIZE: UVec2 = UVec2::new(48, 48);
 
@@ -127,11 +127,14 @@ impl ItemRarityProvider {
     }
 }
 
+pub struct ValueAndTier(pub u16, pub u8);
+
 /// Utility to manage adding affix according to ilevel.
 pub trait AffixConfigGenerator {
     fn max_affix_index(&self, ilevel: u16) -> usize;
     fn weight(&self, ilevel: u16) -> usize;
-    fn generate(&self, ilevel: u16, rng: &mut ThreadRng) -> u16;
+    /// Generate a (value, tier) from available affixes for the given `ilevel`
+    fn generate(&self, ilevel: u16, rng: &mut ThreadRng) -> ValueAndTier;
 }
 
 /// impl for [(max_ilevel, (min_range, max_range), weight)] slice
@@ -149,11 +152,14 @@ impl<const N: usize> AffixConfigGenerator for [(u16, (u16, u16), usize); N] {
             .sum()
     }
 
-    fn generate(&self, ilevel: u16, rng: &mut ThreadRng) -> u16 {
+    fn generate(&self, ilevel: u16, rng: &mut ThreadRng) -> ValueAndTier {
         let max_idx = self.max_affix_index(ilevel);
-        self[0..=max_idx]
-            .choose(rng)
+        let idx = rng.random_range(0..=max_idx);
+        let tier = u8::try_from(self.len() - idx).expect("tier should be compatible with u8");
+        let value = self
+            .get(idx)
             .map(|(_, (min, max), _)| rng.random_range(*min..=*max))
-            .expect("Item affix levels must not be empty")
+            .expect("Item affix levels must not be empty");
+        ValueAndTier(value, tier)
     }
 }
