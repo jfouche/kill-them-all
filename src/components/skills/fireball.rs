@@ -2,7 +2,7 @@ use super::{Skill, SkillUI};
 use crate::components::{damage::BaseHitDamageRange, equipment::weapon::BaseAttackSpeed};
 use bevy::prelude::*;
 
-#[derive(Component)]
+#[derive(Component, Default)]
 #[require(
     Skill,
     Name(|| Name::new("FireBallLauncher")),
@@ -21,6 +21,6 @@ impl SkillUI for FireBallLauncher {
     }
 
     fn tile_index() -> usize {
-        150
+        16
     }
 }

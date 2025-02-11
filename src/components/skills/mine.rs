@@ -11,7 +11,7 @@ use super::{Skill, SkillUI};
 ///
 /// |Skill] that drop a mine regularly
 ///
-#[derive(Component)]
+#[derive(Component, Default)]
 #[require(
     Name(||Name::new("MineDropper")),
     Skill,

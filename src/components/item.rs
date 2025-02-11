@@ -1,4 +1,9 @@
-use super::{equipment::EquipmentProvider, orb::OrbProvider, rng_provider::RngKindProvider};
+use super::{
+    equipment::EquipmentProvider,
+    orb::OrbProvider,
+    rng_provider::RngKindProvider,
+    skills::{SkillProvider, SkillUI},
+};
 use bevy::prelude::*;
 use rand::{rngs::ThreadRng, Rng};
 
@@ -70,8 +75,9 @@ pub struct ItemProvider(pub u16);
 impl ItemProvider {
     pub fn spawn(&self, commands: &mut Commands, rng: &mut ThreadRng) -> Option<ItemEntityInfo> {
         match rng.random_range(0..100) {
-            0..40 => EquipmentProvider::new(self.0).spawn(commands, rng),
-            40..80 => OrbProvider::new().spawn(commands, rng),
+            0..30 => EquipmentProvider::new(self.0).spawn(commands, rng),
+            30..60 => OrbProvider::new().spawn(commands, rng),
+            60..90 => SkillProvider::new(self.0).spawn(commands, rng),
             _ => None,
         }
     }
@@ -88,6 +94,18 @@ pub struct ItemEntityInfo {
 pub struct ItemInfo {
     pub tile_index: usize,
     pub text: String,
+}
+
+impl<T> From<T> for ItemInfo
+where
+    T: SkillUI,
+{
+    fn from(_: T) -> Self {
+        ItemInfo {
+            text: T::label(),
+            tile_index: T::tile_index(),
+        }
+    }
 }
 
 impl From<&ItemInfo> for Text {

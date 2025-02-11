@@ -11,7 +11,7 @@ use skills::{AffectedByAreaOfEffect, Skill, SkillUI};
 ///
 /// Death aura weapon
 ///
-#[derive(Component)]
+#[derive(Component, Default)]
 #[require(
     Name(|| Name::new("DeathAura")),
     Skill,
