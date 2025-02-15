@@ -52,6 +52,7 @@ fn main() {
         utils::blink::BlinkPlugin,
         utils::invulnerable::InvulnerabilityPlugin,
         utils::despawn_after::despawn_after_plugin,
+        utils::dnd_ui::DndPlugin,
     ))
     // Game plugins
     .add_plugins((

@@ -8,8 +8,13 @@ use crate::{
             LooseLifeEvent, MaxLife,
         },
         despawn_all,
-        inventory::{Inventory, InventoryChanged, InventoryPos, PlayerEquipmentChanged},
+        inventory::{
+            Inventory, InventoryChanged, InventoryPos, PlayerEquipmentChanged,
+            TakeDroppedItemCommand,
+        },
+        item::DroppedItem,
         monster::MonsterDeathEvent,
+        orb::OrbProvider,
         player::{
             Experience, LevelUpEvent, NextPositionIndicator, NextPositionIndicatorAssets, Player,
             PlayerAssets, PlayerDeathEvent, Score,
@@ -123,6 +128,14 @@ fn spawn_player(
         })
         .observe(set_invulnerable_on_hit)
         .observe(player_dying);
+
+    // TEMP
+    {
+        let mut rng = rand::rng();
+        let orb = OrbProvider::new().spawn(&mut commands, &mut rng).unwrap();
+        let drop = commands.spawn(DroppedItem(orb.entity)).id();
+        commands.queue(TakeDroppedItemCommand(drop));
+    }
 }
 
 fn pause(mut query: Query<(&mut Invulnerable, &mut Blink), With<Player>>) {

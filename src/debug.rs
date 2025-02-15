@@ -2,6 +2,7 @@
 
 use crate::{
     components::{monster::Monster, player::Player},
+    in_game::life_bar_plugin::LifeBar,
     schedule::*,
 };
 use bevy::{
@@ -42,16 +43,22 @@ impl Plugin for DebugPlugin {
 }
 
 fn inspector_ui(world: &mut World) {
-    let mut egui_context = world
+    let Ok(mut egui_context) = world
         .query_filtered::<&mut EguiContext, With<PrimaryWindow>>()
-        .single(world)
-        .clone();
+        .get_single(world)
+        .cloned()
+    else {
+        return;
+    };
     egui::Window::new("World").show(egui_context.get_mut(), |ui| {
         egui::ScrollArea::both().show(ui, |ui| {
-            let filter = Filter::<(Without<Parent>, Without<Observer>)>::from_ui_fuzzy(
-                ui,
-                egui::Id::new("KTE DEBUG INSPECTOR FILTER"),
-            );
+            let filter =
+                Filter::<(
+                    Without<Parent>,
+                    Without<Observer>,
+                    Without<Monster>,
+                    Without<LifeBar>,
+                )>::from_ui_fuzzy(ui, egui::Id::new("KTE DEBUG INSPECTOR FILTER"));
             bevy_inspector::ui_for_entities_filtered(world, ui, true, &filter);
             ui.allocate_space(ui.available_size());
         });

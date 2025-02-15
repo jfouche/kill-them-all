@@ -41,7 +41,11 @@ impl Inventory {
         }
     }
 
-    fn pos(&self, index: usize) -> InventoryPos {
+    pub fn at(&self, index: usize) -> Option<Entity> {
+        *self.0.get(index)?
+    }
+
+    pub fn pos(index: usize) -> InventoryPos {
         assert!(index < Inventory::len());
         InventoryPos {
             col: (index as u16 % Self::N_COLS) as i16,
@@ -49,11 +53,8 @@ impl Inventory {
         }
     }
 
-    pub fn iter(&self) -> InventoryIter {
-        InventoryIter {
-            inventory: self,
-            index: 0,
-        }
+    pub fn iter(&self) -> impl Iterator<Item = (usize, &Option<Entity>)> {
+        self.0.iter().enumerate()
     }
 }
 
@@ -61,27 +62,6 @@ impl Inventory {
 pub struct InventoryPos {
     pub col: i16,
     pub row: i16,
-}
-
-pub struct InventoryIter<'a> {
-    inventory: &'a Inventory,
-    index: usize,
-}
-
-impl Iterator for InventoryIter<'_> {
-    type Item = (Entity, InventoryPos);
-
-    fn next(&mut self) -> Option<Self::Item> {
-        let mut i = self.index;
-        while i < Inventory::len() {
-            if let Some(entity) = self.inventory.0.get(i)? {
-                self.index = i + 1;
-                return Some((*entity, self.inventory.pos(i)));
-            }
-            i += 1;
-        }
-        None
-    }
 }
 
 /// Event to indicate The [Inventory] changed
@@ -94,7 +74,7 @@ pub struct PlayerEquipmentChanged;
 
 /// Try to add an item to the [Inventory].
 ///
-/// If it succed, it will trigger an [InventoryChanged] event.
+/// If it succeed, it will trigger an [InventoryChanged] event.
 pub struct AddToInventoryCommand(pub Entity);
 
 impl Command for AddToInventoryCommand {
