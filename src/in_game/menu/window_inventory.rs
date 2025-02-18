@@ -6,7 +6,7 @@ use crate::{
         item::{ItemAssets, ItemInfo},
     },
     schedule::{GameRunningSet, GameState},
-    utils::dnd_ui::Cursor,
+    utils::dnd_ui::{DndCursor, DraggedEntity},
 };
 use bevy::{color::palettes::css, input::common_conditions::input_just_pressed, prelude::*};
 
@@ -80,16 +80,11 @@ impl InventoryLocation {
 #[derive(Component, Reflect)]
 struct InventoryIndex(usize);
 
-#[derive(Component, Reflect)]
-#[component(storage = "SparseSet")]
-struct DraggedItem(Entity);
-
 pub struct InventoryPanelPlugin;
 
 impl Plugin for InventoryPanelPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<InventoryIndex>()
-            .register_type::<DraggedItem>()
             .add_systems(OnExit(GameState::InGame), despawn_all::<InventoryWindow>)
             .add_systems(
                 Update,
@@ -137,6 +132,7 @@ fn create_panel(
                 InventoryLocation,
                 InventoryLocation::node(idx),
                 InventoryIndex(idx),
+                Name::new(format!("InventoryLocation({idx})")),
             ))
             .observe(on_over_location)
             .observe(on_out_location)
@@ -152,7 +148,11 @@ fn create_panel(
                     None => 351, // 351 is an empty image
                 };
                 location
-                    .spawn((assets.image_node(tile_index), InventoryIndex(idx)))
+                    .spawn((
+                        Name::new(format!("InventoryItem({idx})")),
+                        assets.image_node(tile_index),
+                        InventoryIndex(idx),
+                    ))
                     .observe(on_over_item)
                     .observe(on_drag_start_item)
                     .observe(on_drag_end);
@@ -184,7 +184,7 @@ fn update_inventory(
 
 fn on_over_location(
     trigger: Trigger<Pointer<Over>>,
-    cursor: Query<&ImageNode, With<Cursor>>,
+    cursor: Single<&DraggedEntity, With<DndCursor>>,
     mut locations: Query<(&mut BorderColor, &InventoryIndex), With<InventoryLocation>>,
     inventory: Single<&Inventory>,
 ) {
@@ -197,7 +197,7 @@ fn on_over_location(
         index.0
     );
     if inventory.at(index.0).is_none() {
-        if cursor.get_single().is_ok() {
+        if cursor.is_some() {
             border_color.0 = css::YELLOW.into();
         }
     }
@@ -249,16 +249,16 @@ fn on_out_location(
 
 fn on_drag_start_item(
     trigger: Trigger<Pointer<DragStart>>,
-    mut commands: Commands,
-    indexes: Query<(&InventoryIndex, &ImageNode)>,
+    indexes: Query<(&InventoryIndex, &ImageNode), Without<DndCursor>>,
     inventory: Single<&Inventory>,
-    cursor: Single<Entity, With<Cursor>>,
+    cursor: Single<(&mut DraggedEntity, &mut ImageNode), With<DndCursor>>,
 ) {
     warn!("on_drag_start({})", trigger.entity());
-    if let Ok((index, image_node)) = indexes.get(trigger.entity()) {
+    if let Ok((index, item_image)) = indexes.get(trigger.entity()) {
         if let Some(item) = inventory.at(index.0) {
-            commands.entity(*cursor).insert(image_node.clone());
-            commands.entity(trigger.entity()).insert(DraggedItem(item));
+            let (mut dragged_entity, mut cursor_image) = cursor.into_inner();
+            **dragged_entity = Some(item);
+            *cursor_image = item_image.clone();
         }
     }
 }
@@ -266,11 +266,12 @@ fn on_drag_start_item(
 fn on_drag_end(
     trigger: Trigger<Pointer<DragEnd>>,
     mut commands: Commands,
-    cursor: Single<Entity, With<Cursor>>,
+    cursor: Single<(&mut DraggedEntity, &mut ImageNode), With<DndCursor>>,
 ) {
     warn!("on_drag_end({})", trigger.entity());
-    commands.entity(*cursor).remove::<ImageNode>();
-    commands.entity(trigger.entity()).remove::<DraggedItem>();
+    let (mut dragged_entity, mut cursor_image) = cursor.into_inner();
+    **dragged_entity = None;
+    *cursor_image = ImageNode::default();
     commands.trigger(InventoryChanged);
 }
 
@@ -278,13 +279,14 @@ fn on_drop_on_location(
     trigger: Trigger<Pointer<DragDrop>>,
     mut commands: Commands,
     indexes: Query<&InventoryIndex, With<InventoryLocation>>,
-    dragged_items: Query<&DraggedItem>,
+    cursor: Single<&DraggedEntity, With<DndCursor>>,
     inventory: Single<&Inventory>,
+    names: Query<NameOrEntity>,
 ) {
     warn!(
-        "on_drop_on_location({} on {})",
-        trigger.event().target,
-        trigger.entity(),
+        "on_drop_on_location({}) target: {}",
+        names.get(trigger.entity()).unwrap(),
+        names.get(trigger.event().target).unwrap(),
     );
     let Ok(index) = indexes.get(trigger.entity()) else {
         return;
@@ -292,10 +294,10 @@ fn on_drop_on_location(
     warn!("on_drop_on_location() 1 - {}", index.0);
     if inventory.at(index.0).is_none() {
         warn!("on_drop_on_location() 2");
-        if let Ok(item) = dragged_items.get_single() {
-            warn!("on_drop_on_location() 3 - {}", item.0);
+        if let Some(item) = ***cursor {
+            warn!("on_drop_on_location() 3 - {}", item);
             commands.queue(AddToInventoryAtIndexCommand {
-                item: item.0,
+                item,
                 index: index.0,
             });
         }
