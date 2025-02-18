@@ -1,30 +1,14 @@
-use super::{
-    panel_equipments::EquipmentsPanel, popup_info::ShowPopupOnMouseOver,
-    popup_select_equipment::ShowEquipmentActionsOnClick,
-};
+use super::{panel_equipments::EquipmentsPanel, popup_info::InfoPopup};
 use crate::{
-    camera::MainCamera,
     components::{
         despawn_all,
-        inventory::{Inventory, InventoryChanged, InventoryPos},
-        item::{Item, ItemAssets, ItemInfo},
+        inventory::{AddToInventoryAtIndexCommand, Inventory, InventoryChanged},
+        item::{ItemAssets, ItemInfo},
     },
-    in_game::{GameRunningSet, GameState},
-    utils::{
-        dnd_ui::{Cursor, Draggable, Dragged, Hoverable},
-        picking::INVENTORY_DEPTH,
-    },
+    schedule::{GameRunningSet, GameState},
+    utils::dnd_ui::Cursor,
 };
-use bevy::{
-    color::palettes::css,
-    input::common_conditions::input_just_pressed,
-    picking::{
-        backend::{HitData, PointerHits},
-        pointer::{PointerId, PointerLocation},
-        PickSet,
-    },
-    prelude::*,
-};
+use bevy::{color::palettes::css, input::common_conditions::input_just_pressed, prelude::*};
 
 ///
 /// A window that shows the content of the [Inventory]
@@ -32,7 +16,6 @@ use bevy::{
 #[derive(Component)]
 #[require(
     Name(|| Name::new("InventoryWindow")),
-    Visibility(|| Visibility::Hidden),
     Node(|| Node {
         position_type: PositionType::Absolute,
         flex_direction: FlexDirection::Column,
@@ -76,9 +59,6 @@ pub struct InventoryPanel;
 )]
 pub struct InventoryLocation;
 
-#[derive(Component, Reflect)]
-struct InventoryIndex(usize);
-
 impl InventoryLocation {
     fn default_node() -> Node {
         Node {
@@ -97,77 +77,20 @@ impl InventoryLocation {
     }
 }
 
-#[derive(Bundle)]
-struct InventoryItemBundle {
-    image_node: ImageNode,
-    node: Node,
-    on_over: ShowPopupOnMouseOver,
-    draggable: Draggable,
-}
+#[derive(Component, Reflect)]
+struct InventoryIndex(usize);
 
-impl InventoryItemBundle {
-    fn new(pos: InventoryPos, info: &ItemInfo, assets: &ItemAssets) -> Self {
-        InventoryItemBundle {
-            image_node: assets.image_node(info.tile_index),
-            node: Node {
-                grid_column: GridPlacement::start(pos.col + 1),
-                grid_row: GridPlacement::start(pos.row + 1),
-                ..Default::default()
-            },
-            on_over: ShowPopupOnMouseOver {
-                text: info.text.clone(),
-                image: Some(assets.image_node(info.tile_index)),
-            },
-            draggable: Draggable,
-        }
-    }
-}
-
-#[derive(Bundle)]
-struct InventoryEquipmentBundle {
-    base: InventoryItemBundle,
-    hoverable: Hoverable,
-    on_click: ShowEquipmentActionsOnClick,
-}
-
-impl InventoryEquipmentBundle {
-    fn new(item: Entity, pos: InventoryPos, info: &ItemInfo, assets: &ItemAssets) -> Self {
-        InventoryEquipmentBundle {
-            base: InventoryItemBundle::new(pos, info, assets),
-            hoverable: Hoverable,
-            on_click: ShowEquipmentActionsOnClick {
-                text: info.text.clone(),
-                image: Some(assets.image_node(info.tile_index)),
-                item,
-            },
-        }
-    }
-}
-
-#[derive(Bundle)]
-struct InventoryOrbBundle {
-    base: InventoryItemBundle,
-}
-
-impl InventoryOrbBundle {
-    fn new(pos: InventoryPos, info: &ItemInfo, assets: &ItemAssets) -> Self {
-        InventoryOrbBundle {
-            base: InventoryItemBundle::new(pos, info, assets),
-        }
-    }
-}
+#[derive(Component, Reflect)]
+#[component(storage = "SparseSet")]
+struct DraggedItem(Entity);
 
 pub struct InventoryPanelPlugin;
 
 impl Plugin for InventoryPanelPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<InventoryIndex>()
-            .add_systems(Startup, spawn_window)
+            .register_type::<DraggedItem>()
             .add_systems(OnExit(GameState::InGame), despawn_all::<InventoryWindow>)
-            .add_systems(
-                PreUpdate,
-                inventory_picking_backend.in_set(PickSet::Backend),
-            )
             .add_systems(
                 Update,
                 toggle_window
@@ -179,18 +102,24 @@ impl Plugin for InventoryPanelPlugin {
     }
 }
 
-fn spawn_window(mut commands: Commands) {
-    commands.spawn(InventoryWindow).with_children(|wnd| {
-        wnd.spawn(EquipmentsPanel);
-        wnd.spawn(InventoryPanel);
-    });
-}
-
-fn toggle_window(window: Single<&mut Visibility, With<InventoryWindow>>) {
-    let mut visibiliy = window.into_inner();
-    *visibiliy = match *visibiliy {
-        Visibility::Hidden => Visibility::Inherited,
-        _ => Visibility::Hidden,
+fn toggle_window(
+    mut commands: Commands,
+    mut windows: Query<&mut Visibility, With<InventoryWindow>>,
+) {
+    match windows.iter_mut().next() {
+        Some(mut visiblity) => {
+            *visiblity = match *visiblity {
+                Visibility::Hidden => Visibility::Inherited,
+                _ => Visibility::Hidden,
+            }
+        }
+        None => {
+            // spawn window as it doesn't exist
+            commands.spawn(InventoryWindow).with_children(|wnd| {
+                wnd.spawn(EquipmentsPanel);
+                wnd.spawn(InventoryPanel);
+            });
+        }
     }
 }
 
@@ -211,25 +140,22 @@ fn create_panel(
             ))
             .observe(on_over_location)
             .observe(on_out_location)
-            .observe(on_drag_drop_on_location)
+            .observe(on_drop_on_location)
             .with_children(|location| {
-                match item {
+                let tile_index = match item {
                     Some(item) => {
-                        let info = infos.get(*item).expect("Item should have ItemInfo");
-                        location.spawn((
-                            assets.image_node(info.tile_index),
-                            Item,
-                            InventoryIndex(idx),
-                        ))
+                        infos
+                            .get(*item)
+                            .expect("Item should have ItemInfo")
+                            .tile_index
                     }
-                    None => {
-                        // 351 is a transparent image
-                        location.spawn((assets.image_node(351), InventoryIndex(idx)))
-                    }
-                }
-                .observe(on_over_item)
-                .observe(on_drag_start_item)
-                .observe(on_drag_end_item);
+                    None => 351, // 351 is an empty image
+                };
+                location
+                    .spawn((assets.image_node(tile_index), InventoryIndex(idx)))
+                    .observe(on_over_item)
+                    .observe(on_drag_start_item)
+                    .observe(on_drag_end);
             });
         }
     });
@@ -237,124 +163,141 @@ fn create_panel(
 
 fn update_inventory(
     _trigger: Trigger<InventoryChanged>,
-    mut commands: Commands,
-    mut nodes: Query<(Entity, &mut ImageNode, &InventoryIndex)>,
+    mut nodes: Query<(&mut ImageNode, &InventoryIndex)>,
     inventory: Single<&Inventory>,
     infos: Query<&ItemInfo>,
     assets: Res<ItemAssets>,
 ) {
-    for (entity, mut image, index) in &mut nodes {
-        match inventory.at(index.0) {
+    for (mut image, index) in &mut nodes {
+        let tile_index = match inventory.at(index.0) {
             Some(item) => {
-                let info = infos.get(item).expect("Item should have ItemInfo");
-                *image = assets.image_node(info.tile_index);
-                commands.entity(entity).insert(Item);
+                infos
+                    .get(item)
+                    .expect("Item should have ItemInfo")
+                    .tile_index
             }
-            None => {
-                *image = assets.image_node(351);
-                commands.entity(entity).remove::<Item>();
-            }
-        }
+            None => 351,
+        };
+        *image = assets.image_node(tile_index);
     }
 }
 
 fn on_over_location(
     trigger: Trigger<Pointer<Over>>,
-    cursor: Query<&Children, With<Cursor>>,
-    mut locations: Query<&mut BorderColor, With<InventoryLocation>>,
+    cursor: Query<&ImageNode, With<Cursor>>,
+    mut locations: Query<(&mut BorderColor, &InventoryIndex), With<InventoryLocation>>,
+    inventory: Single<&Inventory>,
 ) {
-    let Ok(mut border_color) = locations.get_mut(trigger.entity()) else {
+    let Ok((mut border_color, index)) = locations.get_mut(trigger.entity()) else {
         return;
     };
-    if cursor.get_single().is_ok() {
-        border_color.0 = css::YELLOW.into();
-    } else {
-        border_color.0 = Srgba::NONE.into();
+    warn!(
+        "on_over_location({}) : index: {} 3",
+        trigger.entity(),
+        index.0
+    );
+    if inventory.at(index.0).is_none() {
+        if cursor.get_single().is_ok() {
+            border_color.0 = css::YELLOW.into();
+        }
+    }
+}
+
+fn on_over_item(
+    trigger: Trigger<Pointer<Over>>,
+    mut commands: Commands,
+    mut items: Query<&InventoryIndex, With<ImageNode>>,
+    inventory: Single<&Inventory>,
+    infos: Query<&ItemInfo>,
+    assets: Res<ItemAssets>,
+) {
+    let Ok(index) = items.get_mut(trigger.entity()) else {
+        return;
+    };
+    warn!("on_over_item({}) : index: {}", trigger.entity(), index.0);
+
+    if let Some(item) = inventory.at(index.0) {
+        if let Ok(info) = infos.get(item) {
+            commands.spawn(InfoPopup {
+                image: Some(assets.image_node(info.tile_index)),
+                text: info.text.clone(),
+                source: trigger.entity(),
+                pos: trigger.event().pointer_location.position,
+            });
+        }
     }
 }
 
 fn on_out_location(
     trigger: Trigger<Pointer<Out>>,
+    mut commands: Commands,
     mut locations: Query<&mut BorderColor, With<InventoryLocation>>,
+    popups: Query<Entity, With<InfoPopup>>,
 ) {
-    let Ok(mut border_color) = locations.get_mut(trigger.entity()) else {
-        return;
-    };
-    border_color.0 = Srgba::NONE.into();
+    warn!("on_out_location({})", trigger.entity());
+    if let Ok(mut border_color) = locations.get_mut(trigger.entity()) {
+        border_color.0 = Srgba::NONE.into();
+    }
+    for entity in &popups {
+        commands.entity(entity).despawn_recursive();
+    }
 }
 
-fn on_over_item(trigger: Trigger<Pointer<Over>>) {
-    warn!("on_over({})", trigger.entity());
-}
+// fn on_over_item(trigger: Trigger<Pointer<Over>>) {
+//     warn!("on_over({})", trigger.entity());
+// }
 
 fn on_drag_start_item(
     trigger: Trigger<Pointer<DragStart>>,
     mut commands: Commands,
-    indexes: Query<&InventoryIndex, With<Item>>,
+    indexes: Query<(&InventoryIndex, &ImageNode)>,
+    inventory: Single<&Inventory>,
+    cursor: Single<Entity, With<Cursor>>,
 ) {
     warn!("on_drag_start({})", trigger.entity());
-    if indexes.get(trigger.entity()).is_ok() {
-        commands.entity(trigger.entity()).insert(Dragged);
+    if let Ok((index, image_node)) = indexes.get(trigger.entity()) {
+        if let Some(item) = inventory.at(index.0) {
+            commands.entity(*cursor).insert(image_node.clone());
+            commands.entity(trigger.entity()).insert(DraggedItem(item));
+        }
     }
 }
 
-fn on_drag_end_item(
+fn on_drag_end(
     trigger: Trigger<Pointer<DragEnd>>,
     mut commands: Commands,
-    indexes: Query<&InventoryIndex>,
+    cursor: Single<Entity, With<Cursor>>,
 ) {
     warn!("on_drag_end({})", trigger.entity());
-    if indexes.get(trigger.entity()).is_ok() {
-        commands.entity(trigger.entity()).remove::<Dragged>();
-    }
-}
-fn on_drag_drop_on_location(
-    trigger: Trigger<Pointer<DragDrop>>,
-    mut commands: Commands,
-    indexes: Query<&InventoryIndex>,
-) {
-    warn!(
-        "on_drag_drop({}) on {}",
-        trigger.entity(),
-        trigger.event().target
-    );
+    commands.entity(*cursor).remove::<ImageNode>();
+    commands.entity(trigger.entity()).remove::<DraggedItem>();
+    commands.trigger(InventoryChanged);
 }
 
-fn inventory_picking_backend(
-    pointers: Query<(&PointerId, &PointerLocation)>,
-    camera: Single<(Entity, &Camera), With<MainCamera>>,
-    items: Query<(Entity, &GlobalTransform, &ComputedNode, &Parent), With<Item>>,
-    inventory_locations: Query<(), With<InventoryLocation>>,
-    mut output: EventWriter<PointerHits>,
+fn on_drop_on_location(
+    trigger: Trigger<Pointer<DragDrop>>,
+    mut commands: Commands,
+    indexes: Query<&InventoryIndex, With<InventoryLocation>>,
+    dragged_items: Query<&DraggedItem>,
+    inventory: Single<&Inventory>,
 ) {
-    let (camera_entity, camera) = *camera;
-    let order = camera.order as f32 + 0.5;
-    for (pointer_id, pointer_pos) in pointers
-        .iter()
-        .filter_map(|(id, loc)| loc.location().map(|l| (id, l.position)))
-    {
-        let mut pointer_pos = pointer_pos * camera.target_scaling_factor().unwrap_or(1.);
-        if let Some(viewport) = camera.physical_viewport_rect() {
-            pointer_pos -= viewport.min.as_vec2();
-        }
-        // warn!("pointer_pos = {pointer_pos}");
-        let mut picks = Vec::new();
-        for (entity, transform, node) in items
-            .iter()
-            .filter(|(_, _, _, p)| inventory_locations.get(p.get()).is_ok())
-            .map(|(entity, transform, node, _)| (entity, transform, node))
-        {
-            let rect = Rect::from_center_size(transform.translation().xy(), node.size());
-            if rect.contains(pointer_pos) {
-                picks.push((
-                    entity,
-                    HitData::new(camera_entity, INVENTORY_DEPTH, None, None),
-                ));
-            }
-        }
-        if !picks.is_empty() {
-            warn!("pointer: {pointer_pos} on {:?}", picks.first().unwrap().0);
-            output.send(PointerHits::new(*pointer_id, picks, order));
+    warn!(
+        "on_drop_on_location({} on {})",
+        trigger.event().target,
+        trigger.entity(),
+    );
+    let Ok(index) = indexes.get(trigger.entity()) else {
+        return;
+    };
+    warn!("on_drop_on_location() 1 - {}", index.0);
+    if inventory.at(index.0).is_none() {
+        warn!("on_drop_on_location() 2");
+        if let Ok(item) = dragged_items.get_single() {
+            warn!("on_drop_on_location() 3 - {}", item.0);
+            commands.queue(AddToInventoryAtIndexCommand {
+                item: item.0,
+                index: index.0,
+            });
         }
     }
 }

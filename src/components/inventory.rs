@@ -26,7 +26,16 @@ impl Inventory {
             info!("Can't add item to inventory because it's full");
             return false;
         };
-        info!("Inventory added {item}");
+        self.add_at(item, index)
+    }
+
+    fn add_at(&mut self, item: Entity, index: usize) -> bool {
+        assert!(index < Self::len());
+        if self.0[index].is_some() {
+            warn!("Can't add item to a non empty location");
+            return false;
+        }
+        info!("Inventory added {item} at {index}");
         self.0[index] = Some(item);
         true
     }
@@ -84,6 +93,28 @@ impl Command for AddToInventoryCommand {
 
         if inventory.add(self.0) {
             world.entity_mut(inventory_entity).add_child(self.0);
+            world.trigger(InventoryChanged);
+        }
+    }
+}
+
+/// Try to add an item to the [Inventory] at a given index.
+///
+/// If it succeed, it will trigger an [InventoryChanged] event.
+pub struct AddToInventoryAtIndexCommand {
+    pub item: Entity,
+    pub index: usize,
+}
+
+impl Command for AddToInventoryAtIndexCommand {
+    fn apply(self, world: &mut World) {
+        let (inventory_entity, mut inventory) =
+            world.query::<(Entity, &mut Inventory)>().single_mut(world);
+
+        // Allow to move an item
+        inventory.remove(self.item);
+        if inventory.add_at(self.item, self.index) {
+            world.entity_mut(inventory_entity).add_child(self.item);
             world.trigger(InventoryChanged);
         }
     }

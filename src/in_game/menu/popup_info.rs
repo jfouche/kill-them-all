@@ -33,7 +33,8 @@ fn spawn_popup(
     if let Ok(info) = infos.get(trigger.entity()) {
         if !popups.iter().any(|popup| popup.source == trigger.entity()) {
             commands.spawn(InfoPopup {
-                info: info.clone(),
+                image: info.image.clone(),
+                text: info.text.clone(),
                 source: trigger.entity(),
                 pos: trigger.event().pointer_location.position,
             });
@@ -87,10 +88,11 @@ fn despawn_popup_on_removed(
     }),
     ZIndex(|| ZIndex(1))
 )]
-struct InfoPopup {
-    info: ShowPopupOnMouseOver,
-    source: Entity,
-    pos: Vec2,
+pub struct InfoPopup {
+    pub text: String,
+    pub image: Option<ImageNode>,
+    pub source: Entity,
+    pub pos: Vec2,
 }
 
 fn create_popup(mut world: DeferredWorld, entity: Entity, _: ComponentId) {
@@ -106,10 +108,10 @@ impl Command for CreatePopupCommand {
             .expect("InfoPopup added")
             .clone();
         world.entity_mut(self.0).with_children(|parent| {
-            if let Some(image_node) = popup.info.image {
+            if let Some(image_node) = popup.image {
                 parent.spawn(image_node);
             }
-            parent.spawn((Text(popup.info.text), TextFont::from_font_size(12.)));
+            parent.spawn((Text(popup.text), TextFont::from_font_size(12.)));
         });
         let mut node = world.get_mut::<Node>(self.0).expect("Node");
         node.left = Val::Px(popup.pos.x - 60.);
