@@ -38,6 +38,10 @@ impl ItemAssets {
         ImageNode::from_atlas_image(self.image(), self.texture_atlas(index))
     }
 
+    pub fn empty_image_node(&self) -> ImageNode {
+        self.image_node(351)
+    }
+
     pub fn sprite(&self, index: usize) -> Sprite {
         Sprite {
             image: self.image(),

@@ -8,7 +8,7 @@ use crate::{
             ColliderLdtkBundle, ColliderTile, CurrentMapLevel, LevelConfigLdtkBundle, MapCollider,
             MapLevelConfig, MonsterCount, MonsterInitialPosition, MonsterInitialPositionLdtkBundle,
             PlayerInitialPosition, PlayerInitialPositionLdtkBundle, SpawnMonstersEvent,
-            SpawnPlayerEvent, WaterLdtkBundle, WaterTile, WorldMap, WorldMapAssets,
+            WaterLdtkBundle, WaterTile, WorldMap, WorldMapAssets, WorldMapLoadingFinished,
         },
     },
     schedule::GameState,
@@ -92,7 +92,7 @@ fn spawn_characters(
     }) {
         if let Ok((entity, transform)) = players.get_single() {
             if parents.iter_ancestors(entity).any(|e| e == level_entity) {
-                commands.trigger(SpawnPlayerEvent {
+                commands.trigger(WorldMapLoadingFinished {
                     translation: transform.translation().xy(),
                 });
                 commands.entity(entity).remove_parent().despawn();

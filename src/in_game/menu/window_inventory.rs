@@ -128,29 +128,29 @@ fn create_panel(
     // TODO : create observers globally
     commands.entity(trigger.entity()).with_children(|cmd| {
         for (idx, item) in inventory.iter() {
+            let image_node = match item {
+                Some(item) => assets.image_node(
+                    infos
+                        .get(*item)
+                        .expect("Item should have ItemInfo")
+                        .tile_index,
+                ),
+                None => assets.empty_image_node(),
+            };
             cmd.spawn((
                 InventoryLocation,
+                Name::new(format!("InventoryLocation({idx})")),
                 InventoryLocation::node(idx),
                 InventoryIndex(idx),
-                Name::new(format!("InventoryLocation({idx})")),
             ))
             .observe(on_over_location)
             .observe(on_out_location)
             .observe(on_drop_on_location)
             .with_children(|location| {
-                let tile_index = match item {
-                    Some(item) => {
-                        infos
-                            .get(*item)
-                            .expect("Item should have ItemInfo")
-                            .tile_index
-                    }
-                    None => 351, // 351 is an empty image
-                };
                 location
                     .spawn((
                         Name::new(format!("InventoryItem({idx})")),
-                        assets.image_node(tile_index),
+                        image_node,
                         InventoryIndex(idx),
                     ))
                     .observe(on_over_item)
@@ -168,17 +168,16 @@ fn update_inventory(
     infos: Query<&ItemInfo>,
     assets: Res<ItemAssets>,
 ) {
-    for (mut image, index) in &mut nodes {
-        let tile_index = match inventory.at(index.0) {
-            Some(item) => {
+    for (mut image_node, index) in &mut nodes {
+        *image_node = match inventory.at(index.0) {
+            Some(item) => assets.image_node(
                 infos
                     .get(item)
                     .expect("Item should have ItemInfo")
-                    .tile_index
-            }
-            None => 351,
+                    .tile_index,
+            ),
+            None => assets.empty_image_node(),
         };
-        *image = assets.image_node(tile_index);
     }
 }
 
@@ -243,10 +242,6 @@ fn on_out_location(
     }
 }
 
-// fn on_over_item(trigger: Trigger<Pointer<Over>>) {
-//     warn!("on_over({})", trigger.entity());
-// }
-
 fn on_drag_start_item(
     trigger: Trigger<Pointer<DragStart>>,
     indexes: Query<(&InventoryIndex, &ImageNode), Without<DndCursor>>,
@@ -265,14 +260,12 @@ fn on_drag_start_item(
 
 fn on_drag_end(
     trigger: Trigger<Pointer<DragEnd>>,
-    mut commands: Commands,
     cursor: Single<(&mut DraggedEntity, &mut ImageNode), With<DndCursor>>,
 ) {
     warn!("on_drag_end({})", trigger.entity());
     let (mut dragged_entity, mut cursor_image) = cursor.into_inner();
     **dragged_entity = None;
     *cursor_image = ImageNode::default();
-    commands.trigger(InventoryChanged);
 }
 
 fn on_drop_on_location(
@@ -281,21 +274,14 @@ fn on_drop_on_location(
     indexes: Query<&InventoryIndex, With<InventoryLocation>>,
     cursor: Single<&DraggedEntity, With<DndCursor>>,
     inventory: Single<&Inventory>,
-    names: Query<NameOrEntity>,
 ) {
-    warn!(
-        "on_drop_on_location({}) target: {}",
-        names.get(trigger.entity()).unwrap(),
-        names.get(trigger.event().target).unwrap(),
-    );
+    warn!("on_drop_on_location({})", trigger.entity());
     let Ok(index) = indexes.get(trigger.entity()) else {
         return;
     };
-    warn!("on_drop_on_location() 1 - {}", index.0);
     if inventory.at(index.0).is_none() {
-        warn!("on_drop_on_location() 2");
+        // There is no item at the index in the inventory
         if let Some(item) = ***cursor {
-            warn!("on_drop_on_location() 3 - {}", item);
             commands.queue(AddToInventoryAtIndexCommand {
                 item,
                 index: index.0,
