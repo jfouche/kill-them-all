@@ -1,4 +1,3 @@
-use super::popup_info::ShowPopupOnMouseOver;
 use crate::components::{
     player::Player,
     skills::{
@@ -71,9 +70,9 @@ where
     let text = [T::title(), T::label()].join("\n");
     panel.with_child((
         assets.image_node(T::tile_index()),
-        ShowPopupOnMouseOver {
-            text,
-            image: Some(assets.image_node(T::tile_index())),
-        },
+        // ShowPopupOnMouseOver {
+        //     text,
+        //     image: Some(assets.image_node(T::tile_index())),
+        // },
     ));
 }

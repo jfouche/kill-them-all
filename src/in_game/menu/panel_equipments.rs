@@ -1,12 +1,12 @@
-use crate::{
-    components::{
-        equipment::{Amulet, BodyArmour, Boots, Helmet, Weapon},
-        inventory::{EquipItemCommand, PlayerEquipmentChanged},
-        item::{ItemAssets, ItemInfo},
-        player::Player,
-    },
-    in_game::menu::popup_info::InfoPopup,
-    utils::dnd_ui::{DndCursor, DraggedEntity},
+use super::{
+    dnd::{DndCursor, DraggedEntity, ItemEntity, ShowBorderOnDrag},
+    popup_info::SpawnInfoPopupObservers,
+};
+use crate::components::{
+    equipment::{Amulet, BodyArmour, Boots, Helmet, Weapon},
+    inventory::{EquipItemCommand, PlayerEquipmentChanged},
+    item::{ItemAssets, ItemInfo},
+    player::Player,
 };
 use bevy::{ecs::query::QueryFilter, prelude::*};
 
@@ -35,8 +35,8 @@ pub struct EquipmentsPanel;
     Name(|| Name::new("EquipmentBox")),
     ImageNode,
     BackgroundColor(|| BackgroundColor(Srgba::rgb_u8(70, 70, 70).into())),
-    EquipmentEntity,
-    Interaction
+    BorderColor(|| BorderColor(Srgba::BLACK.into())),
+    ItemEntity
 )]
 struct EquipmentBox;
 
@@ -44,6 +44,7 @@ struct EquipmentBox;
 fn default_box_node() -> Node {
     Node {
         position_type: PositionType::Absolute,
+        border: UiRect::all(Val::Px(3.)),
         width: Val::Px(48.),
         height: Val::Px(48.),
         ..Default::default()
@@ -58,9 +59,6 @@ fn box_node(x: f32, y: f32) -> Node {
         ..default_box_node()
     }
 }
-
-#[derive(Component, Default, Reflect)]
-struct EquipmentEntity(Option<Entity>);
 
 #[derive(Component)]
 #[require(EquipmentBox)]
@@ -129,90 +127,52 @@ fn spawn_panel_content(
     mut commands: Commands,
     assets: Res<ItemAssets>,
 ) {
-    let mut on_over_observer = Observer::new(on_over_equipment);
-    let mut on_out_observer = Observer::new(on_out_equipment);
+    let mut spawn_info_observers = SpawnInfoPopupObservers::new();
+    let mut show_borders_on_drag_observers = ShowBorderOnDrag::new();
 
     commands.entity(trigger.entity()).with_children(|panel| {
         let id = panel
             .spawn(HelmetLocation::bundle(&assets))
             .observe(on_drop_equipment::<Helmet>)
             .id();
-        on_over_observer.watch_entity(id);
-        on_out_observer.watch_entity(id);
+        spawn_info_observers.watch_entity(id);
+        show_borders_on_drag_observers.watch_entity(id);
 
         let id = panel
             .spawn(BodyArmourLocation::bundle(&assets))
             .observe(on_drop_equipment::<BodyArmour>)
             .id();
-        on_over_observer.watch_entity(id);
-        on_out_observer.watch_entity(id);
+        spawn_info_observers.watch_entity(id);
+        show_borders_on_drag_observers.watch_entity(id);
 
         let id = panel
             .spawn(BootsLocation::bundle(&assets))
             .observe(on_drop_equipment::<Boots>)
             .id();
-        on_over_observer.watch_entity(id);
-        on_out_observer.watch_entity(id);
+        spawn_info_observers.watch_entity(id);
+        show_borders_on_drag_observers.watch_entity(id);
 
         let id = panel
             .spawn(AmuletLocation::bundle(&assets))
             .observe(on_drop_equipment::<Amulet>)
             .id();
-        on_over_observer.watch_entity(id);
-        on_out_observer.watch_entity(id);
+        spawn_info_observers.watch_entity(id);
+        show_borders_on_drag_observers.watch_entity(id);
 
         let id = panel
             .spawn(WeaponLocation::bundle(&assets))
             .observe(on_drop_equipment::<Weapon>)
             .id();
-        on_over_observer.watch_entity(id);
-        on_out_observer.watch_entity(id);
+        spawn_info_observers.watch_entity(id);
+        show_borders_on_drag_observers.watch_entity(id);
     });
 
-    commands.spawn(on_over_observer);
-    commands.spawn(on_out_observer);
+    spawn_info_observers.spawn(&mut commands);
+    show_borders_on_drag_observers.spawn(&mut commands);
 
     commands.queue(|world: &mut World| {
         world.trigger(PlayerEquipmentChanged);
     });
-}
-
-fn on_over_equipment(
-    trigger: Trigger<Pointer<Over>>,
-    mut commands: Commands,
-    mut items: Query<&EquipmentEntity>,
-    infos: Query<&ItemInfo>,
-    assets: Res<ItemAssets>,
-) {
-    warn!("on_over_equipment({})", trigger.entity());
-
-    let Ok(EquipmentEntity(Some(equipment_entity))) = items.get_mut(trigger.entity()) else {
-        return;
-    };
-
-    if let Ok(info) = infos.get(*equipment_entity) {
-        commands.spawn(InfoPopup {
-            image: Some(assets.image_node(info.tile_index)),
-            text: info.text.clone(),
-            source: trigger.entity(),
-            pos: trigger.event().pointer_location.position,
-        });
-    }
-}
-
-fn on_out_equipment(
-    trigger: Trigger<Pointer<Out>>,
-    mut commands: Commands,
-    // mut locations: Query<&mut BorderColor, With<InventoryLocation>>,
-    popups: Query<Entity, With<InfoPopup>>,
-) {
-    warn!("on_out_equipment({})", trigger.entity());
-    // if let Ok(mut border_color) = locations.get_mut(trigger.entity()) {
-    //     border_color.0 = Srgba::NONE.into();
-    // }
-    for entity in &popups {
-        commands.entity(entity).despawn_recursive();
-    }
 }
 
 fn on_drop_equipment<T>(
@@ -229,15 +189,17 @@ fn on_drop_equipment<T>(
         trigger.entity()
     );
     if let Some(item_entity) = ***cursor {
+        warn!("on_drop_equipment() item={item_entity}");
         if equipments.get(item_entity).is_ok() {
-            // The item drop is an helmet
+            warn!("on_drop_equipment() item is correct");
+            // The item drop is the correct one
             commands.queue(EquipItemCommand(item_entity));
         }
     }
 }
 
 fn update_equipment<F1, F2>(
-    mut locations: Query<(&mut ImageNode, &mut EquipmentEntity), F1>,
+    mut locations: Query<(&mut ImageNode, &mut ItemEntity), F1>,
     equipments: Query<(Entity, &ItemInfo, &Parent), F2>,
     player: Entity,
     assets: &ItemAssets,
@@ -249,10 +211,13 @@ fn update_equipment<F1, F2>(
         .iter()
         .filter(|(_e, _info, parent)| ***parent == player)
         .map(|(e, info, _)| (Some(e), assets.image_node(info.tile_index)))
+        .map(|v| dbg!(v))
         .next() // There should be only one result if it matches
         .unwrap_or((None, assets.empty_image_node()));
 
+    dbg!(entity_option);
     for (mut image_node, mut equipment_entity) in &mut locations {
+        warn!(" *********** OK");
         *image_node = equipment_image_node.clone();
         equipment_entity.0 = entity_option;
     }
@@ -261,7 +226,7 @@ fn update_equipment<F1, F2>(
 fn update_equipments(
     _trigger: Trigger<PlayerEquipmentChanged>,
     helmet_locations: Query<
-        (&mut ImageNode, &mut EquipmentEntity),
+        (&mut ImageNode, &mut ItemEntity),
         (
             With<HelmetLocation>,
             Without<BodyArmourLocation>,
@@ -272,7 +237,7 @@ fn update_equipments(
     >,
     helmets: Query<(Entity, &ItemInfo, &Parent), With<Helmet>>,
     body_armour_locations: Query<
-        (&mut ImageNode, &mut EquipmentEntity),
+        (&mut ImageNode, &mut ItemEntity),
         (
             With<BodyArmourLocation>,
             Without<HelmetLocation>,
@@ -283,7 +248,7 @@ fn update_equipments(
     >,
     body_armours: Query<(Entity, &ItemInfo, &Parent), With<BodyArmour>>,
     boots_locations: Query<
-        (&mut ImageNode, &mut EquipmentEntity),
+        (&mut ImageNode, &mut ItemEntity),
         (
             With<BootsLocation>,
             Without<HelmetLocation>,
@@ -294,7 +259,7 @@ fn update_equipments(
     >,
     boots: Query<(Entity, &ItemInfo, &Parent), With<Boots>>,
     amulet_locations: Query<
-        (&mut ImageNode, &mut EquipmentEntity),
+        (&mut ImageNode, &mut ItemEntity),
         (
             With<AmuletLocation>,
             Without<HelmetLocation>,
@@ -305,7 +270,7 @@ fn update_equipments(
     >,
     amulets: Query<(Entity, &ItemInfo, &Parent), With<Amulet>>,
     weapon_locations: Query<
-        (&mut ImageNode, &mut EquipmentEntity),
+        (&mut ImageNode, &mut ItemEntity),
         (
             With<WeaponLocation>,
             Without<HelmetLocation>,
@@ -318,6 +283,7 @@ fn update_equipments(
     player: Single<Entity, With<Player>>,
     assets: Res<ItemAssets>,
 ) {
+    warn!("update_equipments()");
     update_equipment(helmet_locations, helmets, *player, &assets);
     update_equipment(body_armour_locations, body_armours, *player, &assets);
     update_equipment(boots_locations, boots, *player, &assets);
@@ -329,8 +295,7 @@ pub struct InventoryPanelPlugin;
 
 impl Plugin for InventoryPanelPlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<EquipmentEntity>()
-            .add_observer(spawn_panel_content)
+        app.add_observer(spawn_panel_content)
             .add_observer(update_equipments);
     }
 }

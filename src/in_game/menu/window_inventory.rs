@@ -1,4 +1,8 @@
-use super::{panel_equipments::EquipmentsPanel, popup_info::InfoPopup};
+use super::{
+    dnd::{DndCursor, DraggedEntity, ItemEntity, ShowBorderOnDrag},
+    panel_equipments::EquipmentsPanel,
+    popup_info::SpawnInfoPopupObservers,
+};
 use crate::{
     components::{
         despawn_all,
@@ -6,7 +10,6 @@ use crate::{
         item::{ItemAssets, ItemInfo},
     },
     schedule::{GameRunningSet, GameState},
-    utils::dnd_ui::{DndCursor, DraggedEntity},
 };
 use bevy::{color::palettes::css, input::common_conditions::input_just_pressed, prelude::*};
 
@@ -55,7 +58,7 @@ pub struct InventoryPanel;
     Name(|| Name::new("InventoryLocation")),
     Node(InventoryLocation::default_node),
     BackgroundColor(|| BackgroundColor(css::DARK_GRAY.into())),
-    BorderColor(|| BorderColor(Srgba::NONE.into()))
+    BorderColor(|| BorderColor(Srgba::NONE.into())),
 )]
 pub struct InventoryLocation;
 
@@ -118,127 +121,67 @@ fn toggle_window(
     }
 }
 
-fn create_panel(
-    trigger: Trigger<OnAdd, InventoryPanel>,
-    mut commands: Commands,
-    inventory: Single<&Inventory>,
-    infos: Query<&ItemInfo>,
-    assets: Res<ItemAssets>,
-) {
-    // TODO : create observers globally
+fn create_panel(trigger: Trigger<OnAdd, InventoryPanel>, mut commands: Commands) {
+    let mut spawn_info_observers = SpawnInfoPopupObservers::new();
+    let mut show_borders_on_drag_observers = ShowBorderOnDrag::new();
     commands.entity(trigger.entity()).with_children(|cmd| {
-        for (idx, item) in inventory.iter() {
-            let image_node = match item {
-                Some(item) => assets.image_node(
-                    infos
-                        .get(*item)
-                        .expect("Item should have ItemInfo")
-                        .tile_index,
-                ),
-                None => assets.empty_image_node(),
-            };
-            cmd.spawn((
-                InventoryLocation,
-                Name::new(format!("InventoryLocation({idx})")),
-                InventoryLocation::node(idx),
-                InventoryIndex(idx),
-            ))
-            .observe(on_over_location)
-            .observe(on_out_location)
-            .observe(on_drop_on_location)
-            .with_children(|location| {
-                location
-                    .spawn((
-                        Name::new(format!("InventoryItem({idx})")),
-                        image_node,
-                        InventoryIndex(idx),
-                    ))
-                    .observe(on_over_item)
-                    .observe(on_drag_start_item)
-                    .observe(on_drag_end);
-            });
+        for idx in 0..Inventory::len() {
+            let id = cmd
+                .spawn((
+                    InventoryLocation,
+                    Name::new(format!("InventoryLocation({idx})")),
+                    InventoryLocation::node(idx),
+                    InventoryIndex(idx),
+                ))
+                .observe(on_drop_on_location)
+                .with_children(|location| {
+                    let id = location
+                        .spawn((
+                            Name::new(format!("InventoryItem({idx})")),
+                            ImageNode::default(),
+                            InventoryIndex(idx),
+                            ItemEntity::default(),
+                        ))
+                        .observe(on_drag_start_item)
+                        .observe(on_drag_end)
+                        .id();
+                    spawn_info_observers.watch_entity(id);
+                })
+                .id();
+            show_borders_on_drag_observers.watch_entity(id);
         }
+    });
+
+    spawn_info_observers.spawn(&mut commands);
+    show_borders_on_drag_observers.spawn(&mut commands);
+
+    commands.queue(|world: &mut World| {
+        world.trigger(InventoryChanged);
     });
 }
 
 fn update_inventory(
     _trigger: Trigger<InventoryChanged>,
-    mut nodes: Query<(&mut ImageNode, &InventoryIndex)>,
+    mut nodes: Query<(&mut ImageNode, &mut ItemEntity, &InventoryIndex)>,
     inventory: Single<&Inventory>,
     infos: Query<&ItemInfo>,
     assets: Res<ItemAssets>,
 ) {
-    for (mut image_node, index) in &mut nodes {
-        *image_node = match inventory.at(index.0) {
-            Some(item) => assets.image_node(
-                infos
-                    .get(item)
-                    .expect("Item should have ItemInfo")
-                    .tile_index,
+    for (mut image_node, mut item_entity, index) in &mut nodes {
+        let (entity_option, item_image_node) = match inventory.at(index.0) {
+            Some(item) => (
+                Some(item),
+                assets.image_node(
+                    infos
+                        .get(item)
+                        .expect("Item should have ItemInfo")
+                        .tile_index,
+                ),
             ),
-            None => assets.empty_image_node(),
+            None => (None, assets.empty_image_node()),
         };
-    }
-}
-
-fn on_over_location(
-    trigger: Trigger<Pointer<Over>>,
-    cursor: Single<&DraggedEntity, With<DndCursor>>,
-    mut locations: Query<(&mut BorderColor, &InventoryIndex), With<InventoryLocation>>,
-    inventory: Single<&Inventory>,
-) {
-    let Ok((mut border_color, index)) = locations.get_mut(trigger.entity()) else {
-        return;
-    };
-    warn!(
-        "on_over_location({}) : index: {} 3",
-        trigger.entity(),
-        index.0
-    );
-    if inventory.at(index.0).is_none() {
-        if cursor.is_some() {
-            border_color.0 = css::YELLOW.into();
-        }
-    }
-}
-
-fn on_over_item(
-    trigger: Trigger<Pointer<Over>>,
-    mut commands: Commands,
-    mut items: Query<&InventoryIndex, With<ImageNode>>,
-    inventory: Single<&Inventory>,
-    infos: Query<&ItemInfo>,
-    assets: Res<ItemAssets>,
-) {
-    let Ok(index) = items.get_mut(trigger.entity()) else {
-        return;
-    };
-    warn!("on_over_item({}) : index: {}", trigger.entity(), index.0);
-
-    if let Some(item) = inventory.at(index.0) {
-        if let Ok(info) = infos.get(item) {
-            commands.spawn(InfoPopup {
-                image: Some(assets.image_node(info.tile_index)),
-                text: info.text.clone(),
-                source: trigger.entity(),
-                pos: trigger.event().pointer_location.position,
-            });
-        }
-    }
-}
-
-fn on_out_location(
-    trigger: Trigger<Pointer<Out>>,
-    mut commands: Commands,
-    mut locations: Query<&mut BorderColor, With<InventoryLocation>>,
-    popups: Query<Entity, With<InfoPopup>>,
-) {
-    warn!("on_out_location({})", trigger.entity());
-    if let Ok(mut border_color) = locations.get_mut(trigger.entity()) {
-        border_color.0 = Srgba::NONE.into();
-    }
-    for entity in &popups {
-        commands.entity(entity).despawn_recursive();
+        item_entity.0 = entity_option;
+        *image_node = item_image_node;
     }
 }
 

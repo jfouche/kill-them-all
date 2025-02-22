@@ -1,120 +1,98 @@
-use crate::ui::popup::Popup;
-use bevy::{
-    ecs::{component::ComponentId, world::DeferredWorld},
-    prelude::*,
+use super::dnd::ItemEntity;
+use crate::{
+    components::item::{ItemAssets, ItemInfo},
+    ui::popup::Popup,
 };
+use bevy::prelude::*;
 
-/// Component to add to allow a popup when overing the entity
-#[derive(Component, Default, Clone)]
-#[component(on_add = init_show_popup_on_mouse_over)]
-pub struct ShowPopupOnMouseOver {
-    pub text: String,
-    pub image: Option<ImageNode>,
-}
+pub struct InfoPopupPlugin;
 
-fn init_show_popup_on_mouse_over(mut world: DeferredWorld, entity: Entity, _: ComponentId) {
-    world
-        .commands()
-        .entity(entity)
-        .observe(spawn_popup)
-        .observe(despawn_popup_on_out)
-        .observe(despawn_popup_on_click)
-        .observe(despawn_popup_on_removed);
-}
-
-/// System to add to an entity observer to spawn the [InfoPopup]
-/// when overing the observed entity
-fn spawn_popup(
-    trigger: Trigger<Pointer<Over>>,
-    mut commands: Commands,
-    infos: Query<&ShowPopupOnMouseOver>,
-    popups: Query<&InfoPopup>,
-) {
-    if let Ok(info) = infos.get(trigger.entity()) {
-        if !popups.iter().any(|popup| popup.source == trigger.entity()) {
-            commands.spawn(InfoPopup {
-                image: info.image.clone(),
-                text: info.text.clone(),
-                source: trigger.entity(),
-                pos: trigger.event().pointer_location.position,
-            });
-        }
-    }
-}
-
-/// System to add to an entity observer to despawn the [InfoPopup]
-/// when overing out the observed entity
-fn despawn_popup_on_out(
-    _trigger: Trigger<Pointer<Out>>,
-    mut commands: Commands,
-    popups: Query<Entity, With<InfoPopup>>,
-) {
-    if let Ok(entity) = popups.get_single() {
-        commands.entity(entity).despawn_recursive()
-    }
-}
-
-fn despawn_popup_on_click(
-    _trigger: Trigger<Pointer<Click>>,
-    mut commands: Commands,
-    popups: Query<Entity, With<InfoPopup>>,
-) {
-    if let Ok(entity) = popups.get_single() {
-        commands.entity(entity).despawn_recursive()
-    }
-}
-
-fn despawn_popup_on_removed(
-    _trigger: Trigger<OnRemove, ShowPopupOnMouseOver>,
-    mut commands: Commands,
-    popups: Query<Entity, With<InfoPopup>>,
-) {
-    if let Ok(entity) = popups.get_single() {
-        commands.entity(entity).despawn_recursive()
+impl Plugin for InfoPopupPlugin {
+    fn build(&self, app: &mut App) {
+        app.register_type::<ItemEntity>();
     }
 }
 
 /// The popup itself
-#[derive(Component, Clone)]
-#[component(on_add = create_popup)]
+#[derive(Component)]
 #[require(
     Name(|| Name::new("InfoPopup")),
     Popup,
-    Node(|| Node {
-        max_width: Val::Px(180.),
-        margin: UiRect::all(Val::Px(0.)),
-        padding: UiRect::all(Val::Px(5.)),
-        ..Popup::default_node()
-    }),
+    Node,
     ZIndex(|| ZIndex(1))
 )]
-pub struct InfoPopup {
-    pub text: String,
-    pub image: Option<ImageNode>,
-    pub source: Entity,
-    pub pos: Vec2,
+struct InfoPopup;
+
+impl InfoPopup {
+    fn node(pos: Vec2) -> Node {
+        Node {
+            max_width: Val::Px(180.),
+            margin: UiRect::all(Val::Px(0.)),
+            padding: UiRect::all(Val::Px(5.)),
+            left: Val::Px(pos.x - 60.),
+            top: Val::Px(pos.y - 130.),
+            ..Popup::default_node()
+        }
+    }
 }
 
-fn create_popup(mut world: DeferredWorld, entity: Entity, _: ComponentId) {
-    world.commands().queue(CreatePopupCommand(entity));
+/// Observers that shows an info popup when overing an Item.
+///
+/// It needs an [ItemEntity] component.
+pub struct SpawnInfoPopupObservers {
+    spawn: Observer,
+    despawn: Observer,
 }
 
-struct CreatePopupCommand(Entity);
+impl SpawnInfoPopupObservers {
+    pub fn new() -> Self {
+        Self {
+            spawn: Observer::new(spawn_popup_info_on_over_item),
+            despawn: Observer::new(despawn_popup_info_on_out_item),
+        }
+    }
 
-impl Command for CreatePopupCommand {
-    fn apply(self, world: &mut World) {
-        let popup = world
-            .get::<InfoPopup>(self.0)
-            .expect("InfoPopup added")
-            .clone();
-        world.entity_mut(self.0).with_children(|parent| {
-            if let Some(image_node) = popup.image {
-                parent.spawn(image_node);
-            }
-            parent.spawn((Text(popup.text), TextFont::from_font_size(12.)));
-        });
-        let mut node = world.get_mut::<Node>(self.0).expect("Node");
-        node.left = Val::Px(popup.pos.x - 60.);
-        node.top = Val::Px(popup.pos.y - 130.);
+    pub fn watch_entity(&mut self, entity: Entity) {
+        self.spawn.watch_entity(entity);
+        self.despawn.watch_entity(entity);
+    }
+
+    pub fn spawn(self, commands: &mut Commands) {
+        commands.spawn(self.spawn);
+        commands.spawn(self.despawn);
+    }
+}
+
+fn spawn_popup_info_on_over_item(
+    trigger: Trigger<Pointer<Over>>,
+    mut commands: Commands,
+    mut item_entities: Query<&ItemEntity>,
+    items: Query<&ItemInfo>,
+    assets: Res<ItemAssets>,
+) {
+    warn!("spawn_popup_info_on_over_item({})", trigger.entity());
+    if let Ok(ItemEntity(Some(item_entity))) = item_entities.get_mut(trigger.entity()) {
+        if let Ok(info) = items.get(*item_entity) {
+            commands
+                .spawn((
+                    InfoPopup,
+                    InfoPopup::node(trigger.event().pointer_location.position),
+                ))
+                .with_children(|popup| {
+                    popup.spawn(assets.image_node(info.tile_index));
+                    popup.spawn((Text(info.text.clone()), TextFont::from_font_size(12.)));
+                });
+        }
+    };
+}
+
+fn despawn_popup_info_on_out_item(
+    trigger: Trigger<Pointer<Out>>,
+    mut commands: Commands,
+    popups: Query<Entity, With<InfoPopup>>,
+) {
+    warn!("despawn_popup_info_on_out_item({})", trigger.entity());
+    for entity in &popups {
+        commands.entity(entity).despawn_recursive();
     }
 }

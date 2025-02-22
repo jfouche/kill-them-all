@@ -1,3 +1,4 @@
+mod dnd;
 mod menu_level_up;
 mod menu_pause;
 mod menu_player_died;
@@ -24,8 +25,10 @@ impl Plugin for InGameMenuPlugin {
             menu_player_died::PlayerDiedMenuPlugin,
             panel_equipments::InventoryPanelPlugin,
             panel_skills::SkillsPanelPlugin,
+            popup_info::InfoPopupPlugin,
             window_statistics::StatsWindowPlugin,
             window_inventory::InventoryPanelPlugin,
+            dnd::DndPlugin,
         ))
         .init_resource::<ItemAssets>()
         .add_systems(OnEnter(InGameState::Pause), pause)

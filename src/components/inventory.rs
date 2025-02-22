@@ -13,7 +13,7 @@ impl Inventory {
     pub const N_COLS: u16 = 8;
     pub const N_ROWS: u16 = 4;
 
-    const fn len() -> usize {
+    pub const fn len() -> usize {
         (Inventory::N_COLS * Inventory::N_ROWS) as usize
     }
 
@@ -60,10 +60,6 @@ impl Inventory {
             col: (index as u16 % Self::N_COLS) as i16,
             row: (index as u16 / Self::N_COLS) as i16,
         }
-    }
-
-    pub fn iter(&self) -> impl Iterator<Item = (usize, &Option<Entity>)> {
-        self.0.iter().enumerate()
     }
 }
 
