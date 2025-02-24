@@ -67,7 +67,7 @@ fn spawn_skill<T>(panel: &mut EntityCommands, assets: &SkillAssets)
 where
     T: Component + SkillUI,
 {
-    let text = [T::title(), T::label()].join("\n");
+    let _text = [T::title(), T::label()].join("\n");
     panel.with_child((
         assets.image_node(T::tile_index()),
         // ShowPopupOnMouseOver {

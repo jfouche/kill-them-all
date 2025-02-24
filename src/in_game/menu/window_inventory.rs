@@ -1,5 +1,5 @@
 use super::{
-    dnd::{DndCursor, DraggedEntity, ItemEntity, ShowBorderOnDrag},
+    dnd::{DndCursor, DraggedEntity, ShowBorderOnDrag},
     panel_equipments::EquipmentsPanel,
     popup_info::SpawnInfoPopupObservers,
 };
@@ -7,7 +7,7 @@ use crate::{
     components::{
         despawn_all,
         inventory::{AddToInventoryAtIndexCommand, Inventory, InventoryChanged},
-        item::{ItemAssets, ItemInfo},
+        item::{ItemAssets, ItemEntity, ItemInfo},
     },
     schedule::{GameRunningSet, GameState},
 };
@@ -123,7 +123,7 @@ fn toggle_window(
 
 fn create_panel(trigger: Trigger<OnAdd, InventoryPanel>, mut commands: Commands) {
     let mut spawn_info_observers = SpawnInfoPopupObservers::new();
-    let mut show_borders_on_drag_observers = ShowBorderOnDrag::new();
+    let mut show_borders_on_drag_observers = <ShowBorderOnDrag>::new();
     commands.entity(trigger.entity()).with_children(|cmd| {
         for idx in 0..Inventory::len() {
             let id = cmd
@@ -191,7 +191,7 @@ fn on_drag_start_item(
     inventory: Single<&Inventory>,
     cursor: Single<(&mut DraggedEntity, &mut ImageNode), With<DndCursor>>,
 ) {
-    warn!("on_drag_start({})", trigger.entity());
+    warn!("on_drag_start_item({})", trigger.entity());
     if let Ok((index, item_image)) = indexes.get(trigger.entity()) {
         if let Some(item) = inventory.at(index.0) {
             let (mut dragged_entity, mut cursor_image) = cursor.into_inner();

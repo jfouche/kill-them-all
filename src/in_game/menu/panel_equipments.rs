@@ -1,11 +1,11 @@
 use super::{
-    dnd::{DndCursor, DraggedEntity, ItemEntity, ShowBorderOnDrag},
+    dnd::{DndCursor, DraggedEntity, ShowBorderOnDrag},
     popup_info::SpawnInfoPopupObservers,
 };
 use crate::components::{
     equipment::{Amulet, BodyArmour, Boots, Helmet, Weapon},
     inventory::{EquipItemCommand, PlayerEquipmentChanged},
-    item::{ItemAssets, ItemInfo},
+    item::{ItemAssets, ItemEntity, ItemInfo},
     player::Player,
 };
 use bevy::{ecs::query::QueryFilter, prelude::*};
@@ -128,7 +128,11 @@ fn spawn_panel_content(
     assets: Res<ItemAssets>,
 ) {
     let mut spawn_info_observers = SpawnInfoPopupObservers::new();
-    let mut show_borders_on_drag_observers = ShowBorderOnDrag::new();
+    let mut helmet_border_obervers = ShowBorderOnDrag::<With<Helmet>>::new();
+    let mut body_armour_border_observers = ShowBorderOnDrag::<With<BodyArmour>>::new();
+    let mut boots_border_observers = ShowBorderOnDrag::<With<Boots>>::new();
+    let mut amulet_border_observers = ShowBorderOnDrag::<With<Amulet>>::new();
+    let mut wepaon_border_observers = ShowBorderOnDrag::<With<Weapon>>::new();
 
     commands.entity(trigger.entity()).with_children(|panel| {
         let id = panel
@@ -136,39 +140,43 @@ fn spawn_panel_content(
             .observe(on_drop_equipment::<Helmet>)
             .id();
         spawn_info_observers.watch_entity(id);
-        show_borders_on_drag_observers.watch_entity(id);
+        helmet_border_obervers.watch_entity(id);
 
         let id = panel
             .spawn(BodyArmourLocation::bundle(&assets))
             .observe(on_drop_equipment::<BodyArmour>)
             .id();
         spawn_info_observers.watch_entity(id);
-        show_borders_on_drag_observers.watch_entity(id);
+        body_armour_border_observers.watch_entity(id);
 
         let id = panel
             .spawn(BootsLocation::bundle(&assets))
             .observe(on_drop_equipment::<Boots>)
             .id();
         spawn_info_observers.watch_entity(id);
-        show_borders_on_drag_observers.watch_entity(id);
+        boots_border_observers.watch_entity(id);
 
         let id = panel
             .spawn(AmuletLocation::bundle(&assets))
             .observe(on_drop_equipment::<Amulet>)
             .id();
         spawn_info_observers.watch_entity(id);
-        show_borders_on_drag_observers.watch_entity(id);
+        amulet_border_observers.watch_entity(id);
 
         let id = panel
             .spawn(WeaponLocation::bundle(&assets))
             .observe(on_drop_equipment::<Weapon>)
             .id();
         spawn_info_observers.watch_entity(id);
-        show_borders_on_drag_observers.watch_entity(id);
+        wepaon_border_observers.watch_entity(id);
     });
 
     spawn_info_observers.spawn(&mut commands);
-    show_borders_on_drag_observers.spawn(&mut commands);
+    helmet_border_obervers.spawn(&mut commands);
+    body_armour_border_observers.spawn(&mut commands);
+    boots_border_observers.spawn(&mut commands);
+    amulet_border_observers.spawn(&mut commands);
+    wepaon_border_observers.spawn(&mut commands);
 
     commands.queue(|world: &mut World| {
         world.trigger(PlayerEquipmentChanged);
@@ -189,9 +197,7 @@ fn on_drop_equipment<T>(
         trigger.entity()
     );
     if let Some(item_entity) = ***cursor {
-        warn!("on_drop_equipment() item={item_entity}");
         if equipments.get(item_entity).is_ok() {
-            warn!("on_drop_equipment() item is correct");
             // The item drop is the correct one
             commands.queue(EquipItemCommand(item_entity));
         }
@@ -211,13 +217,10 @@ fn update_equipment<F1, F2>(
         .iter()
         .filter(|(_e, _info, parent)| ***parent == player)
         .map(|(e, info, _)| (Some(e), assets.image_node(info.tile_index)))
-        .map(|v| dbg!(v))
         .next() // There should be only one result if it matches
         .unwrap_or((None, assets.empty_image_node()));
 
-    dbg!(entity_option);
     for (mut image_node, mut equipment_entity) in &mut locations {
-        warn!(" *********** OK");
         *image_node = equipment_image_node.clone();
         equipment_entity.0 = entity_option;
     }

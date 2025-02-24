@@ -1,6 +1,5 @@
-use super::dnd::ItemEntity;
 use crate::{
-    components::item::{ItemAssets, ItemInfo},
+    components::item::{ItemAssets, ItemEntity, ItemInfo},
     ui::popup::Popup,
 };
 use bevy::prelude::*;

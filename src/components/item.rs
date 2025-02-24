@@ -1,5 +1,5 @@
 use super::{equipment::EquipmentProvider, orb::OrbProvider, rng_provider::RngKindProvider};
-use bevy::prelude::*;
+use bevy::{color::palettes::css, prelude::*};
 use rand::{rngs::ThreadRng, Rng};
 
 pub const ITEM_SIZE: UVec2 = UVec2::new(48, 48);
@@ -67,6 +67,32 @@ pub struct DroppedItem(pub Entity);
 #[derive(Component, Default, Deref, Reflect)]
 #[require(Item)]
 pub struct ItemLevel(pub u16);
+
+/// Component to add to UI to indicate which entity (if any) correspond to the node
+#[derive(Component, Default, Reflect)]
+pub struct ItemEntity(pub Option<Entity>);
+
+#[derive(Component)]
+#[require(
+    Node(ItemLocation::default_node),
+    BackgroundColor(|| BackgroundColor(css::DARK_GRAY.into())),
+    BorderColor(|| BorderColor(Srgba::NONE.into())),
+    ItemEntity
+)]
+pub struct ItemLocation;
+
+impl ItemLocation {
+    fn default_node() -> Node {
+        Node {
+            border: UiRect::all(Val::Px(3.)),
+            ..Default::default()
+        }
+    }
+}
+
+#[derive(Component)]
+#[require(ImageNode)]
+pub struct ItemImage;
 
 /// Provide a random [Item], based on the level provided
 pub struct ItemProvider(pub u16);

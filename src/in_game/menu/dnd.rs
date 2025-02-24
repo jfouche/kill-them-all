@@ -1,4 +1,6 @@
-use bevy::{color::palettes::css, prelude::*, window::PrimaryWindow};
+use crate::components::item::Item;
+use bevy::{color::palettes::css, ecs::query::QueryFilter, prelude::*, window::PrimaryWindow};
+use std::marker::PhantomData;
 
 pub struct DndPlugin;
 
@@ -35,10 +37,6 @@ pub struct DndCursor;
 
 #[derive(Component, Default, Deref, DerefMut, Reflect)]
 pub struct DraggedEntity(pub Option<Entity>);
-
-/// Component to add to UI to indicate which entity (if any) correspond to the node
-#[derive(Component, Default, Reflect)]
-pub struct ItemEntity(pub Option<Entity>);
 
 fn spawn_dnd_cursor(mut commands: Commands) {
     commands.spawn(DndCursor);
@@ -80,16 +78,21 @@ fn cursor_to_world(window: &Window, cam_transform: &Transform, cursor_pos: Vec2)
     out.xy()
 }
 
-pub struct ShowBorderOnDrag {
+pub struct ShowBorderOnDrag<F = With<Item>> {
     on_enter: Observer,
     on_leave: Observer,
+    _phantom: PhantomData<F>,
 }
 
-impl ShowBorderOnDrag {
+impl<F> ShowBorderOnDrag<F>
+where
+    F: QueryFilter + 'static,
+{
     pub fn new() -> Self {
         Self {
-            on_enter: Observer::new(show_borders_on_drag_enter_item),
+            on_enter: Observer::new(show_borders_on_drag_enter_item::<F>),
             on_leave: Observer::new(hide_borders_on_drag_leave_item),
+            _phantom: PhantomData::<F>,
         }
     }
 
@@ -104,14 +107,22 @@ impl ShowBorderOnDrag {
     }
 }
 
-fn show_borders_on_drag_enter_item(
+fn show_borders_on_drag_enter_item<F>(
     trigger: Trigger<Pointer<DragEnter>>,
     mut borders: Query<&mut BorderColor>,
-) {
+    items: Query<(), F>,
+    cursor: Single<&DraggedEntity, With<DndCursor>>,
+) where
+    F: QueryFilter,
+{
     warn!("show_borders_on_drag_enter_item({})", trigger.entity());
-    if let Ok(mut border_color) = borders.get_mut(trigger.entity()) {
-        border_color.0 = css::DARK_ORANGE.into();
-    };
+    if let Some(item_entity) = ***cursor {
+        if items.get(item_entity).is_ok() {
+            if let Ok(mut border_color) = borders.get_mut(trigger.entity()) {
+                border_color.0 = css::DARK_ORANGE.into();
+            }
+        }
+    }
 }
 
 fn hide_borders_on_drag_leave_item(
