@@ -37,7 +37,7 @@ bevy = { version = "0.15", default-features = false, features = [
     "default_font",
     "png"
 ] }
-bevy_rapier2d = "0.28"
+bevy_rapier2d = "0.29"
 bevy_ecs_tilemap = "0.15"
 bevy_ecs_ldtk = "0.11"
 
