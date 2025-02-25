@@ -2,6 +2,7 @@ use super::{
     dnd::{DndCursor, DraggedEntity},
     item_location::{ItemLocationDragObservers, ShowBorderOnDrag},
     panel_equipments::EquipmentsPanel,
+    panel_skills::SkillsPanel,
     popup_info::SpawnInfoPopupObservers,
 };
 use crate::{
@@ -14,7 +15,7 @@ use crate::{
     },
     schedule::{GameRunningSet, GameState},
 };
-use bevy::{color::palettes::css, input::common_conditions::input_just_pressed, prelude::*};
+use bevy::{input::common_conditions::input_just_pressed, prelude::*};
 
 ///
 /// A window that shows the content of the [Inventory]
@@ -47,7 +48,7 @@ pub struct InventoryWindow;
         grid_template_rows: RepeatedGridTrack::flex(Inventory::N_ROWS, 1.),
         ..Default::default()
     }),
-    BackgroundColor(|| BackgroundColor(css::LIGHT_GRAY.into()))
+    BackgroundColor(|| BackgroundColor(Srgba::rgb(0.16, 0.16, 0.16).into())) 
 )]
 pub struct InventoryPanel;
 
@@ -104,6 +105,7 @@ fn toggle_window(
             // spawn window as it doesn't exist
             commands.spawn(InventoryWindow).with_children(|wnd| {
                 wnd.spawn(EquipmentsPanel);
+                wnd.spawn(SkillsPanel);
                 wnd.spawn(InventoryPanel);
             });
         }

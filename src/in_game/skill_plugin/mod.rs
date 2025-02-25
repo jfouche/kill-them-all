@@ -7,7 +7,7 @@ use crate::components::{
     affix::{IncreaseAreaOfEffect, PierceChance},
     character::{Character, HitEvent},
     damage::Projectile,
-    skills::{AffectedByAreaOfEffect, Skill, SkillAssets},
+    skills::{AffectedByAreaOfEffect, Skill},
 };
 
 use super::GameRunningSet;
@@ -23,7 +23,6 @@ impl Plugin for SkillsPlugin {
             mine_plugin::MinePlugin,
             death_aura_plugin::DeathAuraPlugin,
         ))
-        .init_resource::<SkillAssets>()
         .add_observer(update_character_observers)
         .add_systems(
             Update,
