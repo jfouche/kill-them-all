@@ -7,7 +7,7 @@ use crate::{
     components::{
         despawn_all,
         inventory::{AddToInventoryAtIndexCommand, Inventory, InventoryChanged},
-        item::{ItemAssets, ItemEntity, ItemInfo},
+        item::{ItemAssets, ItemEntity, ItemInfo, ItemLocation},
     },
     schedule::{GameRunningSet, GameState},
 };
@@ -40,8 +40,6 @@ pub struct InventoryWindow;
     Name(|| Name::new("InventoryPanel")),
     Node(|| Node {
         display: Display::Grid,
-        // width: Val::Px(Inventory::N_COLS as f32 * 32.),
-        // height: Val::Px(Inventory::N_ROWS as f32 * 32.),
         grid_template_columns: RepeatedGridTrack::flex(Inventory::N_COLS, 1.),
         grid_template_rows: RepeatedGridTrack::flex(Inventory::N_ROWS, 1.),
         ..Default::default()
@@ -54,28 +52,16 @@ pub struct InventoryPanel;
 /// A location in the [InventoryPanel]
 ///
 #[derive(Component)]
-#[require(
-    Name(|| Name::new("InventoryLocation")),
-    Node(InventoryLocation::default_node),
-    BackgroundColor(|| BackgroundColor(css::DARK_GRAY.into())),
-    BorderColor(|| BorderColor(Srgba::NONE.into())),
-)]
-pub struct InventoryLocation;
+#[require(ItemLocation)]
+struct InventoryLocation;
 
 impl InventoryLocation {
-    fn default_node() -> Node {
-        Node {
-            border: UiRect::all(Val::Px(3.)),
-            ..Default::default()
-        }
-    }
-
     fn node(index: usize) -> Node {
         let pos = Inventory::pos(index);
         Node {
             grid_column: GridPlacement::start(pos.col + 1),
             grid_row: GridPlacement::start(pos.row + 1),
-            ..Self::default_node()
+            ..ItemLocation::default_node()
         }
     }
 }
@@ -124,6 +110,9 @@ fn toggle_window(
 fn create_panel(trigger: Trigger<OnAdd, InventoryPanel>, mut commands: Commands) {
     let mut spawn_info_observers = SpawnInfoPopupObservers::new();
     let mut show_borders_on_drag_observers = <ShowBorderOnDrag>::new();
+    let mut on_drop_observer = Observer::new(on_drop_on_location);
+    let mut on_drag_start_observer = Observer::new(on_drag_start_item);
+    let mut on_drag_end_observer = Observer::new(on_drag_end);
     commands.entity(trigger.entity()).with_children(|cmd| {
         for idx in 0..Inventory::len() {
             let id = cmd
@@ -133,27 +122,20 @@ fn create_panel(trigger: Trigger<OnAdd, InventoryPanel>, mut commands: Commands)
                     InventoryLocation::node(idx),
                     InventoryIndex(idx),
                 ))
-                .observe(on_drop_on_location)
-                .with_children(|location| {
-                    let id = location
-                        .spawn((
-                            Name::new(format!("InventoryItem({idx})")),
-                            ImageNode::default(),
-                            InventoryIndex(idx),
-                            ItemEntity::default(),
-                        ))
-                        .observe(on_drag_start_item)
-                        .observe(on_drag_end)
-                        .id();
-                    spawn_info_observers.watch_entity(id);
-                })
                 .id();
+            spawn_info_observers.watch_entity(id);
             show_borders_on_drag_observers.watch_entity(id);
+            on_drop_observer.watch_entity(id);
+            on_drag_start_observer.watch_entity(id);
+            on_drag_end_observer.watch_entity(id);
         }
     });
 
     spawn_info_observers.spawn(&mut commands);
     show_borders_on_drag_observers.spawn(&mut commands);
+    commands.spawn(on_drop_observer);
+    commands.spawn(on_drag_start_observer);
+    commands.spawn(on_drag_end_observer);
 
     commands.queue(|world: &mut World| {
         world.trigger(InventoryChanged);
@@ -162,41 +144,30 @@ fn create_panel(trigger: Trigger<OnAdd, InventoryPanel>, mut commands: Commands)
 
 fn update_inventory(
     _trigger: Trigger<InventoryChanged>,
-    mut nodes: Query<(&mut ImageNode, &mut ItemEntity, &InventoryIndex)>,
+    mut nodes: Query<(&mut ItemEntity, &InventoryIndex)>,
     inventory: Single<&Inventory>,
-    infos: Query<&ItemInfo>,
-    assets: Res<ItemAssets>,
 ) {
-    for (mut image_node, mut item_entity, index) in &mut nodes {
-        let (entity_option, item_image_node) = match inventory.at(index.0) {
-            Some(item) => (
-                Some(item),
-                assets.image_node(
-                    infos
-                        .get(item)
-                        .expect("Item should have ItemInfo")
-                        .tile_index,
-                ),
-            ),
-            None => (None, assets.empty_image_node()),
-        };
-        item_entity.0 = entity_option;
-        *image_node = item_image_node;
+    for (mut item_entity, index) in &mut nodes {
+        item_entity.0 = inventory.at(index.0);
     }
 }
 
 fn on_drag_start_item(
     trigger: Trigger<Pointer<DragStart>>,
-    indexes: Query<(&InventoryIndex, &ImageNode), Without<DndCursor>>,
+    indexes: Query<&InventoryIndex, Without<DndCursor>>,
     inventory: Single<&Inventory>,
+    infos: Query<&ItemInfo>,
     cursor: Single<(&mut DraggedEntity, &mut ImageNode), With<DndCursor>>,
+    assets: Res<ItemAssets>,
 ) {
-    warn!("on_drag_start_item({})", trigger.entity());
-    if let Ok((index, item_image)) = indexes.get(trigger.entity()) {
+    if let Ok(index) = indexes.get(trigger.entity()) {
         if let Some(item) = inventory.at(index.0) {
-            let (mut dragged_entity, mut cursor_image) = cursor.into_inner();
-            **dragged_entity = Some(item);
-            *cursor_image = item_image.clone();
+            warn!("on_drag_start_item({})", trigger.entity());
+            if let Ok(info) = infos.get(item) {
+                let (mut dragged_entity, mut cursor_image) = cursor.into_inner();
+                **dragged_entity = Some(item);
+                *cursor_image = assets.image_node(info.tile_index);
+            }
         }
     }
 }
@@ -219,16 +190,15 @@ fn on_drop_on_location(
     inventory: Single<&Inventory>,
 ) {
     warn!("on_drop_on_location({})", trigger.entity());
-    let Ok(index) = indexes.get(trigger.entity()) else {
-        return;
-    };
-    if inventory.at(index.0).is_none() {
-        // There is no item at the index in the inventory
-        if let Some(item) = ***cursor {
-            commands.queue(AddToInventoryAtIndexCommand {
-                item,
-                index: index.0,
-            });
+    if let Ok(index) = indexes.get(trigger.entity()) {
+        if inventory.at(index.0).is_none() {
+            // There is no item at the index in the inventory
+            if let Some(item) = ***cursor {
+                commands.queue(AddToInventoryAtIndexCommand {
+                    item,
+                    index: index.0,
+                });
+            }
         }
     }
 }

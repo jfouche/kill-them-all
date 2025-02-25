@@ -4,14 +4,6 @@ use crate::{
 };
 use bevy::prelude::*;
 
-pub struct InfoPopupPlugin;
-
-impl Plugin for InfoPopupPlugin {
-    fn build(&self, app: &mut App) {
-        app.register_type::<ItemEntity>();
-    }
-}
-
 /// The popup itself
 #[derive(Component)]
 #[require(
@@ -69,8 +61,8 @@ fn spawn_popup_info_on_over_item(
     items: Query<&ItemInfo>,
     assets: Res<ItemAssets>,
 ) {
-    warn!("spawn_popup_info_on_over_item({})", trigger.entity());
     if let Ok(ItemEntity(Some(item_entity))) = item_entities.get_mut(trigger.entity()) {
+        warn!("spawn_popup_info_on_over_item({})", trigger.entity());
         if let Ok(info) = items.get(*item_entity) {
             commands
                 .spawn((
@@ -90,8 +82,8 @@ fn despawn_popup_info_on_out_item(
     mut commands: Commands,
     popups: Query<Entity, With<InfoPopup>>,
 ) {
-    warn!("despawn_popup_info_on_out_item({})", trigger.entity());
     for entity in &popups {
+        warn!("despawn_popup_info_on_out_item({})", trigger.entity());
         commands.entity(entity).despawn_recursive();
     }
 }

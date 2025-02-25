@@ -5,7 +5,7 @@ use super::{
 use crate::components::{
     equipment::{Amulet, BodyArmour, Boots, Helmet, Weapon},
     inventory::{EquipItemCommand, PlayerEquipmentChanged},
-    item::{ItemAssets, ItemEntity, ItemInfo},
+    item::{ItemAssets, ItemEntity, ItemInfo, ItemLocation},
     player::Player,
 };
 use bevy::{ecs::query::QueryFilter, prelude::*};
@@ -33,10 +33,7 @@ pub struct EquipmentsPanel;
 #[derive(Component, Default)]
 #[require(
     Name(|| Name::new("EquipmentBox")),
-    ImageNode,
-    BackgroundColor(|| BackgroundColor(Srgba::rgb_u8(70, 70, 70).into())),
-    BorderColor(|| BorderColor(Srgba::BLACK.into())),
-    ItemEntity
+    ItemLocation
 )]
 struct EquipmentBox;
 
@@ -44,10 +41,9 @@ struct EquipmentBox;
 fn default_box_node() -> Node {
     Node {
         position_type: PositionType::Absolute,
-        border: UiRect::all(Val::Px(3.)),
         width: Val::Px(48.),
         height: Val::Px(48.),
-        ..Default::default()
+        ..ItemLocation::default_node()
     }
 }
 
@@ -132,7 +128,8 @@ fn spawn_panel_content(
     let mut body_armour_border_observers = ShowBorderOnDrag::<With<BodyArmour>>::new();
     let mut boots_border_observers = ShowBorderOnDrag::<With<Boots>>::new();
     let mut amulet_border_observers = ShowBorderOnDrag::<With<Amulet>>::new();
-    let mut wepaon_border_observers = ShowBorderOnDrag::<With<Weapon>>::new();
+    let mut weapon_border_observers = ShowBorderOnDrag::<With<Weapon>>::new();
+    let mut on_drag_start_observer = Observer::new(on_drag_start_item);
 
     commands.entity(trigger.entity()).with_children(|panel| {
         let id = panel
@@ -141,6 +138,7 @@ fn spawn_panel_content(
             .id();
         spawn_info_observers.watch_entity(id);
         helmet_border_obervers.watch_entity(id);
+        on_drag_start_observer.watch_entity(id);
 
         let id = panel
             .spawn(BodyArmourLocation::bundle(&assets))
@@ -148,6 +146,7 @@ fn spawn_panel_content(
             .id();
         spawn_info_observers.watch_entity(id);
         body_armour_border_observers.watch_entity(id);
+        on_drag_start_observer.watch_entity(id);
 
         let id = panel
             .spawn(BootsLocation::bundle(&assets))
@@ -155,6 +154,7 @@ fn spawn_panel_content(
             .id();
         spawn_info_observers.watch_entity(id);
         boots_border_observers.watch_entity(id);
+        on_drag_start_observer.watch_entity(id);
 
         let id = panel
             .spawn(AmuletLocation::bundle(&assets))
@@ -162,13 +162,15 @@ fn spawn_panel_content(
             .id();
         spawn_info_observers.watch_entity(id);
         amulet_border_observers.watch_entity(id);
+        on_drag_start_observer.watch_entity(id);
 
         let id = panel
             .spawn(WeaponLocation::bundle(&assets))
             .observe(on_drop_equipment::<Weapon>)
             .id();
         spawn_info_observers.watch_entity(id);
-        wepaon_border_observers.watch_entity(id);
+        weapon_border_observers.watch_entity(id);
+        on_drag_start_observer.watch_entity(id);
     });
 
     spawn_info_observers.spawn(&mut commands);
@@ -176,11 +178,29 @@ fn spawn_panel_content(
     body_armour_border_observers.spawn(&mut commands);
     boots_border_observers.spawn(&mut commands);
     amulet_border_observers.spawn(&mut commands);
-    wepaon_border_observers.spawn(&mut commands);
+    weapon_border_observers.spawn(&mut commands);
+    commands.spawn(on_drag_start_observer);
 
     commands.queue(|world: &mut World| {
         world.trigger(PlayerEquipmentChanged);
     });
+}
+
+fn on_drag_start_item(
+    trigger: Trigger<Pointer<DragStart>>,
+    locations: Query<&ItemEntity, With<ItemLocation>>,
+    infos: Query<&ItemInfo>,
+    cursor: Single<(&mut DraggedEntity, &mut ImageNode), With<DndCursor>>,
+    assets: Res<ItemAssets>,
+) {
+    if let Ok(ItemEntity(Some(item))) = locations.get(trigger.entity()) {
+        warn!("on_drag_start_item({})", trigger.entity());
+        if let Ok(info) = infos.get(*item) {
+            let (mut dragged_entity, mut cursor_image) = cursor.into_inner();
+            **dragged_entity = Some(*item);
+            *cursor_image = assets.image_node(info.tile_index);
+        }
+    }
 }
 
 fn on_drop_equipment<T>(
@@ -205,23 +225,21 @@ fn on_drop_equipment<T>(
 }
 
 fn update_equipment<F1, F2>(
-    mut locations: Query<(&mut ImageNode, &mut ItemEntity), F1>,
-    equipments: Query<(Entity, &ItemInfo, &Parent), F2>,
+    mut locations: Query<&mut ItemEntity, F1>,
+    equipments: Query<(Entity, &Parent), F2>,
     player: Entity,
-    assets: &ItemAssets,
 ) where
     F1: QueryFilter,
     F2: QueryFilter,
 {
-    let (entity_option, equipment_image_node) = equipments
+    let entity_option = equipments
         .iter()
-        .filter(|(_e, _info, parent)| ***parent == player)
-        .map(|(e, info, _)| (Some(e), assets.image_node(info.tile_index)))
+        .filter(|(_e, parent)| ***parent == player)
+        .map(|(e, _p)| e)
         .next() // There should be only one result if it matches
-        .unwrap_or((None, assets.empty_image_node()));
+        ;
 
-    for (mut image_node, mut equipment_entity) in &mut locations {
-        *image_node = equipment_image_node.clone();
+    for mut equipment_entity in &mut locations {
         equipment_entity.0 = entity_option;
     }
 }
@@ -229,7 +247,7 @@ fn update_equipment<F1, F2>(
 fn update_equipments(
     _trigger: Trigger<PlayerEquipmentChanged>,
     helmet_locations: Query<
-        (&mut ImageNode, &mut ItemEntity),
+        &mut ItemEntity,
         (
             With<HelmetLocation>,
             Without<BodyArmourLocation>,
@@ -238,9 +256,9 @@ fn update_equipments(
             Without<WeaponLocation>,
         ),
     >,
-    helmets: Query<(Entity, &ItemInfo, &Parent), With<Helmet>>,
+    helmets: Query<(Entity, &Parent), With<Helmet>>,
     body_armour_locations: Query<
-        (&mut ImageNode, &mut ItemEntity),
+        &mut ItemEntity,
         (
             With<BodyArmourLocation>,
             Without<HelmetLocation>,
@@ -249,9 +267,9 @@ fn update_equipments(
             Without<WeaponLocation>,
         ),
     >,
-    body_armours: Query<(Entity, &ItemInfo, &Parent), With<BodyArmour>>,
+    body_armours: Query<(Entity, &Parent), With<BodyArmour>>,
     boots_locations: Query<
-        (&mut ImageNode, &mut ItemEntity),
+        &mut ItemEntity,
         (
             With<BootsLocation>,
             Without<HelmetLocation>,
@@ -260,9 +278,9 @@ fn update_equipments(
             Without<WeaponLocation>,
         ),
     >,
-    boots: Query<(Entity, &ItemInfo, &Parent), With<Boots>>,
+    boots: Query<(Entity, &Parent), With<Boots>>,
     amulet_locations: Query<
-        (&mut ImageNode, &mut ItemEntity),
+        &mut ItemEntity,
         (
             With<AmuletLocation>,
             Without<HelmetLocation>,
@@ -271,9 +289,9 @@ fn update_equipments(
             Without<WeaponLocation>,
         ),
     >,
-    amulets: Query<(Entity, &ItemInfo, &Parent), With<Amulet>>,
+    amulets: Query<(Entity, &Parent), With<Amulet>>,
     weapon_locations: Query<
-        (&mut ImageNode, &mut ItemEntity),
+        &mut ItemEntity,
         (
             With<WeaponLocation>,
             Without<HelmetLocation>,
@@ -282,16 +300,15 @@ fn update_equipments(
             Without<AmuletLocation>,
         ),
     >,
-    weapons: Query<(Entity, &ItemInfo, &Parent), With<Weapon>>,
+    weapons: Query<(Entity, &Parent), With<Weapon>>,
     player: Single<Entity, With<Player>>,
-    assets: Res<ItemAssets>,
 ) {
     warn!("update_equipments()");
-    update_equipment(helmet_locations, helmets, *player, &assets);
-    update_equipment(body_armour_locations, body_armours, *player, &assets);
-    update_equipment(boots_locations, boots, *player, &assets);
-    update_equipment(amulet_locations, amulets, *player, &assets);
-    update_equipment(weapon_locations, weapons, *player, &assets);
+    update_equipment(helmet_locations, helmets, *player);
+    update_equipment(body_armour_locations, body_armours, *player);
+    update_equipment(boots_locations, boots, *player);
+    update_equipment(amulet_locations, amulets, *player);
+    update_equipment(weapon_locations, weapons, *player);
 }
 
 pub struct InventoryPanelPlugin;

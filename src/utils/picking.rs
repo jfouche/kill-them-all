@@ -6,14 +6,11 @@ pub trait WorldPosition {
 
 impl WorldPosition for &PointerLocation {
     fn world_position(&self, camera: &Camera, camera_transform: &GlobalTransform) -> Option<Vec2> {
-        self.location
-            .as_ref()
-            .map(|l| {
-                camera
-                    .viewport_to_world_2d(camera_transform, l.position)
-                    .ok()
-            })
-            .flatten()
+        self.location.as_ref().and_then(|l| {
+            camera
+                .viewport_to_world_2d(camera_transform, l.position)
+                .ok()
+        })
     }
 }
 

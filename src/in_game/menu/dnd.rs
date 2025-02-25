@@ -1,4 +1,4 @@
-use crate::components::item::Item;
+use crate::components::item::{Item, ItemLocation};
 use bevy::{color::palettes::css, ecs::query::QueryFilter, prelude::*, window::PrimaryWindow};
 use std::marker::PhantomData;
 
@@ -31,6 +31,7 @@ struct CursorState {
         ..Default::default()
     }),
     ImageNode,
+    Transform(|| Transform::from_scale(Vec3::splat(0.8))),
     ZIndex(|| ZIndex(1))
 )]
 pub struct DndCursor;
@@ -67,7 +68,7 @@ fn move_cursor(cursor_state: Res<CursorState>, mut cursor: Single<&mut Node, Wit
 
 fn cursor_to_world(window: &Window, cam_transform: &Transform, cursor_pos: Vec2) -> Vec2 {
     // get the size of the window
-    let size = Vec2::new(window.width() as f32, window.height() as f32);
+    let size = Vec2::new(window.width(), window.height());
 
     // the default orthographic projection is in pixels from the center;
     // just undo the translation
@@ -109,7 +110,7 @@ where
 
 fn show_borders_on_drag_enter_item<F>(
     trigger: Trigger<Pointer<DragEnter>>,
-    mut borders: Query<&mut BorderColor>,
+    mut colors: Query<&mut BackgroundColor, With<ItemLocation>>,
     items: Query<(), F>,
     cursor: Single<&DraggedEntity, With<DndCursor>>,
 ) where
@@ -118,8 +119,8 @@ fn show_borders_on_drag_enter_item<F>(
     warn!("show_borders_on_drag_enter_item({})", trigger.entity());
     if let Some(item_entity) = ***cursor {
         if items.get(item_entity).is_ok() {
-            if let Ok(mut border_color) = borders.get_mut(trigger.entity()) {
-                border_color.0 = css::DARK_ORANGE.into();
+            if let Ok(mut color) = colors.get_mut(trigger.entity()) {
+                color.0 = css::DARK_ORANGE.into();
             }
         }
     }
@@ -127,10 +128,10 @@ fn show_borders_on_drag_enter_item<F>(
 
 fn hide_borders_on_drag_leave_item(
     trigger: Trigger<Pointer<DragLeave>>,
-    mut borders: Query<&mut BorderColor>,
+    mut colors: Query<&mut BackgroundColor, With<ItemLocation>>,
 ) {
     warn!("hide_borders_on_drag_leave_item({})", trigger.entity());
-    if let Ok(mut border_color) = borders.get_mut(trigger.entity()) {
-        border_color.0 = Srgba::NONE.into();
+    if let Ok(mut color) = colors.get_mut(trigger.entity()) {
+        color.0 = Srgba::NONE.into();
     };
 }
