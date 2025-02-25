@@ -1,3 +1,5 @@
+mod dnd;
+mod item_location;
 mod menu_level_up;
 mod menu_pause;
 mod menu_player_died;
@@ -19,6 +21,7 @@ impl Plugin for InGameMenuPlugin {
         use crate::{components::item::ItemAssets, schedule::InGameState};
 
         app.add_plugins((
+            item_location::ItemImagePlugin,
             menu_pause::PausePlugin,
             menu_level_up::LevelUpMenuPlugin,
             menu_player_died::PlayerDiedMenuPlugin,
@@ -26,6 +29,7 @@ impl Plugin for InGameMenuPlugin {
             panel_skills::SkillsPanelPlugin,
             window_statistics::StatsWindowPlugin,
             window_inventory::InventoryPanelPlugin,
+            dnd::DndPlugin,
         ))
         .init_resource::<ItemAssets>()
         .add_systems(OnEnter(InGameState::Pause), pause)

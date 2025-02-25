@@ -43,6 +43,10 @@ impl ItemAssets {
         ImageNode::from_atlas_image(self.image(), self.texture_atlas(index))
     }
 
+    pub fn empty_image_node(&self) -> ImageNode {
+        self.image_node(351)
+    }
+
     pub fn sprite(&self, index: usize) -> Sprite {
         Sprite {
             image: self.image(),
@@ -68,6 +72,34 @@ pub struct DroppedItem(pub Entity);
 #[derive(Component, Default, Deref, Reflect)]
 #[require(Item)]
 pub struct ItemLevel(pub u16);
+
+/// Component to add to UI to indicate which entity (if any) correspond to the node
+#[derive(Component, Default, Reflect)]
+pub struct ItemEntity(pub Option<Entity>);
+
+#[derive(Component, Default)]
+#[require(
+    Node(ItemLocation::default_node),
+    BackgroundColor(|| BackgroundColor(Srgba::NONE.into())),
+    ItemEntity
+)]
+pub struct ItemLocation;
+
+impl ItemLocation {
+    pub fn default_node() -> Node {
+        Node {
+            padding: UiRect::all(Val::Px(3.0)),
+            ..Default::default()
+        }
+    }
+}
+
+#[derive(Component)]
+#[require(
+    ImageNode,
+    BackgroundColor(|| BackgroundColor(Srgba::rgb(0.25, 0.25, 0.25).into())),
+)]
+pub struct ItemImage;
 
 /// Provide a random [Item], based on the level provided
 pub struct ItemProvider(pub u16);

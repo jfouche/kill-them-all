@@ -29,7 +29,7 @@ const BAR_HEIGHT: f32 = 8.;
     ProgressBar,
     ProgressBarColor(|| ProgressBarColor(Color::srgb(1., 0., 0.)))
 )]
-struct LifeBar;
+pub struct LifeBar;
 
 /// Stores a map with the [Monster] entity as key, and the [LifeBar] entity as value
 #[derive(Resource, Default, Deref, DerefMut)]

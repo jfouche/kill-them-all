@@ -98,7 +98,7 @@ impl<'a> AffixesInserter<'a> {
             .gen(rng)
             .expect("At least one rarity");
         let tile_index = T::tile_index(rarity);
-        let title = format!("{} ({})", ilevel + 1, T::title());
+        let title = format!("{} ({})", T::title(), ilevel + 1);
         AffixesInserter {
             labels: vec![title],
             commands: commands.spawn((equipment, ItemLevel(ilevel), rarity)),

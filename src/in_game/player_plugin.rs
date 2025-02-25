@@ -8,14 +8,19 @@ use crate::{
             LooseLifeEvent, MaxLife,
         },
         despawn_all,
-        inventory::{Inventory, InventoryChanged, InventoryPos, PlayerEquipmentChanged},
+        inventory::{
+            Inventory, InventoryChanged, InventoryPos, PlayerEquipmentChanged,
+            TakeDroppedItemCommand,
+        },
+        item::DroppedItem,
         monster::MonsterDeathEvent,
+        orb::OrbProvider,
         player::{
             Experience, LevelUpEvent, NextPositionIndicator, NextPositionIndicatorAssets, Player,
             PlayerAssets, PlayerDeathEvent, Score,
         },
         skills::death_aura::DeathAura,
-        world_map::{SpawnPlayerEvent, WorldMap, LAYER_PLAYER},
+        world_map::{WorldMap, WorldMapLoadingFinished, LAYER_PLAYER},
         GROUP_ENEMY,
     },
     schedule::{GameRunningSet, GameState},
@@ -38,12 +43,11 @@ impl Plugin for PlayerPlugin {
             .register_type::<Experience>()
             .register_type::<Inventory>()
             .register_type::<InventoryPos>()
+            .add_systems(OnEnter(GameState::InGame), (spawn_player, unpause))
             .add_systems(
                 OnExit(GameState::InGame),
-                (despawn_all::<Player>, despawn_all::<Inventory>),
+                (despawn_all::<Player>, despawn_all::<Inventory>, pause),
             )
-            .add_systems(OnEnter(GameState::InGame), unpause)
-            .add_systems(OnExit(GameState::InGame), pause)
             .add_systems(
                 Update,
                 (
@@ -54,7 +58,7 @@ impl Plugin for PlayerPlugin {
                 )
                     .in_set(GameRunningSet::EntityUpdate),
             )
-            .add_observer(spawn_player)
+            .add_observer(move_player)
             .add_observer(manage_player_movement_with_mouse);
     }
 }
@@ -104,25 +108,32 @@ fn manage_player_movement_with_mouse(trigger: Trigger<OnAdd, WorldMap>, mut comm
         );
 }
 
-fn spawn_player(
-    trigger: Trigger<SpawnPlayerEvent>,
-    mut commands: Commands,
-    assets: Res<PlayerAssets>,
-) {
+fn spawn_player(mut commands: Commands, assets: Res<PlayerAssets>) {
     commands.spawn(Inventory::default());
 
     commands
-        .spawn((
-            Player,
-            Transform::from_translation(trigger.event().translation.extend(LAYER_PLAYER)),
-            Player::sprite(&assets),
-        ))
+        .spawn((Player, Player::sprite(&assets)))
         .with_children(|player| {
             player.spawn(DeathAura);
             player.spawn(IncreaseAreaOfEffect(50.));
         })
         .observe(set_invulnerable_on_hit)
         .observe(player_dying);
+
+    // TEMP
+    {
+        let mut rng = rand::rng();
+        let orb = OrbProvider::new().spawn(&mut commands, &mut rng).unwrap();
+        let drop = commands.spawn(DroppedItem(orb.entity)).id();
+        commands.queue(TakeDroppedItemCommand(drop));
+    }
+}
+
+fn move_player(
+    trigger: Trigger<WorldMapLoadingFinished>,
+    mut player: Single<&mut Transform, With<Player>>,
+) {
+    player.translation = trigger.event().translation.extend(LAYER_PLAYER);
 }
 
 fn pause(mut query: Query<(&mut Invulnerable, &mut Blink), With<Player>>) {

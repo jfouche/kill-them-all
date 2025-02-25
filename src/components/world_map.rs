@@ -141,9 +141,9 @@ pub struct CurrentMapLevel {
     pub monster_level: u16,
 }
 
-/// Event triggered when the player can be spawn
+/// Event triggered when the map loading finished
 #[derive(Event)]
-pub struct SpawnPlayerEvent {
+pub struct WorldMapLoadingFinished {
     pub translation: Vec2,
 }
 

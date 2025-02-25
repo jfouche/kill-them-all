@@ -13,7 +13,7 @@ impl Inventory {
     pub const N_COLS: u16 = 8;
     pub const N_ROWS: u16 = 4;
 
-    const fn len() -> usize {
+    pub const fn len() -> usize {
         (Inventory::N_COLS * Inventory::N_ROWS) as usize
     }
 
@@ -26,7 +26,16 @@ impl Inventory {
             info!("Can't add item to inventory because it's full");
             return false;
         };
-        info!("Inventory added {item}");
+        self.add_at(item, index)
+    }
+
+    fn add_at(&mut self, item: Entity, index: usize) -> bool {
+        assert!(index < Self::len());
+        if self.0[index].is_some() {
+            warn!("Can't add item to a non empty location");
+            return false;
+        }
+        info!("Inventory added {item} at {index}");
         self.0[index] = Some(item);
         true
     }
@@ -41,18 +50,15 @@ impl Inventory {
         }
     }
 
-    fn pos(&self, index: usize) -> InventoryPos {
+    pub fn at(&self, index: usize) -> Option<Entity> {
+        *self.0.get(index)?
+    }
+
+    pub fn pos(index: usize) -> InventoryPos {
         assert!(index < Inventory::len());
         InventoryPos {
             col: (index as u16 % Self::N_COLS) as i16,
             row: (index as u16 / Self::N_COLS) as i16,
-        }
-    }
-
-    pub fn iter(&self) -> InventoryIter {
-        InventoryIter {
-            inventory: self,
-            index: 0,
         }
     }
 }
@@ -61,27 +67,6 @@ impl Inventory {
 pub struct InventoryPos {
     pub col: i16,
     pub row: i16,
-}
-
-pub struct InventoryIter<'a> {
-    inventory: &'a Inventory,
-    index: usize,
-}
-
-impl Iterator for InventoryIter<'_> {
-    type Item = (Entity, InventoryPos);
-
-    fn next(&mut self) -> Option<Self::Item> {
-        let mut i = self.index;
-        while i < Inventory::len() {
-            if let Some(entity) = self.inventory.0.get(i)? {
-                self.index = i + 1;
-                return Some((*entity, self.inventory.pos(i)));
-            }
-            i += 1;
-        }
-        None
-    }
 }
 
 /// Event to indicate The [Inventory] changed
@@ -94,7 +79,7 @@ pub struct PlayerEquipmentChanged;
 
 /// Try to add an item to the [Inventory].
 ///
-/// If it succed, it will trigger an [InventoryChanged] event.
+/// If it succeed, it will trigger an [InventoryChanged] event.
 pub struct AddToInventoryCommand(pub Entity);
 
 impl Command for AddToInventoryCommand {
@@ -104,6 +89,28 @@ impl Command for AddToInventoryCommand {
 
         if inventory.add(self.0) {
             world.entity_mut(inventory_entity).add_child(self.0);
+            world.trigger(InventoryChanged);
+        }
+    }
+}
+
+/// Try to add an item to the [Inventory] at a given index.
+///
+/// If it succeed, it will trigger an [InventoryChanged] event.
+pub struct AddToInventoryAtIndexCommand {
+    pub item: Entity,
+    pub index: usize,
+}
+
+impl Command for AddToInventoryAtIndexCommand {
+    fn apply(self, world: &mut World) {
+        let (inventory_entity, mut inventory) =
+            world.query::<(Entity, &mut Inventory)>().single_mut(world);
+
+        // Allow to move an item
+        inventory.remove(self.item);
+        if inventory.add_at(self.item, self.index) {
+            world.entity_mut(inventory_entity).add_child(self.item);
             world.trigger(InventoryChanged);
         }
     }

@@ -1,20 +1,24 @@
 use super::{
-    panel_equipments::EquipmentsPanel, popup_info::ShowPopupOnMouseOver,
-    popup_select_equipment::ShowEquipmentActionsOnClick,
+    dnd::{DndCursor, DraggedEntity},
+    item_location::{ItemLocationDragObservers, ShowBorderOnDrag},
+    panel_equipments::EquipmentsPanel,
+    popup_info::SpawnInfoPopupObservers,
 };
 use crate::{
     components::{
         despawn_all,
-        equipment::Equipment,
-        inventory::{Inventory, InventoryChanged, InventoryPos},
-        item::{ItemAssets, ItemInfo},
-        orb::Orb,
+        inventory::{
+            AddToInventoryAtIndexCommand, Inventory, InventoryChanged, PlayerEquipmentChanged,
+        },
+        item::{ItemEntity, ItemLocation},
     },
-    in_game::{GameRunningSet, GameState},
+    schedule::{GameRunningSet, GameState},
 };
-use bevy::{input::common_conditions::input_just_pressed, prelude::*};
+use bevy::{color::palettes::css, input::common_conditions::input_just_pressed, prelude::*};
 
+///
 /// A window that shows the content of the [Inventory]
+///
 #[derive(Component)]
 #[require(
     Name(|| Name::new("InventoryWindow")),
@@ -31,85 +35,52 @@ use bevy::{input::common_conditions::input_just_pressed, prelude::*};
 )]
 pub struct InventoryWindow;
 
+///
 /// A panel that shows the content of the [Inventory]
+///
 #[derive(Component)]
 #[require(
     Name(|| Name::new("InventoryPanel")),
     Node(|| Node {
         display: Display::Grid,
-        width: Val::Px(Inventory::N_COLS as f32 * 32.),
-        height: Val::Px(Inventory::N_ROWS as f32 * 32.),
         grid_template_columns: RepeatedGridTrack::flex(Inventory::N_COLS, 1.),
         grid_template_rows: RepeatedGridTrack::flex(Inventory::N_ROWS, 1.),
         ..Default::default()
     }),
+    BackgroundColor(|| BackgroundColor(css::LIGHT_GRAY.into()))
 )]
 pub struct InventoryPanel;
 
-#[derive(Bundle)]
-struct InventoryItemBundle {
-    image_node: ImageNode,
-    node: Node,
-    on_over: ShowPopupOnMouseOver,
-}
+///
+/// A location in the [InventoryPanel]
+///
+#[derive(Component)]
+#[require(ItemLocation)]
+struct InventoryLocation;
 
-impl InventoryItemBundle {
-    fn new(pos: InventoryPos, info: &ItemInfo, assets: &ItemAssets) -> Self {
-        InventoryItemBundle {
-            image_node: assets.image_node(info.tile_index),
-            node: Node {
-                grid_column: GridPlacement::start(pos.col + 1),
-                grid_row: GridPlacement::start(pos.row + 1),
-                ..Default::default()
-            },
-            on_over: ShowPopupOnMouseOver {
-                text: info.text.clone(),
-                image: Some(assets.image_node(info.tile_index)),
-            },
+impl InventoryLocation {
+    fn node(index: usize) -> Node {
+        let pos = Inventory::pos(index);
+        Node {
+            grid_column: GridPlacement::start(pos.col + 1),
+            grid_row: GridPlacement::start(pos.row + 1),
+            ..ItemLocation::default_node()
         }
     }
 }
 
-#[derive(Bundle)]
-struct InventoryEquipmentBundle {
-    base: InventoryItemBundle,
-    on_click: ShowEquipmentActionsOnClick,
-}
-
-impl InventoryEquipmentBundle {
-    fn new(item: Entity, pos: InventoryPos, info: &ItemInfo, assets: &ItemAssets) -> Self {
-        InventoryEquipmentBundle {
-            base: InventoryItemBundle::new(pos, info, assets),
-            on_click: ShowEquipmentActionsOnClick {
-                text: info.text.clone(),
-                image: Some(assets.image_node(info.tile_index)),
-                item,
-            },
-        }
-    }
-}
-
-#[derive(Bundle)]
-struct InventoryOrbBundle {
-    base: InventoryItemBundle,
-}
-
-impl InventoryOrbBundle {
-    fn new(pos: InventoryPos, info: &ItemInfo, assets: &ItemAssets) -> Self {
-        InventoryOrbBundle {
-            base: InventoryItemBundle::new(pos, info, assets),
-        }
-    }
-}
+#[derive(Component, Reflect)]
+struct InventoryIndex(usize);
 
 pub struct InventoryPanelPlugin;
 
 impl Plugin for InventoryPanelPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnExit(GameState::InGame), despawn_all::<InventoryWindow>)
+        app.register_type::<InventoryIndex>()
+            .add_systems(OnExit(GameState::InGame), despawn_all::<InventoryWindow>)
             .add_systems(
                 Update,
-                spawn_or_despawn_window
+                toggle_window
                     .run_if(input_just_pressed(KeyCode::KeyI))
                     .in_set(GameRunningSet::UserInput),
             )
@@ -118,55 +89,120 @@ impl Plugin for InventoryPanelPlugin {
     }
 }
 
-fn spawn_or_despawn_window(mut commands: Commands, windows: Query<Entity, With<InventoryWindow>>) {
-    if let Ok(entity) = windows.get_single() {
-        commands.entity(entity).despawn_recursive();
-    } else {
-        commands.spawn(InventoryWindow).with_children(|wnd| {
-            wnd.spawn(EquipmentsPanel);
-            wnd.spawn(InventoryPanel);
-        });
+fn toggle_window(
+    mut commands: Commands,
+    mut windows: Query<&mut Visibility, With<InventoryWindow>>,
+) {
+    match windows.iter_mut().next() {
+        Some(mut visiblity) => {
+            *visiblity = match *visiblity {
+                Visibility::Hidden => Visibility::Inherited,
+                _ => Visibility::Hidden,
+            }
+        }
+        None => {
+            // spawn window as it doesn't exist
+            commands.spawn(InventoryWindow).with_children(|wnd| {
+                wnd.spawn(EquipmentsPanel);
+                wnd.spawn(InventoryPanel);
+            });
+        }
     }
 }
 
-fn create_panel(
-    trigger: Trigger<OnAdd, InventoryPanel>,
-    mut commands: Commands,
-    inventory: Single<&Inventory>,
-    equipments: Query<&ItemInfo, With<Equipment>>,
-    orbs: Query<&ItemInfo, With<Orb>>,
-    assets: Res<ItemAssets>,
-) {
+fn create_panel(trigger: Trigger<OnAdd, InventoryPanel>, mut commands: Commands) {
+    let mut spawn_info_observers = SpawnInfoPopupObservers::new();
+    let mut show_borders_on_drag_observers = <ShowBorderOnDrag>::new();
+    let mut drag_item_observers = ItemLocationDragObservers::new();
+    let mut on_drop_observer = Observer::new(on_drop_on_location);
+
     commands.entity(trigger.entity()).with_children(|cmd| {
-        for (item, pos) in inventory.iter() {
-            if let Ok(info) = equipments.get(item) {
-                cmd.spawn(InventoryEquipmentBundle::new(item, pos, info, &assets));
-            } else if let Ok(info) = orbs.get(item) {
-                cmd.spawn(InventoryOrbBundle::new(pos, info, &assets));
-            }
+        for idx in 0..Inventory::len() {
+            let id = cmd
+                .spawn((
+                    InventoryLocation,
+                    Name::new(format!("InventoryLocation({idx})")),
+                    InventoryLocation::node(idx),
+                    InventoryIndex(idx),
+                ))
+                .id();
+            spawn_info_observers.watch_entity(id);
+            show_borders_on_drag_observers.watch_entity(id);
+            drag_item_observers.watch_entity(id);
+            on_drop_observer.watch_entity(id);
         }
+    });
+
+    spawn_info_observers.spawn(&mut commands);
+    show_borders_on_drag_observers.spawn(&mut commands);
+    drag_item_observers.spawn(&mut commands);
+    commands.spawn(on_drop_observer);
+
+    commands.queue(|world: &mut World| {
+        world.trigger(InventoryChanged);
     });
 }
 
 fn update_inventory(
     _trigger: Trigger<InventoryChanged>,
-    mut commands: Commands,
-    panels: Query<Entity, With<InventoryPanel>>,
+    mut nodes: Query<(&mut ItemEntity, &InventoryIndex)>,
     inventory: Single<&Inventory>,
-    equipments: Query<&ItemInfo, With<Equipment>>,
-    orbs: Query<&ItemInfo, With<Orb>>,
-    assets: Res<ItemAssets>,
 ) {
-    for panel in &panels {
-        commands.entity(panel).despawn_descendants();
-        commands.entity(panel).with_children(|cmd| {
-            for (item, pos) in inventory.iter() {
-                if let Ok(info) = equipments.get(item) {
-                    cmd.spawn(InventoryEquipmentBundle::new(item, pos, info, &assets));
-                } else if let Ok(info) = orbs.get(item) {
-                    cmd.spawn(InventoryOrbBundle::new(pos, info, &assets));
-                }
+    for (mut item_entity, index) in &mut nodes {
+        item_entity.0 = inventory.at(index.0);
+    }
+}
+
+// fn on_drag_start_item(
+//     trigger: Trigger<Pointer<DragStart>>,
+//     indexes: Query<&InventoryIndex, Without<DndCursor>>,
+//     inventory: Single<&Inventory>,
+//     infos: Query<&ItemInfo>,
+//     cursor: Single<(&mut DraggedEntity, &mut ImageNode), With<DndCursor>>,
+//     assets: Res<ItemAssets>,
+// ) {
+//     if let Ok(index) = indexes.get(trigger.entity()) {
+//         if let Some(item) = inventory.at(index.0) {
+//             warn!("on_drag_start_item({})", trigger.entity());
+//             if let Ok(info) = infos.get(item) {
+//                 let (mut dragged_entity, mut cursor_image) = cursor.into_inner();
+//                 **dragged_entity = Some(item);
+//                 *cursor_image = assets.image_node(info.tile_index);
+//             }
+//         }
+//     }
+// }
+
+// fn on_drag_end(
+//     trigger: Trigger<Pointer<DragEnd>>,
+//     cursor: Single<(&mut DraggedEntity, &mut ImageNode), With<DndCursor>>,
+// ) {
+//     warn!("on_drag_end({})", trigger.entity());
+//     let (mut dragged_entity, mut cursor_image) = cursor.into_inner();
+//     **dragged_entity = None;
+//     *cursor_image = ImageNode::default();
+// }
+
+fn on_drop_on_location(
+    trigger: Trigger<Pointer<DragDrop>>,
+    mut commands: Commands,
+    indexes: Query<&InventoryIndex, With<InventoryLocation>>,
+    cursor: Single<&DraggedEntity, With<DndCursor>>,
+    inventory: Single<&Inventory>,
+) {
+    warn!("on_drop_on_location({})", trigger.entity());
+    if let Ok(index) = indexes.get(trigger.entity()) {
+        if inventory.at(index.0).is_none() {
+            // There is no item at the index in the inventory
+            if let Some(item) = ***cursor {
+                commands.queue(AddToInventoryAtIndexCommand {
+                    item,
+                    index: index.0,
+                });
+                commands.queue(|world: &mut World| {
+                    world.trigger(PlayerEquipmentChanged);
+                });
             }
-        });
+        }
     }
 }
