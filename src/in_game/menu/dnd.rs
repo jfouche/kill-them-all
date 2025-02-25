@@ -1,6 +1,4 @@
-use crate::components::item::{Item, ItemLocation};
-use bevy::{color::palettes::css, ecs::query::QueryFilter, prelude::*, window::PrimaryWindow};
-use std::marker::PhantomData;
+use bevy::{prelude::*, window::PrimaryWindow};
 
 pub struct DndPlugin;
 
@@ -77,61 +75,4 @@ fn cursor_to_world(window: &Window, cam_transform: &Transform, cursor_pos: Vec2)
     // apply the camera transform
     let out = cam_transform.compute_matrix() * screen_pos.extend(0.0).extend(1.0);
     out.xy()
-}
-
-pub struct ShowBorderOnDrag<F = With<Item>> {
-    on_enter: Observer,
-    on_leave: Observer,
-    _phantom: PhantomData<F>,
-}
-
-impl<F> ShowBorderOnDrag<F>
-where
-    F: QueryFilter + 'static,
-{
-    pub fn new() -> Self {
-        Self {
-            on_enter: Observer::new(show_borders_on_drag_enter_item::<F>),
-            on_leave: Observer::new(hide_borders_on_drag_leave_item),
-            _phantom: PhantomData::<F>,
-        }
-    }
-
-    pub fn watch_entity(&mut self, entity: Entity) {
-        self.on_enter.watch_entity(entity);
-        self.on_leave.watch_entity(entity);
-    }
-
-    pub fn spawn(self, commands: &mut Commands) {
-        commands.spawn(self.on_enter);
-        commands.spawn(self.on_leave);
-    }
-}
-
-fn show_borders_on_drag_enter_item<F>(
-    trigger: Trigger<Pointer<DragEnter>>,
-    mut colors: Query<&mut BackgroundColor, With<ItemLocation>>,
-    items: Query<(), F>,
-    cursor: Single<&DraggedEntity, With<DndCursor>>,
-) where
-    F: QueryFilter,
-{
-    warn!("show_borders_on_drag_enter_item({})", trigger.entity());
-    if let Some(item_entity) = ***cursor {
-        if items.get(item_entity).is_ok() {
-            if let Ok(mut color) = colors.get_mut(trigger.entity()) {
-                color.0 = css::DARK_ORANGE.into();
-            }
-        }
-    }
-}
-
-fn hide_borders_on_drag_leave_item(
-    trigger: Trigger<Pointer<DragLeave>>,
-    mut colors: Query<&mut BackgroundColor, With<ItemLocation>>,
-) {
-    warn!("hide_borders_on_drag_leave_item({})", trigger.entity());
-    if let Ok(mut color) = colors.get_mut(trigger.entity()) {
-        color.0 = Srgba::NONE.into();
-    };
 }

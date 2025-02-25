@@ -1,13 +1,16 @@
 use super::{
-    dnd::{DndCursor, DraggedEntity, ShowBorderOnDrag},
+    dnd::{DndCursor, DraggedEntity},
+    item_location::{ItemLocationDragObservers, ShowBorderOnDrag},
     panel_equipments::EquipmentsPanel,
     popup_info::SpawnInfoPopupObservers,
 };
 use crate::{
     components::{
         despawn_all,
-        inventory::{AddToInventoryAtIndexCommand, Inventory, InventoryChanged},
-        item::{ItemAssets, ItemEntity, ItemInfo, ItemLocation},
+        inventory::{
+            AddToInventoryAtIndexCommand, Inventory, InventoryChanged, PlayerEquipmentChanged,
+        },
+        item::{ItemEntity, ItemLocation},
     },
     schedule::{GameRunningSet, GameState},
 };
@@ -110,9 +113,9 @@ fn toggle_window(
 fn create_panel(trigger: Trigger<OnAdd, InventoryPanel>, mut commands: Commands) {
     let mut spawn_info_observers = SpawnInfoPopupObservers::new();
     let mut show_borders_on_drag_observers = <ShowBorderOnDrag>::new();
+    let mut drag_item_observers = ItemLocationDragObservers::new();
     let mut on_drop_observer = Observer::new(on_drop_on_location);
-    let mut on_drag_start_observer = Observer::new(on_drag_start_item);
-    let mut on_drag_end_observer = Observer::new(on_drag_end);
+
     commands.entity(trigger.entity()).with_children(|cmd| {
         for idx in 0..Inventory::len() {
             let id = cmd
@@ -125,17 +128,15 @@ fn create_panel(trigger: Trigger<OnAdd, InventoryPanel>, mut commands: Commands)
                 .id();
             spawn_info_observers.watch_entity(id);
             show_borders_on_drag_observers.watch_entity(id);
+            drag_item_observers.watch_entity(id);
             on_drop_observer.watch_entity(id);
-            on_drag_start_observer.watch_entity(id);
-            on_drag_end_observer.watch_entity(id);
         }
     });
 
     spawn_info_observers.spawn(&mut commands);
     show_borders_on_drag_observers.spawn(&mut commands);
+    drag_item_observers.spawn(&mut commands);
     commands.spawn(on_drop_observer);
-    commands.spawn(on_drag_start_observer);
-    commands.spawn(on_drag_end_observer);
 
     commands.queue(|world: &mut World| {
         world.trigger(InventoryChanged);
@@ -152,35 +153,35 @@ fn update_inventory(
     }
 }
 
-fn on_drag_start_item(
-    trigger: Trigger<Pointer<DragStart>>,
-    indexes: Query<&InventoryIndex, Without<DndCursor>>,
-    inventory: Single<&Inventory>,
-    infos: Query<&ItemInfo>,
-    cursor: Single<(&mut DraggedEntity, &mut ImageNode), With<DndCursor>>,
-    assets: Res<ItemAssets>,
-) {
-    if let Ok(index) = indexes.get(trigger.entity()) {
-        if let Some(item) = inventory.at(index.0) {
-            warn!("on_drag_start_item({})", trigger.entity());
-            if let Ok(info) = infos.get(item) {
-                let (mut dragged_entity, mut cursor_image) = cursor.into_inner();
-                **dragged_entity = Some(item);
-                *cursor_image = assets.image_node(info.tile_index);
-            }
-        }
-    }
-}
+// fn on_drag_start_item(
+//     trigger: Trigger<Pointer<DragStart>>,
+//     indexes: Query<&InventoryIndex, Without<DndCursor>>,
+//     inventory: Single<&Inventory>,
+//     infos: Query<&ItemInfo>,
+//     cursor: Single<(&mut DraggedEntity, &mut ImageNode), With<DndCursor>>,
+//     assets: Res<ItemAssets>,
+// ) {
+//     if let Ok(index) = indexes.get(trigger.entity()) {
+//         if let Some(item) = inventory.at(index.0) {
+//             warn!("on_drag_start_item({})", trigger.entity());
+//             if let Ok(info) = infos.get(item) {
+//                 let (mut dragged_entity, mut cursor_image) = cursor.into_inner();
+//                 **dragged_entity = Some(item);
+//                 *cursor_image = assets.image_node(info.tile_index);
+//             }
+//         }
+//     }
+// }
 
-fn on_drag_end(
-    trigger: Trigger<Pointer<DragEnd>>,
-    cursor: Single<(&mut DraggedEntity, &mut ImageNode), With<DndCursor>>,
-) {
-    warn!("on_drag_end({})", trigger.entity());
-    let (mut dragged_entity, mut cursor_image) = cursor.into_inner();
-    **dragged_entity = None;
-    *cursor_image = ImageNode::default();
-}
+// fn on_drag_end(
+//     trigger: Trigger<Pointer<DragEnd>>,
+//     cursor: Single<(&mut DraggedEntity, &mut ImageNode), With<DndCursor>>,
+// ) {
+//     warn!("on_drag_end({})", trigger.entity());
+//     let (mut dragged_entity, mut cursor_image) = cursor.into_inner();
+//     **dragged_entity = None;
+//     *cursor_image = ImageNode::default();
+// }
 
 fn on_drop_on_location(
     trigger: Trigger<Pointer<DragDrop>>,
@@ -197,6 +198,9 @@ fn on_drop_on_location(
                 commands.queue(AddToInventoryAtIndexCommand {
                     item,
                     index: index.0,
+                });
+                commands.queue(|world: &mut World| {
+                    world.trigger(PlayerEquipmentChanged);
                 });
             }
         }

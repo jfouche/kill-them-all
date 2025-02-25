@@ -1,11 +1,12 @@
 use super::{
-    dnd::{DndCursor, DraggedEntity, ShowBorderOnDrag},
+    dnd::{DndCursor, DraggedEntity},
+    item_location::{ItemLocationDragObservers, ShowBorderOnDrag},
     popup_info::SpawnInfoPopupObservers,
 };
 use crate::components::{
     equipment::{Amulet, BodyArmour, Boots, Helmet, Weapon},
     inventory::{EquipItemCommand, PlayerEquipmentChanged},
-    item::{ItemAssets, ItemEntity, ItemInfo, ItemLocation},
+    item::{ItemAssets, ItemEntity, ItemLocation},
     player::Player,
 };
 use bevy::{ecs::query::QueryFilter, prelude::*};
@@ -129,7 +130,7 @@ fn spawn_panel_content(
     let mut boots_border_observers = ShowBorderOnDrag::<With<Boots>>::new();
     let mut amulet_border_observers = ShowBorderOnDrag::<With<Amulet>>::new();
     let mut weapon_border_observers = ShowBorderOnDrag::<With<Weapon>>::new();
-    let mut on_drag_start_observer = Observer::new(on_drag_start_item);
+    let mut drag_item_observers = ItemLocationDragObservers::new();
 
     commands.entity(trigger.entity()).with_children(|panel| {
         let id = panel
@@ -138,7 +139,7 @@ fn spawn_panel_content(
             .id();
         spawn_info_observers.watch_entity(id);
         helmet_border_obervers.watch_entity(id);
-        on_drag_start_observer.watch_entity(id);
+        drag_item_observers.watch_entity(id);
 
         let id = panel
             .spawn(BodyArmourLocation::bundle(&assets))
@@ -146,7 +147,7 @@ fn spawn_panel_content(
             .id();
         spawn_info_observers.watch_entity(id);
         body_armour_border_observers.watch_entity(id);
-        on_drag_start_observer.watch_entity(id);
+        drag_item_observers.watch_entity(id);
 
         let id = panel
             .spawn(BootsLocation::bundle(&assets))
@@ -154,7 +155,7 @@ fn spawn_panel_content(
             .id();
         spawn_info_observers.watch_entity(id);
         boots_border_observers.watch_entity(id);
-        on_drag_start_observer.watch_entity(id);
+        drag_item_observers.watch_entity(id);
 
         let id = panel
             .spawn(AmuletLocation::bundle(&assets))
@@ -162,7 +163,7 @@ fn spawn_panel_content(
             .id();
         spawn_info_observers.watch_entity(id);
         amulet_border_observers.watch_entity(id);
-        on_drag_start_observer.watch_entity(id);
+        drag_item_observers.watch_entity(id);
 
         let id = panel
             .spawn(WeaponLocation::bundle(&assets))
@@ -170,7 +171,7 @@ fn spawn_panel_content(
             .id();
         spawn_info_observers.watch_entity(id);
         weapon_border_observers.watch_entity(id);
-        on_drag_start_observer.watch_entity(id);
+        drag_item_observers.watch_entity(id);
     });
 
     spawn_info_observers.spawn(&mut commands);
@@ -179,28 +180,11 @@ fn spawn_panel_content(
     boots_border_observers.spawn(&mut commands);
     amulet_border_observers.spawn(&mut commands);
     weapon_border_observers.spawn(&mut commands);
-    commands.spawn(on_drag_start_observer);
+    drag_item_observers.spawn(&mut commands);
 
     commands.queue(|world: &mut World| {
         world.trigger(PlayerEquipmentChanged);
     });
-}
-
-fn on_drag_start_item(
-    trigger: Trigger<Pointer<DragStart>>,
-    locations: Query<&ItemEntity, With<ItemLocation>>,
-    infos: Query<&ItemInfo>,
-    cursor: Single<(&mut DraggedEntity, &mut ImageNode), With<DndCursor>>,
-    assets: Res<ItemAssets>,
-) {
-    if let Ok(ItemEntity(Some(item))) = locations.get(trigger.entity()) {
-        warn!("on_drag_start_item({})", trigger.entity());
-        if let Ok(info) = infos.get(*item) {
-            let (mut dragged_entity, mut cursor_image) = cursor.into_inner();
-            **dragged_entity = Some(*item);
-            *cursor_image = assets.image_node(info.tile_index);
-        }
-    }
 }
 
 fn on_drop_equipment<T>(
