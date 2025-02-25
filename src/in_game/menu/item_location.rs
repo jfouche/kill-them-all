@@ -94,7 +94,7 @@ where
 }
 
 fn show_borders_on_drag_enter_item<F>(
-    trigger: Trigger<Pointer<DragEnter>>,
+    mut trigger: Trigger<Pointer<DragEnter>>,
     mut colors: Query<&mut BackgroundColor, With<ItemLocation>>,
     items: Query<(), F>,
     cursor: Single<&DraggedEntity, With<DndCursor>>,
@@ -109,16 +109,18 @@ fn show_borders_on_drag_enter_item<F>(
             }
         }
     }
+    trigger.propagate(false);
 }
 
 fn hide_borders_on_drag_leave_item(
-    trigger: Trigger<Pointer<DragLeave>>,
+    mut trigger: Trigger<Pointer<DragLeave>>,
     mut colors: Query<&mut BackgroundColor, With<ItemLocation>>,
 ) {
     if let Ok(mut color) = colors.get_mut(trigger.entity()) {
         warn!("hide_borders_on_drag_leave_item({})", trigger.entity());
         color.0 = Srgba::NONE.into();
-    };
+    }
+    trigger.propagate(false);
 }
 
 pub struct ItemLocationDragObservers(Vec<Observer>);
@@ -143,7 +145,7 @@ impl ItemLocationDragObservers {
 }
 
 fn on_drag_start_item(
-    trigger: Trigger<Pointer<DragStart>>,
+    mut trigger: Trigger<Pointer<DragStart>>,
     locations: Query<&ItemEntity, With<ItemLocation>>,
     infos: Query<&ItemInfo>,
     cursor: Single<(&mut DraggedEntity, &mut ImageNode), With<DndCursor>>,
@@ -157,14 +159,16 @@ fn on_drag_start_item(
             *cursor_image = assets.image_node(info.tile_index);
         }
     }
+    trigger.propagate(false);
 }
 
 fn on_drag_end_item(
-    trigger: Trigger<Pointer<DragEnd>>,
+    mut trigger: Trigger<Pointer<DragEnd>>,
     cursor: Single<(&mut DraggedEntity, &mut ImageNode), With<DndCursor>>,
 ) {
     warn!("on_drag_end_item({})", trigger.entity());
     let (mut dragged_entity, mut cursor_image) = cursor.into_inner();
     **dragged_entity = None;
     *cursor_image = ImageNode::default();
+    trigger.propagate(false);
 }

@@ -55,7 +55,7 @@ impl SpawnInfoPopupObservers {
 }
 
 fn spawn_popup_info_on_over_item(
-    trigger: Trigger<Pointer<Over>>,
+    mut trigger: Trigger<Pointer<Over>>,
     mut commands: Commands,
     mut item_entities: Query<&ItemEntity>,
     items: Query<&ItemInfo>,
@@ -74,11 +74,13 @@ fn spawn_popup_info_on_over_item(
                     popup.spawn((Text(info.text.clone()), TextFont::from_font_size(12.)));
                 });
         }
-    };
+        // TODO: https://github.com/bevyengine/bevy/blob/release-0.15.3/crates/bevy_picking/src/events.rs#L353
+        trigger.propagate(false);
+    }
 }
 
 fn despawn_popup_info_on_out_item(
-    trigger: Trigger<Pointer<Out>>,
+    mut trigger: Trigger<Pointer<Out>>,
     mut commands: Commands,
     popups: Query<Entity, With<InfoPopup>>,
 ) {
@@ -86,4 +88,5 @@ fn despawn_popup_info_on_out_item(
         warn!("despawn_popup_info_on_out_item({})", trigger.entity());
         commands.entity(entity).despawn_recursive();
     }
+    trigger.propagate(false);
 }
