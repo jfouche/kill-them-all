@@ -7,7 +7,7 @@ use crate::{
         equipment::weapon::AttackTimer,
         skills::mine::{Mine, MineAssets, MineDropper, MineExplodeTimer, MineExplosion},
     },
-    in_game::{GameRunningSet, GameState},
+    schedule::{GameRunningSet, GameState},
 };
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::CollisionGroups;

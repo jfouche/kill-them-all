@@ -1,4 +1,3 @@
-use super::GameRunningSet;
 use crate::{
     camera::MainCamera,
     components::{
@@ -11,7 +10,7 @@ use crate::{
             WaterLdtkBundle, WaterTile, WorldMap, WorldMapAssets, WorldMapLoadingFinished,
         },
     },
-    schedule::GameState,
+    schedule::{GameRunningSet, GameState},
     utils::picking::{WorldPosition, MAP_DEPTH},
 };
 use bevy::{

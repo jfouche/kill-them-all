@@ -1,10 +1,10 @@
-use super::{GameRunningSet, GameState};
 use crate::{
     camera::MainCamera,
     components::{
         character::{CharacterDyingEvent, Life, MaxLife},
         monster::Monster,
     },
+    schedule::{GameRunningSet, GameState},
     ui::progressbar::{ProgressBar, ProgressBarColor},
 };
 use bevy::prelude::*;

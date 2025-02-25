@@ -1,6 +1,6 @@
 use crate::{
     components::*,
-    in_game::{GameRunningSet, GameState},
+    schedule::{GameRunningSet, GameState},
 };
 use affix::PierceChance;
 use bevy::prelude::*;

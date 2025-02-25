@@ -8,7 +8,7 @@ use crate::{
         equipment::weapon::AttackTimer,
         skills::fireball::FireBallLauncher,
     },
-    in_game::{GameRunningSet, GameState},
+    schedule::{GameRunningSet, GameState},
 };
 use bevy::{color::palettes::css::YELLOW, prelude::*};
 use bevy_rapier2d::prelude::*;

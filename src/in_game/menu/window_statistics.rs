@@ -8,7 +8,7 @@ use crate::{
         despawn_all,
         player::Player,
     },
-    in_game::{GameRunningSet, GameState},
+    schedule::{GameRunningSet, GameState},
 };
 use bevy::prelude::*;
 

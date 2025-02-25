@@ -11,30 +11,40 @@ mod popup_select_equipment;
 mod window_inventory;
 mod window_statistics;
 
-use bevy::prelude::{App, OnEnter, OnExit, Plugin};
+pub use plugin::InGameMenuPlugin;
 
-pub struct InGameMenuPlugin;
+mod plugin {
+    use crate::in_game::{pause, unpause};
+    use bevy::prelude::{App, OnEnter, OnExit, Plugin};
 
-impl Plugin for InGameMenuPlugin {
-    fn build(&self, app: &mut App) {
-        use super::{pause, unpause};
-        use crate::{components::item::ItemAssets, schedule::InGameState};
+    pub struct InGameMenuPlugin;
 
-        app.add_plugins((
-            item_location::ItemImagePlugin,
-            menu_pause::PausePlugin,
-            menu_level_up::LevelUpMenuPlugin,
-            menu_player_died::PlayerDiedMenuPlugin,
-            panel_equipments::InventoryPanelPlugin,
-            panel_skills::SkillsPanelPlugin,
-            window_statistics::StatsWindowPlugin,
-            window_inventory::InventoryPanelPlugin,
-            dnd::DndPlugin,
-        ))
-        .init_resource::<ItemAssets>()
-        .add_systems(OnEnter(InGameState::Pause), pause)
-        .add_systems(OnExit(InGameState::Pause), unpause)
-        .add_systems(OnEnter(InGameState::LevelUp), pause)
-        .add_systems(OnExit(InGameState::LevelUp), unpause);
+    impl Plugin for InGameMenuPlugin {
+        fn build(&self, app: &mut App) {
+            use super::{
+                dnd::DndPlugin, item_location::ItemImagePlugin, menu_level_up::LevelUpMenuPlugin,
+                menu_pause::PausePlugin, menu_player_died::PlayerDiedMenuPlugin,
+                panel_equipments::InventoryPanelPlugin, panel_skills::SkillsPanelPlugin,
+                window_statistics::StatsWindowPlugin,
+            };
+            use crate::{components::item::ItemAssets, schedule::InGameState};
+
+            app.add_plugins((
+                ItemImagePlugin,
+                PausePlugin,
+                LevelUpMenuPlugin,
+                PlayerDiedMenuPlugin,
+                InventoryPanelPlugin,
+                SkillsPanelPlugin,
+                StatsWindowPlugin,
+                InventoryPanelPlugin,
+                DndPlugin,
+            ))
+            .init_resource::<ItemAssets>()
+            .add_systems(OnEnter(InGameState::Pause), pause)
+            .add_systems(OnExit(InGameState::Pause), unpause)
+            .add_systems(OnEnter(InGameState::LevelUp), pause)
+            .add_systems(OnExit(InGameState::LevelUp), unpause);
+        }
     }
 }
