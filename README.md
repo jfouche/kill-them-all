@@ -5,6 +5,12 @@
 - [Affixes](#affixes)
 - [How to build](#build)
 
+# How to play
+
+Use mouse to move player. Take items dropped by monsters you killed. 
+Use [I] to open the inventory.
+Try to use the best items for the player.
+
 ## Player affixes
 
 TODO
