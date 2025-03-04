@@ -14,7 +14,7 @@ use mine::MineDropper;
 use rand::rngs::ThreadRng;
 use shuriken::ShurikenLauncher;
 
-#[derive(Component)]
+#[derive(Component, Clone, Copy, PartialEq, Eq)]
 #[require(Item)]
 pub struct SkillGem;
 

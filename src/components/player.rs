@@ -1,17 +1,20 @@
 use super::{
     animation::AnimationTimer,
     character::{BaseLife, BaseMovementSpeed, Character, Target},
+    inventory::{AddToInventoryCommand, PlayerEquipmentChanged, RemoveFromInventoryCommand},
+    skills::SkillGem,
     GROUP_ALL, GROUP_PLAYER,
 };
 use crate::utils::despawn_after::DespawnAfter;
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
-use std::time::Duration;
+use std::{time::Duration, usize};
 
 #[derive(Component)]
 #[require(
     Name(|| Name::new("Player")),
     Character,
+    PlayerSkills,
     Target(|| Target::Monster),
     BaseLife(|| BaseLife(10.)),
     BaseMovementSpeed(|| BaseMovementSpeed(100.)),
@@ -32,6 +35,137 @@ impl Player {
             texture_atlas: Some(assets.atlas_layout.clone().into()),
             custom_size: Some(PLAYER_SIZE),
             ..Default::default()
+        }
+    }
+}
+
+#[derive(Component, Clone, Copy)]
+pub enum PlayerAction {
+    Skill1,
+    Skill2,
+    Skill3,
+    Skill4,
+}
+
+impl PlayerAction {
+    fn index(&self) -> usize {
+        match self {
+            PlayerAction::Skill1 => 0,
+            PlayerAction::Skill2 => 1,
+            PlayerAction::Skill3 => 2,
+            PlayerAction::Skill4 => 3,
+        }
+    }
+}
+
+impl From<usize> for PlayerAction {
+    fn from(value: usize) -> Self {
+        match value {
+            0 => PlayerAction::Skill1,
+            1 => PlayerAction::Skill2,
+            2 => PlayerAction::Skill3,
+            3 => PlayerAction::Skill4,
+            _ => unreachable!(),
+        }
+    }
+}
+
+#[derive(Component, Default)]
+pub struct PlayerSkills([Option<Entity>; 4]);
+
+impl PlayerSkills {
+    // fn contains(&self, skill: Entity) -> Option<PlayerAction> {
+    //     self.0
+    //         .iter()
+    //         .position(|&o| o == Some(skill))
+    //         .map(|i| i.into())
+    // }
+
+    pub fn get(&self, action: PlayerAction) -> Option<Entity> {
+        *self.0.get(action.index())?
+    }
+
+    fn set(&mut self, action: PlayerAction, skill: Entity) -> bool {
+        let index = action.index();
+        match self.0[index] {
+            Some(_) => {
+                warn!("Can't set skills[{index}] as it's not empty");
+                false
+            }
+            None => {
+                self.0[index] = Some(skill);
+                true
+            }
+        }
+    }
+
+    fn remove(&mut self, skill: Entity) -> bool {
+        let Some(index) = self.0.iter().position(|&o| o == Some(skill)) else {
+            return false;
+        };
+        self.0.get_mut(index).map(|o| *o = None).is_some()
+    }
+}
+
+pub struct EquipSkillGemCommand(pub Entity, pub PlayerAction);
+
+impl Command for EquipSkillGemCommand {
+    fn apply(self, world: &mut World) {
+        let gem_entity = self.0;
+        let mut skill_gems = world.query::<&SkillGem>();
+        let Ok(_) = skill_gems.get(world, gem_entity) else {
+            warn!("Can't equip {gem_entity} as it's not an SkillGem");
+            return;
+        };
+
+        let Ok((player_entity, mut skills)) = world
+            .query_filtered::<(Entity, &mut PlayerSkills), With<Player>>()
+            .get_single_mut(world)
+        else {
+            error!("Player doesn't have a PlayerSkills");
+            return;
+        };
+
+        let action = self.1;
+        let old_gem = match skills.get(action) {
+            Some(gem) => (gem != gem_entity).then(|| gem),
+            None => None,
+        };
+        skills.set(action, gem_entity);
+
+        // Manage inventory
+        RemoveFromInventoryCommand(gem_entity).apply(world);
+        if let Some(old_gem) = old_gem {
+            AddToInventoryCommand(old_gem).apply(world);
+        }
+
+        // Add_child will remove the old parent before applying new parenting
+        world.entity_mut(player_entity).add_child(gem_entity);
+        world.trigger(PlayerEquipmentChanged);
+    }
+}
+
+pub struct RemoveSkillGemCommand(pub Entity);
+
+impl Command for RemoveSkillGemCommand {
+    fn apply(self, world: &mut World) {
+        let gem_entity = self.0;
+        let mut skill_gems = world.query::<&SkillGem>();
+        let Ok(_) = skill_gems.get(world, gem_entity) else {
+            warn!("Can't remove {gem_entity} as it's not an SkillGem");
+            return;
+        };
+
+        let Ok(mut skills) = world
+            .query_filtered::<&mut PlayerSkills, With<Player>>()
+            .get_single_mut(world)
+        else {
+            error!("Player doesn't have a PlayerSkills");
+            return;
+        };
+
+        if skills.remove(gem_entity) {
+            world.trigger(PlayerEquipmentChanged);
         }
     }
 }

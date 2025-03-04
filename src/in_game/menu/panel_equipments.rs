@@ -6,7 +6,7 @@ use super::{
 use crate::components::{
     equipment::{Amulet, BodyArmour, Boots, Helmet, Weapon},
     inventory::PlayerEquipmentChanged,
-    item::{EquipSkillGemCommand, ItemAssets, ItemEntity, ItemLocation},
+    item::{EquipEquipmentCommand, ItemAssets, ItemEntity, ItemLocation},
     player::Player,
 };
 use bevy::prelude::*;
@@ -203,7 +203,7 @@ fn on_drop_equipment<T>(
     if let Some(item_entity) = ***cursor {
         if equipments.get(item_entity).is_ok() {
             // The item drop is the correct one
-            commands.queue(EquipSkillGemCommand(item_entity));
+            commands.queue(EquipEquipmentCommand(item_entity));
         }
     }
 }

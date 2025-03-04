@@ -306,9 +306,3 @@ impl Command for DropItemCommand {
         }
     }
 }
-
-pub struct EquipSkillGemCommand(pub Entity);
-
-impl Command for EquipSkillGemCommand {
-    fn apply(self, world: &mut World) {}
-}

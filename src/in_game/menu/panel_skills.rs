@@ -1,15 +1,14 @@
 use crate::components::{
-    item::{EquipSkillGemCommand, ItemLocation},
-    player::Player,
-    skills::{
-        death_aura::DeathAura, fireball::FireBallLauncher, mine::MineDropper,
-        shuriken::ShurikenLauncher, SkillGem, SkillUI,
-    },
+    inventory::PlayerEquipmentChanged,
+    item::{ItemEntity, ItemLocation},
+    player::{EquipSkillGemCommand, Player, PlayerAction, PlayerSkills},
+    skills::SkillGem,
 };
 use bevy::prelude::*;
 
 use super::{
     dnd::{DndCursor, DraggedEntity},
+    item_location::ShowBorderOnDrag,
     popup_info::SpawnInfoPopupObservers,
 };
 
@@ -26,53 +25,80 @@ use super::{
 )]
 pub struct SkillsPanel;
 
+#[derive(Component)]
+#[require(ItemLocation)]
+struct SkillGemLocation;
+
 pub struct SkillsPanelPlugin;
 
 impl Plugin for SkillsPanelPlugin {
     fn build(&self, app: &mut App) {
-        app.add_observer(create_panel);
+        app.add_observer(create_panel).add_observer(update_skills);
     }
 }
 
 fn create_panel(trigger: Trigger<OnAdd, SkillsPanel>, mut commands: Commands) {
     let mut spawn_info_observers = SpawnInfoPopupObservers::new();
+    let mut border_observers = ShowBorderOnDrag::<With<SkillGem>>::new();
     let mut drop_observer = Observer::new(on_drop_item);
 
     commands.entity(trigger.entity()).with_children(|panel| {
         panel.spawn(Text::new("A:"));
-        let entity = panel.spawn(ItemLocation).id();
+        let entity = panel.spawn((PlayerAction::Skill1, SkillGemLocation)).id();
         spawn_info_observers.watch_entity(entity);
+        border_observers.watch_entity(entity);
         drop_observer.watch_entity(entity);
 
         panel.spawn(Text::new("Z:"));
-        let entity = panel.spawn(ItemLocation).id();
+        let entity = panel.spawn((PlayerAction::Skill2, SkillGemLocation)).id();
         spawn_info_observers.watch_entity(entity);
+        border_observers.watch_entity(entity);
         drop_observer.watch_entity(entity);
 
         panel.spawn(Text::new("E:"));
-        let entity = panel.spawn(ItemLocation).id();
+        let entity = panel.spawn((PlayerAction::Skill3, SkillGemLocation)).id();
         spawn_info_observers.watch_entity(entity);
+        border_observers.watch_entity(entity);
         drop_observer.watch_entity(entity);
 
         panel.spawn(Text::new("R:"));
-        let entity = panel.spawn(ItemLocation).id();
+        let entity = panel.spawn((PlayerAction::Skill4, SkillGemLocation)).id();
         spawn_info_observers.watch_entity(entity);
+        border_observers.watch_entity(entity);
         drop_observer.watch_entity(entity);
     });
     spawn_info_observers.spawn(&mut commands);
+    border_observers.spawn(&mut commands);
     commands.spawn(drop_observer);
+}
+
+fn update_skills(
+    _trigger: Trigger<PlayerEquipmentChanged>,
+    skills: Query<&PlayerSkills, With<Player>>,
+    mut locations: Query<(&mut ItemEntity, &PlayerAction), With<SkillGemLocation>>,
+) {
+    warn!("update_skills");
+    let Ok(skills) = skills.get_single() else {
+        return;
+    };
+    for (mut item_entity, action) in &mut locations {
+        item_entity.0 = skills.get(*action);
+    }
 }
 
 fn on_drop_item(
     trigger: Trigger<Pointer<DragDrop>>,
     mut commands: Commands,
+    locations: Query<&PlayerAction, With<SkillGemLocation>>,
     cursor: Single<&DraggedEntity, With<DndCursor>>,
     skill_gems: Query<(), With<SkillGem>>,
 ) {
     if let Some(item_entity) = ***cursor {
         if skill_gems.get(item_entity).is_ok() {
-            // The item dropped is a skill gem
-            commands.queue(EquipSkillGemCommand(item_entity));
+            if let Ok(action) = locations.get(trigger.entity()) {
+                // The item dropped is a skill gem
+                commands.queue(EquipSkillGemCommand(item_entity, *action));
+            }
         }
     }
 }
