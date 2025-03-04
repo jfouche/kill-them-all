@@ -43,7 +43,8 @@ impl Plugin for DebugPlugin {
                 log_transitions::<InGameState>,
                 // display_collision_events.in_set(GameRunningSet::EntityUpdate),
                 toggle_debug_ui.run_if(input_just_pressed(KeyCode::Backquote)),
-                count_entities.run_if(on_timer(Duration::from_secs(1))),
+                count_entities.run_if(on_timer(Duration::from_secs(5))),
+                show_key_pressed,
             ),
         );
     }
@@ -98,4 +99,15 @@ fn toggle_debug_ui(mut options: ResMut<UiDebugOptions>) {
 
 fn count_entities(entities: &Entities) {
     info!("count_entities() : {}", entities.len());
+}
+
+fn show_key_pressed(inputs: Res<ButtonInput<KeyCode>>) {
+    let key_pressed = inputs
+        .get_just_pressed()
+        .map(|k| format!("{k:?}"))
+        .collect::<Vec<_>>()
+        .join(", ");
+    if !key_pressed.is_empty() {
+        info!("show_key_pressed() : {key_pressed}");
+    }
 }

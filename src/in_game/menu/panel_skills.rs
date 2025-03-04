@@ -1,12 +1,17 @@
 use crate::components::{
-    item::ItemLocation,
+    item::{EquipSkillGemCommand, ItemLocation},
     player::Player,
     skills::{
         death_aura::DeathAura, fireball::FireBallLauncher, mine::MineDropper,
-        shuriken::ShurikenLauncher, SkillUI,
+        shuriken::ShurikenLauncher, SkillGem, SkillUI,
     },
 };
 use bevy::prelude::*;
+
+use super::{
+    dnd::{DndCursor, DraggedEntity},
+    popup_info::SpawnInfoPopupObservers,
+};
 
 #[derive(Component)]
 #[require(
@@ -30,16 +35,46 @@ impl Plugin for SkillsPanelPlugin {
 }
 
 fn create_panel(trigger: Trigger<OnAdd, SkillsPanel>, mut commands: Commands) {
+    let mut spawn_info_observers = SpawnInfoPopupObservers::new();
+    let mut drop_observer = Observer::new(on_drop_item);
+
     commands.entity(trigger.entity()).with_children(|panel| {
         panel.spawn(Text::new("A:"));
-        panel.spawn(ItemLocation);
+        let entity = panel.spawn(ItemLocation).id();
+        spawn_info_observers.watch_entity(entity);
+        drop_observer.watch_entity(entity);
+
         panel.spawn(Text::new("Z:"));
-        panel.spawn(ItemLocation);
+        let entity = panel.spawn(ItemLocation).id();
+        spawn_info_observers.watch_entity(entity);
+        drop_observer.watch_entity(entity);
+
         panel.spawn(Text::new("E:"));
-        panel.spawn(ItemLocation);
+        let entity = panel.spawn(ItemLocation).id();
+        spawn_info_observers.watch_entity(entity);
+        drop_observer.watch_entity(entity);
+
         panel.spawn(Text::new("R:"));
-        panel.spawn(ItemLocation);
+        let entity = panel.spawn(ItemLocation).id();
+        spawn_info_observers.watch_entity(entity);
+        drop_observer.watch_entity(entity);
     });
+    spawn_info_observers.spawn(&mut commands);
+    commands.spawn(drop_observer);
+}
+
+fn on_drop_item(
+    trigger: Trigger<Pointer<DragDrop>>,
+    mut commands: Commands,
+    cursor: Single<&DraggedEntity, With<DndCursor>>,
+    skill_gems: Query<(), With<SkillGem>>,
+) {
+    if let Some(item_entity) = ***cursor {
+        if skill_gems.get(item_entity).is_ok() {
+            // The item dropped is a skill gem
+            commands.queue(EquipSkillGemCommand(item_entity));
+        }
+    }
 }
 
 // fn show_skills(

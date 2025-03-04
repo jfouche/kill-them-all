@@ -192,7 +192,7 @@ fn on_drop_on_location(
     cursor: Single<&DraggedEntity, With<DndCursor>>,
     inventory: Single<&Inventory>,
 ) {
-    warn!("on_drop_on_location({})", trigger.entity());
+    info!("on_drop_on_location({})", trigger.entity());
     if let Ok(index) = indexes.get(trigger.entity()) {
         if inventory.at(index.0).is_none() {
             // There is no item at the index in the inventory

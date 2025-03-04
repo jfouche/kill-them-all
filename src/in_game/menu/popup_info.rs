@@ -62,7 +62,7 @@ fn spawn_popup_info_on_over_item(
     assets: Res<ItemAssets>,
 ) {
     if let Ok(ItemEntity(Some(item_entity))) = item_entities.get_mut(trigger.entity()) {
-        warn!("spawn_popup_info_on_over_item({})", trigger.entity());
+        info!("spawn_popup_info_on_over_item({})", trigger.entity());
         if let Ok(info) = items.get(*item_entity) {
             commands
                 .spawn((
@@ -85,7 +85,7 @@ fn despawn_popup_info_on_out_item(
     popups: Query<Entity, With<InfoPopup>>,
 ) {
     for entity in &popups {
-        warn!("despawn_popup_info_on_out_item({})", trigger.entity());
+        info!("despawn_popup_info_on_out_item({})", trigger.entity());
         commands.entity(entity).despawn_recursive();
     }
     trigger.propagate(false);

@@ -1,6 +1,5 @@
+use super::item::DroppedItem;
 use bevy::prelude::*;
-
-use super::{equipment::Equipment, item::DroppedItem, player::Player};
 
 ///
 /// The [Inventory] contains all items that carry the [Player] as children
@@ -132,96 +131,6 @@ impl Command for RemoveFromInventoryCommand {
                 .remove::<InventoryPos>()
                 .remove_children(&[self.0]);
             world.trigger(InventoryChanged);
-        }
-    }
-}
-
-/// Command to add an [Equipment] to the [Player].
-///
-/// If the item is in the [Inventory], it will remove it.
-/// If the [Player] already have this kind of [Equipment], it will put the old
-/// one to the [Inventory]
-pub struct EquipItemCommand(pub Entity);
-
-impl Command for EquipItemCommand {
-    fn apply(self, world: &mut World) {
-        let mut equipments = world.query::<(Entity, &Equipment, &Parent)>();
-        let Ok(equipment_to_equip) = equipments.get(world, self.0).map(|(_, eqp, _)| *eqp) else {
-            warn!("Can't equip {} as it's not an Equipment", self.0);
-            return;
-        };
-
-        // Check it the player already have an item of same type
-        let player = world.query_filtered::<Entity, With<Player>>().single(world);
-        let old_equipment = equipments
-            .iter(world)
-            // same parent, same type, but different entity
-            .filter(|(entity, eqp, parent)| {
-                player == ***parent && **eqp == equipment_to_equip && *entity != self.0
-            })
-            .map(|(e, _eqp, _p)| e)
-            // There should be at most 1 equipment
-            .next();
-
-        // Manage inventory
-        RemoveFromInventoryCommand(self.0).apply(world);
-        if let Some(old_equipment) = old_equipment {
-            AddToInventoryCommand(old_equipment).apply(world);
-        }
-
-        // Add_child will remove the old parent before applying new parenting
-        world.entity_mut(player).add_child(self.0);
-        world.trigger(PlayerEquipmentChanged);
-    }
-}
-
-/// Command to drop an item
-pub struct DropItemCommand(pub Entity);
-
-impl Command for DropItemCommand {
-    fn apply(self, world: &mut World) {
-        let player = world.query_filtered::<Entity, With<Player>>().single(world);
-        let inventory = world
-            .query_filtered::<Entity, With<Inventory>>()
-            .single(world);
-
-        enum Change {
-            None,
-            Player,
-            Inventory,
-            Other(Entity),
-        }
-
-        let change = world
-            .query::<&Parent>()
-            .get(world, self.0)
-            .map(|p| {
-                if **p == player {
-                    Change::Player
-                } else if **p == inventory {
-                    Change::Inventory
-                } else {
-                    Change::Other(**p)
-                }
-            })
-            .unwrap_or(Change::None);
-
-        match change {
-            Change::Player => {
-                world.entity_mut(player).remove_children(&[self.0]);
-            }
-            Change::Inventory => {
-                RemoveFromInventoryCommand(self.0).apply(world);
-            }
-            Change::Other(parent) => {
-                world.entity_mut(parent).remove_children(&[self.0]);
-            }
-            Change::None => {}
-        }
-        world.entity_mut(self.0).despawn();
-
-        if let Change::Player = change {
-            world.trigger(PlayerEquipmentChanged);
         }
     }
 }

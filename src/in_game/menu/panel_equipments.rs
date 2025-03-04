@@ -5,11 +5,11 @@ use super::{
 };
 use crate::components::{
     equipment::{Amulet, BodyArmour, Boots, Helmet, Weapon},
-    inventory::{EquipItemCommand, PlayerEquipmentChanged},
-    item::{ItemAssets, ItemEntity, ItemLocation},
+    inventory::PlayerEquipmentChanged,
+    item::{EquipSkillGemCommand, ItemAssets, ItemEntity, ItemLocation},
     player::Player,
 };
-use bevy::{ecs::query::QueryFilter, prelude::*};
+use bevy::prelude::*;
 
 ///
 /// Equipments panel
@@ -195,7 +195,7 @@ fn on_drop_equipment<T>(
 ) where
     T: Component,
 {
-    warn!(
+    info!(
         "on_drop_equipment::<{}>({})",
         std::any::type_name::<T>(),
         trigger.entity()
@@ -203,22 +203,23 @@ fn on_drop_equipment<T>(
     if let Some(item_entity) = ***cursor {
         if equipments.get(item_entity).is_ok() {
             // The item drop is the correct one
-            commands.queue(EquipItemCommand(item_entity));
+            commands.queue(EquipSkillGemCommand(item_entity));
         }
     }
 }
 
-fn update_equipment<F1, F2>(
-    mut locations: Query<&mut ItemEntity, F1>,
-    equipments: Query<(Entity, &Parent), F2>,
-    player: Entity,
+fn update_equipment<EL, E>(
+    _trigger: Trigger<PlayerEquipmentChanged>,
+    mut locations: Query<&mut ItemEntity, With<EL>>,
+    equipments: Query<(Entity, &Parent), With<E>>,
+    player: Single<Entity, With<Player>>,
 ) where
-    F1: QueryFilter,
-    F2: QueryFilter,
+    EL: Component,
+    E: Component,
 {
     let entity_option = equipments
         .iter()
-        .filter(|(_e, parent)| ***parent == player)
+        .filter(|(_e, parent)| ***parent == *player)
         .map(|(e, _p)| e)
         .next() // There should be only one result if it matches
         ;
@@ -228,78 +229,15 @@ fn update_equipment<F1, F2>(
     }
 }
 
-fn update_equipments(
-    _trigger: Trigger<PlayerEquipmentChanged>,
-    helmet_locations: Query<
-        &mut ItemEntity,
-        (
-            With<HelmetLocation>,
-            Without<BodyArmourLocation>,
-            Without<BootsLocation>,
-            Without<AmuletLocation>,
-            Without<WeaponLocation>,
-        ),
-    >,
-    helmets: Query<(Entity, &Parent), With<Helmet>>,
-    body_armour_locations: Query<
-        &mut ItemEntity,
-        (
-            With<BodyArmourLocation>,
-            Without<HelmetLocation>,
-            Without<BootsLocation>,
-            Without<AmuletLocation>,
-            Without<WeaponLocation>,
-        ),
-    >,
-    body_armours: Query<(Entity, &Parent), With<BodyArmour>>,
-    boots_locations: Query<
-        &mut ItemEntity,
-        (
-            With<BootsLocation>,
-            Without<HelmetLocation>,
-            Without<BodyArmourLocation>,
-            Without<AmuletLocation>,
-            Without<WeaponLocation>,
-        ),
-    >,
-    boots: Query<(Entity, &Parent), With<Boots>>,
-    amulet_locations: Query<
-        &mut ItemEntity,
-        (
-            With<AmuletLocation>,
-            Without<HelmetLocation>,
-            Without<BodyArmourLocation>,
-            Without<BootsLocation>,
-            Without<WeaponLocation>,
-        ),
-    >,
-    amulets: Query<(Entity, &Parent), With<Amulet>>,
-    weapon_locations: Query<
-        &mut ItemEntity,
-        (
-            With<WeaponLocation>,
-            Without<HelmetLocation>,
-            Without<BodyArmourLocation>,
-            Without<BootsLocation>,
-            Without<AmuletLocation>,
-        ),
-    >,
-    weapons: Query<(Entity, &Parent), With<Weapon>>,
-    player: Single<Entity, With<Player>>,
-) {
-    warn!("update_equipments()");
-    update_equipment(helmet_locations, helmets, *player);
-    update_equipment(body_armour_locations, body_armours, *player);
-    update_equipment(boots_locations, boots, *player);
-    update_equipment(amulet_locations, amulets, *player);
-    update_equipment(weapon_locations, weapons, *player);
-}
+pub struct EquipmentPanelPlugin;
 
-pub struct InventoryPanelPlugin;
-
-impl Plugin for InventoryPanelPlugin {
+impl Plugin for EquipmentPanelPlugin {
     fn build(&self, app: &mut App) {
         app.add_observer(spawn_panel_content)
-            .add_observer(update_equipments);
+            .add_observer(update_equipment::<HelmetLocation, Helmet>)
+            .add_observer(update_equipment::<BodyArmourLocation, BodyArmour>)
+            .add_observer(update_equipment::<BootsLocation, Boots>)
+            .add_observer(update_equipment::<AmuletLocation, Amulet>)
+            .add_observer(update_equipment::<WeaponLocation, Weapon>);
     }
 }
