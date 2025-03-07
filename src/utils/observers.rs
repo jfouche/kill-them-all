@@ -1,12 +1,20 @@
 use bevy::prelude::*;
 
-#[derive(Default, Deref, DerefMut)]
-pub struct MultipleObservers(pub Vec<Observer>);
+/// Helper trait to manage Vec<Oberver> that watch multiple entities
+pub trait VecObserversExt {
+    fn with_observers(self, observers: Vec<Observer>) -> Self;
+    fn watch_entity(&mut self, entity: Entity);
+}
 
-impl MultipleObservers {
-    pub fn watch_entity(&mut self, entity: Entity) {
-        for o in self.0.iter_mut() {
-            o.watch_entity(entity);
+impl VecObserversExt for Vec<Observer> {
+    fn watch_entity(&mut self, entity: Entity) {
+        self.iter_mut().for_each(|o| o.watch_entity(entity));
+    }
+
+    fn with_observers(mut self, observers: Vec<Observer>) -> Self {
+        for o in observers {
+            self.push(o);
         }
+        self
     }
 }

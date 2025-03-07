@@ -3,11 +3,14 @@ use super::{
     item_location::{ItemLocationDragObservers, ShowBorderOnDrag},
     popup_info::SpawnInfoPopupObservers,
 };
-use crate::components::{
-    equipment::{Amulet, BodyArmour, Boots, Helmet, Weapon},
-    inventory::PlayerEquipmentChanged,
-    item::{EquipEquipmentCommand, ItemAssets, ItemEntity, ItemLocation},
-    player::Player,
+use crate::{
+    components::{
+        equipment::{Amulet, BodyArmour, Boots, Helmet, Weapon},
+        inventory::PlayerEquipmentChanged,
+        item::{EquipEquipmentCommand, ItemAssets, ItemEntity, ItemLocation},
+        player::Player,
+    },
+    utils::observers::VecObserversExt,
 };
 use bevy::prelude::*;
 
@@ -124,63 +127,59 @@ fn spawn_panel_content(
     mut commands: Commands,
     assets: Res<ItemAssets>,
 ) {
-    let mut spawn_info_observers = SpawnInfoPopupObservers::new();
-    let mut helmet_border_obervers = ShowBorderOnDrag::<With<Helmet>>::new();
-    let mut body_armour_border_observers = ShowBorderOnDrag::<With<BodyArmour>>::new();
-    let mut boots_border_observers = ShowBorderOnDrag::<With<Boots>>::new();
-    let mut amulet_border_observers = ShowBorderOnDrag::<With<Amulet>>::new();
-    let mut weapon_border_observers = ShowBorderOnDrag::<With<Weapon>>::new();
-    let mut drag_item_observers = ItemLocationDragObservers::new();
+    let mut observers = Vec::new()
+        .with_observers(SpawnInfoPopupObservers::observers())
+        .with_observers(ItemLocationDragObservers::observers());
+
+    let mut helmet_border_observers = ShowBorderOnDrag::<With<Helmet>>::default();
+    let mut body_armour_border_observers = ShowBorderOnDrag::<With<BodyArmour>>::default();
+    let mut boots_border_observers = ShowBorderOnDrag::<With<Boots>>::default();
+    let mut amulet_border_observers = ShowBorderOnDrag::<With<Amulet>>::default();
+    let mut weapon_border_observers = ShowBorderOnDrag::<With<Weapon>>::default();
 
     commands.entity(trigger.entity()).with_children(|panel| {
-        let id = panel
+        let entity = panel
             .spawn(HelmetLocation::bundle(&assets))
             .observe(on_drop_equipment::<Helmet>)
             .id();
-        spawn_info_observers.watch_entity(id);
-        helmet_border_obervers.watch_entity(id);
-        drag_item_observers.watch_entity(id);
+        observers.watch_entity(entity);
+        helmet_border_observers.watch_entity(entity);
 
-        let id = panel
+        let entity = panel
             .spawn(BodyArmourLocation::bundle(&assets))
             .observe(on_drop_equipment::<BodyArmour>)
             .id();
-        spawn_info_observers.watch_entity(id);
-        body_armour_border_observers.watch_entity(id);
-        drag_item_observers.watch_entity(id);
+        observers.watch_entity(entity);
+        body_armour_border_observers.watch_entity(entity);
 
-        let id = panel
+        let entity = panel
             .spawn(BootsLocation::bundle(&assets))
             .observe(on_drop_equipment::<Boots>)
             .id();
-        spawn_info_observers.watch_entity(id);
-        boots_border_observers.watch_entity(id);
-        drag_item_observers.watch_entity(id);
+        observers.watch_entity(entity);
+        boots_border_observers.watch_entity(entity);
 
-        let id = panel
+        let entity = panel
             .spawn(AmuletLocation::bundle(&assets))
             .observe(on_drop_equipment::<Amulet>)
             .id();
-        spawn_info_observers.watch_entity(id);
-        amulet_border_observers.watch_entity(id);
-        drag_item_observers.watch_entity(id);
+        observers.watch_entity(entity);
+        amulet_border_observers.watch_entity(entity);
 
-        let id = panel
+        let entity = panel
             .spawn(WeaponLocation::bundle(&assets))
             .observe(on_drop_equipment::<Weapon>)
             .id();
-        spawn_info_observers.watch_entity(id);
-        weapon_border_observers.watch_entity(id);
-        drag_item_observers.watch_entity(id);
+        observers.watch_entity(entity);
+        weapon_border_observers.watch_entity(entity);
     });
 
-    spawn_info_observers.spawn(&mut commands);
-    helmet_border_obervers.spawn(&mut commands);
-    body_armour_border_observers.spawn(&mut commands);
-    boots_border_observers.spawn(&mut commands);
-    amulet_border_observers.spawn(&mut commands);
-    weapon_border_observers.spawn(&mut commands);
-    drag_item_observers.spawn(&mut commands);
+    commands.spawn_batch(observers);
+    commands.spawn_batch(helmet_border_observers.0);
+    commands.spawn_batch(body_armour_border_observers.0);
+    commands.spawn_batch(boots_border_observers.0);
+    commands.spawn_batch(amulet_border_observers.0);
+    commands.spawn_batch(weapon_border_observers.0);
 
     commands.queue(|world: &mut World| {
         world.trigger(PlayerEquipmentChanged);

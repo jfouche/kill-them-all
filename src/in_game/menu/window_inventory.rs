@@ -13,7 +13,7 @@ use crate::{
         },
         item::{ItemEntity, ItemLocation},
     },
-    schedule::{GameRunningSet, GameState},
+    schedule::{GameRunningSet, GameState}, utils::observers::VecObserversExt,
 };
 use bevy::{input::common_conditions::input_just_pressed, prelude::*};
 
@@ -113,14 +113,14 @@ fn toggle_window(
 }
 
 fn create_panel(trigger: Trigger<OnAdd, InventoryPanel>, mut commands: Commands) {
-    let mut spawn_info_observers = SpawnInfoPopupObservers::new();
-    let mut show_borders_on_drag_observers = <ShowBorderOnDrag>::new();
-    let mut drag_item_observers = ItemLocationDragObservers::new();
-    let mut on_drop_observer = Observer::new(on_drop_on_location);
+    let mut observers = vec![Observer::new(on_drop_on_location)]
+        .with_observers(SpawnInfoPopupObservers::observers())
+        .with_observers(ItemLocationDragObservers::observers())
+        .with_observers(<ShowBorderOnDrag>::observers());
 
     commands.entity(trigger.entity()).with_children(|cmd| {
         for idx in 0..Inventory::len() {
-            let id = cmd
+            let entity = cmd
                 .spawn((
                     InventoryLocation,
                     Name::new(format!("InventoryLocation({idx})")),
@@ -128,17 +128,11 @@ fn create_panel(trigger: Trigger<OnAdd, InventoryPanel>, mut commands: Commands)
                     InventoryIndex(idx),
                 ))
                 .id();
-            spawn_info_observers.watch_entity(id);
-            show_borders_on_drag_observers.watch_entity(id);
-            drag_item_observers.watch_entity(id);
-            on_drop_observer.watch_entity(id);
+            observers.watch_entity(entity);
         }
     });
 
-    spawn_info_observers.spawn(&mut commands);
-    show_borders_on_drag_observers.spawn(&mut commands);
-    drag_item_observers.spawn(&mut commands);
-    commands.spawn(on_drop_observer);
+    commands.spawn_batch(observers);
 
     commands.queue(|world: &mut World| {
         world.trigger(InventoryChanged);

@@ -64,32 +64,27 @@ fn update_image(
     }
 }
 
-pub struct ShowBorderOnDrag<F = With<Item>> {
-    on_enter: Observer,
-    on_leave: Observer,
-    _phantom: PhantomData<F>,
+#[derive(Deref, DerefMut)]
+pub struct ShowBorderOnDrag<F = With<Item>>(#[deref] pub Vec<Observer>, PhantomData<F>);
+
+impl<F> Default for ShowBorderOnDrag<F>
+where
+    F: QueryFilter + 'static,
+{
+    fn default() -> Self {
+        Self(Self::observers(), PhantomData)
+    }
 }
 
 impl<F> ShowBorderOnDrag<F>
 where
     F: QueryFilter + 'static,
 {
-    pub fn new() -> Self {
-        Self {
-            on_enter: Observer::new(show_borders_on_drag_enter_item::<F>),
-            on_leave: Observer::new(hide_borders_on_drag_leave_item),
-            _phantom: PhantomData::<F>,
-        }
-    }
-
-    pub fn watch_entity(&mut self, entity: Entity) {
-        self.on_enter.watch_entity(entity);
-        self.on_leave.watch_entity(entity);
-    }
-
-    pub fn spawn(self, commands: &mut Commands) {
-        commands.spawn(self.on_enter);
-        commands.spawn(self.on_leave);
+    pub fn observers() -> Vec<Observer> {
+        vec![
+            Observer::new(show_borders_on_drag_enter_item::<F>),
+            Observer::new(hide_borders_on_drag_leave_item),
+        ]
     }
 }
 
@@ -123,24 +118,21 @@ fn hide_borders_on_drag_leave_item(
     trigger.propagate(false);
 }
 
+#[derive(Deref, DerefMut)]
 pub struct ItemLocationDragObservers(Vec<Observer>);
 
+impl Default for ItemLocationDragObservers {
+    fn default() -> Self {
+        Self(Self::observers())
+    }
+}
+
 impl ItemLocationDragObservers {
-    pub fn new() -> Self {
-        Self(vec![
+    pub fn observers() -> Vec<Observer> {
+        vec![
             Observer::new(on_drag_start_item),
             Observer::new(on_drag_end_item),
-        ])
-    }
-
-    pub fn watch_entity(&mut self, entity: Entity) {
-        self.0.iter_mut().for_each(|o| {
-            o.watch_entity(entity);
-        });
-    }
-
-    pub fn spawn(self, commands: &mut Commands) {
-        commands.spawn_batch(self.0);
+        ]
     }
 }
 

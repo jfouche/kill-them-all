@@ -8,7 +8,7 @@ use crate::{
 use bevy::{
     dev_tools::{fps_overlay::*, states::log_transitions, ui_debug_overlay::*},
     ecs::entity::Entities,
-    input::common_conditions::input_just_pressed,
+    input::common_conditions::{input_just_pressed, input_just_released},
     prelude::*,
     time::common_conditions::on_timer,
     window::PrimaryWindow,
@@ -44,7 +44,7 @@ impl Plugin for DebugPlugin {
                 // display_collision_events.in_set(GameRunningSet::EntityUpdate),
                 toggle_debug_ui.run_if(input_just_pressed(KeyCode::Backquote)),
                 count_entities.run_if(on_timer(Duration::from_secs(5))),
-                show_key_pressed,
+                show_key_pressed.run_if(input_just_released(KeyCode::KeyD)),
             ),
         );
     }

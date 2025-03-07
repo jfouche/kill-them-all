@@ -33,6 +33,7 @@ pub fn small_button_node() -> Node {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Clone, Copy)]
 pub enum ButtonKind {
     Big,
@@ -62,6 +63,7 @@ impl TextButton {
         }
     }
 
+    #[allow(dead_code)]
     pub fn small(text: impl Into<String>) -> Self {
         Self {
             text: text.into(),

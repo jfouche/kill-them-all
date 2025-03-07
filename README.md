@@ -11,6 +11,8 @@ Use mouse to move player. Take items dropped by monsters you killed.
 Use [I] to open the inventory.
 Try to use the best items for the player.
 
+In debug mode, you can press [D] to log some information on console.
+
 ## Player affixes
 
 TODO

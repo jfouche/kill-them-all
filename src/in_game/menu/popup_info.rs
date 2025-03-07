@@ -28,29 +28,20 @@ impl InfoPopup {
 }
 
 /// Observers that shows an info popup when overing an Item.
-///
-/// It needs an [ItemEntity] component.
-pub struct SpawnInfoPopupObservers {
-    spawn: Observer,
-    despawn: Observer,
-}
+pub struct SpawnInfoPopupObservers(/* pub Vec<Observer> */);
+
+// impl Default for SpawnInfoPopupObservers {
+//     fn default() -> Self {
+//         Self(Self::observers())
+//     }
+// }
 
 impl SpawnInfoPopupObservers {
-    pub fn new() -> Self {
-        Self {
-            spawn: Observer::new(spawn_popup_info_on_over_item),
-            despawn: Observer::new(despawn_popup_info_on_out_item),
-        }
-    }
-
-    pub fn watch_entity(&mut self, entity: Entity) {
-        self.spawn.watch_entity(entity);
-        self.despawn.watch_entity(entity);
-    }
-
-    pub fn spawn(self, commands: &mut Commands) {
-        commands.spawn(self.spawn);
-        commands.spawn(self.despawn);
+    pub fn observers() -> Vec<Observer> {
+        vec![
+            Observer::new(spawn_popup_info_on_over_item),
+            Observer::new(despawn_popup_info_on_out_item),
+        ]
     }
 }
 
