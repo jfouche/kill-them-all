@@ -99,7 +99,7 @@ impl PlayerSkills {
         }
     }
 
-    fn remove(&mut self, skill: Entity) -> bool {
+    pub fn remove(&mut self, skill: Entity) -> bool {
         let Some(index) = self.0.iter().position(|&o| o == Some(skill)) else {
             return false;
         };

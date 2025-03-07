@@ -1,4 +1,4 @@
-use super::item::DroppedItem;
+use super::{item::DroppedItem, player::PlayerSkills};
 use bevy::prelude::*;
 
 ///
@@ -110,6 +110,14 @@ impl Command for AddToInventoryAtIndexCommand {
         inventory.remove(self.item);
         if inventory.add_at(self.item, self.index) {
             world.entity_mut(inventory_entity).add_child(self.item);
+
+            // remove from skill if it was
+            world
+                .query::<&mut PlayerSkills>()
+                .get_single_mut(world)
+                .expect("PlayerSkills")
+                .remove(self.item);
+
             world.trigger(InventoryChanged);
         }
     }
