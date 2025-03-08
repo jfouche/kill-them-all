@@ -16,10 +16,11 @@ use crate::{
         monster::MonsterDeathEvent,
         orb::OrbProvider,
         player::{
-            Experience, LevelUpEvent, NextPositionIndicator, NextPositionIndicatorAssets, Player,
-            PlayerAssets, PlayerDeathEvent, Score,
+            EquipSkillGemCommand, Experience, LevelUpEvent, NextPositionIndicator,
+            NextPositionIndicatorAssets, Player, PlayerAction, PlayerAssets, PlayerDeathEvent,
+            PlayerSkills, Score,
         },
-        skills::death_aura::DeathAura,
+        skills::{death_aura::DeathAura, spawn_skill},
         world_map::{WorldMap, WorldMapLoadingFinished, LAYER_PLAYER},
         GROUP_ENEMY,
     },
@@ -43,6 +44,7 @@ impl Plugin for PlayerPlugin {
             .register_type::<Experience>()
             .register_type::<Inventory>()
             .register_type::<InventoryPos>()
+            .register_type::<PlayerSkills>()
             .add_systems(OnEnter(GameState::InGame), (spawn_player, unpause))
             .add_systems(
                 OnExit(GameState::InGame),
@@ -114,11 +116,14 @@ fn spawn_player(mut commands: Commands, assets: Res<PlayerAssets>) {
     commands
         .spawn((Player, Player::sprite(&assets)))
         .with_children(|player| {
-            player.spawn(DeathAura);
             player.spawn(IncreaseAreaOfEffect(50.));
         })
         .observe(set_invulnerable_on_hit)
         .observe(player_dying);
+
+    // Add Death aura to the player
+    let info = spawn_skill::<DeathAura>(&mut commands);
+    commands.queue(EquipSkillGemCommand(info.entity, PlayerAction::Skill1));
 
     // TEMP
     {

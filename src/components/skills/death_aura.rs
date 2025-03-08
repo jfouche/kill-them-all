@@ -6,7 +6,7 @@ use bevy::{
 };
 use bevy_rapier2d::prelude::*;
 use damage::{BaseDamageOverTime, Damager};
-use skills::{AffectedByAreaOfEffect, Skill, SkillUI};
+use skills::{AffectedByAreaOfEffect, SkillGem, SkillUI};
 
 ///
 /// Death aura weapon
@@ -14,7 +14,7 @@ use skills::{AffectedByAreaOfEffect, Skill, SkillUI};
 #[derive(Component, Default)]
 #[require(
     Name(|| Name::new("DeathAura")),
-    Skill,
+    SkillGem,
     AffectedByAreaOfEffect,
     Damager,
     BaseDamageOverTime(|| BaseDamageOverTime(3.)),

@@ -1,4 +1,4 @@
-use super::{Skill, SkillUI};
+use super::{SkillGem, SkillUI};
 use crate::components::{
     damage::{BaseHitDamageRange, Projectile},
     equipment::weapon::BaseAttackSpeed,
@@ -24,7 +24,7 @@ impl FromWorld for ShurikenAssets {
 ///
 #[derive(Component)]
 #[require(
-    Skill,
+    SkillGem,
     Name(|| Name::new("ShurikenLauncher")),
     BaseHitDamageRange(|| BaseHitDamageRange::new(2., 4.)),
     BaseAttackSpeed(|| BaseAttackSpeed(1.5)),

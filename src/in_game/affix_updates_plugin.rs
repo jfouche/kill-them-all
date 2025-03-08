@@ -322,7 +322,7 @@ fn update_weapon_hit_damage_range(
     for (mut damage_range, base, more, increase) in &mut weapons {
         damage_range.init(base);
         if let Some(more) = more {
-            damage_range.add(more);
+            damage_range.more(more);
         }
         if let Some(increase) = increase {
             damage_range.increase(increase);
@@ -364,20 +364,21 @@ fn update_skill_attack_speed(
 
 /// [Skill]'s [HitDamageRange] = ([Weapon]'s [HitDamageRange] + [Character]'s [MoreDamage]) * [Character]'s [IncreaseDamage]
 fn update_skill_hit_damage_range(
-    mut skills: Query<(&mut HitDamageRange, &Parent), With<Skill>>,
+    mut skills: Query<(&mut HitDamageRange, &BaseHitDamageRange, &Parent), With<Skill>>,
     weapons: Query<(&HitDamageRange, &Parent), (With<Weapon>, Without<Skill>)>,
     characters: Query<(Option<&MoreDamage>, Option<&IncreaseDamage>), With<Character>>,
 ) {
-    for (mut skill_damage_range, parent) in &mut skills {
+    for (mut skill_damage_range, base, parent) in &mut skills {
+        skill_damage_range.init(base);
         if let Some(weapon_damage_range) = weapons
             .iter()
             .find(|(_, p)| ***p == **parent)
             .map(|(val, _)| val)
         {
-            *skill_damage_range = *weapon_damage_range;
+            skill_damage_range.add(weapon_damage_range);
             if let Ok((more, increase)) = characters.get(**parent) {
                 if let Some(more) = more {
-                    skill_damage_range.add(more);
+                    skill_damage_range.more(more);
                 }
                 if let Some(increase) = increase {
                     skill_damage_range.increase(increase);

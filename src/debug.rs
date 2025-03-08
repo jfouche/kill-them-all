@@ -43,8 +43,8 @@ impl Plugin for DebugPlugin {
                 log_transitions::<InGameState>,
                 // display_collision_events.in_set(GameRunningSet::EntityUpdate),
                 toggle_debug_ui.run_if(input_just_pressed(KeyCode::Backquote)),
-                count_entities.run_if(on_timer(Duration::from_secs(5))),
-                show_key_pressed.run_if(input_just_released(KeyCode::KeyD)),
+                count_entities.run_if(input_just_released(KeyCode::KeyD)),
+                show_key_pressed,
             ),
         );
     }

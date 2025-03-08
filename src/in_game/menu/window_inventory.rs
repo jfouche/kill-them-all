@@ -99,7 +99,8 @@ fn toggle_window(
             *visiblity = match *visiblity {
                 Visibility::Hidden => Visibility::Inherited,
                 _ => Visibility::Hidden,
-            }
+            };
+            commands.trigger(PlayerEquipmentChanged);
         }
         None => {
             // spawn window as it doesn't exist

@@ -6,7 +6,7 @@ use crate::components::{
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
-use super::{Skill, SkillUI};
+use super::{SkillGem, SkillUI};
 
 ///
 /// |Skill] that drop a mine regularly
@@ -14,7 +14,7 @@ use super::{Skill, SkillUI};
 #[derive(Component, Default)]
 #[require(
     Name(||Name::new("MineDropper")),
-    Skill,
+    SkillGem,
     HitDamageRange(|| HitDamageRange::new(1., 5.)),
     BaseAttackSpeed(|| BaseAttackSpeed(0.6))
 )]

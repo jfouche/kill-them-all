@@ -8,7 +8,7 @@ use super::{
 use crate::utils::despawn_after::DespawnAfter;
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
-use std::{time::Duration, usize};
+use std::time::Duration;
 
 #[derive(Component)]
 #[require(
@@ -70,7 +70,7 @@ impl From<usize> for PlayerAction {
     }
 }
 
-#[derive(Component, Default)]
+#[derive(Component, Default, Reflect)]
 pub struct PlayerSkills([Option<Entity>; 4]);
 
 impl PlayerSkills {
@@ -128,7 +128,7 @@ impl Command for EquipSkillGemCommand {
 
         let action = self.1;
         let old_gem = match skills.get(action) {
-            Some(gem) => (gem != gem_entity).then(|| gem),
+            Some(gem) => (gem != gem_entity).then_some(gem),
             None => None,
         };
         skills.set(action, gem_entity);

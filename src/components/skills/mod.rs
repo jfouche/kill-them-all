@@ -14,8 +14,8 @@ use mine::MineDropper;
 use rand::rngs::ThreadRng;
 use shuriken::ShurikenLauncher;
 
-#[derive(Component, Clone, Copy, PartialEq, Eq)]
-#[require(Item)]
+#[derive(Component, Default, Clone, Copy, PartialEq, Eq)]
+#[require(Item, Skill)]
 pub struct SkillGem;
 
 #[derive(Component, Default)]
@@ -51,12 +51,12 @@ impl SkillKind {
     }
 }
 
-fn spawn_skill<T>(commands: &mut Commands) -> ItemEntityInfo
+pub fn spawn_skill<T>(commands: &mut Commands) -> ItemEntityInfo
 where
     T: Component + Default + Into<ItemInfo>,
 {
     let info: ItemInfo = T::default().into();
-    let entity = commands.spawn((SkillGem, T::default(), info.clone())).id();
+    let entity = commands.spawn((T::default(), info.clone())).id();
     ItemEntityInfo { entity, info }
 }
 

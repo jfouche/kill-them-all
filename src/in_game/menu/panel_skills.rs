@@ -64,6 +64,9 @@ fn create_panel(trigger: Trigger<OnAdd, SkillsPanel>, mut commands: Commands) {
         observers.watch_entity(entity);
     });
     commands.spawn_batch(observers);
+
+    // to force to init the update
+    commands.trigger(PlayerEquipmentChanged);
 }
 
 fn update_skills(

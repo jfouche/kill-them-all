@@ -49,7 +49,12 @@ impl HitDamageRange {
         self.max = base.0.max;
     }
 
-    pub fn add(&mut self, more: &MoreDamage) {
+    pub fn add(&mut self, range: &HitDamageRange) {
+        self.min += range.min;
+        self.max += range.max;
+    }
+
+    pub fn more(&mut self, more: &MoreDamage) {
         self.min += more.0;
         self.max += more.0;
     }
