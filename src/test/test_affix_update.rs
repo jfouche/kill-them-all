@@ -1,3 +1,4 @@
+use crate::assert_approx_eq;
 use crate::components::{
     affix::{
         Armour, BaseArmour, IncreaseArmour, IncreaseAttackSpeed, IncreaseDamage, MoreArmour,
@@ -100,9 +101,9 @@ fn test_skill_damage_range() {
     let skill_alone = app.world_mut().spawn(FireBallLauncher).id();
     app.world_mut()
         .spawn(Character)
-        .with_children(|parent| {
-            parent.spawn(Wand);
-        })
+        // .with_children(|parent| {
+        //     parent.spawn(Wand);
+        // })
         .add_child(skill_alone);
 
     let skill_with_affixes = app.world_mut().spawn(FireBallLauncher).id();
@@ -118,10 +119,12 @@ fn test_skill_damage_range() {
     app.update();
 
     let damage_range = app.world().get::<HitDamageRange>(skill_alone);
-    assert_eq!(1., damage_range.unwrap().min);
-    assert_eq!(2., damage_range.unwrap().max);
+    assert_approx_eq!(1., damage_range.unwrap().min);
+    assert_approx_eq!(2., damage_range.unwrap().max);
 
     let damage_range = app.world().get::<HitDamageRange>(skill_with_affixes);
-    assert_eq!(12.1, damage_range.unwrap().min);
-    assert_eq!(13.75, damage_range.unwrap().max);
+    // weapon : (1..2 + 5 ) * 50% = 9..10.5
+    // skill : (1..2 + 9..10.5 + 2) * 10% = 13.2..15.95
+    assert_approx_eq!(13.2, damage_range.unwrap().min);
+    assert_approx_eq!(15.95, damage_range.unwrap().max);
 }

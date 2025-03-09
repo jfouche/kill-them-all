@@ -97,7 +97,7 @@ fn show_borders_on_drag_enter_item<F>(
     F: QueryFilter,
 {
     if let Some(item_entity) = ***cursor {
-        info!("show_borders_on_drag_enter_item({})", trigger.entity());
+        // info!("show_borders_on_drag_enter_item({})", trigger.entity());
         if items.get(item_entity).is_ok() {
             if let Ok(mut color) = colors.get_mut(trigger.entity()) {
                 color.0 = css::DARK_ORANGE.into();
@@ -112,7 +112,7 @@ fn hide_borders_on_drag_leave_item(
     mut colors: Query<&mut BackgroundColor, With<ItemLocation>>,
 ) {
     if let Ok(mut color) = colors.get_mut(trigger.entity()) {
-        info!("hide_borders_on_drag_leave_item({})", trigger.entity());
+        // info!("hide_borders_on_drag_leave_item({})", trigger.entity());
         color.0 = Srgba::NONE.into();
     }
     trigger.propagate(false);
@@ -144,7 +144,7 @@ fn on_drag_start_item(
     assets: Res<ItemAssets>,
 ) {
     if let Ok(ItemEntity(Some(item))) = locations.get(trigger.entity()) {
-        info!("on_drag_start_item({})", trigger.entity());
+        // info!("on_drag_start_item({})", trigger.entity());
         if let Ok(info) = infos.get(*item) {
             let (mut dragged_entity, mut cursor_image) = cursor.into_inner();
             **dragged_entity = Some(*item);
@@ -158,7 +158,7 @@ fn on_drag_end_item(
     mut trigger: Trigger<Pointer<DragEnd>>,
     cursor: Single<(&mut DraggedEntity, &mut ImageNode), With<DndCursor>>,
 ) {
-    info!("on_drag_end_item({})", trigger.entity());
+    // info!("on_drag_end_item({})", trigger.entity());
     let (mut dragged_entity, mut cursor_image) = cursor.into_inner();
     **dragged_entity = None;
     *cursor_image = ImageNode::default();

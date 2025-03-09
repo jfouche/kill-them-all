@@ -74,7 +74,6 @@ fn update_skills(
     skills: Query<&PlayerSkills, With<Player>>,
     mut locations: Query<(&mut ItemEntity, &PlayerAction), With<SkillGemLocation>>,
 ) {
-    warn!("update_skills");
     let Ok(skills) = skills.get_single() else {
         return;
     };
