@@ -44,8 +44,8 @@ impl Default for AttackTimer {
 
 impl AttackTimer {
     pub fn set_attack_speed(&mut self, attack_speed: AttackSpeed) {
-        if *attack_speed == 0.0 {
-            warn!("AttackSpeed is 0.");
+        if *attack_speed <= 0.0 {
+            warn!("AttackSpeed is <= 0.0");
             return;
         }
         self.set_duration(Duration::from_secs_f32(1. / *attack_speed));

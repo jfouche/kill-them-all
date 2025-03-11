@@ -46,14 +46,14 @@ fn cast_fireball(
 ) {
     let (skill_entity, target_pos) = (trigger.0, trigger.1);
     if let Ok((damage_range, parent)) = skills.get(skill_entity) {
-        if let Ok((gunner_pos, pierce, target)) = characters.get(**parent) {
-            let gunner_pos = gunner_pos.translation.xy();
-            let velocity = (target_pos - gunner_pos).normalize() * FIREBALL_SPEED;
+        if let Ok((origin, pierce, target)) = characters.get(**parent) {
+            let origin = origin.translation.xy();
+            let velocity = (target_pos - origin).normalize() * FIREBALL_SPEED;
             commands.spawn((
                 FireBall,
                 *damage_range,
                 DamagerParams {
-                    transform: Transform::from_translation(gunner_pos.extend(LAYER_DAMAGER)),
+                    transform: Transform::from_translation(origin.extend(LAYER_DAMAGER)),
                     collision_groups: Damager::collision_groups(*target),
                 },
                 ProjectileParams {

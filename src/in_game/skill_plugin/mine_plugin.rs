@@ -4,8 +4,11 @@ use crate::{
         character::{Character, Target},
         damage::{Damager, DamagerParams, HitDamageRange},
         despawn_all,
-        equipment::weapon::AttackTimer,
-        skills::mine::{Mine, MineAssets, MineDropper, MineExplodeTimer, MineExplosion},
+        skills::{
+            mine::{Mine, MineAssets, MineDropper, MineExplodeTimer, MineExplosion},
+            ActivateSkill,
+        },
+        world_map::LAYER_DAMAGER,
     },
     schedule::{GameRunningSet, GameState},
 };
@@ -21,32 +24,33 @@ impl Plugin for MinePlugin {
             .add_systems(OnExit(GameState::InGame), despawn_all::<MineExplosion>)
             .add_systems(
                 Update,
-                (drop_mine, mine_explosion, despawn_explosion).in_set(GameRunningSet::EntityUpdate),
-            );
+                (mine_explosion, despawn_explosion).in_set(GameRunningSet::EntityUpdate),
+            )
+            .add_observer(drop_mine);
     }
 }
 
 fn drop_mine(
+    trigger: Trigger<ActivateSkill>,
     mut commands: Commands,
-    mut mine_droppers: Query<(&AttackTimer, &HitDamageRange, &Parent), With<MineDropper>>,
+    mut mine_droppers: Query<(&HitDamageRange, &Parent), With<MineDropper>>,
     characters: Query<(&Transform, &Target), With<Character>>,
     assets: Res<MineAssets>,
 ) {
-    for (timer, damage_range, parent) in &mut mine_droppers {
-        if timer.just_finished() {
-            if let Ok((Transform { translation, .. }, target)) = characters.get(**parent) {
-                let image = assets.mine_texture.clone();
-                let atlas = assets.mine_atlas_layout.clone().into();
-                commands.spawn((
-                    Mine,
-                    *damage_range,
-                    DamagerParams {
-                        transform: Transform::from_xyz(translation.x, translation.y, 12.),
-                        collision_groups: Damager::collision_groups(*target),
-                    },
-                    Sprite::from_atlas_image(image, atlas),
-                ));
-            }
+    let skill_entity = trigger.0;
+    if let Ok((damage_range, parent)) = mine_droppers.get_mut(skill_entity) {
+        if let Ok((Transform { translation, .. }, target)) = characters.get(**parent) {
+            let image = assets.mine_texture.clone();
+            let atlas = assets.mine_atlas_layout.clone().into();
+            commands.spawn((
+                Mine,
+                *damage_range,
+                DamagerParams {
+                    transform: Transform::from_translation(translation.with_z(LAYER_DAMAGER)),
+                    collision_groups: Damager::collision_groups(*target),
+                },
+                Sprite::from_atlas_image(image, atlas),
+            ));
         }
     }
 }

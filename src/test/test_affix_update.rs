@@ -1,4 +1,5 @@
 use crate::assert_approx_eq;
+use crate::components::skills::shuriken::ShurikenLauncher;
 use crate::components::{
     affix::{
         Armour, BaseArmour, IncreaseArmour, IncreaseAttackSpeed, IncreaseDamage, MoreArmour,
@@ -72,7 +73,7 @@ fn test_skill_attack_speed() {
         })
         .add_child(skill_alone);
 
-    let skill_with_affixes = app.world_mut().spawn(FireBallLauncher).id();
+    let skill_with_affixes = app.world_mut().spawn(ShurikenLauncher).id();
     app.world_mut()
         .spawn(Character)
         .with_children(|parent| {
@@ -84,14 +85,15 @@ fn test_skill_attack_speed() {
     app.update();
 
     let attack_speed = app.world().get::<AttackSpeed>(skill_alone);
-    assert_eq!(1.2, attack_speed.unwrap().0);
+    assert_eq!(1.0, attack_speed.unwrap().0);
     let attack_timer = app.world().get::<AttackTimer>(skill_alone);
-    assert_eq!(1. / 1.2, attack_timer.unwrap().duration().as_secs_f32());
+    assert_eq!(1. / 1.0, attack_timer.unwrap().duration().as_secs_f32());
 
+    // 0.8 + 50% + 20%
     let attack_speed = app.world().get::<AttackSpeed>(skill_with_affixes);
-    assert_eq!(2.16, attack_speed.unwrap().0);
+    assert_approx_eq!(1.44, attack_speed.unwrap().0);
     let attack_timer = app.world().get::<AttackTimer>(skill_with_affixes);
-    assert_eq!(1. / 2.16, attack_timer.unwrap().duration().as_secs_f32());
+    assert_eq!(1. / 1.44, attack_timer.unwrap().duration().as_secs_f32());
 }
 
 #[test]

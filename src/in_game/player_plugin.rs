@@ -21,7 +21,7 @@ use crate::{
             NextPositionIndicatorAssets, Player, PlayerAction, PlayerAssets, PlayerDeathEvent,
             PlayerSkills, Score,
         },
-        skills::{death_aura::DeathAura, spawn_skill, ActivateSkill, Skill},
+        skills::{spawn_skill, ActivateSkill, Skill},
         world_map::{WorldMap, WorldMapLoadingFinished, LAYER_PLAYER},
         GROUP_ENEMY,
     },
@@ -123,8 +123,8 @@ fn spawn_player(mut commands: Commands, assets: Res<PlayerAssets>) {
         .observe(set_invulnerable_on_hit)
         .observe(player_dying);
 
-    // Add Death aura to the player
-    let info = spawn_skill::<DeathAura>(&mut commands);
+    // Add a skill to the player
+    let info = spawn_skill::<crate::components::skills::shuriken::ShurikenLauncher>(&mut commands);
     commands.queue(EquipSkillGemCommand(info.entity, PlayerAction::Skill1));
 
     // TEMP

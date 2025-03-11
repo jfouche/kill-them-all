@@ -22,22 +22,14 @@ impl FromWorld for ShurikenAssets {
 ///
 /// Skill that launch [Shuriken]s
 ///
-#[derive(Component)]
+#[derive(Component, Default)]
 #[require(
     SkillGem,
     Name(|| Name::new("ShurikenLauncher")),
     BaseHitDamageRange(|| BaseHitDamageRange::new(2., 4.)),
-    BaseAttackSpeed(|| BaseAttackSpeed(1.5)),
+    BaseAttackSpeed(|| BaseAttackSpeed(0.6)),
 )]
-pub struct ShurikenLauncher {
-    pub dir: Dir2,
-}
-
-impl Default for ShurikenLauncher {
-    fn default() -> Self {
-        ShurikenLauncher { dir: Dir2::NORTH }
-    }
-}
+pub struct ShurikenLauncher;
 
 impl SkillUI for ShurikenLauncher {
     fn title() -> String {
