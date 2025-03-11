@@ -1,4 +1,7 @@
-use super::{AffixesInserter, Equipment, EquipmentUI};
+use super::{
+    common::{AffixesInserter, EquipmentUI},
+    Equipment,
+};
 use crate::components::{
     affix::{Armour, MoreLife, PierceChance},
     item::{AffixConfigGenerator, ItemEntityInfo, ItemLevel, ItemRarity},

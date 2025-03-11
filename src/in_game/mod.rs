@@ -8,7 +8,7 @@ pub mod life_bar_plugin;
 pub mod menu;
 pub mod monster_plugin;
 pub mod player_plugin;
-pub mod skill_plugin;
+pub mod skills;
 pub mod world_map_plugin;
 
 pub use plugin::{back_to_game, pause, unpause, InGamePluginsGroup};
@@ -40,7 +40,7 @@ mod plugin {
                 .add(world_map_plugin::WorldMapPlugin)
                 .add(life_bar_plugin::LifeBarPlugin)
                 .add(animation_plugin::AnimationPlugin)
-                .add(skill_plugin::SkillsPlugin)
+                .add(skills::SkillsPlugin)
                 .add(menu::InGameMenuPlugin)
                 .add(in_game_schedule_plugin)
         }

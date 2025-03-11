@@ -1,8 +1,10 @@
-use super::weapon::{BaseAttackSpeed, Weapon};
+use super::{
+    common::{AffixesInserter, EquipmentUI},
+    weapon::{BaseAttackSpeed, Weapon},
+};
 use crate::components::{
     affix::{IncreaseAttackSpeed, IncreaseDamage, MoreDamage, PierceChance},
     damage::BaseHitDamageRange,
-    equipment::{AffixesInserter, EquipmentUI},
     item::{AffixConfigGenerator, ItemEntityInfo, ItemLevel, ItemRarity},
     rng_provider::RngKindProvider,
 };
