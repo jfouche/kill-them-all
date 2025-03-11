@@ -2,7 +2,7 @@ use super::{item::DroppedItem, player::PlayerSkills};
 use bevy::prelude::*;
 
 ///
-/// The [Inventory] contains all items that carry the [Player] as children
+/// The [Inventory] contains all items that carry the [crate::components::player::Player] as children
 ///
 #[derive(Component, Default, Reflect)]
 #[require(Name(|| Name::new("Inventory")))]
@@ -76,7 +76,7 @@ pub struct ToggleInventory;
 #[derive(Event)]
 pub struct InventoryChanged;
 
-/// Event to indicate The [Player] equipments changed
+/// Event to indicate The [crate::components::player::Player] equipments changed
 #[derive(Event)]
 pub struct PlayerEquipmentChanged;
 

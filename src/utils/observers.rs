@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-/// Helper trait to manage Vec<Oberver> that watch multiple entities
+/// Helper trait to manage `Vec<Observer>` that watch multiple entities
 pub trait VecObserversExt {
     fn with_observers(self, observers: Vec<Observer>) -> Self;
     fn watch_entity(&mut self, entity: Entity);
