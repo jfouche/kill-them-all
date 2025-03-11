@@ -38,7 +38,7 @@ pub struct AttackTimer(pub Timer);
 
 impl Default for AttackTimer {
     fn default() -> Self {
-        AttackTimer(Timer::from_seconds(1., TimerMode::Repeating))
+        AttackTimer(Timer::from_seconds(1., TimerMode::Once))
     }
 }
 

@@ -156,4 +156,5 @@ pub struct SpawnMonstersEvent {
 
 pub const LAYER_PLAYER: f32 = 10.;
 pub const LAYER_MONSTER: f32 = 9.;
-pub const LAYER_ITEM: f32 = 8.;
+pub const LAYER_DAMAGER: f32 = 8.;
+pub const LAYER_ITEM: f32 = 7.;

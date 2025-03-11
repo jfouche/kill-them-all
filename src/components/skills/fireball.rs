@@ -7,7 +7,7 @@ use bevy::prelude::*;
     SkillGem,
     Name(|| Name::new("FireBallLauncher")),
     BaseHitDamageRange(|| BaseHitDamageRange::new(1., 2.)),
-    BaseAttackSpeed(|| BaseAttackSpeed(1.2))
+    BaseAttackSpeed(|| BaseAttackSpeed(1.0))
 )]
 pub struct FireBallLauncher;
 

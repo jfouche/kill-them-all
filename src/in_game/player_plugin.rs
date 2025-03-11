@@ -8,6 +8,7 @@ use crate::{
             LooseLifeEvent, MaxLife,
         },
         despawn_all,
+        equipment::weapon::AttackTimer,
         inventory::{
             Inventory, InventoryChanged, InventoryPos, PlayerEquipmentChanged,
             TakeDroppedItemCommand,
@@ -20,14 +21,14 @@ use crate::{
             NextPositionIndicatorAssets, Player, PlayerAction, PlayerAssets, PlayerDeathEvent,
             PlayerSkills, Score,
         },
-        skills::{death_aura::DeathAura, spawn_skill},
+        skills::{death_aura::DeathAura, spawn_skill, ActivateSkill, Skill},
         world_map::{WorldMap, WorldMapLoadingFinished, LAYER_PLAYER},
         GROUP_ENEMY,
     },
     schedule::{GameRunningSet, GameState},
     utils::{blink::Blink, invulnerable::Invulnerable},
 };
-use bevy::prelude::*;
+use bevy::{prelude::*, window::PrimaryWindow};
 use bevy_rapier2d::prelude::*;
 use std::time::Duration;
 
@@ -57,6 +58,7 @@ impl Plugin for PlayerPlugin {
                     player_invulnerability_finished,
                     increment_player_experience,
                     refill_life_on_level_up,
+                    activate_skill,
                 )
                     .in_set(GameRunningSet::EntityUpdate),
             )
@@ -65,18 +67,14 @@ impl Plugin for PlayerPlugin {
     }
 }
 
-fn world_position<E>(
+fn world_position(
     cameras: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
-    pointer: &Pointer<E>,
-) -> Option<Vec2>
-where
-    E: std::fmt::Debug + Clone + Reflect,
-{
-    cameras.get_single().ok().and_then(|(camera, transform)| {
-        camera
-            .viewport_to_world_2d(transform, pointer.pointer_location.position)
-            .ok()
-    })
+    pos: Vec2,
+) -> Option<Vec2> {
+    cameras
+        .get_single()
+        .ok()
+        .and_then(|(camera, transform)| camera.viewport_to_world_2d(transform, pos).ok())
 }
 
 fn manage_player_movement_with_mouse(trigger: Trigger<OnAdd, WorldMap>, mut commands: Commands) {
@@ -88,7 +86,9 @@ fn manage_player_movement_with_mouse(trigger: Trigger<OnAdd, WorldMap>, mut comm
              mut player: Single<&mut CharacterAction, With<Player>>,
              cameras: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
              assets: Res<NextPositionIndicatorAssets>| {
-                if let Some(world_pos) = world_position(cameras, trigger.event()) {
+                if let Some(world_pos) =
+                    world_position(cameras, trigger.event().pointer_location.position)
+                {
                     player.goto(world_pos);
                     commands.spawn((
                         NextPositionIndicator,
@@ -103,7 +103,9 @@ fn manage_player_movement_with_mouse(trigger: Trigger<OnAdd, WorldMap>, mut comm
             |trigger: Trigger<Pointer<Drag>>,
              mut player: Single<&mut CharacterAction, With<Player>>,
              cameras: Query<(&Camera, &GlobalTransform), With<MainCamera>>| {
-                if let Some(world_pos) = world_position(cameras, trigger.event()) {
+                if let Some(world_pos) =
+                    world_position(cameras, trigger.event().pointer_location.position)
+                {
                     player.goto(world_pos);
                 }
             },
@@ -252,6 +254,53 @@ fn refill_life_on_level_up(
         for _ in level_up_rcv.read() {
             // Regen life
             life.regenerate(**max_life);
+        }
+    }
+}
+
+fn activate_skill(
+    mut commands: Commands,
+    players: Query<&PlayerSkills, With<Player>>,
+    mut skills: Query<&mut AttackTimer, With<Skill>>,
+    windows: Query<&Window, With<PrimaryWindow>>,
+    cameras: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
+    buttons: Res<ButtonInput<KeyCode>>,
+) {
+    let Ok(player_skills) = players.get_single() else {
+        return;
+    };
+
+    let Some(pos) = windows
+        .get_single()
+        .ok()
+        .and_then(|w| w.cursor_position())
+        .and_then(|pos| world_position(cameras, pos))
+    else {
+        return;
+    };
+
+    let mut actions = vec![];
+    if buttons.pressed(KeyCode::KeyQ) {
+        actions.push(PlayerAction::Skill1);
+    }
+    if buttons.pressed(KeyCode::KeyW) {
+        actions.push(PlayerAction::Skill2);
+    }
+    if buttons.pressed(KeyCode::KeyE) {
+        actions.push(PlayerAction::Skill3);
+    }
+    if buttons.pressed(KeyCode::KeyR) {
+        actions.push(PlayerAction::Skill4);
+    }
+
+    for action in actions {
+        if let Some(skill) = player_skills.get(action) {
+            if let Ok(mut timer) = skills.get_mut(skill) {
+                if timer.finished() {
+                    commands.trigger(ActivateSkill(skill, pos));
+                    timer.reset();
+                }
+            }
         }
     }
 }

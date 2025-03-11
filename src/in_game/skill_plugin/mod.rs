@@ -8,9 +8,10 @@ use crate::{
         affix::{IncreaseAreaOfEffect, PierceChance},
         character::{Character, HitEvent},
         damage::Projectile,
+        equipment::weapon::AttackTimer,
         skills::{AffectedByAreaOfEffect, Skill},
     },
-    schedule::GameRunningSet,
+    schedule::{GameRunningSet, GameState},
 };
 use bevy::prelude::*;
 
@@ -26,9 +27,19 @@ impl Plugin for SkillsPlugin {
         ))
         .add_observer(update_character_observers)
         .add_systems(
+            PreUpdate,
+            tick_attack_timer.run_if(in_state(GameState::InGame)),
+        )
+        .add_systems(
             Update,
             update_skills_affected_by_aoe.in_set(GameRunningSet::EntityUpdate),
         );
+    }
+}
+
+fn tick_attack_timer(mut timers: Query<&mut AttackTimer, With<Skill>>, time: Res<Time>) {
+    for mut timer in &mut timers {
+        timer.tick(time.delta());
     }
 }
 

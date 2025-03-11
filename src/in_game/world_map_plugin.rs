@@ -322,23 +322,23 @@ fn level_selection_follow_player(
                 ),
             };
 
-            if level_bounds.contains(player_transform.translation().xy()) {
-                if *level_iid != current_map_level.level_iid {
-                    info!("Player change level to {level_iid}");
-                    current_map_level.level_iid = level_iid.clone();
-                    let config = configs.iter().find_map(|(entity, config)| {
-                        parents
-                            .iter_ancestors(entity)
-                            .find(|p| *p == level_entity)
-                            .map(|_| config)
-                    });
+            if level_bounds.contains(player_transform.translation().xy())
+                && *level_iid != current_map_level.level_iid
+            {
+                info!("Player change level to {level_iid}");
+                current_map_level.level_iid = level_iid.clone();
+                let config = configs.iter().find_map(|(entity, config)| {
+                    parents
+                        .iter_ancestors(entity)
+                        .find(|p| *p == level_entity)
+                        .map(|_| config)
+                });
 
-                    if let Some(config) = config {
-                        current_map_level.name = config.name.clone();
-                        current_map_level.monster_level = config.monster_level;
-                    } else {
-                        error!("Can't find MapLevelConfig for level {level_iid:?}");
-                    }
+                if let Some(config) = config {
+                    current_map_level.name = config.name.clone();
+                    current_map_level.monster_level = config.monster_level;
+                } else {
+                    error!("Can't find MapLevelConfig for level {level_iid:?}");
                 }
             }
         }

@@ -92,3 +92,7 @@ impl SkillProvider {
         Some(self.provider.gen(rng)?.spawn(commands))
     }
 }
+
+/// Event to indicate that a skill should activate
+#[derive(Event)]
+pub struct ActivateSkill(pub Entity, pub Vec2);

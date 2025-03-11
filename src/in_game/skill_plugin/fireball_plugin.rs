@@ -2,13 +2,12 @@ use crate::{
     components::{
         affix::PierceChance,
         character::{Character, Target},
-        damage::{Damager, DamagerParams, ProjectileParams},
-        damage::{HitDamageRange, Projectile},
+        damage::{Damager, DamagerParams, HitDamageRange, Projectile, ProjectileParams},
         despawn_all,
-        equipment::weapon::AttackTimer,
-        skills::fireball::FireBallLauncher,
+        skills::{fireball::FireBallLauncher, ActivateSkill},
+        world_map::LAYER_DAMAGER,
     },
-    schedule::{GameRunningSet, GameState},
+    schedule::GameState,
 };
 use bevy::{color::palettes::css::YELLOW, prelude::*};
 use bevy_rapier2d::prelude::*;
@@ -35,52 +34,33 @@ pub struct FireballPlugin;
 impl Plugin for FireballPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnExit(GameState::InGame), despawn_all::<FireBall>)
-            .add_systems(Update, cast_fireball.in_set(GameRunningSet::EntityUpdate));
+            .add_observer(cast_fireball);
     }
 }
 
 fn cast_fireball(
+    trigger: Trigger<ActivateSkill>,
     mut commands: Commands,
-    weapons: Query<(&AttackTimer, &HitDamageRange, &Parent), With<FireBallLauncher>>,
+    skills: Query<(&HitDamageRange, &Parent), With<FireBallLauncher>>,
     characters: Query<(&Transform, &PierceChance, &Target), With<Character>>,
 ) {
-    for (timer, hit_damage_range, parent) in &weapons {
-        if timer.just_finished() {
-            if let Ok((gunner_pos, pierce, target)) = characters.get(**parent) {
-                let gunner = gunner_pos.translation;
-                // Get the nearest target
-                let nearest_target = characters
-                    .iter()
-                    .filter(|(_t, _pc, other_target)| *other_target != target)
-                    .map(|(transform, _pc, _t)| transform.translation)
-                    .reduce(|nearest, other| {
-                        if gunner.distance(other) < gunner.distance(nearest) {
-                            other // new nearest
-                        } else {
-                            nearest
-                        }
-                    });
-
-                const MAX_DISTANCE: f32 = 200.;
-                if let Some(target_pos) = nearest_target {
-                    if gunner.distance(target_pos) < MAX_DISTANCE {
-                        commands.spawn((
-                            FireBall,
-                            *hit_damage_range,
-                            DamagerParams {
-                                transform: Transform::from_translation(gunner),
-                                collision_groups: Damager::collision_groups(*target),
-                            },
-                            ProjectileParams {
-                                pierce_chance: *pierce,
-                                velocity: Velocity::linear(
-                                    (target_pos - gunner).xy().normalize() * FIREBALL_SPEED,
-                                ),
-                            },
-                        ));
-                    }
-                }
-            }
+    let (skill_entity, target_pos) = (trigger.0, trigger.1);
+    if let Ok((damage_range, parent)) = skills.get(skill_entity) {
+        if let Ok((gunner_pos, pierce, target)) = characters.get(**parent) {
+            let gunner_pos = gunner_pos.translation.xy();
+            let velocity = (target_pos - gunner_pos).normalize() * FIREBALL_SPEED;
+            commands.spawn((
+                FireBall,
+                *damage_range,
+                DamagerParams {
+                    transform: Transform::from_translation(gunner_pos.extend(LAYER_DAMAGER)),
+                    collision_groups: Damager::collision_groups(*target),
+                },
+                ProjectileParams {
+                    pierce_chance: *pierce,
+                    velocity: Velocity::linear(velocity),
+                },
+            ));
         }
     }
 }

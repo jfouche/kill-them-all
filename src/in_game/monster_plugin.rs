@@ -5,13 +5,13 @@ use crate::{
         character::{CharacterAction, CharacterDiedEvent, CharacterDyingEvent},
         damage::HitDamageRange,
         despawn_all,
-        equipment::Wand,
+        equipment::{weapon::AttackTimer, Wand},
         monster::{
             AllMonsterAssets, Monster, MonsterDeathEvent, MonsterLevel, MonsterRarity,
             MonsterSpawnParams, MonsterType1, MonsterType2, MonsterType3, ViewRange, XpOnDeath,
         },
         player::{Player, Score},
-        skills::fireball::FireBallLauncher,
+        skills::{fireball::FireBallLauncher, ActivateSkill, Skill},
         upgrade::UpgradeProvider,
         world_map::{SpawnMonstersEvent, LAYER_MONSTER},
     },
@@ -33,7 +33,8 @@ impl Plugin for MonsterPlugin {
             .add_systems(OnExit(GameState::InGame), despawn_all::<Monster>)
             .add_systems(
                 Update,
-                (monsters_moves, animate_sprite).in_set(GameRunningSet::EntityUpdate),
+                (monsters_moves, animate_sprite, activate_skill)
+                    .in_set(GameRunningSet::EntityUpdate),
             )
             .add_observer(spawn_monsters)
             .add_observer(update_monster);
@@ -184,6 +185,26 @@ fn animate_sprite(
                         _ => 0,
                     }
                 };
+            }
+        }
+    }
+}
+
+fn activate_skill(
+    mut commands: Commands,
+    monsters: Query<(&Transform, &ViewRange), With<Monster>>,
+    players: Query<&Transform, With<Player>>,
+    mut skills: Query<(Entity, &mut AttackTimer, &Parent), With<Skill>>,
+) {
+    let Ok(player_pos) = players.get_single().map(|t| t.translation.xy()) else {
+        return;
+    };
+    for (entity, mut timer, parent) in &mut skills {
+        if let Ok((pos, view_range)) = monsters.get(parent.get()) {
+            let distance = (player_pos - pos.translation.xy()).length();
+            if timer.finished() && distance <= **view_range {
+                commands.trigger(ActivateSkill(entity, player_pos));
+                timer.reset();
             }
         }
     }
