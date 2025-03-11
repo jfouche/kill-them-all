@@ -4,7 +4,7 @@ pub mod mine;
 pub mod shuriken;
 
 use super::{
-    item::{Item, ItemEntityInfo, ItemInfo},
+    item::{Item, ItemEntityInfo, ItemInfo, ItemLocation},
     rng_provider::RngKindProvider,
 };
 use bevy::prelude::*;
@@ -26,6 +26,10 @@ pub trait SkillUI {
     fn label() -> String;
     fn tile_index() -> usize;
 }
+
+#[derive(Component)]
+#[require(ItemLocation)]
+pub struct SkillGemLocation;
 
 /// Tag to indicate that the [Skill] is affected by
 /// [crate::components::affix::IncreaseAreaOfEffect] affixes

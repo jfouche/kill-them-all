@@ -5,7 +5,7 @@ mod menu_pause;
 mod menu_player_died;
 mod panel_equipments;
 mod panel_skills;
-mod popup_info;
+pub mod popup_info;
 mod window_inventory;
 mod window_statistics;
 

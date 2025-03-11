@@ -1,4 +1,5 @@
 pub mod button;
+pub mod item_location;
 pub mod popup;
 pub mod progressbar;
 
@@ -6,6 +7,7 @@ pub use plugin::{HSizer, UiPlugins, VSizer};
 
 mod plugin {
     use super::button::button_plugin;
+    use super::item_location::ItemLocationPlugin;
     use super::progressbar::ProgressBarPlugin;
     use bevy::app::PluginGroupBuilder;
     use bevy::prelude::*;
@@ -14,10 +16,10 @@ mod plugin {
     #[derive(Component, Default)]
     #[require(
     Node(|| Node {
-        flex_direction: FlexDirection::Row,
-        ..Default::default()
-    })
-)]
+            flex_direction: FlexDirection::Row,
+            ..Default::default()
+        })
+    )]
     pub struct HSizer;
 
     /// Vertical sizer
@@ -37,6 +39,7 @@ mod plugin {
             PluginGroupBuilder::start::<Self>()
                 .add(ProgressBarPlugin)
                 .add(button_plugin)
+                .add(ItemLocationPlugin)
         }
     }
 }

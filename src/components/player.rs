@@ -128,9 +128,17 @@ impl Command for EquipSkillGemCommand {
 
         let action = self.1;
         let old_gem = match skills.get(action) {
-            Some(gem) => (gem != gem_entity).then_some(gem),
+            Some(gem) => {
+                if gem == gem_entity {
+                    // same gem: no need to continue
+                    return;
+                }
+                skills.remove(gem);
+                Some(gem)
+            }
             None => None,
         };
+        skills.remove(gem_entity);
         skills.set(action, gem_entity);
 
         // Manage inventory

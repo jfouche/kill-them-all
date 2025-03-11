@@ -1,19 +1,17 @@
-use crate::{
-    components::{
-        inventory::PlayerEquipmentChanged,
-        item::{ItemEntity, ItemLocation},
-        player::{EquipSkillGemCommand, Player, PlayerAction, PlayerSkills},
-        skills::SkillGem,
-    },
-    utils::observers::VecObserversExt,
-};
-use bevy::prelude::*;
-
 use super::{
     dnd::{DndCursor, DraggedEntity},
     item_location::{ItemLocationDragObservers, ShowBorderOnDrag},
     popup_info::SpawnInfoPopupObservers,
 };
+use crate::{
+    components::{
+        inventory::PlayerEquipmentChanged,
+        player::{EquipSkillGemCommand, PlayerAction},
+        skills::{SkillGem, SkillGemLocation},
+    },
+    utils::observers::VecObserversExt,
+};
+use bevy::prelude::*;
 
 #[derive(Component)]
 #[require(
@@ -28,15 +26,11 @@ use super::{
 )]
 pub struct SkillsPanel;
 
-#[derive(Component)]
-#[require(ItemLocation)]
-struct SkillGemLocation;
-
 pub struct SkillsPanelPlugin;
 
 impl Plugin for SkillsPanelPlugin {
     fn build(&self, app: &mut App) {
-        app.add_observer(create_panel).add_observer(update_skills);
+        app.add_observer(create_panel);
     }
 }
 
@@ -67,19 +61,6 @@ fn create_panel(trigger: Trigger<OnAdd, SkillsPanel>, mut commands: Commands) {
 
     // to force to init the update
     commands.trigger(PlayerEquipmentChanged);
-}
-
-fn update_skills(
-    _trigger: Trigger<PlayerEquipmentChanged>,
-    skills: Query<&PlayerSkills, With<Player>>,
-    mut locations: Query<(&mut ItemEntity, &PlayerAction), With<SkillGemLocation>>,
-) {
-    let Ok(skills) = skills.get_single() else {
-        return;
-    };
-    for (mut item_entity, action) in &mut locations {
-        item_entity.0 = skills.get(*action);
-    }
 }
 
 fn on_drop_item(

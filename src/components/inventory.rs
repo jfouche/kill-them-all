@@ -68,6 +68,10 @@ pub struct InventoryPos {
     pub row: i16,
 }
 
+/// Event to to toggle the inventory window
+#[derive(Event)]
+pub struct ToggleInventory;
+
 /// Event to indicate The [Inventory] changed
 #[derive(Event)]
 pub struct InventoryChanged;
@@ -88,6 +92,13 @@ impl Command for AddToInventoryCommand {
 
         if inventory.add(self.0) {
             world.entity_mut(inventory_entity).add_child(self.0);
+            // remove from skill if it was a skill
+            world
+                .query::<&mut PlayerSkills>()
+                .get_single_mut(world)
+                .expect("PlayerSkills")
+                .remove(self.0);
+
             world.trigger(InventoryChanged);
         }
     }
@@ -111,7 +122,7 @@ impl Command for AddToInventoryAtIndexCommand {
         if inventory.add_at(self.item, self.index) {
             world.entity_mut(inventory_entity).add_child(self.item);
 
-            // remove from skill if it was
+            // remove from skill if it was a skill
             world
                 .query::<&mut PlayerSkills>()
                 .get_single_mut(world)

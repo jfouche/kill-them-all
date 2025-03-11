@@ -10,10 +10,12 @@ use crate::{
         despawn_all,
         inventory::{
             AddToInventoryAtIndexCommand, Inventory, InventoryChanged, PlayerEquipmentChanged,
+            ToggleInventory,
         },
         item::{ItemEntity, ItemLocation},
     },
-    schedule::{GameRunningSet, GameState}, utils::observers::VecObserversExt,
+    schedule::{GameRunningSet, GameState},
+    utils::observers::VecObserversExt,
 };
 use bevy::{input::common_conditions::input_just_pressed, prelude::*};
 
@@ -27,7 +29,7 @@ use bevy::{input::common_conditions::input_just_pressed, prelude::*};
         position_type: PositionType::Absolute,
         flex_direction: FlexDirection::Column,
         right: Val::Px(0.),
-        bottom: Val::Px(0.),
+        bottom: Val::Px(50.),
         border: UiRect::all(Val::Px(1.)),
         ..Default::default()
     }),
@@ -48,7 +50,7 @@ pub struct InventoryWindow;
         grid_template_rows: RepeatedGridTrack::flex(Inventory::N_ROWS, 1.),
         ..Default::default()
     }),
-    BackgroundColor(|| BackgroundColor(Srgba::rgb(0.16, 0.16, 0.16).into())) 
+    BackgroundColor(|| BackgroundColor(Srgba::rgb(0.16, 0.16, 0.16).into()))
 )]
 pub struct InventoryPanel;
 
@@ -81,16 +83,18 @@ impl Plugin for InventoryPanelPlugin {
             .add_systems(OnExit(GameState::InGame), despawn_all::<InventoryWindow>)
             .add_systems(
                 Update,
-                toggle_window
+                (|mut commands: Commands| commands.trigger(ToggleInventory))
                     .run_if(input_just_pressed(KeyCode::KeyI))
                     .in_set(GameRunningSet::UserInput),
             )
             .add_observer(create_panel)
-            .add_observer(update_inventory);
+            .add_observer(update_inventory)
+            .add_observer(toggle_window);
     }
 }
 
 fn toggle_window(
+    _: Trigger<ToggleInventory>,
     mut commands: Commands,
     mut windows: Query<&mut Visibility, With<InventoryWindow>>,
 ) {
