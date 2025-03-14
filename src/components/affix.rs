@@ -187,6 +187,9 @@ impl PierceChance {
     pub fn try_pierce(&mut self, rng: &mut ThreadRng) -> bool {
         if rng.random_range(0. ..100.) < **self {
             self.0 -= 100.;
+            if self.0.is_sign_negative() {
+                self.0 = 0.;
+            }
             true
         } else {
             false

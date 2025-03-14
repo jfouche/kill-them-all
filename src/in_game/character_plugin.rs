@@ -97,7 +97,7 @@ fn mitigate_damage_on_hit(
     characters: Query<&Armour, With<Character>>,
 ) {
     if let Ok(armour) = characters.get(trigger.entity()) {
-        let damage = armour.mitigate(trigger.event().damage);
+        let damage = armour.mitigate(trigger.damage);
         info!("trigger_take_hit: damage: {:.1}", *damage);
         if *damage > 0. {
             commands.trigger_targets(LooseLifeEvent(damage), trigger.entity());

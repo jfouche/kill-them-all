@@ -56,11 +56,12 @@ mod plugin {
         mut commands: Commands,
         mut projectiles: Query<&mut PierceChance, With<Projectile>>,
     ) {
-        if let Ok(mut pierce_chance) = projectiles.get_mut(trigger.entity()) {
+        if let Ok(mut pierce_chance) = projectiles.get_mut(trigger.damager) {
             let mut rng = rand::rng();
+            warn!("try_pierce({})", pierce_chance.0);
             if !pierce_chance.try_pierce(&mut rng) {
                 // Didn't pierce => despawn projectile
-                commands.entity(trigger.entity()).despawn();
+                commands.entity(trigger.damager).despawn();
             }
         }
     }

@@ -89,11 +89,11 @@ fn test_skill_attack_speed() {
     let attack_timer = app.world().get::<AttackTimer>(skill_alone);
     assert_eq!(1. / 1.0, attack_timer.unwrap().duration().as_secs_f32());
 
-    // 0.8 + 50% + 20%
+    // 0.6 + 50% + 20%
     let attack_speed = app.world().get::<AttackSpeed>(skill_with_affixes);
-    assert_approx_eq!(1.44, attack_speed.unwrap().0);
+    assert_approx_eq!(1.08, attack_speed.unwrap().0);
     let attack_timer = app.world().get::<AttackTimer>(skill_with_affixes);
-    assert_eq!(1. / 1.44, attack_timer.unwrap().duration().as_secs_f32());
+    assert_eq!(1. / 1.08, attack_timer.unwrap().duration().as_secs_f32());
 }
 
 #[test]

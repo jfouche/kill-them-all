@@ -1,7 +1,7 @@
 use crate::{
     camera::MainCamera,
     components::{
-        affix::IncreaseAreaOfEffect,
+        affix::{IncreaseAreaOfEffect, PierceChance},
         animation::AnimationTimer,
         character::{
             CharacterAction, CharacterDiedEvent, CharacterDyingEvent, CharacterLevel, Life,
@@ -115,13 +115,11 @@ fn manage_player_movement_with_mouse(trigger: Trigger<OnAdd, WorldMap>, mut comm
 fn spawn_player(mut commands: Commands, assets: Res<PlayerAssets>) {
     commands.spawn(Inventory::default());
 
-    commands
+    let player_id = commands
         .spawn((Player, Player::sprite(&assets)))
-        .with_children(|player| {
-            player.spawn(IncreaseAreaOfEffect(50.));
-        })
         .observe(set_invulnerable_on_hit)
-        .observe(player_dying);
+        .observe(player_dying)
+        .id();
 
     // Add a skill to the player
     let info = spawn_skill::<crate::components::skills::shuriken::ShurikenLauncher>(&mut commands);
@@ -129,6 +127,11 @@ fn spawn_player(mut commands: Commands, assets: Res<PlayerAssets>) {
 
     // TEMP
     {
+        commands.entity(player_id).with_children(|p| {
+            p.spawn(IncreaseAreaOfEffect(50.));
+            p.spawn(PierceChance(50.));
+        });
+
         let mut rng = rand::rng();
         let orb = OrbProvider::new().spawn(&mut commands, &mut rng).unwrap();
         let drop = commands.spawn(DroppedItem(orb.entity)).id();

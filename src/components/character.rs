@@ -125,6 +125,7 @@ impl std::fmt::Display for MaxLife {
 /// Event to notify a character was hit
 #[derive(Event)]
 pub struct HitEvent {
+    pub damager: Entity,
     pub damage: Damage,
 }
 
