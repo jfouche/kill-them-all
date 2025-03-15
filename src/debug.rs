@@ -23,6 +23,9 @@ use bevy_inspector_egui::{
 use bevy_rapier2d::prelude::*;
 use std::time::Duration;
 
+#[derive(Resource, Deref, DerefMut)]
+struct DebugMode(bool);
+
 pub struct DebugPlugin;
 
 impl Plugin for DebugPlugin {
@@ -35,19 +38,31 @@ impl Plugin for DebugPlugin {
             bevy_rapier2d::render::RapierDebugRenderPlugin::default(),
             WorldInspectorPlugin::new(),
         ))
+        .insert_resource(DebugMode(true))
         .add_systems(
             Update,
             (
-                inspector_ui,
-                log_transitions::<GameState>,
-                log_transitions::<InGameState>,
-                // display_collision_events.in_set(GameRunningSet::EntityUpdate),
+                (toggle_debug_mode, count_entities).run_if(input_just_released(KeyCode::KeyD)),
+                (
+                    inspector_ui,
+                    log_transitions::<GameState>,
+                    log_transitions::<InGameState>,
+                    show_key_pressed,
+                    // display_collision_events.in_set(GameRunningSet::EntityUpdate),
+                )
+                    .run_if(debug_is_active),
                 toggle_debug_ui.run_if(input_just_pressed(KeyCode::Backquote)),
-                count_entities.run_if(input_just_released(KeyCode::KeyD)),
-                show_key_pressed,
             ),
         );
     }
+}
+
+fn debug_is_active(debug: Res<DebugMode>) -> bool {
+    **debug
+}
+
+fn toggle_debug_mode(mut mode: ResMut<DebugMode>) {
+    **mode = !**mode;
 }
 
 fn inspector_ui(world: &mut World) {
@@ -76,7 +91,11 @@ fn inspector_ui(world: &mut World) {
 fn display_collision_events(
     mut collisions: EventReader<CollisionEvent>,
     names: Query<NameOrEntity>,
+    debug: Res<DebugMode>,
 ) {
+    if !**debug {
+        return;
+    }
     for collision in collisions.read() {
         match collision {
             CollisionEvent::Started(e1, e2, flag) => {

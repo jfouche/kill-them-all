@@ -58,10 +58,11 @@ mod plugin {
     ) {
         if let Ok(mut pierce_chance) = projectiles.get_mut(trigger.damager) {
             let mut rng = rand::rng();
-            warn!("try_pierce({})", pierce_chance.0);
             if !pierce_chance.try_pierce(&mut rng) {
                 // Didn't pierce => despawn projectile
                 commands.entity(trigger.damager).despawn();
+            } else {
+                info!("Projectile {} pierced", trigger.damager);
             }
         }
     }

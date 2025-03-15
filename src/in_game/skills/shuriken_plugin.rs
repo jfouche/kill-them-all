@@ -54,7 +54,6 @@ fn launch_shuriken(
                 },
                 Sprite::from_image(asset.shuriken.clone()),
             ));
-            warn!("PierceChance({})", pierce_chance.0);
         }
     }
 }
