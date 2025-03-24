@@ -49,6 +49,7 @@ bevy-inspector-egui = { version = "0.29", default-features = false, features = [
 # WASM
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 bevy = { version = "0.15", default-features = false, features = ["webgpu"] }
+getrandom = { version = "0.3", features = ["wasm_js"] }
 
 [profile.wasm-release]
 inherits = "release"
