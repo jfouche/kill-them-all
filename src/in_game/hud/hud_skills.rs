@@ -4,10 +4,7 @@ use crate::{
         inventory::{PlayerEquipmentChanged, ToggleInventory},
         player::PlayerAction,
         skills::SkillGemLocation,
-    },
-    in_game::menu::popup_info::SpawnInfoPopupObservers,
-    schedule::GameState,
-    utils::observers::VecObserversExt,
+    }, in_game::menu::popup_info::SpawnInfoPopupObservers, schedule::GameState, ui::button::ButtonColors, utils::observers::VecObserversExt
 };
 use bevy::prelude::*;
 
@@ -22,9 +19,10 @@ impl Plugin for HudSkillsPlugin {
 #[derive(Component)]
 #[require(
     Hud,
-    Name(|| Name::new("HudSkills")),
+    Name(|| Name::new("HUD - Skills")),
     Node(|| Node {
         position_type: PositionType::Absolute,
+        align_items: AlignItems::Center,
         right: Val::Px(50.),
         bottom: Val::Px(15.),
         height: Val::Px(48.),
@@ -36,6 +34,11 @@ struct HudSkillsPanel;
 #[derive(Component)]
 #[require(
     Button,
+    ButtonColors(|| ButtonColors {
+        normal: Color::srgb_u8(223, 15, 15), 
+        hovered: Color::srgb_u8(160, 12, 12), 
+        pressed: Color::srgb_u8(214, 90, 90)
+    }),
     Node(|| Node {
         width: Val::Px(50.0),
         height: Val::Percent(100.),
@@ -45,7 +48,6 @@ struct HudSkillsPanel;
         border: UiRect::all(Val::Px(1.0)),
         ..default()
     }),
-    BackgroundColor(|| BackgroundColor(Srgba::rgb(0.9, 0.1, 0.2).into())),
     BorderColor(|| BorderColor(Srgba::BLACK.into()))
 )]
 struct InventoryButton;
