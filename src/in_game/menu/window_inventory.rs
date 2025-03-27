@@ -17,7 +17,7 @@ use crate::{
     schedule::{GameRunningSet, GameState},
     utils::observers::VecObserversExt,
 };
-use bevy::{input::common_conditions::input_just_pressed, prelude::*};
+use bevy::prelude::*;
 
 ///
 /// A window that shows the content of the [Inventory]
@@ -83,13 +83,23 @@ impl Plugin for InventoryPanelPlugin {
             .add_systems(OnExit(GameState::InGame), despawn_all::<InventoryWindow>)
             .add_systems(
                 Update,
-                (|mut commands: Commands| commands.trigger(ToggleInventory))
-                    .run_if(input_just_pressed(KeyCode::KeyI))
-                    .in_set(GameRunningSet::UserInput),
+                trigger_toggle_window.in_set(GameRunningSet::UserInput),
             )
             .add_observer(create_panel)
             .add_observer(update_inventory)
             .add_observer(toggle_window);
+    }
+}
+
+fn trigger_toggle_window(
+    mut commands: Commands,
+    windows: Query<&Visibility, With<InventoryWindow>>,
+    keys: Res<ButtonInput<KeyCode>>,
+) {
+    if keys.just_pressed(KeyCode::KeyI)
+        || (keys.just_pressed(KeyCode::Space) && windows.iter().next() != Some(&Visibility::Hidden))
+    {
+        commands.trigger(ToggleInventory);
     }
 }
 
