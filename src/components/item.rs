@@ -150,8 +150,9 @@ impl From<&ItemInfo> for Text {
 }
 
 /// Equipment Rarity
-#[derive(Component, Clone, Copy, PartialEq, Eq, Hash, Reflect)]
+#[derive(Component, Default, Clone, Copy, PartialEq, Eq, Hash, Reflect)]
 pub enum ItemRarity {
+    #[default]
     Normal,
     Magic,
     Rare,

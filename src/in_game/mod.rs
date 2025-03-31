@@ -7,6 +7,7 @@ pub mod item_plugin;
 pub mod life_bar_plugin;
 pub mod menu;
 pub mod monster_plugin;
+pub mod orb_plugin;
 pub mod player_plugin;
 pub mod skills;
 pub mod world_map_plugin;
@@ -36,6 +37,7 @@ mod plugin {
                 .add(character_plugin::CharacterPlugin)
                 .add(affix_updates_plugin::AffixUpdatesPlugin)
                 .add(monster_plugin::MonsterPlugin)
+                .add(orb_plugin::OrbPlugin)
                 .add(player_plugin::PlayerPlugin)
                 .add(world_map_plugin::WorldMapPlugin)
                 .add(life_bar_plugin::LifeBarPlugin)

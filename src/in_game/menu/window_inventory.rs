@@ -13,6 +13,7 @@ use crate::{
             ToggleInventory,
         },
         item::{ItemEntity, ItemLocation},
+        orb::{ActivateOrbEvent, Orb},
     },
     schedule::{GameRunningSet, GameState},
     utils::observers::VecObserversExt,
@@ -154,54 +155,41 @@ fn update_inventory(
     }
 }
 
-// fn on_drag_start_item(
-//     trigger: Trigger<Pointer<DragStart>>,
-//     indexes: Query<&InventoryIndex, Without<DndCursor>>,
-//     inventory: Single<&Inventory>,
-//     infos: Query<&ItemInfo>,
-//     cursor: Single<(&mut DraggedEntity, &mut ImageNode), With<DndCursor>>,
-//     assets: Res<ItemAssets>,
-// ) {
-//     if let Ok(index) = indexes.get(trigger.entity()) {
-//         if let Some(item) = inventory.at(index.0) {
-//             warn!("on_drag_start_item({})", trigger.entity());
-//             if let Ok(info) = infos.get(item) {
-//                 let (mut dragged_entity, mut cursor_image) = cursor.into_inner();
-//                 **dragged_entity = Some(item);
-//                 *cursor_image = assets.image_node(info.tile_index);
-//             }
-//         }
-//     }
-// }
-
-// fn on_drag_end(
-//     trigger: Trigger<Pointer<DragEnd>>,
-//     cursor: Single<(&mut DraggedEntity, &mut ImageNode), With<DndCursor>>,
-// ) {
-//     warn!("on_drag_end({})", trigger.entity());
-//     let (mut dragged_entity, mut cursor_image) = cursor.into_inner();
-//     **dragged_entity = None;
-//     *cursor_image = ImageNode::default();
-// }
-
 fn on_drop_on_location(
     trigger: Trigger<Pointer<DragDrop>>,
     mut commands: Commands,
     indexes: Query<&InventoryIndex, With<InventoryLocation>>,
     cursor: Single<&DraggedEntity, With<DndCursor>>,
+    orbs: Query<(), With<Orb>>,
     inventory: Single<&Inventory>,
 ) {
-    info!("on_drop_on_location({})", trigger.entity());
-    if let Ok(index) = indexes.get(trigger.entity()) {
-        if inventory.at(index.0).is_none() {
+    let location_item = trigger.entity();
+    let Some(drop_item) = ***cursor else {
+        warn!("on_drop_on_location({location_item}) without item on cursor",);
+        return;
+    };
+    let Ok(index) = indexes.get(location_item) else {
+        warn!("on_drop_on_location({location_item}) without InventoryLocation",);
+        return;
+    };
+    match inventory.at(index.0) {
+        None => {
             // There is no item at the index in the inventory
-            if let Some(item) = ***cursor {
-                commands.queue(AddToInventoryAtIndexCommand {
-                    item,
-                    index: index.0,
-                });
-                commands.queue(|world: &mut World| {
-                    world.trigger(PlayerEquipmentChanged);
+            info!("on_drop_on_location({location_item}) drop item {drop_item}");
+            commands.queue(AddToInventoryAtIndexCommand {
+                item: drop_item,
+                index: index.0,
+            });
+            commands.queue(|world: &mut World| {
+                world.trigger(PlayerEquipmentChanged);
+            });
+        }
+        Some(target_item) => {
+            info!("on_drop_on_location({location_item}) drop item {drop_item} on {target_item}");
+            if orbs.get(drop_item).is_ok() {
+                commands.trigger(ActivateOrbEvent {
+                    orb: drop_item,
+                    item: target_item,
                 });
             }
         }

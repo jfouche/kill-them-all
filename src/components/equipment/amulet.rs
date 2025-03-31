@@ -4,7 +4,7 @@ use super::{
 };
 use crate::components::{
     affix::{Armour, MoreLife, PierceChance},
-    item::{AffixConfigGenerator, ItemEntityInfo, ItemLevel, ItemRarity},
+    item::{AffixConfigGenerator, ItemEntityInfo, ItemRarity},
     rng_provider::RngKindProvider,
 };
 use bevy::prelude::*;
@@ -54,7 +54,9 @@ impl AmuletAffixProvider {
 #[require(
     Name(|| Name::new("Amulet")),
     Equipment(|| Equipment::Amulet),
-    ItemLevel
+    Armour,
+    MoreLife,
+    PierceChance
 )]
 pub struct Amulet;
 
@@ -79,18 +81,26 @@ impl Amulet {
         for _ in 0..amulet.n_affix() {
             match provider.gen(rng) {
                 Some(AmuletAffixKind::AddArmour) => {
-                    amulet.insert::<Armour>(AMULET_MORE_ARMOUR_RANGES.generate(ilevel, rng));
+                    amulet.set::<Armour>(AMULET_MORE_ARMOUR_RANGES.generate(ilevel, rng));
                 }
                 Some(AmuletAffixKind::MoreLife) => {
-                    amulet.insert::<MoreLife>(AMULET_MORE_LIFE_RANGES.generate(ilevel, rng));
+                    amulet.set::<MoreLife>(AMULET_MORE_LIFE_RANGES.generate(ilevel, rng));
                 }
                 Some(AmuletAffixKind::PierceChance) => {
-                    amulet
-                        .insert::<PierceChance>(AMULET_PIERCE_CHANCE_RANGES.generate(ilevel, rng));
+                    amulet.set::<PierceChance>(AMULET_PIERCE_CHANCE_RANGES.generate(ilevel, rng));
                 }
                 None => {}
             }
         }
         amulet.equipment_entity()
+    }
+
+    pub fn reset(commands: &mut EntityCommands) {
+        commands.insert((
+            ItemRarity::Normal,
+            Armour(0.),
+            MoreLife(0.),
+            PierceChance(0.),
+        ));
     }
 }

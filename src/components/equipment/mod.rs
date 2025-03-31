@@ -18,6 +18,7 @@ mod common {
     use super::*;
     use crate::components::{
         item::{ItemEntityInfo, ItemInfo, ItemLevel, ItemRarity, ItemRarityProvider, ValueAndTier},
+        orb::OrbAction,
         rng_provider::RngKindProvider,
     };
     use bevy::prelude::*;
@@ -26,6 +27,7 @@ mod common {
 
     /// Equiment type
     #[derive(Component, Clone, Copy, Debug, PartialEq, Eq, Hash, Reflect)]
+    #[require(ItemInfo, ItemLevel, ItemRarity)]
     pub enum Equipment {
         Helmet,
         BodyArmour,
@@ -68,7 +70,7 @@ mod common {
     impl EquipmentProvider {
         pub fn new(ilevel: u16) -> Self {
             let mut provider = RngKindProvider::default();
-            provider.add(EquipmentKind::Amulet, 40);
+            provider.add(EquipmentKind::Amulet, 4440);
             provider.add(EquipmentKind::BodyArmour, 40);
             provider.add(EquipmentKind::Boots, 40);
             provider.add(EquipmentKind::Helmet, 40);
@@ -93,7 +95,7 @@ mod common {
     /// Helper to insert affix to an equipment
     pub struct AffixesInserter<'a> {
         labels: Vec<String>,
-        commands: EntityCommands<'a>,
+        entity_commands: EntityCommands<'a>,
         tile_index: usize,
         rarity: ItemRarity,
     }
@@ -115,7 +117,7 @@ mod common {
             let title = format!("{} ({})", T::title(), ilevel + 1);
             AffixesInserter {
                 labels: vec![title],
-                commands: commands.spawn((equipment, ItemLevel(ilevel), rarity)),
+                entity_commands: commands.spawn((equipment, ItemLevel(ilevel), rarity)),
                 tile_index,
                 rarity,
             }
@@ -125,13 +127,13 @@ mod common {
             self.rarity.n_affix()
         }
 
-        pub fn insert<A>(&mut self, value: ValueAndTier)
+        pub fn set<A>(&mut self, value: ValueAndTier)
         where
             A: Component + fmt::Display + From<u16>,
         {
             let affix = A::from(value.0);
             self.labels.push(format!("{affix} ({})", value.1));
-            self.commands.insert(affix);
+            self.entity_commands.insert(affix);
         }
 
         pub fn equipment_entity(mut self) -> ItemEntityInfo {
@@ -139,9 +141,9 @@ mod common {
                 text: self.labels.join("\n"),
                 tile_index: self.tile_index,
             };
-            self.commands.insert(equipment_info.clone());
+            self.entity_commands.insert(equipment_info.clone());
             ItemEntityInfo {
-                entity: self.commands.id(),
+                entity: self.entity_commands.id(),
                 info: equipment_info,
             }
         }

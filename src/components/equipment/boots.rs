@@ -77,13 +77,13 @@ impl Boots {
         for _ in 0..boots.n_affix() {
             match provider.gen(rng) {
                 Some(BootsAffixKind::AddArmour) => {
-                    boots.insert::<Armour>(BOOTS_MORE_ARMOUR_RANGES.generate(ilevel, rng));
+                    boots.set::<Armour>(BOOTS_MORE_ARMOUR_RANGES.generate(ilevel, rng));
                 }
                 Some(BootsAffixKind::AddLife) => {
-                    boots.insert::<MoreLife>(BOOTS_MORE_LIFE_RANGES.generate(ilevel, rng));
+                    boots.set::<MoreLife>(BOOTS_MORE_LIFE_RANGES.generate(ilevel, rng));
                 }
                 Some(BootsAffixKind::IncreaseMovementSpeed) => {
-                    boots.insert::<IncreaseMovementSpeed>(
+                    boots.set::<IncreaseMovementSpeed>(
                         BOOTS_INCR_MOVEMENT_SPEED_RANGES.generate(ilevel, rng),
                     );
                 }
