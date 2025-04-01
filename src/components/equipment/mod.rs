@@ -18,7 +18,6 @@ mod common {
     use super::*;
     use crate::components::{
         item::{ItemEntityInfo, ItemInfo, ItemLevel, ItemRarity, ItemRarityProvider, ValueAndTier},
-        orb::OrbAction,
         rng_provider::RngKindProvider,
     };
     use bevy::prelude::*;
@@ -92,7 +91,62 @@ mod common {
         fn tile_index(rarity: ItemRarity) -> usize;
     }
 
+    pub struct AffixProvider<K> {
+        provider: RngKindProvider<K>,
+        labels: Vec<String>,
+    }
+
+    impl<K> AffixProvider<K>
+    where
+        K: Copy + Eq + std::hash::Hash,
+    {
+        pub fn new<T>(ilevel: u16, provider: RngKindProvider<K>) -> Self
+        where
+            T: Component + EquipmentUI,
+        {
+            let title = format!("{} ({})", T::title(), ilevel + 1);
+            AffixProvider {
+                provider,
+                labels: vec![title],
+            }
+        }
+
+        pub fn gen(&mut self, rng: &mut ThreadRng) -> Option<K> {
+            self.provider.gen(rng)
+        }
+
+        pub fn set<A, E>(&mut self, entity: &mut E, value: ValueAndTier)
+        where
+            A: Component + fmt::Display + From<u16>,
+            E: EntityInserter,
+        {
+            let affix = A::from(value.0);
+            self.labels.push(format!("{affix} ({})", value.1));
+            entity.insert(affix);
+        }
+
+        pub fn item_text(&self) -> String {
+            self.labels.join("\n")
+        }
+    }
+
+    pub trait EntityInserter {
+        fn insert<B: Bundle>(&mut self, bundle: B);
+    }
+
+    impl EntityInserter for EntityWorldMut<'_> {
+        fn insert<B: Bundle>(&mut self, bundle: B) {
+            EntityWorldMut::insert(self, bundle);
+        }
+    }
+    impl EntityInserter for EntityCommands<'_> {
+        fn insert<B: Bundle>(&mut self, bundle: B) {
+            EntityCommands::insert(self, bundle);
+        }
+    }
+
     /// Helper to insert affix to an equipment
+    #[deprecated(note = "Use [AffixProvider] instead.")]
     pub struct AffixesInserter<'a> {
         labels: Vec<String>,
         entity_commands: EntityCommands<'a>,
@@ -110,9 +164,7 @@ mod common {
         where
             T: Component + EquipmentUI,
         {
-            let rarity = ItemRarityProvider::new()
-                .gen(rng)
-                .expect("At least one rarity");
+            let rarity = ItemRarityProvider::gen(rng);
             let tile_index = T::tile_index(rarity);
             let title = format!("{} ({})", T::title(), ilevel + 1);
             AffixesInserter {

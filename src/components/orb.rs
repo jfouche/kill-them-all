@@ -1,9 +1,11 @@
 use super::{
-    item::{Item, ItemEntityInfo, ItemInfo, ItemRarity},
+    item::{Item, ItemEntityInfo, ItemInfo, ItemLevel, ItemRarity},
     rng_provider::RngKindProvider,
 };
+use crate::components::inventory::{InventoryChanged, PlayerEquipmentChanged};
 use bevy::prelude::*;
 use rand::rngs::ThreadRng;
+use std::marker::PhantomData;
 
 /// Orb item
 #[derive(Component, Clone, Copy, Eq, PartialEq, Hash)]
@@ -36,61 +38,12 @@ impl From<Orb> for ItemInfo {
     }
 }
 
-// /// Transform a normal item to a magic one
-// #[derive(Component, Default)]
-// #[require(Orb, Name(|| Name::new("TransmutationOrb")))]
-// pub struct TransmutationOrb;
-
-// impl From<TransmutationOrb> for ItemInfo {
-//     fn from(_: TransmutationOrb) -> Self {
-//         ItemInfo {
-//             tile_index: 151,
-//             text: "Transform a normal item to a magic one".into(),
-//         }
-//     }
-// }
-
-// /// Transform a magic item to a rare one
-// #[derive(Component, Default)]
-// #[require(Orb, Name(|| Name::new("RegalOrb")))]
-// pub struct RegalOrb;
-
-// impl From<RegalOrb> for ItemInfo {
-//     fn from(_: RegalOrb) -> Self {
-//         ItemInfo {
-//             tile_index: 155,
-//             text: "Transform a magic item to a rare one".into(),
-//         }
-//     }
-// }
-
-// /// Transform a rare item to a new rare one, keeping the same base
-// #[derive(Component, Default)]
-// #[require(Orb, Name(|| Name::new("ChaosOrb")))]
-// pub struct ChaosOrb;
-
-// impl From<ChaosOrb> for ItemInfo {
-//     fn from(_: ChaosOrb) -> Self {
-//         ItemInfo {
-//             tile_index: 150,
-//             text: "Transform a rare item to a new rare one, keeping the same base".into(),
-//         }
-//     }
-// }
-
-// #[derive(Clone, Copy, Eq, PartialEq, Hash)]
-// enum OrbKind {
-//     Transmutation,
-//     Regal,
-//     Chaos,
-// }
-
 pub struct OrbProvider(RngKindProvider<Orb>);
 
 impl OrbProvider {
     pub fn new() -> Self {
         let mut provider = RngKindProvider::default();
-        provider.add(Orb::Transmutation, 40);
+        provider.add(Orb::Transmutation, 4440);
         provider.add(Orb::Regal, 40);
         provider.add(Orb::Chaos, 40);
         OrbProvider(provider)
@@ -109,7 +62,13 @@ impl OrbProvider {
 }
 
 pub trait OrbAction {
-    fn apply_orb(item: &mut EntityCommands, orb: Orb);
+    fn reset(item: &mut EntityWorldMut);
+    fn gen_affixes(
+        item: &mut EntityWorldMut,
+        ilevel: ItemLevel,
+        rarity: ItemRarity,
+        rng: &mut ThreadRng,
+    );
 }
 
 /// Event to activate an [Orb] on an [Item]
@@ -117,4 +76,63 @@ pub trait OrbAction {
 pub struct ActivateOrbEvent {
     pub orb: Entity,
     pub item: Entity,
+}
+
+/// Command to transmute an item
+pub struct TransmutationCommand<T> {
+    item: Entity,
+    orb: Entity,
+    _data: PhantomData<T>,
+}
+
+impl<T> TransmutationCommand<T> {
+    pub fn new(item: Entity, orb: Entity) -> Self {
+        TransmutationCommand {
+            item,
+            orb,
+            _data: Default::default(),
+        }
+    }
+}
+
+impl<T> Command for TransmutationCommand<T>
+where
+    T: OrbAction + Send + 'static,
+{
+    fn apply(self, world: &mut World) {
+        error!("TransmutationCommand::apply()");
+        let Some(&Orb::Transmutation) = world.entity(self.orb).get::<Orb>() else {
+            error!("Orb is not Orb::Transmutation");
+            return;
+        };
+        let mut item = world.entity_mut(self.item);
+
+        let Some(ilevel) = item.get::<ItemLevel>().copied() else {
+            error!("Item doesn't contain ItemLevel");
+            return;
+        };
+
+        {
+            let Some(mut rarity) = item.get_mut::<ItemRarity>() else {
+                error!("Item doesn't contain ItemRarity");
+                return;
+            };
+            if *rarity != ItemRarity::Normal {
+                error!("Item is not ItemRarity::Normal");
+                return;
+            }
+            *rarity = ItemRarity::Magic;
+        }
+
+        let mut rng = rand::rng();
+
+        T::reset(&mut item);
+        T::gen_affixes(&mut item, ilevel, ItemRarity::Magic, &mut rng);
+
+        // Despawn orb
+        world.entity_mut(self.orb).despawn();
+
+        world.trigger(InventoryChanged);
+        world.trigger(PlayerEquipmentChanged);
+    }
 }

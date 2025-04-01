@@ -72,7 +72,7 @@ pub struct Item;
 )]
 pub struct DroppedItem(pub Entity);
 
-#[derive(Component, Default, Deref, Reflect)]
+#[derive(Component, Clone, Copy, Default, Deref, Reflect)]
 #[require(Item)]
 pub struct ItemLevel(pub u16);
 
@@ -172,12 +172,16 @@ impl ItemRarity {
 pub struct ItemRarityProvider(RngKindProvider<ItemRarity>);
 
 impl ItemRarityProvider {
-    pub fn new() -> Self {
+    fn new() -> Self {
         let mut provider = RngKindProvider::default();
         provider.add(ItemRarity::Normal, 10);
         provider.add(ItemRarity::Magic, 8);
         provider.add(ItemRarity::Rare, 5);
         ItemRarityProvider(provider)
+    }
+
+    pub fn gen(rng: &mut ThreadRng) -> ItemRarity {
+        Self::new().0.gen(rng).expect("At least one rarity")
     }
 }
 

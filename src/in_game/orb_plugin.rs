@@ -1,10 +1,8 @@
-use bevy::prelude::*;
-
 use crate::components::{
     equipment::{Amulet, Equipment},
-    item::{Item, ItemRarity},
-    orb::{ActivateOrbEvent, Orb},
+    orb::{ActivateOrbEvent, Orb, TransmutationCommand},
 };
+use bevy::prelude::*;
 
 pub struct OrbPlugin;
 
@@ -18,30 +16,30 @@ fn on_activate_orb(
     trigger: Trigger<ActivateOrbEvent>,
     mut commands: Commands,
     orbs: Query<&Orb>,
-    equipments: Query<(&Equipment, &ItemRarity)>,
+    equipments: Query<&Equipment>,
 ) {
     error!("on_activate_orb()");
     let orb_entity = trigger.orb;
-    let item_entity = trigger.item;
-
-    let Ok(orb) = orbs.get(orb_entity) else {
+    let Ok(&orb) = orbs.get(orb_entity) else {
         warn!("Can't apply orb as {orb_entity} is not an Orb");
         return;
     };
-    match *orb {
-        Orb::Transmutation => {
-            if let Ok((equipment, &ItemRarity::Normal)) = equipments.get(item_entity) {
-                let mut equipment_cmd = commands.entity(item_entity);
-                match *equipment {
-                    Equipment::Amulet => {
-                        Amulet::reset(&mut equipment_cmd);
-                    }
-                    _ => {
-                        todo!("Not implemented");
-                    }
-                }
+
+    let item_entity = trigger.item;
+    let Ok(&equipment) = equipments.get(item_entity) else {
+        warn!("Item is not an Equipment");
+        return;
+    };
+
+    match orb {
+        Orb::Transmutation => match equipment {
+            Equipment::Amulet => {
+                commands.queue(TransmutationCommand::<Amulet>::new(item_entity, orb_entity));
             }
-        }
+            _ => {
+                todo!("Not implemented");
+            }
+        },
         Orb::Regal => {
             todo!("Not implemented");
         }

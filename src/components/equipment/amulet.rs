@@ -1,10 +1,13 @@
 use super::{
-    common::{AffixesInserter, EquipmentUI},
+    common::{AffixProvider, EquipmentUI},
     Equipment,
 };
 use crate::components::{
     affix::{Armour, MoreLife, PierceChance},
-    item::{AffixConfigGenerator, ItemEntityInfo, ItemRarity},
+    item::{
+        AffixConfigGenerator, ItemEntityInfo, ItemInfo, ItemLevel, ItemRarity, ItemRarityProvider,
+    },
+    orb::OrbAction,
     rng_provider::RngKindProvider,
 };
 use bevy::prelude::*;
@@ -27,26 +30,26 @@ const AMULET_PIERCE_CHANCE_RANGES: &[(u16, (u16, u16), usize); 3] =
     &[(4, (3, 9), 10), (10, (10, 24), 10), (17, (25, 29), 10)];
 
 #[derive(Deref, DerefMut)]
-struct AmuletAffixProvider(RngKindProvider<AmuletAffixKind>);
+struct AmuletAffixProvider(AffixProvider<AmuletAffixKind>);
 
 impl AmuletAffixProvider {
     pub fn new(ilevel: u16) -> Self {
-        let mut provider = RngKindProvider::default();
+        let mut rng_provider = RngKindProvider::default();
 
-        provider.add(
+        rng_provider.add(
             AmuletAffixKind::AddArmour,
             AMULET_MORE_ARMOUR_RANGES.weight(ilevel),
         );
-        provider.add(
+        rng_provider.add(
             AmuletAffixKind::MoreLife,
             AMULET_MORE_LIFE_RANGES.weight(ilevel),
         );
-        provider.add(
+        rng_provider.add(
             AmuletAffixKind::PierceChance,
             AMULET_PIERCE_CHANCE_RANGES.weight(ilevel),
         );
 
-        AmuletAffixProvider(provider)
+        AmuletAffixProvider(AffixProvider::new::<Amulet>(ilevel, rng_provider))
     }
 }
 
@@ -76,31 +79,65 @@ impl EquipmentUI for Amulet {
 
 impl Amulet {
     pub fn spawn(commands: &mut Commands, ilevel: u16, rng: &mut ThreadRng) -> ItemEntityInfo {
+        let rarity = ItemRarityProvider::gen(rng);
+        let mut amulet_commands = commands.spawn((Amulet, rarity));
+        let entity = amulet_commands.id();
         let mut provider = AmuletAffixProvider::new(ilevel);
-        let mut amulet = AffixesInserter::spawn(commands, Amulet, ilevel, rng);
-        for _ in 0..amulet.n_affix() {
+        for _ in 0..rarity.n_affix() {
             match provider.gen(rng) {
                 Some(AmuletAffixKind::AddArmour) => {
-                    amulet.set::<Armour>(AMULET_MORE_ARMOUR_RANGES.generate(ilevel, rng));
+                    let value_and_tier = AMULET_MORE_ARMOUR_RANGES.generate(ilevel, rng);
+                    provider.set::<Armour, _>(&mut amulet_commands, value_and_tier);
                 }
                 Some(AmuletAffixKind::MoreLife) => {
-                    amulet.set::<MoreLife>(AMULET_MORE_LIFE_RANGES.generate(ilevel, rng));
+                    let value_and_tier = AMULET_MORE_LIFE_RANGES.generate(ilevel, rng);
+                    provider.set::<MoreLife, _>(&mut amulet_commands, value_and_tier);
                 }
                 Some(AmuletAffixKind::PierceChance) => {
-                    amulet.set::<PierceChance>(AMULET_PIERCE_CHANCE_RANGES.generate(ilevel, rng));
+                    let value_and_tier = AMULET_PIERCE_CHANCE_RANGES.generate(ilevel, rng);
+                    provider.set::<PierceChance, _>(&mut amulet_commands, value_and_tier);
                 }
                 None => {}
             }
         }
-        amulet.equipment_entity()
+        let info = ItemInfo {
+            text: provider.item_text(),
+            tile_index: Amulet::tile_index(rarity),
+        };
+        amulet_commands.insert(info.clone());
+
+        ItemEntityInfo { entity, info }
+    }
+}
+
+impl OrbAction for Amulet {
+    fn reset(item: &mut EntityWorldMut) {
+        assert!(item.contains::<Amulet>());
+        item.insert((Armour(0.), MoreLife(0.), PierceChance(0.)));
     }
 
-    pub fn reset(commands: &mut EntityCommands) {
-        commands.insert((
-            ItemRarity::Normal,
-            Armour(0.),
-            MoreLife(0.),
-            PierceChance(0.),
-        ));
+    fn gen_affixes(
+        item: &mut EntityWorldMut,
+        ilevel: ItemLevel,
+        rarity: ItemRarity,
+        rng: &mut ThreadRng,
+    ) {
+        assert!(item.contains::<Amulet>());
+        let mut provider = AmuletAffixProvider::new(*ilevel);
+        for _ in 0..rarity.n_affix() {
+            match provider.gen(rng) {
+                Some(AmuletAffixKind::AddArmour) => {
+                    let value_and_tier = AMULET_MORE_ARMOUR_RANGES.generate(*ilevel, rng);
+                    provider.set::<Armour, _>(item, value_and_tier);
+                }
+                Some(AmuletAffixKind::MoreLife) => {}
+                Some(AmuletAffixKind::PierceChance) => {}
+                None => {}
+            }
+        }
+        item.insert(ItemInfo {
+            text: provider.item_text(),
+            tile_index: Amulet::tile_index(rarity),
+        });
     }
 }

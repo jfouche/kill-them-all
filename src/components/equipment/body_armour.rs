@@ -68,12 +68,10 @@ impl BodyArmour {
         for _ in 0..body_armour.n_affix() {
             match provider.gen(rng) {
                 Some(BodyArmourAffixKind::AddArmour) => {
-                    body_armour
-                        .set::<Armour>(BODYARMOUR_MORE_ARMOUR_RANGES.generate(ilevel, rng));
+                    body_armour.set::<Armour>(BODYARMOUR_MORE_ARMOUR_RANGES.generate(ilevel, rng));
                 }
                 Some(BodyArmourAffixKind::AddLife) => {
-                    body_armour
-                        .set::<MoreLife>(BODYARMOUR_MORE_LIFE_RANGES.generate(ilevel, rng));
+                    body_armour.set::<MoreLife>(BODYARMOUR_MORE_LIFE_RANGES.generate(ilevel, rng));
                 }
                 None => {}
             }
