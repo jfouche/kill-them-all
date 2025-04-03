@@ -2,7 +2,9 @@ use super::{
     item::{Item, ItemEntityInfo, ItemInfo, ItemLevel, ItemRarity},
     rng_provider::RngKindProvider,
 };
-use crate::components::inventory::{InventoryChanged, PlayerEquipmentChanged};
+use crate::components::inventory::{
+    InventoryChanged, PlayerEquipmentChanged, RemoveFromInventoryCommand,
+};
 use bevy::prelude::*;
 use rand::rngs::ThreadRng;
 use std::marker::PhantomData;
@@ -131,6 +133,7 @@ where
 
         // Despawn orb
         world.entity_mut(self.orb).despawn();
+        RemoveFromInventoryCommand(self.orb).apply(world);
 
         world.trigger(InventoryChanged);
         world.trigger(PlayerEquipmentChanged);

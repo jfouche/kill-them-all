@@ -1,5 +1,5 @@
 use super::{
-    common::{AffixProvider, EquipmentUI},
+    common::{AffixProvider, EntityInserter, EquipmentUI},
     Equipment,
 };
 use crate::components::{
@@ -13,6 +13,90 @@ use crate::components::{
 use bevy::prelude::*;
 use rand::rngs::ThreadRng;
 
+#[derive(Component)]
+#[require(
+    Name(|| Name::new("Amulet")),
+    Equipment(|| Equipment::Amulet),
+    Armour,
+    MoreLife,
+    PierceChance
+)]
+pub struct Amulet;
+
+impl EquipmentUI for Amulet {
+    fn title() -> String {
+        "Amulet".into()
+    }
+
+    fn tile_index(rarity: ItemRarity) -> usize {
+        match rarity {
+            ItemRarity::Normal => 213,
+            ItemRarity::Magic => 215,
+            ItemRarity::Rare => 216,
+        }
+    }
+}
+
+impl Amulet {
+    pub fn spawn(commands: &mut Commands, ilevel: u16, rng: &mut ThreadRng) -> ItemEntityInfo {
+        let rarity = ItemRarityProvider::gen(rng);
+        let mut amulet_commands = commands.spawn((Amulet, rarity));
+        let entity = amulet_commands.id();
+        let info = Self::generate_affixes(&mut amulet_commands, rarity, ilevel, rng);
+        ItemEntityInfo { entity, info }
+    }
+
+    fn generate_affixes<E: EntityInserter>(
+        entity: &mut E,
+        rarity: ItemRarity,
+        ilevel: u16,
+        rng: &mut ThreadRng,
+    ) -> ItemInfo {
+        let mut provider = AmuletAffixProvider::new(ilevel);
+        for _ in 0..rarity.n_affix() {
+            match provider.gen(rng) {
+                Some(AmuletAffixKind::AddArmour) => {
+                    let value_and_tier = AMULET_MORE_ARMOUR_RANGES.generate(ilevel, rng);
+                    provider.set::<Armour, _>(entity, value_and_tier);
+                }
+                Some(AmuletAffixKind::MoreLife) => {
+                    let value_and_tier = AMULET_MORE_LIFE_RANGES.generate(ilevel, rng);
+                    provider.set::<MoreLife, _>(entity, value_and_tier);
+                }
+                Some(AmuletAffixKind::PierceChance) => {
+                    let value_and_tier = AMULET_PIERCE_CHANCE_RANGES.generate(ilevel, rng);
+                    provider.set::<PierceChance, _>(entity, value_and_tier);
+                }
+                None => {}
+            }
+        }
+        let info = ItemInfo {
+            text: provider.item_text(),
+            tile_index: Amulet::tile_index(rarity),
+        };
+        entity.insert(info.clone());
+        info
+    }
+}
+
+impl OrbAction for Amulet {
+    fn reset(item: &mut EntityWorldMut) {
+        assert!(item.contains::<Amulet>());
+        item.insert((Armour(0.), MoreLife(0.), PierceChance(0.)));
+    }
+
+    fn gen_affixes(
+        item: &mut EntityWorldMut,
+        ilevel: ItemLevel,
+        rarity: ItemRarity,
+        rng: &mut ThreadRng,
+    ) {
+        assert!(item.contains::<Amulet>());
+        let _ = Self::generate_affixes(item, rarity, *ilevel, rng);
+    }
+}
+
+/// All available affixes for [Amulet]
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 enum AmuletAffixKind {
     MoreLife,
@@ -50,94 +134,5 @@ impl AmuletAffixProvider {
         );
 
         AmuletAffixProvider(AffixProvider::new::<Amulet>(ilevel, rng_provider))
-    }
-}
-
-#[derive(Component)]
-#[require(
-    Name(|| Name::new("Amulet")),
-    Equipment(|| Equipment::Amulet),
-    Armour,
-    MoreLife,
-    PierceChance
-)]
-pub struct Amulet;
-
-impl EquipmentUI for Amulet {
-    fn title() -> String {
-        "Amulet".into()
-    }
-
-    fn tile_index(rarity: ItemRarity) -> usize {
-        match rarity {
-            ItemRarity::Normal => 213,
-            ItemRarity::Magic => 215,
-            ItemRarity::Rare => 216,
-        }
-    }
-}
-
-impl Amulet {
-    pub fn spawn(commands: &mut Commands, ilevel: u16, rng: &mut ThreadRng) -> ItemEntityInfo {
-        let rarity = ItemRarityProvider::gen(rng);
-        let mut amulet_commands = commands.spawn((Amulet, rarity));
-        let entity = amulet_commands.id();
-        let mut provider = AmuletAffixProvider::new(ilevel);
-        for _ in 0..rarity.n_affix() {
-            match provider.gen(rng) {
-                Some(AmuletAffixKind::AddArmour) => {
-                    let value_and_tier = AMULET_MORE_ARMOUR_RANGES.generate(ilevel, rng);
-                    provider.set::<Armour, _>(&mut amulet_commands, value_and_tier);
-                }
-                Some(AmuletAffixKind::MoreLife) => {
-                    let value_and_tier = AMULET_MORE_LIFE_RANGES.generate(ilevel, rng);
-                    provider.set::<MoreLife, _>(&mut amulet_commands, value_and_tier);
-                }
-                Some(AmuletAffixKind::PierceChance) => {
-                    let value_and_tier = AMULET_PIERCE_CHANCE_RANGES.generate(ilevel, rng);
-                    provider.set::<PierceChance, _>(&mut amulet_commands, value_and_tier);
-                }
-                None => {}
-            }
-        }
-        let info = ItemInfo {
-            text: provider.item_text(),
-            tile_index: Amulet::tile_index(rarity),
-        };
-        amulet_commands.insert(info.clone());
-
-        ItemEntityInfo { entity, info }
-    }
-}
-
-impl OrbAction for Amulet {
-    fn reset(item: &mut EntityWorldMut) {
-        assert!(item.contains::<Amulet>());
-        item.insert((Armour(0.), MoreLife(0.), PierceChance(0.)));
-    }
-
-    fn gen_affixes(
-        item: &mut EntityWorldMut,
-        ilevel: ItemLevel,
-        rarity: ItemRarity,
-        rng: &mut ThreadRng,
-    ) {
-        assert!(item.contains::<Amulet>());
-        let mut provider = AmuletAffixProvider::new(*ilevel);
-        for _ in 0..rarity.n_affix() {
-            match provider.gen(rng) {
-                Some(AmuletAffixKind::AddArmour) => {
-                    let value_and_tier = AMULET_MORE_ARMOUR_RANGES.generate(*ilevel, rng);
-                    provider.set::<Armour, _>(item, value_and_tier);
-                }
-                Some(AmuletAffixKind::MoreLife) => {}
-                Some(AmuletAffixKind::PierceChance) => {}
-                None => {}
-            }
-        }
-        item.insert(ItemInfo {
-            text: provider.item_text(),
-            tile_index: Amulet::tile_index(rarity),
-        });
     }
 }
