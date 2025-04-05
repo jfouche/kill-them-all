@@ -21,7 +21,7 @@ const APP_TITLE: &str = "Kill'em All";
 fn main() {
     let mut app = App::new();
 
-    #[cfg(feature = "dev")]
+    #[cfg(all(not(target_arch = "wasm32"), feature = "dev"))]
     let window = Window {
         title: APP_TITLE.into(),
         position: WindowPosition::At(IVec2::new(0, 0)),
@@ -29,11 +29,18 @@ fn main() {
         ..Default::default()
     };
 
-    #[cfg(not(feature = "dev"))]
+    #[cfg(all(not(target_arch = "wasm32"), not(feature = "dev")))]
     let window = Window {
         title: APP_TITLE.into(),
         mode: WindowMode::BorderlessFullscreen(MonitorSelection::Primary),
         resizable: false,
+        ..Default::default()
+    };
+
+    #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+    let window = Window {
+        title: APP_TITLE.into(),
+        fit_canvas_to_parent: true,
         ..Default::default()
     };
 

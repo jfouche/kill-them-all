@@ -1,9 +1,8 @@
 use bevy::prelude::*;
 
-const NORMAL_BUTTON: Color = Color::srgb(0.15, 0.35, 0.15);
-const HOVERED_BUTTON: Color = Color::srgb(0.25, 0.55, 0.25);
-const HOVERED_PRESSED_BUTTON: Color = Color::srgb(0.35, 0.75, 0.35);
-const PRESSED_BUTTON: Color = Color::srgb(0.35, 0.75, 0.35);
+const NORMAL_BUTTON_BG_COLOR: Color = Color::srgb(0.15, 0.35, 0.15);
+const HOVERED_BUTTON_BG_COLOR: Color = Color::srgb(0.25, 0.55, 0.25);
+const PRESSED_BUTTON_BG_COLOR: Color = Color::srgb(0.35, 0.75, 0.35);
 
 const BUTTON_TEXT_COLOR: Color = Color::srgb(0.9, 0.9, 0.9);
 const BIG_BUTTON_FONT_SIZE: f32 = 18.;
@@ -33,6 +32,24 @@ pub fn small_button_node() -> Node {
     }
 }
 
+#[derive(Component, Reflect)]
+#[require(BackgroundColor)]
+pub struct ButtonColors {
+    pub normal: Color,
+    pub hovered: Color,
+    pub pressed: Color,
+}
+
+impl Default for ButtonColors {
+    fn default() -> Self {
+        ButtonColors {
+            normal: NORMAL_BUTTON_BG_COLOR,
+            hovered: HOVERED_BUTTON_BG_COLOR,
+            pressed: PRESSED_BUTTON_BG_COLOR,
+        }
+    }
+}
+
 #[allow(dead_code)]
 #[derive(Clone, Copy)]
 pub enum ButtonKind {
@@ -46,8 +63,8 @@ pub enum ButtonKind {
 #[derive(Component, Clone)]
 #[require(
     Button,
+    ButtonColors,
     Node,
-    BackgroundColor(|| BackgroundColor(NORMAL_BUTTON)),
     BorderColor(|| BorderColor(Color::BLACK))
 )]
 pub struct TextButton {
@@ -112,23 +129,28 @@ where
 pub struct SelectedOption;
 
 pub fn button_plugin(app: &mut App) {
-    app.add_systems(
-        Update,
-        (
-            color_buttons,
-            color_selected_buttons,
-            color_deselected_buttons,
-        ),
-    )
-    .add_observer(create_text_button);
+    app.register_type::<ButtonColors>()
+        .add_systems(
+            Update,
+            (
+                color_buttons,
+                color_selected_buttons,
+                color_deselected_buttons,
+            ),
+        )
+        .add_observer(create_text_button)
+        .add_observer(init_color);
 }
 
 fn create_text_button(
     trigger: Trigger<OnAdd, TextButton>,
     mut commands: Commands,
-    mut buttons: Query<(&TextButton, &mut Node)>,
+    mut buttons: Query<(&TextButton, &mut Node, &mut BackgroundColor, &ButtonColors)>,
 ) {
-    let (button, mut node) = buttons.get_mut(trigger.entity()).expect("Added TextButton");
+    let (button, mut node, mut bgcolor, colors) =
+        buttons.get_mut(trigger.entity()).expect("Added TextButton");
+
+    *bgcolor = colors.normal.into();
 
     *node = match button.kind {
         ButtonKind::Big => big_button_node(),
@@ -148,38 +170,52 @@ fn create_text_button(
     // TODO: add observers to change color ?
 }
 
+fn init_color(
+    trigger: Trigger<OnAdd, ButtonColors>,
+    mut buttons: Query<(&mut BackgroundColor, &ButtonColors)>,
+) {
+    if let Ok((mut bgcolor, colors)) = buttons.get_mut(trigger.entity()) {
+        *bgcolor = colors.normal.into();
+    }
+}
+
 // This system handles changing all buttons color based on mouse interaction
 fn color_buttons(
     mut query: Query<
-        (&Interaction, &mut BackgroundColor, Option<&SelectedOption>),
-        (Changed<Interaction>, With<Button>),
+        (
+            &Interaction,
+            &mut BackgroundColor,
+            &ButtonColors,
+            Option<&SelectedOption>,
+        ),
+        Changed<Interaction>,
     >,
 ) {
-    for (interaction, mut color, selected) in &mut query {
-        *color = match (*interaction, selected) {
-            (Interaction::Pressed, _) | (Interaction::None, Some(_)) => PRESSED_BUTTON.into(),
-            (Interaction::Hovered, Some(_)) => HOVERED_PRESSED_BUTTON.into(),
-            (Interaction::Hovered, None) => HOVERED_BUTTON.into(),
-            (Interaction::None, None) => NORMAL_BUTTON.into(),
+    for (interaction, mut bgcolor, colors, selected) in &mut query {
+        *bgcolor = match (*interaction, selected) {
+            (Interaction::Pressed, _) | (Interaction::None, Some(_)) => colors.pressed.into(),
+            (Interaction::Hovered, Some(_)) => colors.pressed.into(),
+            (Interaction::Hovered, None) => colors.hovered.into(),
+            (Interaction::None, None) => colors.normal.into(),
         }
     }
 }
 
 fn color_selected_buttons(
-    mut query: Query<&mut BackgroundColor, (With<Button>, Added<SelectedOption>)>,
+    mut query: Query<(&mut BackgroundColor, &ButtonColors), (With<Button>, Added<SelectedOption>)>,
 ) {
-    for mut color in &mut query {
-        *color = PRESSED_BUTTON.into();
+    for (mut bgcolor, colors) in &mut query {
+        *bgcolor = colors.pressed.into();
     }
 }
 
 fn color_deselected_buttons(
-    mut buttons: Query<&mut BackgroundColor, With<Button>>,
+    mut buttons: Query<(&mut BackgroundColor, &ButtonColors), With<Button>>,
     mut removed: RemovedComponents<SelectedOption>,
 ) {
     for entity in removed.read() {
-        if let Ok(mut color) = buttons.get_mut(entity) {
-            *color = NORMAL_BUTTON.into();
+        if let Ok((mut bgcolor, colors)) = buttons.get_mut(entity) {
+            *bgcolor = colors.normal.into();
         }
     }
 }
