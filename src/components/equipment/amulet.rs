@@ -4,9 +4,7 @@ use super::{
 };
 use crate::components::{
     affix::{Armour, MoreLife, PierceChance},
-    item::{
-        AffixConfigGenerator, ItemEntityInfo, ItemInfo, ItemLevel, ItemRarity, ItemRarityProvider,
-    },
+    item::{AffixConfigGenerator, ItemLevel, ItemRarity},
     orb::OrbAction,
     rng_provider::RngKindProvider,
 };
@@ -38,20 +36,12 @@ impl EquipmentUI for Amulet {
 }
 
 impl Amulet {
-    pub fn spawn(commands: &mut Commands, ilevel: u16, rng: &mut ThreadRng) -> ItemEntityInfo {
-        let rarity = ItemRarityProvider::gen(rng);
-        let mut amulet_commands = commands.spawn((Amulet, rarity));
-        let entity = amulet_commands.id();
-        let info = Self::generate_affixes(&mut amulet_commands, rarity, ilevel, rng);
-        ItemEntityInfo { entity, info }
-    }
-
-    fn generate_affixes<E: EntityInserter>(
+    pub fn generate_affixes<E: EntityInserter>(
         entity: &mut E,
         rarity: ItemRarity,
         ilevel: u16,
         rng: &mut ThreadRng,
-    ) -> ItemInfo {
+    ) -> String {
         let mut provider = AmuletAffixProvider::new(ilevel);
         for _ in 0..rarity.n_affix() {
             match provider.gen(rng) {
@@ -70,18 +60,13 @@ impl Amulet {
                 None => {}
             }
         }
-        let info = ItemInfo {
-            text: provider.item_text(),
-            tile_index: Amulet::tile_index(rarity),
-        };
-        entity.insert(info.clone());
-        info
+        provider.item_text()
     }
 }
 
 impl OrbAction for Amulet {
     fn reset(item: &mut EntityWorldMut) {
-        assert!(item.contains::<Amulet>());
+        assert!(item.contains::<Self>());
         item.insert((Armour(0.), MoreLife(0.), PierceChance(0.)));
     }
 
@@ -91,7 +76,7 @@ impl OrbAction for Amulet {
         rarity: ItemRarity,
         rng: &mut ThreadRng,
     ) {
-        assert!(item.contains::<Amulet>());
+        assert!(item.contains::<Self>());
         let _ = Self::generate_affixes(item, rarity, *ilevel, rng);
     }
 }
@@ -118,21 +103,21 @@ struct AmuletAffixProvider(AffixProvider<AmuletAffixKind>);
 
 impl AmuletAffixProvider {
     pub fn new(ilevel: u16) -> Self {
-        let mut rng_provider = RngKindProvider::default();
+        let mut provider = RngKindProvider::default();
 
-        rng_provider.add(
+        provider.add(
             AmuletAffixKind::AddArmour,
             AMULET_MORE_ARMOUR_RANGES.weight(ilevel),
         );
-        rng_provider.add(
+        provider.add(
             AmuletAffixKind::MoreLife,
             AMULET_MORE_LIFE_RANGES.weight(ilevel),
         );
-        rng_provider.add(
+        provider.add(
             AmuletAffixKind::PierceChance,
             AMULET_PIERCE_CHANCE_RANGES.weight(ilevel),
         );
 
-        AmuletAffixProvider(AffixProvider::new::<Amulet>(ilevel, rng_provider))
+        AmuletAffixProvider(AffixProvider::new::<Amulet>(ilevel, provider))
     }
 }

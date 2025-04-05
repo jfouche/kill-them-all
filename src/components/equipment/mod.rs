@@ -51,13 +51,36 @@ mod common {
             ilevel: u16,
             rng: &mut ThreadRng,
         ) -> ItemEntityInfo {
-            match self {
-                EquipmentKind::Amulet => Amulet::spawn(commands, ilevel, rng),
-                EquipmentKind::BodyArmour => BodyArmour::spawn(commands, ilevel, rng),
-                EquipmentKind::Boots => Boots::spawn(commands, ilevel, rng),
-                EquipmentKind::Helmet => Helmet::spawn(commands, ilevel, rng),
-                EquipmentKind::Wand => Wand::spawn(commands, ilevel, rng),
-            }
+            let rarity = ItemRarityProvider::gen(rng);
+            let mut equipment = match self {
+                EquipmentKind::Amulet => commands.spawn((Amulet, rarity)),
+                EquipmentKind::BodyArmour => commands.spawn((BodyArmour, rarity)),
+                EquipmentKind::Boots => commands.spawn((Boots, rarity)),
+                EquipmentKind::Helmet => commands.spawn((Helmet, rarity)),
+                EquipmentKind::Wand => commands.spawn((Wand, rarity)),
+            };
+            let entity = equipment.id();
+            let affixes_text = match self {
+                EquipmentKind::Amulet => {
+                    Amulet::generate_affixes(&mut equipment, rarity, ilevel, rng)
+                }
+                EquipmentKind::BodyArmour => {
+                    BodyArmour::generate_affixes(&mut equipment, rarity, ilevel, rng)
+                }
+                EquipmentKind::Boots => {
+                    Boots::generate_affixes(&mut equipment, rarity, ilevel, rng)
+                }
+                EquipmentKind::Helmet => {
+                    Helmet::generate_affixes(&mut equipment, rarity, ilevel, rng)
+                }
+                EquipmentKind::Wand => Wand::generate_affixes(&mut equipment, rarity, ilevel, rng),
+            };
+            let info = ItemInfo {
+                text: affixes_text,
+                tile_index: Amulet::tile_index(rarity),
+            };
+            equipment.insert(info.clone());
+            ItemEntityInfo { entity, info }
         }
     }
 
@@ -142,62 +165,6 @@ mod common {
     impl EntityInserter for EntityCommands<'_> {
         fn insert<B: Bundle>(&mut self, bundle: B) {
             EntityCommands::insert(self, bundle);
-        }
-    }
-
-    /// Helper to insert affix to an equipment
-    #[deprecated(note = "Use [AffixProvider] instead.")]
-    pub struct AffixesInserter<'a> {
-        labels: Vec<String>,
-        entity_commands: EntityCommands<'a>,
-        tile_index: usize,
-        rarity: ItemRarity,
-    }
-
-    impl<'a> AffixesInserter<'a> {
-        pub fn spawn<T>(
-            commands: &'a mut Commands,
-            equipment: T,
-            ilevel: u16,
-            rng: &mut ThreadRng,
-        ) -> Self
-        where
-            T: Component + EquipmentUI,
-        {
-            let rarity = ItemRarityProvider::gen(rng);
-            let tile_index = T::tile_index(rarity);
-            let title = format!("{} ({})", T::title(), ilevel + 1);
-            AffixesInserter {
-                labels: vec![title],
-                entity_commands: commands.spawn((equipment, ItemLevel(ilevel), rarity)),
-                tile_index,
-                rarity,
-            }
-        }
-
-        pub fn n_affix(&self) -> u16 {
-            self.rarity.n_affix()
-        }
-
-        pub fn set<A>(&mut self, value: ValueAndTier)
-        where
-            A: Component + fmt::Display + From<u16>,
-        {
-            let affix = A::from(value.0);
-            self.labels.push(format!("{affix} ({})", value.1));
-            self.entity_commands.insert(affix);
-        }
-
-        pub fn equipment_entity(mut self) -> ItemEntityInfo {
-            let equipment_info = ItemInfo {
-                text: self.labels.join("\n"),
-                tile_index: self.tile_index,
-            };
-            self.entity_commands.insert(equipment_info.clone());
-            ItemEntityInfo {
-                entity: self.entity_commands.id(),
-                info: equipment_info,
-            }
         }
     }
 }

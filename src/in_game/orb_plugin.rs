@@ -1,5 +1,5 @@
 use crate::components::{
-    equipment::{Amulet, Equipment},
+    equipment::{Amulet, BodyArmour, Boots, Equipment, Helmet, Wand},
     orb::{ActivateOrbEvent, Orb, TransmutationCommand},
 };
 use bevy::prelude::*;
@@ -36,8 +36,21 @@ fn on_activate_orb(
             Equipment::Amulet => {
                 commands.queue(TransmutationCommand::<Amulet>::new(item_entity, orb_entity));
             }
-            _ => {
-                todo!("Not implemented");
+            Equipment::BodyArmour => {
+                commands.queue(TransmutationCommand::<BodyArmour>::new(
+                    item_entity,
+                    orb_entity,
+                ));
+            }
+            Equipment::Boots => {
+                commands.queue(TransmutationCommand::<Boots>::new(item_entity, orb_entity));
+            }
+            Equipment::Helmet => {
+                commands.queue(TransmutationCommand::<Helmet>::new(item_entity, orb_entity));
+            }
+            Equipment::Weapon => {
+                // TODO: use Weapon
+                commands.queue(TransmutationCommand::<Wand>::new(item_entity, orb_entity));
             }
         },
         Orb::Regal => {
