@@ -135,6 +135,7 @@ mod common {
             }
         }
 
+        #[allow(dead_code)]
         pub fn reset(&mut self) {
             self.provider.reset();
             self.labels.truncate(1);

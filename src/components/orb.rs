@@ -169,7 +169,7 @@ where
         };
         let mut item = world.entity_mut(self.item);
 
-        let Some(ilevel) = item.get::<ItemLevel>().copied() else {
+        let Some(_ilevel) = item.get::<ItemLevel>().copied() else {
             error!("Item doesn't contain ItemLevel");
             return;
         };
@@ -186,18 +186,18 @@ where
             *rarity = ItemRarity::Rare;
         }
 
-        let mut rng = rand::rng();
+        // TODO: implemement Regal orb
+        // let mut rng = rand::rng();
 
-        todo!();
-        // T::reset(&mut item);
-        // T::gen_affixes(&mut item, ilevel, ItemRarity::Rare, &mut rng);
+        // // T::reset(&mut item);
+        // // T::gen_affixes(&mut item, ilevel, ItemRarity::Rare, &mut rng);
 
-        // Despawn orb
-        RemoveFromInventoryCommand(self.orb).apply(world);
-        world.entity_mut(self.orb).despawn();
+        // // Despawn orb
+        // RemoveFromInventoryCommand(self.orb).apply(world);
+        // world.entity_mut(self.orb).despawn();
 
-        world.trigger(InventoryChanged);
-        world.trigger(PlayerEquipmentChanged);
+        // world.trigger(InventoryChanged);
+        // world.trigger(PlayerEquipmentChanged);
     }
 }
 

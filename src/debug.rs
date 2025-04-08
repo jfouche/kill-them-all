@@ -1,7 +1,11 @@
 #![allow(unused)]
 
 use crate::{
-    components::{monster::Monster, player::Player},
+    components::{
+        monster::Monster,
+        player::Player,
+        world_map::{ProceduralWorldMap, WorldMapConfig},
+    },
     in_game::life_bar_plugin::LifeBar,
     schedule::*,
 };
@@ -43,6 +47,7 @@ impl Plugin for DebugPlugin {
             Update,
             (
                 (toggle_debug_mode, count_entities).run_if(input_just_released(KeyCode::KeyD)),
+                (show_generated_map).run_if(input_just_released(KeyCode::KeyM)),
                 (
                     inspector_ui,
                     log_transitions::<GameState>,
@@ -129,4 +134,10 @@ fn show_key_pressed(inputs: Res<ButtonInput<KeyCode>>) {
     if !key_pressed.is_empty() {
         info!("show_key_pressed() : {key_pressed}");
     }
+}
+
+fn show_generated_map() {
+    let mut rng = rand::rng();
+    let map = ProceduralWorldMap::generate(WorldMapConfig::default(), &mut rng);
+    info!("PROCEDURAL MAP : \n {:?}", map);
 }
