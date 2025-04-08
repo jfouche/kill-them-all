@@ -1,9 +1,10 @@
 use super::{
-    common::{AffixProvider, EntityInserter, EquipmentUI},
+    common::{AffixProvider, EquipmentUI},
     Equipment,
 };
 use crate::components::{
     affix::{Armour, MoreLife},
+    common::EntityInserter,
     item::{AffixConfigGenerator, ItemLevel, ItemRarity},
     orb::OrbAction,
     rng_provider::RngKindProvider,

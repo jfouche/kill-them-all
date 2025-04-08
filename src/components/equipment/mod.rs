@@ -17,6 +17,7 @@ mod common {
 
     use super::*;
     use crate::components::{
+        common::EntityInserter,
         item::{ItemEntityInfo, ItemInfo, ItemLevel, ItemRarity, ItemRarityProvider, ValueAndTier},
         rng_provider::RngKindProvider,
     };
@@ -134,6 +135,11 @@ mod common {
             }
         }
 
+        pub fn reset(&mut self) {
+            self.provider.reset();
+            self.labels.truncate(1);
+        }
+
         pub fn gen(&mut self, rng: &mut ThreadRng) -> Option<K> {
             self.provider.gen(rng)
         }
@@ -150,21 +156,6 @@ mod common {
 
         pub fn item_text(&self) -> String {
             self.labels.join("\n")
-        }
-    }
-
-    pub trait EntityInserter {
-        fn insert<B: Bundle>(&mut self, bundle: B);
-    }
-
-    impl EntityInserter for EntityWorldMut<'_> {
-        fn insert<B: Bundle>(&mut self, bundle: B) {
-            EntityWorldMut::insert(self, bundle);
-        }
-    }
-    impl EntityInserter for EntityCommands<'_> {
-        fn insert<B: Bundle>(&mut self, bundle: B) {
-            EntityCommands::insert(self, bundle);
         }
     }
 }

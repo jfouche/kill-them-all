@@ -1,6 +1,6 @@
 use crate::components::{
     equipment::{Amulet, BodyArmour, Boots, Equipment, Helmet, Wand},
-    orb::{ActivateOrbEvent, Orb, TransmutationCommand},
+    orb::{ActivateOrbEvent, ChaosCommand, Orb, RegalCommand, TransmutationCommand},
 };
 use bevy::prelude::*;
 
@@ -53,11 +53,41 @@ fn on_activate_orb(
                 commands.queue(TransmutationCommand::<Wand>::new(item_entity, orb_entity));
             }
         },
-        Orb::Regal => {
-            todo!("Not implemented");
-        }
-        Orb::Chaos => {
-            todo!("Not implemented");
-        }
+        Orb::Regal => match equipment {
+            Equipment::Amulet => {
+                commands.queue(RegalCommand::<Amulet>::new(item_entity, orb_entity));
+            }
+            Equipment::BodyArmour => {
+                commands.queue(RegalCommand::<BodyArmour>::new(item_entity, orb_entity));
+            }
+            Equipment::Boots => {
+                commands.queue(RegalCommand::<Boots>::new(item_entity, orb_entity));
+            }
+            Equipment::Helmet => {
+                commands.queue(RegalCommand::<Helmet>::new(item_entity, orb_entity));
+            }
+            Equipment::Weapon => {
+                // TODO: use Weapon
+                commands.queue(RegalCommand::<Wand>::new(item_entity, orb_entity));
+            }
+        },
+        Orb::Chaos => match equipment {
+            Equipment::Amulet => {
+                commands.queue(ChaosCommand::<Amulet>::new(item_entity, orb_entity));
+            }
+            Equipment::BodyArmour => {
+                commands.queue(ChaosCommand::<BodyArmour>::new(item_entity, orb_entity));
+            }
+            Equipment::Boots => {
+                commands.queue(ChaosCommand::<Boots>::new(item_entity, orb_entity));
+            }
+            Equipment::Helmet => {
+                commands.queue(ChaosCommand::<Helmet>::new(item_entity, orb_entity));
+            }
+            Equipment::Weapon => {
+                // TODO: use Weapon
+                commands.queue(ChaosCommand::<Wand>::new(item_entity, orb_entity));
+            }
+        },
     }
 }

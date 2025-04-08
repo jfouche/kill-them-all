@@ -1,9 +1,10 @@
 use super::{
-    common::{AffixProvider, EntityInserter, EquipmentUI},
+    common::{AffixProvider, EquipmentUI},
     weapon::{BaseAttackSpeed, Weapon},
 };
 use crate::components::{
     affix::{IncreaseAttackSpeed, IncreaseDamage, MoreDamage, PierceChance},
+    common::EntityInserter,
     damage::BaseHitDamageRange,
     item::{AffixConfigGenerator, ItemLevel, ItemRarity},
     orb::OrbAction,

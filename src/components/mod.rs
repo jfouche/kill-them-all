@@ -34,6 +34,22 @@ mod common {
         }
     }
 
+    pub trait EntityInserter {
+        fn insert<B: Bundle>(&mut self, bundle: B);
+    }
+
+    impl EntityInserter for EntityWorldMut<'_> {
+        fn insert<B: Bundle>(&mut self, bundle: B) {
+            EntityWorldMut::insert(self, bundle);
+        }
+    }
+
+    impl EntityInserter for EntityCommands<'_> {
+        fn insert<B: Bundle>(&mut self, bundle: B) {
+            EntityCommands::insert(self, bundle);
+        }
+    }
+
     ///
     /// The [LifeTime] component indicates that the entity should be depawn
     /// after a certain duration

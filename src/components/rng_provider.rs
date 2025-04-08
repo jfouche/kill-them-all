@@ -20,6 +20,10 @@ impl<T> RngKindProvider<T>
 where
     T: Copy + Eq + std::hash::Hash,
 {
+    pub fn reset(&mut self) {
+        self.filters.clear();
+    }
+
     /// Add an kind based on its weigh.
     /// The hight the weight is, the most probable it will appear.
     pub fn add(&mut self, kind: T, weight: usize) -> &mut Self {

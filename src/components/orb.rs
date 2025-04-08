@@ -80,7 +80,7 @@ pub struct ActivateOrbEvent {
     pub item: Entity,
 }
 
-/// Command to transmute an item
+/// Command to change an [ItemRarity::Normal] item to a [ItemRarity::Magic] one
 pub struct TransmutationCommand<T> {
     item: Entity,
     orb: Entity,
@@ -132,8 +132,129 @@ where
         T::gen_affixes(&mut item, ilevel, ItemRarity::Magic, &mut rng);
 
         // Despawn orb
-        world.entity_mut(self.orb).despawn();
         RemoveFromInventoryCommand(self.orb).apply(world);
+        world.entity_mut(self.orb).despawn();
+
+        world.trigger(InventoryChanged);
+        world.trigger(PlayerEquipmentChanged);
+    }
+}
+
+/// Command to change an [ItemRarity::Magic] item to a [ItemRarity::Rare] one
+pub struct RegalCommand<T> {
+    item: Entity,
+    orb: Entity,
+    _data: PhantomData<T>,
+}
+
+impl<T> RegalCommand<T> {
+    pub fn new(item: Entity, orb: Entity) -> Self {
+        RegalCommand {
+            item,
+            orb,
+            _data: Default::default(),
+        }
+    }
+}
+
+impl<T> Command for RegalCommand<T>
+where
+    T: OrbAction + Send + 'static,
+{
+    fn apply(self, world: &mut World) {
+        error!("RegalCommand::apply()");
+        let Some(&Orb::Regal) = world.entity(self.orb).get::<Orb>() else {
+            error!("Orb is not Orb::Regal");
+            return;
+        };
+        let mut item = world.entity_mut(self.item);
+
+        let Some(ilevel) = item.get::<ItemLevel>().copied() else {
+            error!("Item doesn't contain ItemLevel");
+            return;
+        };
+
+        {
+            let Some(mut rarity) = item.get_mut::<ItemRarity>() else {
+                error!("Item doesn't contain ItemRarity");
+                return;
+            };
+            if *rarity != ItemRarity::Magic {
+                error!("Item is not ItemRarity::Magic");
+                return;
+            }
+            *rarity = ItemRarity::Rare;
+        }
+
+        let mut rng = rand::rng();
+
+        todo!();
+        // T::reset(&mut item);
+        // T::gen_affixes(&mut item, ilevel, ItemRarity::Rare, &mut rng);
+
+        // Despawn orb
+        RemoveFromInventoryCommand(self.orb).apply(world);
+        world.entity_mut(self.orb).despawn();
+
+        world.trigger(InventoryChanged);
+        world.trigger(PlayerEquipmentChanged);
+    }
+}
+
+/// Command to change an [ItemRarity::Normal] item to a [ItemRarity::Rare] one
+pub struct ChaosCommand<T> {
+    item: Entity,
+    orb: Entity,
+    _data: PhantomData<T>,
+}
+
+impl<T> ChaosCommand<T> {
+    pub fn new(item: Entity, orb: Entity) -> Self {
+        ChaosCommand {
+            item,
+            orb,
+            _data: Default::default(),
+        }
+    }
+}
+
+impl<T> Command for ChaosCommand<T>
+where
+    T: OrbAction + Send + 'static,
+{
+    fn apply(self, world: &mut World) {
+        error!("ChaosCommand::apply()");
+        let Some(&Orb::Chaos) = world.entity(self.orb).get::<Orb>() else {
+            error!("Orb is not Orb::Chaos");
+            return;
+        };
+        let mut item = world.entity_mut(self.item);
+
+        let Some(ilevel) = item.get::<ItemLevel>().copied() else {
+            error!("Item doesn't contain ItemLevel");
+            return;
+        };
+
+        {
+            let Some(mut rarity) = item.get_mut::<ItemRarity>() else {
+                error!("Item doesn't contain ItemRarity");
+                return;
+            };
+            if *rarity != ItemRarity::Normal {
+                error!("Item is not ItemRarity::Normal");
+                return;
+            }
+            *rarity = ItemRarity::Rare;
+        }
+
+        let mut rng = rand::rng();
+
+        T::reset(&mut item);
+        T::gen_affixes(&mut item, ilevel, ItemRarity::Rare, &mut rng);
+
+        // Despawn orb
+        RemoveFromInventoryCommand(self.orb).apply(world);
+        world.entity_mut(self.orb).despawn();
 
         world.trigger(InventoryChanged);
         world.trigger(PlayerEquipmentChanged);
