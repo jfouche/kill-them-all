@@ -4,7 +4,11 @@ use crate::{
         inventory::{PlayerEquipmentChanged, ToggleInventory},
         player::PlayerAction,
         skills::SkillGemLocation,
-    }, in_game::menu::popup_info::SpawnInfoPopupObservers, schedule::GameState, ui::button::ButtonColors, utils::observers::VecObserversExt
+    },
+    in_game::menu::popup_info::SpawnInfoPopupObservers,
+    schedule::GameState,
+    ui::button::ButtonColors,
+    utils::observers::VecObserversExt,
 };
 use bevy::prelude::*;
 
@@ -35,8 +39,8 @@ struct HudSkillsPanel;
 #[require(
     Button,
     ButtonColors(|| ButtonColors {
-        normal: Color::srgb_u8(223, 15, 15), 
-        hovered: Color::srgb_u8(160, 12, 12), 
+        normal: Color::srgb_u8(223, 15, 15),
+        hovered: Color::srgb_u8(160, 12, 12),
         pressed: Color::srgb_u8(214, 90, 90)
     }),
     Node(|| Node {
