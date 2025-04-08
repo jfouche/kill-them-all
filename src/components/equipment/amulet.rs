@@ -5,7 +5,7 @@ use super::{
 use crate::components::{
     affix::{Armour, MoreLife, PierceChance},
     common::EntityInserter,
-    item::{AffixConfigGenerator, ItemLevel, ItemRarity},
+    item::{AffixConfigGenerator, ItemInfo, ItemLevel, ItemRarity},
     orb::OrbAction,
     rng_provider::RngKindProvider,
 };
@@ -78,7 +78,11 @@ impl OrbAction for Amulet {
         rng: &mut ThreadRng,
     ) {
         assert!(item.contains::<Self>());
-        let _ = Self::generate_affixes(item, rarity, *ilevel, rng);
+        let text = Self::generate_affixes(item, rarity, *ilevel, rng);
+        item.insert(ItemInfo {
+            tile_index: Self::tile_index(rarity),
+            text,
+        });
     }
 }
 

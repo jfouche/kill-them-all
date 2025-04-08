@@ -18,7 +18,6 @@ fn on_activate_orb(
     orbs: Query<&Orb>,
     equipments: Query<&Equipment>,
 ) {
-    error!("on_activate_orb()");
     let orb_entity = trigger.orb;
     let Ok(&orb) = orbs.get(orb_entity) else {
         warn!("Can't apply orb as {orb_entity} is not an Orb");
