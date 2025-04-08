@@ -126,8 +126,9 @@ where
             *rarity = ItemRarity::Magic;
         }
 
-        let mut rng = rand::rng();
+        info!("Apply Transmutation orb on {}.", self.item);
 
+        let mut rng = rand::rng();
         T::reset(&mut item);
         T::gen_affixes(&mut item, ilevel, ItemRarity::Magic, &mut rng);
 
@@ -162,7 +163,6 @@ where
     T: OrbAction + Send + 'static,
 {
     fn apply(self, world: &mut World) {
-        error!("RegalCommand::apply()");
         let Some(&Orb::Regal) = world.entity(self.orb).get::<Orb>() else {
             error!("Orb is not Orb::Regal");
             return;
@@ -185,6 +185,8 @@ where
             }
             *rarity = ItemRarity::Rare;
         }
+        info!("Apply Regal orb on {}.", self.item);
+        todo!();
 
         // TODO: implemement Regal orb
         // let mut rng = rand::rng();
@@ -223,7 +225,6 @@ where
     T: OrbAction + Send + 'static,
 {
     fn apply(self, world: &mut World) {
-        error!("ChaosCommand::apply()");
         let Some(&Orb::Chaos) = world.entity(self.orb).get::<Orb>() else {
             error!("Orb is not Orb::Chaos");
             return;
@@ -247,8 +248,9 @@ where
             *rarity = ItemRarity::Rare;
         }
 
-        let mut rng = rand::rng();
+        info!("Apply Chaos orb on {}.", self.item);
 
+        let mut rng = rand::rng();
         T::reset(&mut item);
         T::gen_affixes(&mut item, ilevel, ItemRarity::Rare, &mut rng);
 
