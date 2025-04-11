@@ -175,7 +175,7 @@ pub const LAYER_ITEM: f32 = 7.;
 #[derive(Resource)]
 pub struct ProceduralWorldMap {
     config: WorldMapConfig,
-    ground_map: HashMap<(usize, usize), TileKind>,
+    ground_map: HashMap<TilePos, TileTextureIndex>,
 }
 
 impl ProceduralWorldMap {
@@ -194,9 +194,28 @@ impl ProceduralWorldMap {
                 } else {
                     TileKind::Grass
                 };
-                ground_map.insert((x, y), kind);
+                ground_map.insert(
+                    TilePos {
+                        x: x as u32,
+                        y: y as u32,
+                    },
+                    kind,
+                );
             }
         }
+
+        let ground_map = ground_map
+            .iter()
+            .map(|(&p, k)| {
+                let i = match k {
+                    TileKind::Water => 34,
+                    TileKind::Mud => 23,
+                    TileKind::Grass => 264,
+                };
+                (p, TileTextureIndex(i))
+            })
+            .collect::<HashMap<_, _>>();
+
         Self { config, ground_map }
     }
 
@@ -233,30 +252,17 @@ impl ProceduralWorldMap {
         let mut tile_storage = TileStorage::empty(map_size);
         let tilemap_entity = commands.spawn(WorldMap).id();
 
-        for y in 0..self.config.height {
-            for x in 0..self.config.width {
-                let tile_pos = TilePos {
-                    x: x as u32,
-                    y: y as u32,
-                };
-
-                let index = match self.ground_map.get(&(x, y)).expect("A tile should exist") {
-                    TileKind::Water => 34,
-                    TileKind::Mud => 23,
-                    TileKind::Grass => 264,
-                };
-
-                let tile_entity = commands
-                    .spawn(TileBundle {
-                        position: tile_pos,
-                        tilemap_id: TilemapId(tilemap_entity),
-                        texture_index: TileTextureIndex(index),
-                        ..Default::default()
-                    })
-                    .id();
-                tile_storage.set(&tile_pos, tile_entity);
-                commands.entity(tilemap_entity).add_child(tile_entity);
-            }
+        for (&position, &texture_index) in &self.ground_map {
+            let tile_entity = commands
+                .spawn(TileBundle {
+                    position,
+                    tilemap_id: TilemapId(tilemap_entity),
+                    texture_index,
+                    ..Default::default()
+                })
+                .id();
+            tile_storage.set(&position, tile_entity);
+            commands.entity(tilemap_entity).add_child(tile_entity);
         }
         let tile_size = TilemapTileSize { x: 16.0, y: 16.0 };
         let grid_size = tile_size.into();
@@ -271,23 +277,17 @@ impl ProceduralWorldMap {
             tile_size,
             ..Default::default()
         });
-    }
-}
 
-impl std::fmt::Debug for ProceduralWorldMap {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for y in (0..self.config.height).rev() {
-            for x in 0..self.config.width {
-                let c = match self.ground_map.get(&(x, y)).expect("A tile should exist") {
-                    TileKind::Water => '~',
-                    TileKind::Mud => ' ',
-                    TileKind::Grass => ',',
-                };
-                write!(f, "{}", c)?;
-            }
-            write!(f, "\n")?;
-        }
-        Ok(())
+        // spawn exterior colliders
+        commands.entity(tilemap_entity).with_children(|parent| {
+            let bl = self.pos_to_world(-1, -1);
+            let tr = self.pos_to_world(self.config.width as i32, 0);
+            let half = (tr - bl) / 2.;
+            parent.spawn((
+                Collider::cuboid(half.x, half.y),
+                Transform::from_translation((bl + half).extend(0.)),
+            ));
+        });
     }
 }
 

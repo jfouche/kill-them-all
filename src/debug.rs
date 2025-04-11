@@ -46,8 +46,8 @@ impl Plugin for DebugPlugin {
         .add_systems(
             Update,
             (
-                (toggle_debug_mode, count_entities).run_if(input_just_released(KeyCode::KeyD)),
-                (show_generated_map).run_if(input_just_released(KeyCode::KeyM)),
+                (toggle_debug_mode, count_entities, show_player_pos)
+                    .run_if(input_just_released(KeyCode::KeyD)),
                 (
                     inspector_ui,
                     log_transitions::<GameState>,
@@ -136,8 +136,10 @@ fn show_key_pressed(inputs: Res<ButtonInput<KeyCode>>) {
     }
 }
 
-fn show_generated_map() {
-    let mut rng = rand::rng();
-    let map = ProceduralWorldMap::generate(WorldMapConfig::default(), &mut rng);
-    info!("PROCEDURAL MAP : \n {:?}", map);
+fn show_player_pos(players: Query<&Transform, With<Player>>, world_map: Res<ProceduralWorldMap>) {
+    if let Ok(transform) = players.get_single() {
+        let player_translation = transform.translation.xy();
+        let player_pos = world_map.world_to_pos(player_translation);
+        info!("Player pos : {player_pos} ({player_translation})");
+    }
 }

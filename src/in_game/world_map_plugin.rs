@@ -59,7 +59,6 @@ fn spawn_worldmap(mut commands: Commands, assets: Res<WorldMapAssets>) {
 
     let mut rng = rand::rng();
     let map = ProceduralWorldMap::generate(WorldMapConfig::default(), &mut rng);
-    error!("ProceduralWorldMap :\n{map:?}");
     map.spawn(&mut commands, &assets);
     commands.insert_resource(map);
     commands.insert_resource(ChunkManager::default());
