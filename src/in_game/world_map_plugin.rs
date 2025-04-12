@@ -47,7 +47,7 @@ impl Plugin for WorldMapPlugin {
     }
 }
 
-fn spawn_worldmap(mut commands: Commands, assets: Res<WorldMapAssets>) {
+fn spawn_worldmap(mut commands: Commands, assets: Res<WorldMapAssets>, mut gizmos: Gizmos) {
     // commands.insert_resource(LevelSelection::index(0));
     // commands.spawn((
     //     WorldMap,

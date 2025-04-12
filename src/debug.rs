@@ -13,6 +13,7 @@ use bevy::{
     dev_tools::{fps_overlay::*, states::log_transitions, ui_debug_overlay::*},
     ecs::entity::Entities,
     input::common_conditions::{input_just_pressed, input_just_released},
+    math::vec2,
     prelude::*,
     time::common_conditions::on_timer,
     window::PrimaryWindow,
@@ -40,7 +41,7 @@ impl Plugin for DebugPlugin {
             EguiPlugin,
             DefaultInspectorConfigPlugin,
             bevy_rapier2d::render::RapierDebugRenderPlugin::default(),
-            WorldInspectorPlugin::new(),
+            WorldInspectorPlugin::new().run_if(debug_is_active),
         ))
         .insert_resource(DebugMode(true))
         .add_systems(
@@ -54,6 +55,7 @@ impl Plugin for DebugPlugin {
                     log_transitions::<InGameState>,
                     show_key_pressed,
                     // display_collision_events.in_set(GameRunningSet::EntityUpdate),
+                    show_map_axes.run_if(resource_exists::<ProceduralWorldMap>),
                 )
                     .run_if(debug_is_active),
                 toggle_debug_ui.run_if(input_just_pressed(KeyCode::Backquote)),
@@ -142,4 +144,10 @@ fn show_player_pos(players: Query<&Transform, With<Player>>, world_map: Res<Proc
         let player_pos = world_map.world_to_pos(player_translation);
         info!("Player pos : {player_pos} ({player_translation})");
     }
+}
+
+fn show_map_axes(mut gizmos: Gizmos, world_map: Res<ProceduralWorldMap>) {
+    let zero = world_map.pos_to_world(0, 0);
+    let one = world_map.pos_to_world(1, 1);
+    gizmos.line_2d(zero, zero + one, Color::srgba_u8(20, 172, 121, 255));
 }

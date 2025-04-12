@@ -1,4 +1,5 @@
 use bevy::{
+    math::vec3,
     prelude::*,
     utils::{HashMap, HashSet},
 };
@@ -81,36 +82,36 @@ impl Default for MonsterCount {
 //     collider: WaterTile,
 // }
 
-#[derive(Component, Default)]
-#[require(
-    Name(|| Name::new("WaterTile")),
-    ColliderTile
-)]
-pub struct WaterTile;
+// #[derive(Component, Default)]
+// #[require(
+//     Name(|| Name::new("WaterTile")),
+//     ColliderTile
+// )]
+// pub struct WaterTile;
 
-impl WaterTile {
-    pub const ID: i32 = 4;
-}
-#[derive(Component, Default)]
-#[require(
-    Name(|| Name::new("ColliderTile"))
-)]
-pub struct ColliderTile;
+// impl WaterTile {
+//     pub const ID: i32 = 4;
+// }
+// #[derive(Component, Default)]
+// #[require(
+//     Name(|| Name::new("ColliderTile"))
+// )]
+// pub struct ColliderTile;
 
-impl ColliderTile {
-    pub const ID: i32 = 3;
-}
+// impl ColliderTile {
+//     pub const ID: i32 = 3;
+// }
 
-#[derive(Component)]
-#[require(
-    Name(|| Name::new("Map Collider")),
-    Transform,
-    Collider,
-    RigidBody(|| RigidBody::Fixed),
-    Friction(|| Friction::new(1.0)),
+// #[derive(Component)]
+// #[require(
+//     Name(|| Name::new("Map Collider")),
+//     Transform,
+//     Collider,
+//     RigidBody(|| RigidBody::Fixed),
+//     Friction(|| Friction::new(1.0)),
 
-)]
-pub struct MapCollider;
+// )]
+// pub struct MapCollider;
 
 /// Map level configuration
 #[derive(Component, Reflect)]
@@ -278,16 +279,20 @@ impl ProceduralWorldMap {
             ..Default::default()
         });
 
-        // spawn exterior colliders
-        commands.entity(tilemap_entity).with_children(|parent| {
-            let bl = self.pos_to_world(-1, -1);
-            let tr = self.pos_to_world(self.config.width as i32, 0);
-            let half = (tr - bl) / 2.;
-            parent.spawn((
-                Collider::cuboid(half.x, half.y),
-                Transform::from_translation((bl + half).extend(0.)),
-            ));
-        });
+        // // spawn exterior colliders
+        // commands.entity(tilemap_entity).with_children(|parent| {
+        //     const HW: f32 = 2.0;
+        //     let left = self.pos_to_world(-1, 0).x;
+        //     error!("left={left} for (-1, 0)");
+        //     let right = self.pos_to_world(self.config.width as i32, 0).x;
+        //     error!("right={right} for ({}), 0)", self.config.width);
+        //     let half_x = (right - left) / 2.;
+        //     error!("half_x={half_x}; left + half_x={}", left + half_x);
+        //     parent.spawn((
+        //         Collider::cuboid(half_x, HW),
+        //         Transform::from_translation(vec3(left + half_x, HW, 0.)),
+        //     ));
+        // });
     }
 }
 
