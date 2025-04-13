@@ -4,8 +4,7 @@ use super::{
 };
 use crate::components::{
     affix::{Armour, MoreLife},
-    common::EntityInserter,
-    item::{AffixConfigGenerator, ItemInfo, ItemLevel, ItemRarity},
+    item::{AffixConfigGenerator, ItemInfo, ItemRarity},
     orb::OrbAction,
     rng_provider::RngKindProvider,
 };
@@ -19,7 +18,17 @@ use rand::rngs::ThreadRng;
     Armour,
     MoreLife
 )]
-pub struct Helmet;
+pub struct Helmet {
+    affix_provider: HelmetAffixProvider,
+}
+
+impl Helmet {
+    pub fn new(ilevel: u16) -> Self {
+        Helmet {
+            affix_provider: HelmetAffixProvider::new(ilevel),
+        }
+    }
+}
 
 impl EquipmentUI for Helmet {
     fn title() -> String {
@@ -35,49 +44,43 @@ impl EquipmentUI for Helmet {
     }
 }
 
-impl Helmet {
-    pub fn generate_affixes<E: EntityInserter>(
-        entity: &mut E,
+impl OrbAction for Helmet {
+    fn affix_reset(&mut self, ecommands: &mut EntityCommands) {
+        self.affix_provider.reset();
+        ecommands.insert((Armour(0.), MoreLife(0.)));
+    }
+
+    fn affix_gen(
+        &mut self,
+        ecommands: &mut EntityCommands,
+        count: u16,
         rarity: ItemRarity,
-        ilevel: u16,
         rng: &mut ThreadRng,
-    ) -> String {
-        let mut provider = HelmetAffixProvider::new(ilevel);
-        for _ in 0..rarity.n_affix() {
-            match provider.gen(rng) {
+    ) {
+        let ilevel = self.affix_provider.ilevel();
+        for _ in 0..count {
+            match self.affix_provider.gen(rng) {
                 Some(HelmetAffixKind::AddArmour) => {
                     let value_and_tier = HELMET_MORE_ARMOUR_RANGES.generate(ilevel, rng);
-                    provider.set::<Armour, _>(entity, value_and_tier);
+                    self.affix_provider
+                        .set::<Armour, _>(ecommands, value_and_tier);
                 }
                 Some(HelmetAffixKind::MoreLife) => {
                     let value_and_tier = HELMET_MORE_LIFE_RANGES.generate(ilevel, rng);
-                    provider.set::<MoreLife, _>(entity, value_and_tier);
+                    self.affix_provider
+                        .set::<MoreLife, _>(ecommands, value_and_tier);
                 }
                 None => {}
             }
         }
-        provider.item_text()
-    }
-}
-
-impl OrbAction for Helmet {
-    fn reset(item: &mut EntityWorldMut) {
-        assert!(item.contains::<Self>());
-        item.insert((Armour(0.), MoreLife(0.)));
-    }
-
-    fn gen_affixes(
-        item: &mut EntityWorldMut,
-        ilevel: ItemLevel,
-        rarity: ItemRarity,
-        rng: &mut ThreadRng,
-    ) {
-        assert!(item.contains::<Self>());
-        let text = Self::generate_affixes(item, rarity, *ilevel, rng);
-        item.insert(ItemInfo {
+        ecommands.insert(ItemInfo {
             tile_index: Self::tile_index(rarity),
-            text,
+            text: self.affix_provider.item_text(),
         });
+    }
+
+    fn affix_text(&self) -> String {
+        self.affix_provider.item_text()
     }
 }
 

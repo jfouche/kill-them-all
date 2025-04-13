@@ -19,6 +19,7 @@ mod common {
     use crate::components::{
         common::EntityInserter,
         item::{ItemEntityInfo, ItemInfo, ItemLevel, ItemRarity, ItemRarityProvider, ValueAndTier},
+        orb::OrbAction,
         rng_provider::RngKindProvider,
     };
     use bevy::prelude::*;
@@ -53,35 +54,34 @@ mod common {
             rng: &mut ThreadRng,
         ) -> ItemEntityInfo {
             let rarity = ItemRarityProvider::gen(rng);
-            let mut equipment = match self {
-                EquipmentKind::Amulet => commands.spawn((Amulet, rarity)),
-                EquipmentKind::BodyArmour => commands.spawn((BodyArmour, rarity)),
-                EquipmentKind::Boots => commands.spawn((Boots, rarity)),
-                EquipmentKind::Helmet => commands.spawn((Helmet, rarity)),
-                EquipmentKind::Wand => commands.spawn((Wand, rarity)),
-            };
-            let entity = equipment.id();
-            let affixes_text = match self {
-                EquipmentKind::Amulet => {
-                    Amulet::generate_affixes(&mut equipment, rarity, ilevel, rng)
-                }
-                EquipmentKind::BodyArmour => {
-                    BodyArmour::generate_affixes(&mut equipment, rarity, ilevel, rng)
-                }
-                EquipmentKind::Boots => {
-                    Boots::generate_affixes(&mut equipment, rarity, ilevel, rng)
-                }
-                EquipmentKind::Helmet => {
-                    Helmet::generate_affixes(&mut equipment, rarity, ilevel, rng)
-                }
-                EquipmentKind::Wand => Wand::generate_affixes(&mut equipment, rarity, ilevel, rng),
-            };
-            let info = ItemInfo {
-                text: affixes_text,
-                tile_index: Amulet::tile_index(rarity),
-            };
-            equipment.insert(info.clone());
-            ItemEntityInfo { entity, info }
+
+            fn s<T>(
+                mut equipment: T,
+                commands: &mut Commands,
+                rarity: ItemRarity,
+                rng: &mut ThreadRng,
+            ) -> ItemEntityInfo
+            where
+                T: Component + EquipmentUI + OrbAction,
+            {
+                let mut ecmds = commands.spawn_empty();
+                let entity = ecmds.id();
+                equipment.affix_gen(&mut ecmds, rarity.n_affix(), rarity, rng);
+                let info = ItemInfo {
+                    text: equipment.affix_text(),
+                    tile_index: T::tile_index(rarity),
+                };
+                commands.entity(entity).insert((equipment, rarity));
+                ItemEntityInfo { entity, info }
+            }
+
+            match self {
+                EquipmentKind::Amulet => s(Amulet::new(ilevel), commands, rarity, rng),
+                EquipmentKind::BodyArmour => s(BodyArmour::new(ilevel), commands, rarity, rng),
+                EquipmentKind::Boots => s(Boots::new(ilevel), commands, rarity, rng),
+                EquipmentKind::Helmet => s(Helmet::new(ilevel), commands, rarity, rng),
+                EquipmentKind::Wand => s(Wand::new(ilevel), commands, rarity, rng),
+            }
         }
     }
 
@@ -93,7 +93,7 @@ mod common {
     impl EquipmentProvider {
         pub fn new(ilevel: u16) -> Self {
             let mut provider = RngKindProvider::default();
-            provider.add(EquipmentKind::Amulet, 4440);
+            provider.add(EquipmentKind::Amulet, 40);
             provider.add(EquipmentKind::BodyArmour, 40);
             provider.add(EquipmentKind::Boots, 40);
             provider.add(EquipmentKind::Helmet, 40);
@@ -116,6 +116,7 @@ mod common {
     }
 
     pub struct AffixProvider<K> {
+        ilevel: u16,
         provider: RngKindProvider<K>,
         labels: Vec<String>,
     }
@@ -130,9 +131,14 @@ mod common {
         {
             let title = format!("{} ({})", T::title(), ilevel + 1);
             AffixProvider {
+                ilevel,
                 provider,
                 labels: vec![title],
             }
+        }
+
+        pub fn ilevel(&self) -> u16 {
+            self.ilevel
         }
 
         pub fn reset(&mut self) {

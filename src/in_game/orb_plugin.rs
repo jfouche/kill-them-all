@@ -1,6 +1,10 @@
+use std::marker::PhantomData;
+
 use crate::components::{
     equipment::{Amulet, BodyArmour, Boots, Equipment, Helmet, Wand},
-    orb::{ActivateOrbEvent, ChaosCommand, Orb, RegalCommand, TransmutationCommand},
+    inventory::{InventoryChanged, PlayerEquipmentChanged, RemoveFromInventoryCommand},
+    item::ItemRarity,
+    orb::{ActivateOrbEvent, Orb, OrbAction},
 };
 use bevy::prelude::*;
 
@@ -8,7 +12,71 @@ pub struct OrbPlugin;
 
 impl Plugin for OrbPlugin {
     fn build(&self, app: &mut App) {
-        app.add_observer(on_activate_orb);
+        app.add_observer(on_activate_orb)
+            .add_observer(on_transmute::<Amulet>)
+            .add_observer(on_transmute::<Boots>)
+            .add_observer(on_transmute::<Helmet>)
+            .add_observer(on_transmute::<BodyArmour>)
+            .add_observer(on_transmute::<Wand>)
+            .add_observer(on_regal::<Amulet>)
+            .add_observer(on_regal::<Boots>)
+            .add_observer(on_regal::<Helmet>)
+            .add_observer(on_regal::<BodyArmour>)
+            .add_observer(on_regal::<Wand>)
+            .add_observer(on_chaos::<Amulet>)
+            .add_observer(on_chaos::<Boots>)
+            .add_observer(on_chaos::<Helmet>)
+            .add_observer(on_chaos::<BodyArmour>)
+            .add_observer(on_chaos::<Wand>);
+    }
+}
+
+#[derive(Event)]
+struct TransmuteEvent<T> {
+    orb: Entity,
+    item: Entity,
+    _phantom: PhantomData<T>,
+}
+
+impl<T> TransmuteEvent<T> {
+    fn new(orb: Entity, item: Entity) -> Self {
+        TransmuteEvent {
+            orb,
+            item,
+            _phantom: PhantomData,
+        }
+    }
+}
+#[derive(Event)]
+struct RegalEvent<T> {
+    orb: Entity,
+    item: Entity,
+    _phantom: PhantomData<T>,
+}
+
+impl<T> RegalEvent<T> {
+    fn new(orb: Entity, item: Entity) -> Self {
+        RegalEvent {
+            orb,
+            item,
+            _phantom: PhantomData,
+        }
+    }
+}
+#[derive(Event)]
+struct ChaosEvent<T> {
+    orb: Entity,
+    item: Entity,
+    _phantom: PhantomData<T>,
+}
+
+impl<T> ChaosEvent<T> {
+    fn new(orb: Entity, item: Entity) -> Self {
+        ChaosEvent {
+            orb,
+            item,
+            _phantom: PhantomData,
+        }
     }
 }
 
@@ -33,60 +101,177 @@ fn on_activate_orb(
     match orb {
         Orb::Transmutation => match equipment {
             Equipment::Amulet => {
-                commands.queue(TransmutationCommand::<Amulet>::new(item_entity, orb_entity));
+                commands.trigger(TransmuteEvent::<Amulet>::new(orb_entity, item_entity));
             }
             Equipment::BodyArmour => {
-                commands.queue(TransmutationCommand::<BodyArmour>::new(
-                    item_entity,
-                    orb_entity,
-                ));
+                commands.trigger(TransmuteEvent::<BodyArmour>::new(orb_entity, item_entity));
             }
             Equipment::Boots => {
-                commands.queue(TransmutationCommand::<Boots>::new(item_entity, orb_entity));
+                commands.trigger(TransmuteEvent::<Boots>::new(orb_entity, item_entity));
             }
             Equipment::Helmet => {
-                commands.queue(TransmutationCommand::<Helmet>::new(item_entity, orb_entity));
+                commands.trigger(TransmuteEvent::<Helmet>::new(orb_entity, item_entity));
             }
             Equipment::Weapon => {
                 // TODO: use Weapon
-                commands.queue(TransmutationCommand::<Wand>::new(item_entity, orb_entity));
+                commands.trigger(TransmuteEvent::<Wand>::new(orb_entity, item_entity));
             }
         },
         Orb::Regal => match equipment {
             Equipment::Amulet => {
-                commands.queue(RegalCommand::<Amulet>::new(item_entity, orb_entity));
+                commands.trigger(RegalEvent::<Amulet>::new(orb_entity, item_entity));
             }
             Equipment::BodyArmour => {
-                commands.queue(RegalCommand::<BodyArmour>::new(item_entity, orb_entity));
+                commands.trigger(RegalEvent::<BodyArmour>::new(orb_entity, item_entity));
             }
             Equipment::Boots => {
-                commands.queue(RegalCommand::<Boots>::new(item_entity, orb_entity));
+                commands.trigger(RegalEvent::<Boots>::new(orb_entity, item_entity));
             }
             Equipment::Helmet => {
-                commands.queue(RegalCommand::<Helmet>::new(item_entity, orb_entity));
+                commands.trigger(RegalEvent::<Helmet>::new(orb_entity, item_entity));
             }
             Equipment::Weapon => {
                 // TODO: use Weapon
-                commands.queue(RegalCommand::<Wand>::new(item_entity, orb_entity));
+                commands.trigger(RegalEvent::<Wand>::new(orb_entity, item_entity));
             }
         },
         Orb::Chaos => match equipment {
             Equipment::Amulet => {
-                commands.queue(ChaosCommand::<Amulet>::new(item_entity, orb_entity));
+                commands.trigger(ChaosEvent::<Amulet>::new(orb_entity, item_entity));
             }
             Equipment::BodyArmour => {
-                commands.queue(ChaosCommand::<BodyArmour>::new(item_entity, orb_entity));
+                commands.trigger(ChaosEvent::<BodyArmour>::new(orb_entity, item_entity));
             }
             Equipment::Boots => {
-                commands.queue(ChaosCommand::<Boots>::new(item_entity, orb_entity));
+                commands.trigger(ChaosEvent::<Boots>::new(orb_entity, item_entity));
             }
             Equipment::Helmet => {
-                commands.queue(ChaosCommand::<Helmet>::new(item_entity, orb_entity));
+                commands.trigger(ChaosEvent::<Helmet>::new(orb_entity, item_entity));
             }
             Equipment::Weapon => {
                 // TODO: use Weapon
-                commands.queue(ChaosCommand::<Wand>::new(item_entity, orb_entity));
+                commands.trigger(ChaosEvent::<Wand>::new(orb_entity, item_entity));
             }
         },
     }
+}
+
+fn on_transmute<T>(
+    trigger: Trigger<TransmuteEvent<T>>,
+    mut commands: Commands,
+    orbs: Query<&Orb>,
+    mut items: Query<(&mut T, &mut ItemRarity)>,
+) where
+    T: Component + OrbAction,
+{
+    let Ok(&Orb::Transmutation) = orbs.get(trigger.orb) else {
+        error!("on_transmute: Orb is not Orb::Transmutation");
+        return;
+    };
+
+    let Ok((mut item, mut rarity)) = items.get_mut(trigger.item) else {
+        error!("on_transmute: Can't transmute a NON Item");
+        return;
+    };
+
+    if *rarity != ItemRarity::Normal {
+        error!("on_transmute: Item is not ItemRarity::Normal");
+        return;
+    }
+
+    info!("Applying Transmutation on {}", trigger.item);
+
+    let mut rng = rand::rng();
+    let mut item_cmds = commands.entity(trigger.item);
+    item.affix_reset(&mut item_cmds);
+    *rarity = ItemRarity::Magic;
+    item.affix_gen(&mut item_cmds, rarity.n_affix(), *rarity, &mut rng);
+
+    // Despawn orb
+    commands.queue(RemoveFromInventoryCommand(trigger.orb));
+    commands.entity(trigger.orb).despawn();
+
+    commands.trigger(InventoryChanged);
+    commands.trigger(PlayerEquipmentChanged);
+}
+
+fn on_regal<T>(
+    trigger: Trigger<RegalEvent<T>>,
+    mut commands: Commands,
+    orbs: Query<&Orb>,
+    mut items: Query<(&mut T, &mut ItemRarity)>,
+) where
+    T: Component + OrbAction,
+{
+    let Ok(&Orb::Regal) = orbs.get(trigger.orb) else {
+        error!("on_regal: Orb is not Orb::Regal");
+        return;
+    };
+
+    let Ok((mut item, mut rarity)) = items.get_mut(trigger.item) else {
+        error!("on_regal: Can't regal a NON Item");
+        return;
+    };
+
+    if *rarity != ItemRarity::Magic {
+        error!("on_regal: Item is not ItemRarity::Magic");
+        return;
+    }
+
+    info!("Applying Regal on {}", trigger.item);
+
+    let mut rng = rand::rng();
+    let mut item_cmds = commands.entity(trigger.item);
+    *rarity = ItemRarity::Rare;
+    item.affix_gen(&mut item_cmds, 1, *rarity, &mut rng);
+
+    // Despawn orb
+    commands.queue(RemoveFromInventoryCommand(trigger.orb));
+    commands.entity(trigger.orb).despawn();
+
+    commands.trigger(InventoryChanged);
+    commands.trigger(PlayerEquipmentChanged);
+}
+
+fn on_chaos<T>(
+    trigger: Trigger<ChaosEvent<T>>,
+    mut commands: Commands,
+    orbs: Query<&Orb>,
+    mut items: Query<(&mut T, &ItemRarity)>,
+) where
+    T: Component + OrbAction,
+{
+    let Ok(&Orb::Chaos) = orbs.get(trigger.orb) else {
+        error!("on_chaos: Orb is not Orb::Chaos");
+        return;
+    };
+
+    let Ok((mut item, rarity)) = items.get_mut(trigger.item) else {
+        error!("on_chaos: Can't transmute a NON Item");
+        return;
+    };
+
+    if *rarity != ItemRarity::Rare {
+        error!("on_chaos: Item is not ItemRarity::Rare");
+        return;
+    }
+
+    info!("Applying Chaos on {}", trigger.item);
+
+    let mut rng = rand::rng();
+    let mut item_cmds = commands.entity(trigger.item);
+    item.affix_reset(&mut item_cmds);
+    item.affix_gen(
+        &mut item_cmds,
+        ItemRarity::Rare.n_affix(),
+        *rarity,
+        &mut rng,
+    );
+
+    // Despawn orb
+    commands.queue(RemoveFromInventoryCommand(trigger.orb));
+    commands.entity(trigger.orb).despawn();
+
+    commands.trigger(InventoryChanged);
+    commands.trigger(PlayerEquipmentChanged);
 }
