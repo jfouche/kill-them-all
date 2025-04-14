@@ -32,7 +32,12 @@ fn test_update_equipment_armour() {
 
     let helmet = app
         .world_mut()
-        .spawn((Helmet, BaseArmour(1.), MoreArmour(3.), IncreaseArmour(50.)))
+        .spawn((
+            Helmet::new(1),
+            BaseArmour(1.),
+            MoreArmour(3.),
+            IncreaseArmour(50.),
+        ))
         .id();
 
     app.update();
@@ -49,7 +54,12 @@ fn test_update_character_armour() {
         .world_mut()
         .spawn(Character)
         .with_children(|parent| {
-            parent.spawn((Helmet, BaseArmour(1.), MoreArmour(3.), IncreaseArmour(50.)));
+            parent.spawn((
+                Helmet::new(1),
+                BaseArmour(1.),
+                MoreArmour(3.),
+                IncreaseArmour(50.),
+            ));
             parent.spawn(MoreArmour(4.));
             parent.spawn(MoreArmour(10.));
         })
@@ -69,7 +79,7 @@ fn test_skill_attack_speed() {
     app.world_mut()
         .spawn(Character)
         .with_children(|parent| {
-            parent.spawn(Wand);
+            parent.spawn(Wand::new(1));
         })
         .add_child(skill_alone);
 
@@ -77,7 +87,7 @@ fn test_skill_attack_speed() {
     app.world_mut()
         .spawn(Character)
         .with_children(|parent| {
-            parent.spawn((Wand, IncreaseAttackSpeed(50.)));
+            parent.spawn((Wand::new(1), IncreaseAttackSpeed(50.)));
             parent.spawn(IncreaseAttackSpeed(20.));
         })
         .add_child(skill_with_affixes);
@@ -112,7 +122,7 @@ fn test_skill_damage_range() {
     app.world_mut()
         .spawn(Character)
         .with_children(|parent| {
-            parent.spawn((Wand, MoreDamage(5.), IncreaseDamage(50.)));
+            parent.spawn((Wand::new(1), MoreDamage(5.), IncreaseDamage(50.)));
             parent.spawn(MoreDamage(2.));
             parent.spawn(IncreaseDamage(10.));
         })

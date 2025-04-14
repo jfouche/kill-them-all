@@ -4,9 +4,8 @@ use super::{
 };
 use crate::components::{
     affix::{IncreaseAttackSpeed, IncreaseDamage, MoreDamage, PierceChance},
-    common::EntityInserter,
     damage::BaseHitDamageRange,
-    item::{AffixConfigGenerator, ItemInfo, ItemLevel, ItemRarity},
+    item::{AffixConfigGenerator, ItemInfo, ItemRarity},
     orb::OrbAction,
     rng_provider::RngKindProvider,
 };
@@ -25,7 +24,17 @@ use rand::rngs::ThreadRng;
     PierceChance,
     IncreaseAttackSpeed
 )]
-pub struct Wand;
+pub struct Wand {
+    affix_provider: WandAffixProvider,
+}
+
+impl Wand {
+    pub fn new(ilevel: u16) -> Self {
+        Wand {
+            affix_provider: WandAffixProvider::new(ilevel),
+        }
+    }
+}
 
 impl EquipmentUI for Wand {
     fn title() -> String {
@@ -41,43 +50,10 @@ impl EquipmentUI for Wand {
     }
 }
 
-impl Wand {
-    pub fn generate_affixes<E: EntityInserter>(
-        entity: &mut E,
-        rarity: ItemRarity,
-        ilevel: u16,
-        rng: &mut ThreadRng,
-    ) -> String {
-        let mut provider = WandAffixProvider::new(ilevel);
-        for _ in 0..rarity.n_affix() {
-            match provider.gen(rng) {
-                Some(WandAffixKind::MoreDamage) => {
-                    let value_and_tier = WAND_MORE_DAMAGE_RANGES.generate(ilevel, rng);
-                    provider.set::<MoreDamage, _>(entity, value_and_tier);
-                }
-                Some(WandAffixKind::IncreaseDamage) => {
-                    let value_and_tier = WAND_INCR_DAMAGE_RANGES.generate(ilevel, rng);
-                    provider.set::<IncreaseDamage, _>(entity, value_and_tier);
-                }
-                Some(WandAffixKind::PierceChance) => {
-                    let value_and_tier = WAND_PIERCE_CHANCE_RANGES.generate(ilevel, rng);
-                    provider.set::<PierceChance, _>(entity, value_and_tier);
-                }
-                Some(WandAffixKind::IncreaseAttackSpeed) => {
-                    let value_and_tier = WAND_INCR_ATTACK_SPEED_RANGES.generate(ilevel, rng);
-                    provider.set::<IncreaseAttackSpeed, _>(entity, value_and_tier);
-                }
-                None => {}
-            }
-        }
-        provider.item_text()
-    }
-}
-
 impl OrbAction for Wand {
-    fn reset(item: &mut EntityWorldMut) {
-        assert!(item.contains::<Self>());
-        item.insert((
+    fn affix_reset(&mut self, ecommands: &mut EntityCommands) {
+        self.affix_provider.reset();
+        ecommands.insert((
             MoreDamage(0.),
             IncreaseDamage(0.),
             PierceChance(0.),
@@ -85,18 +61,47 @@ impl OrbAction for Wand {
         ));
     }
 
-    fn gen_affixes(
-        item: &mut EntityWorldMut,
-        ilevel: ItemLevel,
+    fn affix_gen(
+        &mut self,
+        ecommands: &mut EntityCommands,
+        count: u16,
         rarity: ItemRarity,
         rng: &mut ThreadRng,
     ) {
-        assert!(item.contains::<Self>());
-        let text = Self::generate_affixes(item, rarity, *ilevel, rng);
-        item.insert(ItemInfo {
+        let ilevel = self.affix_provider.ilevel();
+        for _ in 0..count {
+            match self.affix_provider.gen(rng) {
+                Some(WandAffixKind::MoreDamage) => {
+                    let value_and_tier = WAND_MORE_DAMAGE_RANGES.generate(ilevel, rng);
+                    self.affix_provider
+                        .set::<MoreDamage, _>(ecommands, value_and_tier);
+                }
+                Some(WandAffixKind::IncreaseDamage) => {
+                    let value_and_tier = WAND_INCR_DAMAGE_RANGES.generate(ilevel, rng);
+                    self.affix_provider
+                        .set::<IncreaseDamage, _>(ecommands, value_and_tier);
+                }
+                Some(WandAffixKind::PierceChance) => {
+                    let value_and_tier = WAND_PIERCE_CHANCE_RANGES.generate(ilevel, rng);
+                    self.affix_provider
+                        .set::<PierceChance, _>(ecommands, value_and_tier);
+                }
+                Some(WandAffixKind::IncreaseAttackSpeed) => {
+                    let value_and_tier = WAND_INCR_ATTACK_SPEED_RANGES.generate(ilevel, rng);
+                    self.affix_provider
+                        .set::<IncreaseAttackSpeed, _>(ecommands, value_and_tier);
+                }
+                None => {}
+            }
+        }
+        ecommands.insert(ItemInfo {
             tile_index: Self::tile_index(rarity),
-            text,
+            text: self.affix_provider.item_text(),
         });
+    }
+
+    fn affix_text(&self) -> String {
+        self.affix_provider.item_text()
     }
 }
 

@@ -111,7 +111,7 @@ impl ItemProvider {
     pub fn spawn(&self, commands: &mut Commands, rng: &mut ThreadRng) -> Option<ItemEntityInfo> {
         match rng.random_range(0..100) {
             0..30 => EquipmentProvider::new(self.0).spawn(commands, rng),
-            30..60 => OrbProvider::new().spawn(commands, rng),
+            30..60 => Some(OrbProvider::spawn(commands, rng)),
             60..90 => SkillProvider::new(self.0).spawn(commands, rng),
             _ => None,
         }

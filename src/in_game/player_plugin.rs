@@ -133,7 +133,7 @@ fn spawn_player(mut commands: Commands, assets: Res<PlayerAssets>) {
         });
 
         let mut rng = rand::rng();
-        let orb = OrbProvider::new().spawn(&mut commands, &mut rng).unwrap();
+        let orb = OrbProvider::spawn(&mut commands, &mut rng);
         let drop = commands.spawn(DroppedItem(orb.entity)).id();
         commands.queue(TakeDroppedItemCommand(drop));
     }
