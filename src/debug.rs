@@ -1,7 +1,11 @@
 #![allow(unused)]
 
 use crate::{
-    components::{monster::Monster, player::Player},
+    components::{
+        monster::Monster,
+        player::Player,
+        world_map::{ProceduralWorldMap, WorldMapConfig},
+    },
     in_game::life_bar_plugin::LifeBar,
     schedule::*,
 };
@@ -9,6 +13,7 @@ use bevy::{
     dev_tools::{fps_overlay::*, states::log_transitions, ui_debug_overlay::*},
     ecs::entity::Entities,
     input::common_conditions::{input_just_pressed, input_just_released},
+    math::vec2,
     prelude::*,
     time::common_conditions::on_timer,
     window::PrimaryWindow,
@@ -36,19 +41,21 @@ impl Plugin for DebugPlugin {
             EguiPlugin,
             DefaultInspectorConfigPlugin,
             bevy_rapier2d::render::RapierDebugRenderPlugin::default(),
-            WorldInspectorPlugin::new(),
+            WorldInspectorPlugin::new().run_if(debug_is_active),
         ))
         .insert_resource(DebugMode(true))
         .add_systems(
             Update,
             (
-                (toggle_debug_mode, count_entities).run_if(input_just_released(KeyCode::KeyD)),
+                (toggle_debug_mode, count_entities, show_player_pos)
+                    .run_if(input_just_released(KeyCode::KeyD)),
                 (
                     inspector_ui,
                     log_transitions::<GameState>,
                     log_transitions::<InGameState>,
                     show_key_pressed,
                     // display_collision_events.in_set(GameRunningSet::EntityUpdate),
+                    show_map_axes.run_if(resource_exists::<ProceduralWorldMap>),
                 )
                     .run_if(debug_is_active),
                 toggle_debug_ui.run_if(input_just_pressed(KeyCode::Backquote)),
@@ -129,4 +136,18 @@ fn show_key_pressed(inputs: Res<ButtonInput<KeyCode>>) {
     if !key_pressed.is_empty() {
         info!("show_key_pressed() : {key_pressed}");
     }
+}
+
+fn show_player_pos(players: Query<&Transform, With<Player>>, world_map: Res<ProceduralWorldMap>) {
+    if let Ok(transform) = players.get_single() {
+        let player_translation = transform.translation.xy();
+        let player_pos = world_map.world_to_pos(player_translation);
+        info!("Player pos : {player_pos} ({player_translation})");
+    }
+}
+
+fn show_map_axes(mut gizmos: Gizmos, world_map: Res<ProceduralWorldMap>) {
+    let zero = world_map.pos_to_world(0, 0);
+    let one = world_map.pos_to_world(1, 1);
+    gizmos.line_2d(zero, zero + one, Color::srgba_u8(20, 172, 121, 255));
 }
