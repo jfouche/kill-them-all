@@ -1,22 +1,18 @@
 use crate::{
     camera::MainCamera,
-    components::{despawn_all, player::Player, world_map::*},
-    schedule::{GameRunningSet, GameState},
+    components::{despawn_all, world_map::*},
+    schedule::GameState,
     utils::picking::{WorldPosition, MAP_DEPTH},
 };
 use bevy::{
-    math::vec2,
     picking::{
         backend::{HitData, PointerHits},
         pointer::{PointerId, PointerLocation},
         PickSet,
     },
     prelude::*,
-    utils::HashMap,
 };
 use bevy_ecs_tilemap::TilemapPlugin;
-use bevy_rapier2d::prelude::*;
-use std::collections::HashSet;
 
 pub struct WorldMapPlugin;
 
@@ -47,7 +43,7 @@ impl Plugin for WorldMapPlugin {
     }
 }
 
-fn spawn_worldmap(mut commands: Commands, assets: Res<WorldMapAssets>, mut gizmos: Gizmos) {
+fn spawn_worldmap(mut commands: Commands) {
     // commands.insert_resource(LevelSelection::index(0));
     // commands.spawn((
     //     WorldMap,
@@ -58,10 +54,9 @@ fn spawn_worldmap(mut commands: Commands, assets: Res<WorldMapAssets>, mut gizmo
     // ));
 
     let mut rng = rand::rng();
-    let map = ProceduralWorldMap::generate(WorldMapConfig::default(), &mut rng);
-    map.spawn(&mut commands, &assets);
+    let map = ProceduralWorldMap::new(WorldMapConfig::default(), &mut rng);
     commands.insert_resource(map);
-    commands.insert_resource(ChunkManager::default());
+    commands.spawn(WorldMap);
 }
 
 fn spawn_characters(
@@ -71,7 +66,7 @@ fn spawn_characters(
     // parents: Query<&Parent>,
     // players: Query<(Entity, &GlobalTransform), With<PlayerInitialPosition>>,
     // monsters: Query<(Entity, &GlobalTransform, &MonsterCount), With<MonsterInitialPosition>>,
-    configs: Query<(Entity, &MapLevelConfig)>,
+    // configs: Query<(Entity, &MapLevelConfig)>,
     world_map: Res<ProceduralWorldMap>,
 ) {
     commands.trigger(SpawnMonstersEvent {
@@ -123,12 +118,28 @@ fn spawn_characters(
 fn spawn_chunks(
     mut commands: Commands,
     cameras: Query<&Transform, With<MainCamera>>,
-    world_map: Res<ProceduralWorldMap>,
-    chunks_mgr: ResMut<ChunkManager>,
+    world_maps: Query<Entity, With<WorldMap>>,
+    mut world_map: ResMut<ProceduralWorldMap>,
+    assets: Res<WorldMapAssets>,
 ) {
     let Ok(camera_pos) = cameras.get_single().map(|t| t.translation.xy()) else {
         return;
     };
+    let Ok(map_entity) = world_maps.get_single() else {
+        return;
+    };
+    let camera_chunk_pos = world_map.camera_pos_to_chunk_pos(camera_pos);
+    let mut chunk_entities = Vec::with_capacity(9);
+    for y in (camera_chunk_pos.y - 1)..=(camera_chunk_pos.y + 1) {
+        for x in (camera_chunk_pos.x - 1)..=(camera_chunk_pos.x + 1) {
+            let chunk_pos = IVec2::new(x, y);
+            if !world_map.is_spawned(chunk_pos) {
+                let chunk_entity = world_map.spawn_chunk(&mut commands, &assets, chunk_pos);
+                chunk_entities.push(chunk_entity);
+            }
+        }
+    }
+    commands.entity(map_entity).add_children(&chunk_entities);
 
     // world_map.tilemap_chunk(camera_pos);
 
