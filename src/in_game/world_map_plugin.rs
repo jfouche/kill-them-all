@@ -1,7 +1,7 @@
 use crate::{
     camera::MainCamera,
     components::{despawn_all, world_map::*},
-    schedule::GameState,
+    schedule::{GameRunningSet, GameState},
     utils::picking::{WorldPosition, MAP_DEPTH},
 };
 use bevy::{
@@ -18,7 +18,8 @@ pub struct WorldMapPlugin;
 
 impl Plugin for WorldMapPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(TilemapPlugin).register_type::<MapLevelConfig>()
+        app.add_plugins(TilemapPlugin)
+            .register_type::<MapLevelConfig>()
             .init_resource::<WorldMapAssets>()
             .init_resource::<CurrentMapLevel>()
             .add_systems(
@@ -30,16 +31,15 @@ impl Plugin for WorldMapPlugin {
                 PreUpdate,
                 (
                     // level_selection_follow_player,
-                    spawn_chunks,
                     world_map_picking_backend.in_set(PickSet::Backend),
                 )
                     .run_if(in_state(GameState::InGame)),
             )
-            // .add_systems(
-            //     Update,
-            //     (spawn_characters, spawn_colliders).in_set(GameRunningSet::EntityUpdate),
-            // )
-            ;
+            .add_systems(
+                Update,
+                (spawn_chunks, despawn_out_of_range_chunks).in_set(GameRunningSet::EntityUpdate),
+                // (spawn_characters, spawn_colliders).in_set(GameRunningSet::EntityUpdate),
+            );
     }
 }
 
@@ -82,6 +82,24 @@ fn spawn_chunks(
         }
     }
     commands.entity(map_entity).add_children(&chunk_entities);
+}
+
+fn despawn_out_of_range_chunks(
+    mut commands: Commands,
+    cameras: Query<&Transform, With<MainCamera>>,
+    chunks_query: Query<(Entity, &Transform), With<WorldMapChunk>>,
+    mut world_map: ResMut<ProceduralWorldMap>,
+) {
+    let Ok(camera_pos) = cameras.get_single().map(|t| t.translation.xy()) else {
+        return;
+    };
+    for (entity, chunk_transform) in chunks_query.iter() {
+        let chunk_pos = chunk_transform.translation.xy();
+        let distance = camera_pos.distance(chunk_pos);
+        if world_map.remove_chunk_if_out_of_bound(chunk_pos, distance) {
+            commands.entity(entity).despawn();
+        }
+    }
 }
 
 fn world_map_picking_backend(

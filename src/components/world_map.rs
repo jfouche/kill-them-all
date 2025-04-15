@@ -121,7 +121,10 @@ impl ProceduralWorldMap {
     ) -> Entity {
         self.spawned_chunks.insert(chunk_pos);
         let tilemap_entity = commands
-            .spawn(Name::new(format!("WorldMapChunk {chunk_pos}")))
+            .spawn((
+                WorldMapChunk,
+                Name::new(format!("WorldMapChunk {chunk_pos}")),
+            ))
             .id();
         let translation = Vec3::new(
             chunk_pos.x as f32 * self.config.chunk_size as f32 * self.config.tile_size as f32,
@@ -189,6 +192,18 @@ impl ProceduralWorldMap {
         tilemap_entity
     }
 
+    pub fn remove_chunk_if_out_of_bound(&mut self, pos: Vec2, distance: f32) -> bool {
+        if distance > self.config.despawn_distance {
+            let ratio = (self.config.chunk_size * self.config.tile_size) as f32;
+            let x = (pos.x / ratio).floor() as i32;
+            let y = (pos.y / ratio).floor() as i32;
+            self.spawned_chunks.remove(&IVec2::new(x, y));
+            true
+        } else {
+            false
+        }
+    }
+
     pub fn pos_to_world(&self, x: i32, y: i32) -> Vec2 {
         let pos = IVec2 { x, y };
         let tile_size: IVec2 = IVec2::splat(self.config.tile_size as i32);
@@ -200,8 +215,8 @@ impl ProceduralWorldMap {
     }
 }
 
-// #[derive(Component)]
-// pub struct WorldMapChunk;
+#[derive(Component)]
+pub struct WorldMapChunk;
 
 #[derive(Clone, Copy, Debug)]
 enum TileKind {
@@ -214,6 +229,7 @@ pub struct WorldMapConfig {
     noise_scale: f64,
     chunk_size: u32,
     tile_size: u32,
+    despawn_distance: f32,
 }
 
 impl Default for WorldMapConfig {
@@ -222,6 +238,7 @@ impl Default for WorldMapConfig {
             noise_scale: 13.5,
             chunk_size: 4,
             tile_size: 16,
+            despawn_distance: 320.,
         }
     }
 }
