@@ -385,7 +385,6 @@ fn world_map_picking_backend(
     pointers: Query<(&PointerId, &PointerLocation)>,
     camera: Single<(Entity, &Camera, &GlobalTransform), With<MainCamera>>,
     worlds_maps: Query<Entity, With<WorldMap>>,
-    world_map: Res<ProceduralWorldMap>,
     mut output: EventWriter<PointerHits>,
 ) {
     let Ok(world_map) = worlds_maps.get_single() else {
@@ -398,32 +397,13 @@ fn world_map_picking_backend(
             continue;
         };
 
-        // let ldtk_project = ldtk_project_assets
-        //     .get(ldtk_projects.single())
-        //     .expect("ldtk project should be loaded before player is spawned");
-        // let in_world_map = levels.iter().any(|(liid, lvl_transform)| {
-        //     let level = ldtk_project
-        //         .get_raw_level_by_iid(liid.get())
-        //         .expect("level should exist in only project");
-
-        //     let level_bounds = Rect {
-        //         min: lvl_transform.translation().xy(),
-        //         max: lvl_transform.translation().xy()
-        //             + vec2(level.px_wid as f32, level.px_hei as f32),
-        //     };
-
-        //     level_bounds.contains(pointer_world_pos)
-        // });
-        let in_world_map = true;
-        if in_world_map {
-            let depth = MAP_DEPTH;
-            let position = Some(pointer_world_pos.extend(0.));
-            let picks = vec![(
-                world_map,
-                HitData::new(camera_entity, depth, position, Some(Vec3::Z)),
-            )];
-            let order = camera.order as f32;
-            output.send(PointerHits::new(*pointer_id, picks, order));
-        }
+        let depth = MAP_DEPTH;
+        let position = Some(pointer_world_pos.extend(0.));
+        let picks = vec![(
+            world_map,
+            HitData::new(camera_entity, depth, position, None),
+        )];
+        let order = camera.order as f32;
+        output.send(PointerHits::new(*pointer_id, picks, order));
     }
 }

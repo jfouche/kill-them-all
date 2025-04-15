@@ -227,9 +227,8 @@ impl ProceduralWorldMap {
             for y in 0..self.config.chunk_size {
                 let tile_pos = TilePos { x, y };
 
-                let fx = translation.x as f64 + x as f64;
-                let fy = translation.y as f64 + y as f64;
-                error!("Perlin.get([{fx}, {fy}]");
+                let fx = (chunk_pos.x * self.config.chunk_size as i32 + x as i32) as f64;
+                let fy = (chunk_pos.y * self.config.chunk_size as i32 + y as i32) as f64;
                 let noise_val = self
                     .perlin
                     .get([fx / self.config.noise_scale, fy / self.config.noise_scale]);
@@ -415,7 +414,7 @@ impl Default for WorldMapConfig {
     fn default() -> Self {
         WorldMapConfig {
             noise_scale: 13.5,
-            chunk_size: 10,
+            chunk_size: 4,
             tile_size: 16,
         }
     }
