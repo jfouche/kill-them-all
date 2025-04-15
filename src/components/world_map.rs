@@ -32,25 +32,9 @@ impl FromWorld for WorldMapAssets {
 )]
 pub struct WorldMap;
 
-// /// The player initial position tag
-// #[derive(Component, Default)]
-// pub struct PlayerInitialPosition;
-
-// #[derive(Bundle, Default, LdtkEntity)]
-// pub struct PlayerInitialPositionLdtkBundle {
-//     tag: PlayerInitialPosition,
-// }
-
 /// Monsters initial positions tag
 #[derive(Component, Default)]
 pub struct MonsterInitialPosition;
-
-// #[derive(Bundle, Default, LdtkEntity)]
-// pub struct MonsterInitialPositionLdtkBundle {
-//     tag: MonsterInitialPosition,
-//     #[from_entity_instance]
-//     count: MonsterCount,
-// }
 
 #[derive(Component, Deref)]
 pub struct MonsterCount(pub u16);
@@ -63,87 +47,12 @@ impl Default for MonsterCount {
     }
 }
 
-// impl From<&EntityInstance> for MonsterCount {
-//     fn from(value: &EntityInstance) -> Self {
-//         let count = value
-//             .get_int_field("count")
-//             .map(|v| u16::try_from(*v).unwrap_or(DEFAULT_MONSTER_COUNT))
-//             .unwrap_or(DEFAULT_MONSTER_COUNT);
-//         MonsterCount(count)
-//     }
-// }
-
-// /// Map colliders
-// #[derive(Bundle, Default, LdtkIntCell)]
-// pub struct ColliderLdtkBundle {
-//     collider: ColliderTile,
-// }
-
-// #[derive(Bundle, Default, LdtkIntCell)]
-// pub struct WaterLdtkBundle {
-//     collider: WaterTile,
-// }
-
-// #[derive(Component, Default)]
-// #[require(
-//     Name(|| Name::new("WaterTile")),
-//     ColliderTile
-// )]
-// pub struct WaterTile;
-
-// impl WaterTile {
-//     pub const ID: i32 = 4;
-// }
-// #[derive(Component, Default)]
-// #[require(
-//     Name(|| Name::new("ColliderTile"))
-// )]
-// pub struct ColliderTile;
-
-// impl ColliderTile {
-//     pub const ID: i32 = 3;
-// }
-
-// #[derive(Component)]
-// #[require(
-//     Name(|| Name::new("Map Collider")),
-//     Transform,
-//     Collider,
-//     RigidBody(|| RigidBody::Fixed),
-//     Friction(|| Friction::new(1.0)),
-
-// )]
-// pub struct MapCollider;
-
 /// Map level configuration
 #[derive(Component, Reflect)]
 pub struct MapLevelConfig {
     pub name: String,
     pub monster_level: u16,
 }
-
-// #[derive(Bundle, LdtkEntity)]
-// pub struct LevelConfigLdtkBundle {
-//     #[from_entity_instance]
-//     config: MapLevelConfig,
-// }
-
-// impl From<&EntityInstance> for MapLevelConfig {
-//     fn from(value: &EntityInstance) -> Self {
-//         let name = value
-//             .get_string_field("name")
-//             .cloned()
-//             .expect("[name] should be defined for each LDtk level.");
-//         let monster_level = value
-//             .get_int_field("monster_level")
-//             .map(|v| u16::try_from(*v).unwrap_or(0))
-//             .expect("[monster_level] should be defined for each LDtk level.");
-//         MapLevelConfig {
-//             name,
-//             monster_level,
-//         }
-//     }
-// }
 
 /// A resource to store the current map level informations
 #[derive(Resource, Default)]
@@ -210,7 +119,6 @@ impl ProceduralWorldMap {
         assets: &WorldMapAssets,
         chunk_pos: IVec2,
     ) -> Entity {
-        error!("spawn_chunk({chunk_pos})");
         self.spawned_chunks.insert(chunk_pos);
         let tilemap_entity = commands
             .spawn(Name::new(format!("WorldMapChunk {chunk_pos}")))
@@ -270,7 +178,7 @@ impl ProceduralWorldMap {
             size: chunk_size.into(),
             storage: tile_storage,
             texture: TilemapTexture::Single(texture_handle),
-            tile_size: tile_size,
+            tile_size,
             transform: Transform::from_translation(translation),
             render_settings: TilemapRenderSettings {
                 render_chunk_size: chunk_size * 2,
@@ -281,50 +189,6 @@ impl ProceduralWorldMap {
         tilemap_entity
     }
 
-    // pub fn generate(config: WorldMapConfig, rng: &mut ThreadRng) -> Self {
-    //     let perlin = Perlin::new(rng.random());
-    //     let mut ground_map = HashMap::new();
-    //     for x in 0..config.width {
-    //         for y in 0..config.height {
-    //             let noise_val =
-    //                 perlin.get([x as f64 / config.noise_scale, y as f64 / config.noise_scale]);
-    //             // noise_val is in range [-1 .. 1]
-    //             let kind = if noise_val < -0.4 {
-    //                 TileKind::Water
-    //             } else if noise_val < 0.5 {
-    //                 TileKind::Mud
-    //             } else {
-    //                 TileKind::Grass
-    //             };
-    //             ground_map.insert(
-    //                 TilePos {
-    //                     x: x as u32,
-    //                     y: y as u32,
-    //                 },
-    //                 kind,
-    //             );
-    //         }
-    //     }
-
-    //     let ground_map = ground_map
-    //         .iter()
-    //         .map(|(&p, k)| {
-    //             let i = match k {
-    //                 TileKind::Water => 34,
-    //                 TileKind::Mud => 23,
-    //                 TileKind::Grass => 264,
-    //             };
-    //             (p, TileTextureIndex(i))
-    //         })
-    //         .collect::<HashMap<_, _>>();
-
-    //     Self {
-    //         config,
-    //         perlin,
-    //         ground_map,
-    //     }
-    // }
-
     pub fn pos_to_world(&self, x: i32, y: i32) -> Vec2 {
         let pos = IVec2 { x, y };
         let tile_size: IVec2 = IVec2::splat(self.config.tile_size as i32);
@@ -334,64 +198,6 @@ impl ProceduralWorldMap {
     pub fn world_to_pos(&self, translation: Vec2) -> IVec2 {
         (translation / Vec2::splat(self.config.tile_size as f32)).as_ivec2()
     }
-
-    // pub fn tilemap_chunk(&self, camera_pos: Vec2) -> Vec<TileBundle> {
-    //     let tiles = Vec::with_capacity((self.config.chunk_size * self.config.chunk_size) as usize);
-    //     let chunk_pos = self.camera_pos_to_chunk_pos(camera_pos);
-    //     dbg!(chunk_pos);
-
-    //     tiles
-    // }
-
-    // pub fn spawn(&self, commands: &mut Commands, assets: &WorldMapAssets) {
-    //     let map_size = TilemapSize {
-    //         x: self.config.width as u32,
-    //         y: self.config.height as u32,
-    //     };
-    //     let mut tile_storage = TileStorage::empty(map_size);
-    //     let tilemap_entity = commands.spawn(WorldMap).id();
-
-    //     for (&position, &texture_index) in &self.ground_map {
-    //         let tile_entity = commands
-    //             .spawn(TileBundle {
-    //                 position,
-    //                 tilemap_id: TilemapId(tilemap_entity),
-    //                 texture_index,
-    //                 ..Default::default()
-    //             })
-    //             .id();
-    //         tile_storage.set(&position, tile_entity);
-    //         commands.entity(tilemap_entity).add_child(tile_entity);
-    //     }
-    //     let tile_size = TilemapTileSize { x: 16.0, y: 16.0 };
-    //     let grid_size = tile_size.into();
-    //     let map_type = TilemapType::default();
-
-    //     commands.entity(tilemap_entity).insert(TilemapBundle {
-    //         grid_size,
-    //         map_type,
-    //         size: map_size,
-    //         storage: tile_storage,
-    //         texture: TilemapTexture::Single(assets.sprites.clone()),
-    //         tile_size,
-    //         ..Default::default()
-    //     });
-
-    // // spawn exterior colliders
-    // commands.entity(tilemap_entity).with_children(|parent| {
-    //     const HW: f32 = 2.0;
-    //     let left = self.pos_to_world(-1, 0).x;
-    //     error!("left={left} for (-1, 0)");
-    //     let right = self.pos_to_world(self.config.width as i32, 0).x;
-    //     error!("right={right} for ({}), 0)", self.config.width);
-    //     let half_x = (right - left) / 2.;
-    //     error!("half_x={half_x}; left + half_x={}", left + half_x);
-    //     parent.spawn((
-    //         Collider::cuboid(half_x, HW),
-    //         Transform::from_translation(vec3(left + half_x, HW, 0.)),
-    //     ));
-    // });
-    // }
 }
 
 // #[derive(Component)]

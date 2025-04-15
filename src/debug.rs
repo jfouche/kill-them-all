@@ -142,7 +142,7 @@ fn show_player_pos(players: Query<&Transform, With<Player>>, world_map: Res<Proc
     if let Ok(transform) = players.get_single() {
         let player_translation = transform.translation.xy();
         let player_pos = world_map.world_to_pos(player_translation);
-        info!("Player pos : {player_pos} ({player_translation})");
+        info!("Player map pos : {player_pos} ({player_translation})");
     }
 }
 
