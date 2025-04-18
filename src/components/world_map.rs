@@ -1,6 +1,6 @@
 use bevy::{
     prelude::*,
-    utils::{hashbrown::HashSet, HashMap},
+    utils::{HashMap, HashSet},
 };
 use bevy_ecs_tilemap::{
     map::{TilemapId, TilemapRenderSettings, TilemapTexture, TilemapTileSize},
@@ -88,7 +88,7 @@ pub const LAYER_ITEM: f32 = 7.;
 pub struct ProceduralWorldMap {
     config: WorldMapConfig,
     perlin: Perlin,
-    ground_map: HashMap<TilePos, TileTextureIndex>,
+    tiles_kind: HashMap<(i32, i32), TileKind>,
     spawned_chunks: HashSet<IVec2>,
 }
 
@@ -97,7 +97,7 @@ impl ProceduralWorldMap {
         ProceduralWorldMap {
             config,
             perlin: Perlin::new(rng.random()),
-            ground_map: HashMap::new(),
+            tiles_kind: HashMap::new(),
             spawned_chunks: HashSet::new(),
         }
     }
@@ -113,37 +113,14 @@ impl ProceduralWorldMap {
         self.spawned_chunks.contains(&pos)
     }
 
-    pub fn spawn_chunk(
-        &mut self,
-        commands: &mut Commands,
-        assets: &WorldMapAssets,
-        chunk_pos: IVec2,
-    ) -> Entity {
-        self.spawned_chunks.insert(chunk_pos);
-        let tilemap_entity = commands
-            .spawn((
-                WorldMapChunk,
-                Name::new(format!("WorldMapChunk {chunk_pos}")),
-            ))
-            .id();
-        let translation = Vec3::new(
-            chunk_pos.x as f32 * self.config.chunk_size as f32 * self.config.tile_size as f32,
-            chunk_pos.y as f32 * self.config.chunk_size as f32 * self.config.tile_size as f32,
-            0.0,
-        );
-
-        let mut tile_storage = TileStorage::empty(UVec2::splat(self.config.chunk_size).into());
-        // Spawn the elements of the tilemap.
-        for x in 0..self.config.chunk_size {
-            for y in 0..self.config.chunk_size {
-                let tile_pos = TilePos { x, y };
-
-                let fx = (chunk_pos.x * self.config.chunk_size as i32 + x as i32) as f64;
-                let fy = (chunk_pos.y * self.config.chunk_size as i32 + y as i32) as f64;
-                let noise_val = self
-                    .perlin
-                    .get([fx / self.config.noise_scale, fy / self.config.noise_scale]);
-                // noise_val is in range [-1 .. 1]
+    fn tile_kind(&mut self, x: i32, y: i32) -> TileKind {
+        match self.tiles_kind.get(&(x, y)) {
+            Some(kind) => *kind,
+            None => {
+                let noise_val = self.perlin.get([
+                    x as f64 / self.config.noise_scale,
+                    y as f64 / self.config.noise_scale,
+                ]);
                 let kind = if noise_val < -0.4 {
                     TileKind::Water
                 } else if noise_val < 0.5 {
@@ -151,21 +128,73 @@ impl ProceduralWorldMap {
                 } else {
                     TileKind::Grass
                 };
-                let i = match kind {
-                    TileKind::Water => 34,
-                    TileKind::Mud => 23,
-                    TileKind::Grass => 264,
-                };
+                self.tiles_kind.insert((x, y), kind);
+                kind
+            }
+        }
+    }
 
+    fn tile_index(&mut self, x: i32, y: i32) -> u32 {
+        let neighbors = [
+            [
+                self.tile_kind(x - 1, y + 1),
+                self.tile_kind(x + 0, y + 1),
+                self.tile_kind(x + 1, y + 1),
+            ],
+            [
+                self.tile_kind(x - 1, y + 0),
+                self.tile_kind(x + 0, y + 0),
+                self.tile_kind(x + 1, y + 0),
+            ],
+            [
+                self.tile_kind(x - 1, y - 1),
+                self.tile_kind(x + 0, y - 1),
+                self.tile_kind(x + 1, y - 1),
+            ],
+        ];
+        const M: TileKind = TileKind::Mud;
+        const G: TileKind = TileKind::Grass;
+        const W: TileKind = TileKind::Water;
+        match neighbors {
+            [[M, M, M], [G, M, M], [M, M, M]] => 176,
+            [[_, _, _], [_, M, _], [_, _, _]] => 177,
+            [[_, _, _], [_, G, _], [_, _, _]] => 275,
+            [[_, _, _], [_, W, _], [_, _, _]] => 34,
+        }
+    }
+
+    pub fn spawn_chunk(
+        &mut self,
+        commands: &mut Commands,
+        assets: &WorldMapAssets,
+        chunk_pos: IVec2,
+    ) -> Entity {
+        let chunk_size = self.config.chunk_size;
+        let x_offset = chunk_pos.x * chunk_size as i32;
+        let y_offset = chunk_pos.y * chunk_size as i32;
+
+        let chunk_entity = commands
+            .spawn((
+                WorldMapChunk,
+                Name::new(format!("WorldMapChunk {chunk_pos}")),
+            ))
+            .id();
+
+        let mut tile_storage = TileStorage::empty(UVec2::splat(chunk_size).into());
+        for x in 0..chunk_size {
+            for y in 0..chunk_size {
+                // (x, y) is in "chunk" ccordinates, add offset to get the "world" coord
+                let index = self.tile_index(x as i32 + x_offset, y as i32 + y_offset);
+                let tile_pos = TilePos { x, y };
                 let tile_entity = commands
                     .spawn(TileBundle {
                         position: tile_pos,
-                        tilemap_id: TilemapId(tilemap_entity),
-                        texture_index: TileTextureIndex(i),
+                        tilemap_id: TilemapId(chunk_entity),
+                        texture_index: TileTextureIndex(index),
                         ..Default::default()
                     })
                     .id();
-                commands.entity(tilemap_entity).add_child(tile_entity);
+                commands.entity(chunk_entity).add_child(tile_entity);
                 tile_storage.set(&tile_pos, tile_entity);
             }
         }
@@ -175,8 +204,13 @@ impl ProceduralWorldMap {
             x: self.config.tile_size as f32,
             y: self.config.tile_size as f32,
         };
-        let chunk_size = UVec2::splat(self.config.chunk_size);
-        commands.entity(tilemap_entity).insert(TilemapBundle {
+        let chunk_size = UVec2::splat(chunk_size);
+        let translation = Vec3::new(
+            x_offset as f32 * self.config.tile_size as f32,
+            y_offset as f32 * self.config.tile_size as f32,
+            0.0,
+        );
+        commands.entity(chunk_entity).insert(TilemapBundle {
             grid_size: tile_size.into(),
             size: chunk_size.into(),
             storage: tile_storage,
@@ -189,7 +223,9 @@ impl ProceduralWorldMap {
             },
             ..Default::default()
         });
-        tilemap_entity
+        self.spawned_chunks.insert(chunk_pos);
+
+        chunk_entity
     }
 
     pub fn remove_chunk_if_out_of_bound(&mut self, pos: Vec2, distance: f32) -> bool {
@@ -218,7 +254,7 @@ impl ProceduralWorldMap {
 #[derive(Component)]
 pub struct WorldMapChunk;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 enum TileKind {
     Water,
     Mud,

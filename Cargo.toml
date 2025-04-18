@@ -39,12 +39,12 @@ bevy = { version = "0.15", default-features = false, features = [
 ] }
 bevy_rapier2d = "0.29"
 bevy_ecs_tilemap = "0.15"
+noise = "0.9.0"
 
 # feature: dev
 bevy-inspector-egui = { version = "0.30", default-features = false, features = [
     "bevy_render",
 ], optional = true }
-noise = "0.9.0"
 
 # WASM
 [target.'cfg(target_arch = "wasm32")'.dependencies]
