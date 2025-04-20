@@ -134,32 +134,29 @@ impl ProceduralWorldMap {
         }
     }
 
+    fn neighboors(&mut self, x: i32, y: i32) -> Neighbors {
+        Neighbors([
+            self.tile_kind(x - 1, y + 1),
+            self.tile_kind(x + 0, y + 1),
+            self.tile_kind(x + 1, y + 1),
+            self.tile_kind(x - 1, y + 0),
+            self.tile_kind(x + 0, y + 0),
+            self.tile_kind(x + 1, y + 0),
+            self.tile_kind(x - 1, y - 1),
+            self.tile_kind(x + 0, y - 1),
+            self.tile_kind(x + 1, y - 1),
+        ])
+    }
+
     fn tile_index(&mut self, x: i32, y: i32) -> u32 {
-        let neighbors = [
-            [
-                self.tile_kind(x - 1, y + 1),
-                self.tile_kind(x + 0, y + 1),
-                self.tile_kind(x + 1, y + 1),
-            ],
-            [
-                self.tile_kind(x - 1, y + 0),
-                self.tile_kind(x + 0, y + 0),
-                self.tile_kind(x + 1, y + 0),
-            ],
-            [
-                self.tile_kind(x - 1, y - 1),
-                self.tile_kind(x + 0, y - 1),
-                self.tile_kind(x + 1, y - 1),
-            ],
-        ];
-        const M: TileKind = TileKind::Mud;
-        const G: TileKind = TileKind::Grass;
-        const W: TileKind = TileKind::Water;
-        match neighbors {
-            [[M, M, M], [G, M, M], [M, M, M]] => 176,
-            [[_, _, _], [_, M, _], [_, _, _]] => 177,
-            [[_, _, _], [_, G, _], [_, _, _]] => 275,
-            [[_, _, _], [_, W, _], [_, _, _]] => 34,
+        let n = self.neighboors(x, y);
+        match n.c() {
+            TileKind::Water => {
+                let rules = GenericNeighborRules(&n);
+                rules.index()
+            }
+            TileKind::Mud => 177,
+            TileKind::Grass => 144,
         }
     }
 
@@ -229,6 +226,7 @@ impl ProceduralWorldMap {
     }
 
     pub fn remove_chunk_if_out_of_bound(&mut self, pos: Vec2, distance: f32) -> bool {
+        // TODO : retain self.tiles_kind
         if distance > self.config.despawn_distance {
             let ratio = (self.config.chunk_size * self.config.tile_size) as f32;
             let x = (pos.x / ratio).floor() as i32;
@@ -248,6 +246,133 @@ impl ProceduralWorldMap {
 
     pub fn world_to_pos(&self, translation: Vec2) -> IVec2 {
         (translation / Vec2::splat(self.config.tile_size as f32)).as_ivec2()
+    }
+}
+
+struct Neighbors([TileKind; 9]);
+
+impl Neighbors {
+    fn tl(&self) -> TileKind {
+        self.0[0]
+    }
+    fn t(&self) -> TileKind {
+        self.0[1]
+    }
+    fn tr(&self) -> TileKind {
+        self.0[2]
+    }
+    fn l(&self) -> TileKind {
+        self.0[3]
+    }
+    fn c(&self) -> TileKind {
+        self.0[4]
+    }
+    fn r(&self) -> TileKind {
+        self.0[5]
+    }
+    fn bl(&self) -> TileKind {
+        self.0[6]
+    }
+    fn b(&self) -> TileKind {
+        self.0[7]
+    }
+    fn br(&self) -> TileKind {
+        self.0[8]
+    }
+}
+
+/// O : match the center tile
+///
+/// X : different from the center tile
+///
+/// U : donc care about the tile
+macro_rules! neighbors_match {
+    ($sel: ident, $tl:ident $t:ident $tr:ident $l:ident $r:ident $bl:ident $b:ident $br:ident) => {
+        tile_match!($sel, tl, $tl)
+            && tile_match!($sel, t, $t)
+            && tile_match!($sel, tr, $tr)
+            && tile_match!($sel, l, $l)
+            && tile_match!($sel, r, $r)
+            && tile_match!($sel, bl, $bl)
+            && tile_match!($sel, b, $b)
+            && tile_match!($sel, br, $br)
+    };
+}
+
+macro_rules! tile_match {
+    ($sel: ident, $p:ident, O) => {
+        $sel.$p() == $sel.c()
+    };
+    ($sel: ident, $p:ident, X) => {
+        $sel.$p() != $sel.c()
+    };
+    ($sel: ident, $p:ident, U) => {
+        true
+    };
+}
+
+#[derive(Deref)]
+struct GenericNeighborRules<'a>(&'a Neighbors);
+
+impl<'a> GenericNeighborRules<'a> {
+    fn index(&self) -> u32 {
+        let offset = match self.c() {
+            TileKind::Water => 11,
+            TileKind::Mud => 154,
+            _ => unreachable!("Only Water and Mud can have generic rules"),
+        };
+        let i = if let Some(i) = self.rule_7() {
+            i
+        } else if let Some(i) = self.rule_8() {
+            i
+        } else {
+            23
+        };
+        offset + i
+    }
+
+    // XOX
+    // O O
+    // XOX
+    // fn rule1(&self) -> Option<u32> {
+    //     (self.n.t() == self.kind
+    //         && self.n.r() == self.kind
+    //         && self.n.b() == self.kind
+    //         && self.n.l() == self.kind
+    //         && self.n.tl() != self.kind
+    //         && self.n.tr() != self.kind
+    //         && self.n.bl() != self.kind
+    //         && self.n.br() != self.kind)
+    //         .then(|| self.index(96))
+    // }
+
+    // .X.
+    // X O
+    // .OX
+    // fn rule21(&self) -> Option<u32> {
+    //     (self.n.t() == self.kind
+    //         && self.n.r() == self.kind
+    //         && self.n.b() == self.kind
+    //         && self.n.l() == self.kind)
+    //         .then(|| self.index(96))
+    // }
+
+    fn rule_7(&self) -> Option<u32> {
+        neighbors_match!(self,
+            U X U
+            X   U
+            U U U
+        )
+        .then(|| 0)
+    }
+
+    fn rule_8(&self) -> Option<u32> {
+        neighbors_match!(self,
+            U X U
+            U   U
+            U U U
+        )
+        .then(|| 1)
     }
 }
 
@@ -278,3 +403,20 @@ impl Default for WorldMapConfig {
         }
     }
 }
+
+// #[cfg(test)]
+// mod test {
+//     use super::*;
+
+//     const W: TileKind = TileKind::Water;
+//     const M: TileKind = TileKind::Mud;
+//     const G: TileKind = TileKind::Grass;
+
+//     struct N()
+
+//     #[test]
+//     fn test_tile_match() {
+//         let neighbors = Neighbors([W, W, W, W, W, W, W, W, W]);
+//         assert_eq!(true, tile_match!())
+//     }
+// }
