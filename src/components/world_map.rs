@@ -148,15 +148,25 @@ impl ProceduralWorldMap {
         ])
     }
 
-    fn tile_index(&mut self, x: i32, y: i32) -> u32 {
+    fn tile_index(&mut self, x: i32, y: i32, rng: &mut ThreadRng) -> u32 {
         let n = self.neighboors(x, y);
         match n.c() {
             TileKind::Water => {
                 let rules = GenericNeighborRules(&n);
                 rules.index()
             }
-            TileKind::Mud => 177,
-            TileKind::Grass => 144,
+            TileKind::Mud => {
+                let rules = GenericNeighborRules(&n);
+                rules.index()
+            }
+            TileKind::Grass => match rng.random_range(0..100) {
+                0..5 => 244,
+                5..10 => 265,
+                10..15 => 266,
+                15..20 => 267,
+                20..35 => 245,
+                _ => 264,
+            },
         }
     }
 
@@ -177,11 +187,12 @@ impl ProceduralWorldMap {
             ))
             .id();
 
+        let mut rng = rand::rng();
         let mut tile_storage = TileStorage::empty(UVec2::splat(chunk_size).into());
         for x in 0..chunk_size {
             for y in 0..chunk_size {
                 // (x, y) is in "chunk" ccordinates, add offset to get the "world" coord
-                let index = self.tile_index(x as i32 + x_offset, y as i32 + y_offset);
+                let index = self.tile_index(x as i32 + x_offset, y as i32 + y_offset, &mut rng);
                 let tile_pos = TilePos { x, y };
                 let tile_entity = commands
                     .spawn(TileBundle {
@@ -287,15 +298,34 @@ impl Neighbors {
 ///
 /// U : donc care about the tile
 macro_rules! neighbors_match {
-    ($sel: ident, $tl:ident $t:ident $tr:ident $l:ident $r:ident $bl:ident $b:ident $br:ident) => {
-        tile_match!($sel, tl, $tl)
+    ($sel: ident, $index:literal,
+        $tl:ident $t:ident $tr:ident $l:ident $r:ident $bl:ident $b:ident $br:ident) => {
+        (tile_match!($sel, tl, $tl)
             && tile_match!($sel, t, $t)
             && tile_match!($sel, tr, $tr)
             && tile_match!($sel, l, $l)
             && tile_match!($sel, r, $r)
             && tile_match!($sel, bl, $bl)
             && tile_match!($sel, b, $b)
-            && tile_match!($sel, br, $br)
+            && tile_match!($sel, br, $br))
+        .then(|| $index)
+    };
+    ($sel: ident, $index:literal FLIP_X $index_x:literal,
+        $tl:ident $t:ident $tr:ident $l:ident $r:ident $bl:ident $b:ident $br:ident) => {
+        neighbors_match!($sel, $index, $tl $t $tr $l $r $bl $b $br)
+            .or(neighbors_match!($sel, $index_x, $tr $t $tl $r $l $br $b $bl))
+    };
+    ($sel: ident, $index:literal FLIP_Y $index_y:literal,
+        $tl:ident $t:ident $tr:ident $l:ident $r:ident $bl:ident $b:ident $br:ident) => {
+        neighbors_match!($sel, $index, $tl $t $tr $l $r $bl $b $br)
+            .or(neighbors_match!($sel, $index_y, $bl $b $br $l $r $tl $t $tr))
+    };
+    ($sel: ident, $index:literal FLIP_XY $index_x:literal $index_y:literal $index_xy:literal,
+        $tl:ident $t:ident $tr:ident $l:ident $r:ident $bl:ident $b:ident $br:ident) => {
+        neighbors_match!($sel, $index, $tl $t $tr $l $r $bl $b $br)
+            .or(neighbors_match!($sel, $index_x, $tr $t $tl $r $l $br $b $bl))
+            .or(neighbors_match!($sel, $index_y, $bl $b $br $l $r $tl $t $tr))
+            .or(neighbors_match!($sel, $index_xy, $br $b $bl $r $l $tr $t $tl))
     };
 }
 
@@ -321,58 +351,54 @@ impl<'a> GenericNeighborRules<'a> {
             TileKind::Mud => 154,
             _ => unreachable!("Only Water and Mud can have generic rules"),
         };
-        let i = if let Some(i) = self.rule_7() {
-            i
-        } else if let Some(i) = self.rule_8() {
-            i
-        } else {
-            23
-        };
+        let i = self
+            .rule_5()
+            .or(self.rule_7())
+            .or(self.rule_8())
+            .or(self.rule_9())
+            .or(self.rule_10())
+            .unwrap_or(23);
         offset + i
     }
 
-    // XOX
-    // O O
-    // XOX
-    // fn rule1(&self) -> Option<u32> {
-    //     (self.n.t() == self.kind
-    //         && self.n.r() == self.kind
-    //         && self.n.b() == self.kind
-    //         && self.n.l() == self.kind
-    //         && self.n.tl() != self.kind
-    //         && self.n.tr() != self.kind
-    //         && self.n.bl() != self.kind
-    //         && self.n.br() != self.kind)
-    //         .then(|| self.index(96))
-    // }
-
-    // .X.
-    // X O
-    // .OX
-    // fn rule21(&self) -> Option<u32> {
-    //     (self.n.t() == self.kind
-    //         && self.n.r() == self.kind
-    //         && self.n.b() == self.kind
-    //         && self.n.l() == self.kind)
-    //         .then(|| self.index(96))
-    // }
+    fn rule_5(&self) -> Option<u32> {
+        neighbors_match!(self, 3 FLIP_Y 47,
+            U X U
+            X   X
+            U U U
+        )
+    }
 
     fn rule_7(&self) -> Option<u32> {
-        neighbors_match!(self,
+        neighbors_match!(self, 0 FLIP_XY 2 44 46,
             U X U
             X   U
             U U U
         )
-        .then(|| 0)
     }
 
     fn rule_8(&self) -> Option<u32> {
-        neighbors_match!(self,
+        neighbors_match!(self, 1 FLIP_Y 45,
             U X U
             U   U
             U U U
         )
-        .then(|| 1)
+    }
+
+    fn rule_9(&self) -> Option<u32> {
+        neighbors_match!(self, 22 FLIP_X 24,
+            U U U
+            X   U
+            U U U
+        )
+    }
+
+    fn rule_10(&self) -> Option<u32> {
+        neighbors_match!(self, 50 FLIP_XY 49 28 27,
+            X O U
+            O   U
+            U U U
+        )
     }
 }
 
@@ -403,20 +429,3 @@ impl Default for WorldMapConfig {
         }
     }
 }
-
-// #[cfg(test)]
-// mod test {
-//     use super::*;
-
-//     const W: TileKind = TileKind::Water;
-//     const M: TileKind = TileKind::Mud;
-//     const G: TileKind = TileKind::Grass;
-
-//     struct N()
-
-//     #[test]
-//     fn test_tile_match() {
-//         let neighbors = Neighbors([W, W, W, W, W, W, W, W, W]);
-//         assert_eq!(true, tile_match!())
-//     }
-// }

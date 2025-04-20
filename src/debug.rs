@@ -55,7 +55,7 @@ impl Plugin for DebugPlugin {
                     log_transitions::<InGameState>,
                     show_key_pressed,
                     // display_collision_events.in_set(GameRunningSet::EntityUpdate),
-                    show_map_axes.run_if(resource_exists::<ProceduralWorldMap>),
+                    // show_map_axes.run_if(resource_exists::<ProceduralWorldMap>),
                 )
                     .run_if(debug_is_active),
                 toggle_debug_ui.run_if(input_just_pressed(KeyCode::Backquote)),
