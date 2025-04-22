@@ -11,31 +11,44 @@ Use mouse to move player. Take items dropped by monsters you killed.
 Use [I] to open the inventory.
 Try to use the best items for the player.
 
-In debug mode, you can press [D] to log some information on console.
+In debug build:
+- you can press [D] to toggle the "debug mode" to show/hide egui inspector.
+- you can press [L] to log some information on console.
 
-## Player affixes
+## Development
+
+### ECS hieracrhy
+
+- WorldMap
+  - ParentOf WorldMapChunk *
+  - ParentOf Tile *
+- Character
+  - All affixes
+  - ParentOf Upgrade *
+  - ParentOf Equipment *
+    - Affix *
+  - ParentOf Skill *
+
+
+### Player affixes
 
 TODO
 
-## How to build
+### How to build
 
 You need [Rust](https://www.rust-lang.org/) to build this game.
 
-### run 
+To run a "release" version of the game :
 ```shell
 cargo run --release
 ```
 
-### run with debug features
+To run the game with debug features (egui world, visible colliders, and some terminal information using [D])
 ```shell
 cargo run --features=dev
 ```
 
-### run with tracy features
-
-see https://github.com/bevyengine/bevy/blob/main/docs/profiling.md
-
-In a terminal run
+To run with tracy features, (see https://github.com/bevyengine/bevy/blob/main/docs/profiling.md), in a terminal run :
 ```shell
 c:\apps\tracy\tracy-capture.exe -o my_capture.tracy
 ```
@@ -44,11 +57,11 @@ In an other terminal run
 cargo run --release --features bevy/trace_tracy
 ```
 
-# WEB
+## WEB
 
 see [Bevy + WebGPU](https://bevyengine.org/news/bevy-webgpu/)
 
-## Tools
+### Tools
 
 ```shell
 rustup target install wasm32-unknown-unknown

@@ -47,8 +47,8 @@ impl Plugin for DebugPlugin {
         .add_systems(
             Update,
             (
-                (toggle_debug_mode, count_entities, show_player_pos)
-                    .run_if(input_just_released(KeyCode::KeyD)),
+                toggle_debug_mode.run_if(input_just_released(KeyCode::KeyD)),
+                (count_entities, show_player_pos).run_if(input_just_released(KeyCode::KeyL)),
                 (
                     inspector_ui,
                     log_transitions::<GameState>,
@@ -142,7 +142,8 @@ fn show_player_pos(players: Query<&Transform, With<Player>>, world_map: Res<Proc
     if let Ok(transform) = players.get_single() {
         let player_translation = transform.translation.xy();
         let player_pos = world_map.world_to_pos(player_translation);
-        info!("Player map pos : {player_pos} ({player_translation})");
+        let chunk_pos = world_map.chunk_pos(player_translation);
+        info!("Player - map pos: {player_pos}, chunk pos: {chunk_pos}, world translation: {player_translation}");
     }
 }
 

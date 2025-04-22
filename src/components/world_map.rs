@@ -78,6 +78,7 @@ pub const LAYER_PLAYER: f32 = 10.;
 pub const LAYER_MONSTER: f32 = 9.;
 pub const LAYER_DAMAGER: f32 = 8.;
 pub const LAYER_ITEM: f32 = 7.;
+pub const LAYER_MAP: f32 = 0.;
 
 // ============================================================================
 //
@@ -102,11 +103,19 @@ impl ProceduralWorldMap {
         }
     }
 
-    pub fn camera_pos_to_chunk_pos(&self, camera_pos: Vec2) -> IVec2 {
-        let camera_pos = camera_pos.as_ivec2();
+    pub fn chunk_pos(&self, translation: Vec2) -> IVec2 {
+        let pos = translation.as_ivec2();
         let chunk_size: IVec2 = IVec2::splat(self.config.chunk_size as i32);
         let tile_size: IVec2 = IVec2::splat(self.config.tile_size as i32);
-        camera_pos / (chunk_size * tile_size)
+        let mut chunk_pos = pos / (chunk_size * tile_size);
+        // Fix the calculus for negative values
+        if translation.x < 0. {
+            chunk_pos.x -= 1;
+        }
+        if translation.y < 0. {
+            chunk_pos.y -= 1;
+        }
+        chunk_pos
     }
 
     pub fn is_spawned(&self, pos: IVec2) -> bool {
@@ -191,7 +200,7 @@ impl ProceduralWorldMap {
         let mut tile_storage = TileStorage::empty(UVec2::splat(chunk_size).into());
         for x in 0..chunk_size {
             for y in 0..chunk_size {
-                // (x, y) is in "chunk" ccordinates, add offset to get the "world" coord
+                // (x, y) is in "chunk" coordinates, add offset to get the "world map" coordinates
                 let index = self.tile_index(x as i32 + x_offset, y as i32 + y_offset, &mut rng);
                 let tile_pos = TilePos { x, y };
                 let tile_entity = commands
@@ -207,17 +216,19 @@ impl ProceduralWorldMap {
             }
         }
 
+        let f_tile_size = self.config.tile_size as f32;
         let texture_handle: Handle<Image> = assets.sprites.clone();
         let tile_size = TilemapTileSize {
-            x: self.config.tile_size as f32,
-            y: self.config.tile_size as f32,
+            x: f_tile_size,
+            y: f_tile_size,
         };
-        let chunk_size = UVec2::splat(chunk_size);
+
         let translation = Vec3::new(
-            x_offset as f32 * self.config.tile_size as f32,
-            y_offset as f32 * self.config.tile_size as f32,
-            0.0,
+            x_offset as f32 * f_tile_size,
+            y_offset as f32 * f_tile_size,
+            LAYER_MAP,
         );
+        let chunk_size = UVec2::splat(chunk_size);
         commands.entity(chunk_entity).insert(TilemapBundle {
             grid_size: tile_size.into(),
             size: chunk_size.into(),
@@ -263,30 +274,39 @@ impl ProceduralWorldMap {
 struct Neighbors([TileKind; 9]);
 
 impl Neighbors {
+    #[inline]
     fn tl(&self) -> TileKind {
         self.0[0]
     }
+    #[inline]
     fn t(&self) -> TileKind {
         self.0[1]
     }
+    #[inline]
     fn tr(&self) -> TileKind {
         self.0[2]
     }
+    #[inline]
     fn l(&self) -> TileKind {
         self.0[3]
     }
+    #[inline]
     fn c(&self) -> TileKind {
         self.0[4]
     }
+    #[inline]
     fn r(&self) -> TileKind {
         self.0[5]
     }
+    #[inline]
     fn bl(&self) -> TileKind {
         self.0[6]
     }
+    #[inline]
     fn b(&self) -> TileKind {
         self.0[7]
     }
+    #[inline]
     fn br(&self) -> TileKind {
         self.0[8]
     }
@@ -413,19 +433,19 @@ enum TileKind {
 }
 
 pub struct WorldMapConfig {
-    noise_scale: f64,
-    chunk_size: u32,
-    tile_size: u32,
-    despawn_distance: f32,
+    pub noise_scale: f64,
+    pub chunk_size: u32,
+    pub tile_size: u32,
+    pub despawn_distance: f32,
 }
 
 impl Default for WorldMapConfig {
     fn default() -> Self {
         WorldMapConfig {
             noise_scale: 13.5,
-            chunk_size: 4,
+            chunk_size: 3,
             tile_size: 16,
-            despawn_distance: 320.,
+            despawn_distance: 520.,
         }
     }
 }

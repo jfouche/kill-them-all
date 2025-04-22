@@ -45,7 +45,8 @@ impl Plugin for WorldMapPlugin {
 
 fn spawn_worldmap(mut commands: Commands) {
     let mut rng = rand::rng();
-    let map = ProceduralWorldMap::new(WorldMapConfig::default(), &mut rng);
+    let config = WorldMapConfig::default();
+    let map = ProceduralWorldMap::new(config, &mut rng);
     commands.insert_resource(map);
     commands.spawn(WorldMap);
 }
@@ -70,12 +71,13 @@ fn spawn_chunks(
     let Ok(map_entity) = world_maps.get_single() else {
         return;
     };
-    let camera_chunk_pos = world_map.camera_pos_to_chunk_pos(camera_pos);
+    let camera_chunk_pos = world_map.chunk_pos(camera_pos);
     let mut chunk_entities = Vec::with_capacity(9);
     for y in (camera_chunk_pos.y - 1)..=(camera_chunk_pos.y + 1) {
         for x in (camera_chunk_pos.x - 1)..=(camera_chunk_pos.x + 1) {
             let chunk_pos = IVec2::new(x, y);
             if !world_map.is_spawned(chunk_pos) {
+                error!("spawn chunk {chunk_pos} for camera {camera_chunk_pos}");
                 let chunk_entity = world_map.spawn_chunk(&mut commands, &assets, chunk_pos);
                 chunk_entities.push(chunk_entity);
             }
