@@ -91,7 +91,7 @@ fn update_monster(
     mut commands: Commands,
     rarities: Query<&MonsterRarity>,
 ) {
-    if let Ok(MonsterRarity::Rare) = rarities.get(trigger.entity()) {
+    if let Ok(MonsterRarity::Rare) = rarities.get(trigger.target()) {
         let mut upgrade_provider = UpgradeProvider::new();
         let mut rng = rand::rng();
         let mut entities = Vec::new();
@@ -103,17 +103,17 @@ fn update_monster(
             }
         }
 
-        commands.entity(trigger.entity()).add_children(&entities);
+        commands.entity(trigger.target()).add_children(&entities);
 
         // Add a weapon and more life
-        commands.entity(trigger.entity()).with_children(|c| {
+        commands.entity(trigger.target()).with_children(|c| {
             c.spawn(Wand::new(1)); // TODO: get ilevel
             c.spawn(FireBallLauncher);
             c.spawn(MoreLife(10.));
         });
     }
     commands
-        .entity(trigger.entity())
+        .entity(trigger.target())
         .observe(monster_dying)
         .observe(increment_score);
 }
@@ -125,7 +125,7 @@ fn monsters_moves(
     mut monsters: Query<(&mut CharacterAction, &Transform, &ViewRange), With<Monster>>,
     players: Query<&Transform, With<Player>>,
 ) {
-    if let Ok(player_pos) = players.get_single().map(|t| t.translation.xy()) {
+    if let Ok(player_pos) = players.single().map(|t| t.translation.xy()) {
         for (mut action, monster_transform, view_range) in &mut monsters {
             let distance = (monster_transform.translation.xy() - player_pos).length();
             // warn!("distance={distance}");
@@ -145,14 +145,14 @@ fn monster_dying(
     mut character_died_events: EventWriter<CharacterDiedEvent>,
 ) {
     info!("monster_dying");
-    if let Ok((transform, mlevel, xp)) = monsters.get(trigger.entity()) {
-        monster_death_events.send(MonsterDeathEvent {
+    if let Ok((transform, mlevel, xp)) = monsters.get(trigger.target()) {
+        monster_death_events.write(MonsterDeathEvent {
             pos: transform.translation,
             xp: **xp,
             mlevel: **mlevel,
         });
 
-        character_died_events.send(CharacterDiedEvent(trigger.entity()));
+        character_died_events.write(CharacterDiedEvent(trigger.target()));
     }
 }
 
@@ -194,13 +194,13 @@ fn activate_skill(
     mut commands: Commands,
     monsters: Query<(&Transform, &ViewRange), With<Monster>>,
     players: Query<&Transform, With<Player>>,
-    mut skills: Query<(Entity, &mut AttackTimer, &Parent), With<Skill>>,
+    mut skills: Query<(Entity, &mut AttackTimer, &ChildOf), With<Skill>>,
 ) {
-    let Ok(player_pos) = players.get_single().map(|t| t.translation.xy()) else {
+    let Ok(player_pos) = players.single().map(|t| t.translation.xy()) else {
         return;
     };
-    for (entity, mut timer, parent) in &mut skills {
-        if let Ok((pos, view_range)) = monsters.get(parent.get()) {
+    for (entity, mut timer, child_of) in &mut skills {
+        if let Ok((pos, view_range)) = monsters.get(child_of.parent()) {
             let distance = (player_pos - pos.translation.xy()).length();
             if timer.finished() && distance <= **view_range {
                 commands.trigger(ActivateSkill(entity, player_pos));

@@ -18,23 +18,17 @@ impl Plugin for PausePlugin {
 
 #[derive(Component)]
 #[require(
-    Name(|| Name::new("PauseMenu")),
-    Popup(|| Popup::default().with_title("Pause"))
+    Name::new("PauseMenu"),
+    Popup = Popup::default().with_title("Pause")
 )]
 struct PauseMenu;
 
 #[derive(Component)]
-#[require(
-    TextButton(|| TextButton::big("Back to game")),
-    MenuButtonAction(|| MenuButtonAction::BackToGame),
-)]
+#[require(TextButton::big("Back to game"), MenuButtonAction::BackToGame)]
 pub struct ButtonBackToGame;
 
 #[derive(Component)]
-#[require(
-    TextButton(|| TextButton::big("Quit game")),
-    MenuButtonAction(|| MenuButtonAction::QuitGame),
-)]
+#[require(TextButton::big("Quit game"), MenuButtonAction::QuitGame)]
 pub struct ButtonQuitGame;
 
 // All actions that can be triggered from a button click
@@ -57,7 +51,7 @@ fn menu_action(
     mut in_game_state: ResMut<NextState<InGameState>>,
     mut game_state: ResMut<NextState<GameState>>,
 ) {
-    if let Ok(action) = actions.get(trigger.entity()) {
+    if let Ok(action) = actions.get(trigger.target()) {
         match action {
             MenuButtonAction::BackToGame => {
                 in_game_state.set(InGameState::Running);

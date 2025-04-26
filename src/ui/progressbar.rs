@@ -1,5 +1,5 @@
 use bevy::{
-    ecs::{component::ComponentId, world::DeferredWorld},
+    ecs::{component::HookContext, world::DeferredWorld},
     prelude::*,
 };
 
@@ -34,8 +34,10 @@ impl ProgressBar {
     }
 }
 
-fn create_progress_bar(mut world: DeferredWorld, entity: Entity, _id: ComponentId) {
-    world.commands().queue(CreateProgressBarCommand(entity));
+fn create_progress_bar(mut world: DeferredWorld, context: HookContext) {
+    world
+        .commands()
+        .queue(CreateProgressBarCommand(context.entity));
 }
 
 struct CreateProgressBarCommand(Entity);
@@ -50,10 +52,10 @@ impl Command for CreateProgressBarCommand {
 
 #[derive(Component)]
 #[require(
-    Node(|| Node {
+    Node {
         height: Val::Percent(100.0),
         ..default()
-    })
+    }
 )]
 struct ProgressBarForeground;
 
@@ -71,11 +73,11 @@ impl Plugin for ProgressBarPlugin {
 }
 
 fn update_progress_bars(
-    mut children: Query<(&mut Node, &mut BackgroundColor, &Parent), With<ProgressBarForeground>>,
+    mut children: Query<(&mut Node, &mut BackgroundColor, &ChildOf), With<ProgressBarForeground>>,
     parents: Query<(&ProgressBar, &ProgressBarColor)>,
 ) {
-    for (mut node, mut background, parent) in children.iter_mut() {
-        if let Ok((data, color)) = parents.get(**parent) {
+    for (mut node, mut background, child_of) in children.iter_mut() {
+        if let Ok((data, color)) = parents.get(child_of.parent()) {
             node.width = Val::Percent(100.0 * data.percent());
             *background = BackgroundColor(**color);
         }

@@ -18,14 +18,14 @@ const FIREBALL_SIZE: f32 = 5.0;
 /// The [FireBallLauncher] projectile
 #[derive(Component)]
 #[require(
-    Name(|| Name::new("FireBall")),
+    Name::new("FireBall"),
     Projectile,
-    Collider(|| Collider::cuboid(FIREBALL_SIZE / 2., FIREBALL_SIZE / 2.)),
-    Sprite(|| Sprite {
+    Collider::cuboid(FIREBALL_SIZE / 2., FIREBALL_SIZE / 2.),
+    Sprite {
         color: YELLOW.into(),
         custom_size: Some(Vec2::new(FIREBALL_SIZE, FIREBALL_SIZE)),
         ..Default::default()
-    }),
+    },
 )]
 struct FireBall;
 
@@ -41,12 +41,12 @@ impl Plugin for FireballPlugin {
 fn cast_fireball(
     trigger: Trigger<ActivateSkill>,
     mut commands: Commands,
-    skills: Query<(&HitDamageRange, &Parent), With<FireBallLauncher>>,
+    skills: Query<(&HitDamageRange, &ChildOf), With<FireBallLauncher>>,
     characters: Query<(&Transform, &PierceChance, &Target), With<Character>>,
 ) {
     let (skill_entity, target_pos) = (trigger.0, trigger.1);
-    if let Ok((damage_range, parent)) = skills.get(skill_entity) {
-        if let Ok((origin, pierce, target)) = characters.get(**parent) {
+    if let Ok((damage_range, child_of)) = skills.get(skill_entity) {
+        if let Ok((origin, pierce, target)) = characters.get(child_of.parent()) {
             let origin = origin.translation.xy();
             let velocity = (target_pos - origin).normalize() * FIREBALL_SPEED;
             commands.spawn((

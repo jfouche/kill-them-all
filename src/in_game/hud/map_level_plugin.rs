@@ -17,23 +17,23 @@ impl Plugin for MapLevelPlugin {
 #[derive(Component)]
 #[require(
     Hud,
-    Name(|| Name::new("HUD - MapLevelPanel")),
-    Node(|| Node {
+    Name::new("HUD - MapLevelPanel"),
+    Node {
         position_type: PositionType::Absolute,
         right: Val::Px(0.),
         top: Val::Px(100.),
         padding: UiRect::all(Val::Px(4.)),
         ..Default::default()
-    }),
-    BackgroundColor(|| BackgroundColor(Color::srgba(0.2, 0.2, 0.2, 0.5))),
+    },
+    BackgroundColor(Color::srgba(0.2, 0.2, 0.2, 0.5)),
 )]
 struct MapLevelPanel;
 
 #[derive(Component)]
 #[require(
     Text,
-    TextFont(|| TextFont::from_font_size(10.)),
-    TextColor(|| TextColor(Color::WHITE))
+    TextFont = TextFont::from_font_size(10.),
+    TextColor(Color::WHITE)
 )]
 struct MapLevelText;
 

@@ -5,7 +5,7 @@ use bevy::prelude::*;
 /// The [Inventory] contains all items that carry the [crate::components::player::Player] as children
 ///
 #[derive(Component, Default, Reflect)]
-#[require(Name(|| Name::new("Inventory")))]
+#[require(Name::new("Inventory"))]
 pub struct Inventory([Option<Entity>; Inventory::len()]);
 
 impl Inventory {
@@ -87,15 +87,19 @@ pub struct AddToInventoryCommand(pub Entity);
 
 impl Command for AddToInventoryCommand {
     fn apply(self, world: &mut World) {
-        let (inventory_entity, mut inventory) =
-            world.query::<(Entity, &mut Inventory)>().single_mut(world);
+        let Ok((inventory_entity, mut inventory)) =
+            world.query::<(Entity, &mut Inventory)>().single_mut(world)
+        else {
+            error!("Inventory doesn't exist!");
+            return;
+        };
 
         if inventory.add(self.0) {
             world.entity_mut(inventory_entity).add_child(self.0);
             // remove from skill if it was a skill
             world
                 .query::<&mut PlayerSkills>()
-                .get_single_mut(world)
+                .single_mut(world)
                 .expect("PlayerSkills")
                 .remove(self.0);
 
@@ -114,8 +118,12 @@ pub struct AddToInventoryAtIndexCommand {
 
 impl Command for AddToInventoryAtIndexCommand {
     fn apply(self, world: &mut World) {
-        let (inventory_entity, mut inventory) =
-            world.query::<(Entity, &mut Inventory)>().single_mut(world);
+        let Ok((inventory_entity, mut inventory)) =
+            world.query::<(Entity, &mut Inventory)>().single_mut(world)
+        else {
+            error!("Inventory doesn't exist!");
+            return;
+        };
 
         // Allow to move an item
         inventory.remove(self.item);
@@ -125,7 +133,7 @@ impl Command for AddToInventoryAtIndexCommand {
             // remove from skill if it was a skill
             world
                 .query::<&mut PlayerSkills>()
-                .get_single_mut(world)
+                .single_mut(world)
                 .expect("PlayerSkills")
                 .remove(self.item);
 
@@ -141,8 +149,12 @@ pub struct RemoveFromInventoryCommand(pub Entity);
 
 impl Command for RemoveFromInventoryCommand {
     fn apply(self, world: &mut World) {
-        let (inventory_entity, mut inventory) =
-            world.query::<(Entity, &mut Inventory)>().single_mut(world);
+        let Ok((inventory_entity, mut inventory)) =
+            world.query::<(Entity, &mut Inventory)>().single_mut(world)
+        else {
+            error!("Inventory doesn't exist!");
+            return;
+        };
 
         if inventory.remove(self.0) {
             world
@@ -170,8 +182,12 @@ impl Command for TakeDroppedItemCommand {
             warn!("Can't take item from {item_entity} as it's not a [DroppedItem]");
             return;
         };
-        let (inventory_entity, mut inventory) =
-            world.query::<(Entity, &mut Inventory)>().single_mut(world);
+        let Ok((inventory_entity, mut inventory)) =
+            world.query::<(Entity, &mut Inventory)>().single_mut(world)
+        else {
+            error!("Inventory doesn't exist!");
+            return;
+        };
 
         if inventory.add(*item) {
             world.entity_mut(inventory_entity).add_child(*item);

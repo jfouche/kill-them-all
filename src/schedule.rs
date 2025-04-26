@@ -46,7 +46,7 @@ pub fn schedule_plugin(app: &mut App) {
         )
         .add_systems(
             Update,
-            apply_deferred
+            ApplyDeferred
                 .after(GameRunningSet::DespawnEntities)
                 .before(GameRunningSet::UserInput),
         )

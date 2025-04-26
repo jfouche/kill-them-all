@@ -1,14 +1,14 @@
 use bevy::{
-    ecs::{component::ComponentId, world::DeferredWorld},
+    ecs::{component::HookContext, world::DeferredWorld},
     prelude::*,
 };
 
 #[derive(Component, Default)]
 #[component(on_add = create_popup)]
 #[require(
-    Node(Popup::default_node),
-    BackgroundColor(|| BackgroundColor(Color::srgb(0.25, 0.25, 0.25))),
-    BorderColor(|| BorderColor(Color::BLACK)),
+    Node = Popup::default_node(),
+    BackgroundColor(Color::srgb(0.25, 0.25, 0.25)),
+    BorderColor(Color::BLACK)
 )]
 pub struct Popup {
     title: Option<String>,
@@ -34,8 +34,8 @@ impl Popup {
     }
 }
 
-fn create_popup(mut world: DeferredWorld, entity: Entity, _: ComponentId) {
-    world.commands().queue(CreatePopupCommand(entity));
+fn create_popup(mut world: DeferredWorld, context: HookContext) {
+    world.commands().queue(CreatePopupCommand(context.entity));
 }
 
 struct CreatePopupCommand(Entity);
@@ -59,20 +59,20 @@ impl Command for CreatePopupCommand {
 
 #[derive(Component)]
 #[require(
-    Name(|| Name::new("PopupTitleBar")),
-    Node(|| Node {
+    Name::new("PopupTitleBar"),
+    Node {
         width: Val::Percent(100.0),
         justify_content: JustifyContent::Center,
         ..Default::default()
-    }),
-    BackgroundColor(|| BackgroundColor(Color::srgb(0.1, 0.1, 0.1))),
+    },
+    BackgroundColor(Color::srgb(0.1, 0.1, 0.1)),
 )]
 struct PopupTitleBar;
 
 #[derive(Component)]
 #[require(
     Text,
-    TextFont(|| TextFont::from_font_size(32.)),
-    TextColor(|| TextColor(Color::srgb(0.72, 0.72, 0.72)))
+    TextFont::from_font_size(32.),
+    TextColor(Color::srgb(0.72, 0.72, 0.72))
 )]
 struct PopupTitle;

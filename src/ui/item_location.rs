@@ -19,7 +19,7 @@ fn update_skills_location(
     skills: Query<&PlayerSkills, With<Player>>,
     mut locations: Query<(&mut ItemEntity, &PlayerAction), With<SkillGemLocation>>,
 ) {
-    if let Ok(skills) = skills.get_single() {
+    if let Ok(skills) = skills.single() {
         for (mut item_entity, action) in &mut locations {
             item_entity.0 = skills.get(*action);
         }

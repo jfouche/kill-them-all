@@ -10,7 +10,7 @@ use crate::{
     schedule::*,
 };
 use bevy::{
-    dev_tools::{fps_overlay::*, states::log_transitions, ui_debug_overlay::*},
+    dev_tools::{fps_overlay::*, states::log_transitions},
     ecs::entity::Entities,
     input::common_conditions::{input_just_pressed, input_just_released},
     math::vec2,
@@ -19,7 +19,7 @@ use bevy::{
     window::PrimaryWindow,
 };
 use bevy_inspector_egui::{
-    bevy_egui::{EguiContext, EguiPlugin},
+    bevy_egui::{EguiContext, EguiContextPass, EguiPlugin},
     bevy_inspector::{self, guess_entity_name, hierarchy::SelectedEntities, EntityFilter, Filter},
     egui,
     quick::WorldInspectorPlugin,
@@ -36,21 +36,27 @@ pub struct DebugPlugin;
 impl Plugin for DebugPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
-            DebugUiPlugin,
+            EguiPlugin {
+                enable_multipass_for_primary_context: true,
+            },
             FpsOverlayPlugin::default(),
-            EguiPlugin,
             DefaultInspectorConfigPlugin,
             bevy_rapier2d::render::RapierDebugRenderPlugin::default(),
             WorldInspectorPlugin::new().run_if(debug_is_active),
         ))
+        .insert_resource(UiDebugOptions {
+            enabled: true,
+            // `UiDebugOptions` has a few new options, but for now we'll leave the defaults.
+            ..default()
+        })
         .insert_resource(DebugMode(true))
+        .add_systems(EguiContextPass, inspector_ui.run_if(debug_is_active))
         .add_systems(
             Update,
             (
                 toggle_debug_mode.run_if(input_just_released(KeyCode::KeyD)),
                 (count_entities, show_player_pos).run_if(input_just_released(KeyCode::KeyL)),
                 (
-                    inspector_ui,
                     log_transitions::<GameState>,
                     log_transitions::<InGameState>,
                     show_key_pressed,
@@ -75,7 +81,7 @@ fn toggle_debug_mode(mut mode: ResMut<DebugMode>) {
 fn inspector_ui(world: &mut World) {
     let Ok(mut egui_context) = world
         .query_filtered::<&mut EguiContext, With<PrimaryWindow>>()
-        .get_single(world)
+        .single(world)
         .cloned()
     else {
         return;
@@ -84,7 +90,7 @@ fn inspector_ui(world: &mut World) {
         egui::ScrollArea::both().show(ui, |ui| {
             let filter =
                 Filter::<(
-                    Without<Parent>,
+                    Without<ChildOf>,
                     Without<Observer>,
                     Without<Monster>,
                     Without<LifeBar>,
@@ -139,7 +145,7 @@ fn show_key_pressed(inputs: Res<ButtonInput<KeyCode>>) {
 }
 
 fn show_player_pos(players: Query<&Transform, With<Player>>, world_map: Res<ProceduralWorldMap>) {
-    if let Ok(transform) = players.get_single() {
+    if let Ok(transform) = players.single() {
         let player_translation = transform.translation.xy();
         let player_pos = world_map.world_to_pos(player_translation);
         let chunk_pos = world_map.chunk_pos(player_translation);

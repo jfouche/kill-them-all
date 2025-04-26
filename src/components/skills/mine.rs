@@ -13,10 +13,10 @@ use super::{SkillGem, SkillUI};
 ///
 #[derive(Component, Default)]
 #[require(
-    Name(||Name::new("MineDropper")),
+    Name::new("MineDropper"),
     SkillGem,
-    HitDamageRange(|| HitDamageRange::new(1., 5.)),
-    BaseAttackSpeed(|| BaseAttackSpeed(0.6))
+    HitDamageRange::new(1., 5.),
+    BaseAttackSpeed(0.6)
 )]
 pub struct MineDropper;
 
@@ -39,12 +39,12 @@ impl SkillUI for MineDropper {
 ///
 #[derive(Component)]
 #[require(
-    Name(|| Name::new("Mine")),
+    Name::new("Mine"),
     Damager,
-    Collider(|| Collider::ball(8.)),
+    Collider::ball(8.),
     MineExplodeTimer,
     Sprite,
-    CyclicAnimation(|| CyclicAnimation::new(0..2))
+    CyclicAnimation::new(0..2)
 )]
 pub struct Mine;
 
@@ -60,9 +60,9 @@ impl Default for MineExplodeTimer {
 #[derive(Component)]
 #[require(
     Damager,
-    Collider(|| Collider::ball(16.)),
+    Collider::ball(16.),
     Sprite,
-    OneShotAnimation(|| OneShotAnimation::new(0..8))
+    OneShotAnimation::new(0..8)
 )]
 pub struct MineExplosion;
 

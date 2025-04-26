@@ -1,6 +1,6 @@
 use bevy::{
+    platform::collections::{HashMap, HashSet},
     prelude::*,
-    utils::{HashMap, HashSet},
 };
 use bevy_ecs_tilemap::{
     map::{TilemapId, TilemapRenderSettings, TilemapTexture, TilemapTileSize},
@@ -25,11 +25,7 @@ impl FromWorld for WorldMapAssets {
 
 /// The world map
 #[derive(Component, Copy, Clone)]
-#[require(
-    Name(|| Name::new("WorldMap")),
-    Transform,
-    Visibility
-)]
+#[require(Name::new("WorldMap"), Transform, Visibility)]
 pub struct WorldMap;
 
 /// Monsters initial positions tag

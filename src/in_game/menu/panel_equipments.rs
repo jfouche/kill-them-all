@@ -19,15 +19,15 @@ use bevy::prelude::*;
 ///
 #[derive(Component)]
 #[require(
-    Name(|| Name::new("EquipmentsPanel")),
-    Node(|| Node {
+    Name::new("EquipmentsPanel"),
+    Node {
         width: Val::Px(200.),
         height: Val::Px(200.),
         padding: UiRect::all(Val::Px(5.)),
         margin: UiRect::horizontal(Val::Auto),
         ..Default::default()
-    }),
-    BackgroundColor(|| BackgroundColor(Srgba::rgb_u8(40, 40, 40).into()))
+    },
+    BackgroundColor(Srgba::rgb_u8(40, 40, 40).into())
 )]
 pub struct EquipmentsPanel;
 
@@ -35,10 +35,7 @@ pub struct EquipmentsPanel;
 ///  A box that shows an equipment
 ///
 #[derive(Component, Default)]
-#[require(
-    Name(|| Name::new("EquipmentBox")),
-    ItemLocation
-)]
+#[require(Name::new("EquipmentBox"), ItemLocation)]
 struct EquipmentBox;
 
 #[inline]
@@ -137,7 +134,7 @@ fn spawn_panel_content(
     let mut amulet_border_observers = ShowBorderOnDrag::<With<Amulet>>::default();
     let mut weapon_border_observers = ShowBorderOnDrag::<With<Weapon>>::default();
 
-    commands.entity(trigger.entity()).with_children(|panel| {
+    commands.entity(trigger.target()).with_children(|panel| {
         let entity = panel
             .spawn(HelmetLocation::bundle(&assets))
             .observe(on_drop_equipment::<Helmet>)
@@ -197,7 +194,7 @@ fn on_drop_equipment<T>(
     info!(
         "on_drop_equipment::<{}>({})",
         std::any::type_name::<T>(),
-        trigger.entity()
+        trigger.target()
     );
     if let Some(item_entity) = ***cursor {
         if equipments.get(item_entity).is_ok() {
@@ -210,7 +207,7 @@ fn on_drop_equipment<T>(
 fn update_equipment<EL, E>(
     _trigger: Trigger<PlayerEquipmentChanged>,
     mut locations: Query<&mut ItemEntity, With<EL>>,
-    equipments: Query<(Entity, &Parent), With<E>>,
+    equipments: Query<(Entity, &ChildOf), With<E>>,
     player: Single<Entity, With<Player>>,
 ) where
     EL: Component,
@@ -218,7 +215,7 @@ fn update_equipment<EL, E>(
 {
     let entity_option = equipments
         .iter()
-        .filter(|(_e, parent)| ***parent == *player)
+        .filter(|(_e, child_of)| child_of.parent() == *player)
         .map(|(e, _p)| e)
         .next() // There should be only one result if it matches
         ;

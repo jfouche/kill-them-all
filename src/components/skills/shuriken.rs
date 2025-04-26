@@ -25,9 +25,9 @@ impl FromWorld for ShurikenAssets {
 #[derive(Component, Default)]
 #[require(
     SkillGem,
-    Name(|| Name::new("ShurikenLauncher")),
-    BaseHitDamageRange(|| BaseHitDamageRange::new(2., 4.)),
-    BaseAttackSpeed(|| BaseAttackSpeed(0.6)),
+    Name::new("ShurikenLauncher"),
+    BaseHitDamageRange::new(2., 4.),
+    BaseAttackSpeed(0.6)
 )]
 pub struct ShurikenLauncher;
 
@@ -48,10 +48,5 @@ impl SkillUI for ShurikenLauncher {
 /// A shuriken projectile
 ///
 #[derive(Component)]
-#[require(
-    Name(|| Name::new("Shuriken")),
-    Projectile,
-    Sprite,
-    Collider(|| Collider::ball(8.))
-)]
+#[require(Name::new("Shuriken"), Projectile, Sprite, Collider::ball(8.))]
 pub struct Shuriken;

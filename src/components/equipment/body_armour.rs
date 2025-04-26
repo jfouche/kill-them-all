@@ -12,12 +12,7 @@ use bevy::prelude::*;
 use rand::rngs::ThreadRng;
 
 #[derive(Component)]
-#[require(
-    Name(|| Name::new("BodyArmour")),
-    Equipment(|| Equipment::BodyArmour),
-    Armour,
-    MoreLife
-)]
+#[require(Name::new("BodyArmour"), Equipment::BodyArmour, Armour, MoreLife)]
 pub struct BodyArmour {
     affix_provider: BodyArmourAffixProvider,
 }

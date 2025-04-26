@@ -91,43 +91,28 @@ pub struct MonsterLevel(pub u16);
 #[derive(Component, Default)]
 #[require(
     Character,
-    Target(|| Target::Player),
+    Target::Player,
     ViewRange,
     MonsterRarity,
     XpOnDeath,
     HitDamageRange,
     Sprite,
     AnimationTimer,
-    Collider(|| Collider::cuboid(8., 8.)),
-    CollisionGroups(|| CollisionGroups::new(GROUP_ENEMY, GROUP_ALL & !GROUP_ITEM))
+    Collider::cuboid(8., 8.),
+    CollisionGroups::new(GROUP_ENEMY, GROUP_ALL & !GROUP_ITEM)
 )]
 pub struct Monster;
 
 #[derive(Component)]
-#[require(
-    Name(|| Name::new("Monster#1")),
-    Monster,
-    BaseLife(|| BaseLife(2.)),
-    BaseMovementSpeed(||BaseMovementSpeed(50.)),
-)]
+#[require(Name::new("Monster#1"), Monster, BaseLife(2.), BaseMovementSpeed(50.))]
 pub struct MonsterType1;
 
 #[derive(Component)]
-#[require(
-    Name(|| Name::new("Monster#2")),
-    Monster,
-    BaseLife(|| BaseLife(3.)),
-    BaseMovementSpeed(||BaseMovementSpeed(40.)),
-)]
+#[require(Name::new("Monster#2"), Monster, BaseLife(3.), BaseMovementSpeed(40.))]
 pub struct MonsterType2;
 
 #[derive(Component)]
-#[require(
-    Name(|| Name::new("Monster#3")),
-    Monster,
-    BaseLife(|| BaseLife(4.)),
-    BaseMovementSpeed(||BaseMovementSpeed(30.)),
-)]
+#[require(Name::new("Monster#3"), Monster, BaseLife(4.), BaseMovementSpeed(30.))]
 pub struct MonsterType3;
 
 // TODO: use enum
@@ -221,7 +206,7 @@ pub struct XpOnDeath(pub u32);
 ///
 #[derive(Component)]
 #[require(
-    Name(|| Name::new("MonsterFuturePos")),
+    Name::new("MonsterFuturePos"),
     MonsterSpawnTimer,
     Transform,
     Mesh2d,

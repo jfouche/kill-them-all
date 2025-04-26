@@ -5,9 +5,9 @@ use bevy::prelude::*;
 #[derive(Component, Default)]
 #[require(
     SkillGem,
-    Name(|| Name::new("FireBallLauncher")),
-    BaseHitDamageRange(|| BaseHitDamageRange::new(1., 2.)),
-    BaseAttackSpeed(|| BaseAttackSpeed(1.0))
+    Name::new("FireBallLauncher"),
+    BaseHitDamageRange::new(1., 2.),
+    BaseAttackSpeed(1.0)
 )]
 pub struct FireBallLauncher;
 

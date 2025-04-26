@@ -65,10 +65,10 @@ fn spawn_chunks(
     mut world_map: ResMut<ProceduralWorldMap>,
     assets: Res<WorldMapAssets>,
 ) {
-    let Ok(camera_pos) = cameras.get_single().map(|t| t.translation.xy()) else {
+    let Ok(camera_pos) = cameras.single().map(|t| t.translation.xy()) else {
         return;
     };
-    let Ok(map_entity) = world_maps.get_single() else {
+    let Ok(map_entity) = world_maps.single() else {
         return;
     };
     let camera_chunk_pos = world_map.chunk_pos(camera_pos);
@@ -77,7 +77,6 @@ fn spawn_chunks(
         for x in (camera_chunk_pos.x - 1)..=(camera_chunk_pos.x + 1) {
             let chunk_pos = IVec2::new(x, y);
             if !world_map.is_spawned(chunk_pos) {
-                error!("spawn chunk {chunk_pos} for camera {camera_chunk_pos}");
                 let chunk_entity = world_map.spawn_chunk(&mut commands, &assets, chunk_pos);
                 chunk_entities.push(chunk_entity);
             }
@@ -92,7 +91,7 @@ fn despawn_out_of_range_chunks(
     chunks_query: Query<(Entity, &Transform), With<WorldMapChunk>>,
     mut world_map: ResMut<ProceduralWorldMap>,
 ) {
-    let Ok(camera_pos) = cameras.get_single().map(|t| t.translation.xy()) else {
+    let Ok(camera_pos) = cameras.single().map(|t| t.translation.xy()) else {
         return;
     };
     for (entity, chunk_transform) in chunks_query.iter() {
@@ -110,7 +109,7 @@ fn world_map_picking_backend(
     worlds_maps: Query<Entity, With<WorldMap>>,
     mut output: EventWriter<PointerHits>,
 ) {
-    let Ok(world_map) = worlds_maps.get_single() else {
+    let Ok(world_map) = worlds_maps.single() else {
         return;
     };
     let (camera_entity, camera, camera_transform) = *camera;
@@ -127,6 +126,6 @@ fn world_map_picking_backend(
             HitData::new(camera_entity, depth, position, None),
         )];
         let order = camera.order as f32;
-        output.send(PointerHits::new(*pointer_id, picks, order));
+        output.write(PointerHits::new(*pointer_id, picks, order));
     }
 }

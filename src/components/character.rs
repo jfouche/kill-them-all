@@ -23,11 +23,11 @@ use bevy_rapier2d::prelude::*;
     IncreaseAreaOfEffect,
     Armour,
     Transform,
-    RigidBody(|| RigidBody::Dynamic),
+    RigidBody::Dynamic,
     Velocity,
     Collider,
     CollisionGroups,
-    LockedAxes(|| LockedAxes::ROTATION_LOCKED)
+    LockedAxes::ROTATION_LOCKED
 )]
 pub struct Character;
 

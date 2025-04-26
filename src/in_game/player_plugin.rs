@@ -72,16 +72,16 @@ fn world_position(
     pos: Vec2,
 ) -> Option<Vec2> {
     cameras
-        .get_single()
+        .single()
         .ok()
         .and_then(|(camera, transform)| camera.viewport_to_world_2d(transform, pos).ok())
 }
 
 fn manage_player_movement_with_mouse(trigger: Trigger<OnAdd, WorldMap>, mut commands: Commands) {
     commands
-        .entity(trigger.entity())
+        .entity(trigger.target())
         .observe(
-            |trigger: Trigger<Pointer<Down>>,
+            |trigger: Trigger<Pointer<Pressed>>,
              mut commands: Commands,
              mut player: Single<&mut CharacterAction, With<Player>>,
              cameras: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
@@ -147,14 +147,14 @@ fn move_player(
 }
 
 fn pause(mut query: Query<(&mut Invulnerable, &mut Blink), With<Player>>) {
-    if let Ok((mut invulnerable, mut blink)) = query.get_single_mut() {
+    if let Ok((mut invulnerable, mut blink)) = query.single_mut() {
         invulnerable.pause(true);
         blink.pause(true);
     }
 }
 
 fn unpause(mut query: Query<(&mut Invulnerable, &mut Blink), With<Player>>) {
-    if let Ok((mut invulnerable, mut blink)) = query.get_single_mut() {
+    if let Ok((mut invulnerable, mut blink)) = query.single_mut() {
         invulnerable.pause(false);
         blink.pause(false);
     }
@@ -165,9 +165,9 @@ fn set_invulnerable_on_hit(
     mut commands: Commands,
     mut players: Query<&mut CollisionGroups, With<Player>>,
 ) {
-    if let Ok(mut collision_groups) = players.get_mut(trigger.entity()) {
+    if let Ok(mut collision_groups) = players.get_mut(trigger.target()) {
         // Set player invulnerable
-        commands.entity(trigger.entity()).insert((
+        commands.entity(trigger.target()).insert((
             Invulnerable::new(Duration::from_secs_f32(1.0), GROUP_ENEMY),
             Blink::new(Duration::from_secs_f32(0.15)),
         ));
@@ -184,7 +184,7 @@ fn player_dying(
 ) {
     info!("player_dying");
     commands.trigger(PlayerDeathEvent);
-    send_died.send(CharacterDiedEvent(trigger.entity()));
+    send_died.write(CharacterDiedEvent(trigger.target()));
 }
 
 ///
@@ -194,7 +194,7 @@ fn animate_player_sprite(
     time: Res<Time>,
     mut q_player: Query<(&Velocity, &mut AnimationTimer, &mut Sprite), With<Player>>,
 ) {
-    if let Ok((&velocity, mut timer, mut sprite)) = q_player.get_single_mut() {
+    if let Ok((&velocity, mut timer, mut sprite)) = q_player.single_mut() {
         timer.tick(time.delta());
         if timer.just_finished() {
             if let Some(atlas) = &mut sprite.texture_atlas {
@@ -235,7 +235,7 @@ fn increment_player_experience(
     mut q_player: Query<(&mut Experience, &mut CharacterLevel), With<Player>>,
     mut level_up_sender: EventWriter<LevelUpEvent>,
 ) {
-    if let Ok((mut experience, mut level)) = q_player.get_single_mut() {
+    if let Ok((mut experience, mut level)) = q_player.single_mut() {
         for monster_death_ev in monster_death_reader.read() {
             experience.add(monster_death_ev.xp);
             let current_level = experience.level();
@@ -243,7 +243,7 @@ fn increment_player_experience(
                 // LEVEL UP !
                 **level = current_level;
                 info!("Level up : {current_level}");
-                level_up_sender.send(LevelUpEvent);
+                level_up_sender.write(LevelUpEvent);
             }
         }
     }
@@ -253,7 +253,7 @@ fn refill_life_on_level_up(
     mut q_player: Query<(&mut Life, &MaxLife), With<Player>>,
     mut level_up_rcv: EventReader<LevelUpEvent>,
 ) {
-    if let Ok((mut life, max_life)) = q_player.get_single_mut() {
+    if let Ok((mut life, max_life)) = q_player.single_mut() {
         for _ in level_up_rcv.read() {
             // Regen life
             life.regenerate(**max_life);
@@ -269,12 +269,12 @@ fn activate_skill(
     cameras: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
     buttons: Res<ButtonInput<KeyCode>>,
 ) {
-    let Ok(player_skills) = players.get_single() else {
+    let Ok(player_skills) = players.single() else {
         return;
     };
 
     let Some(pos) = windows
-        .get_single()
+        .single()
         .ok()
         .and_then(|w| w.cursor_position())
         .and_then(|pos| world_position(cameras, pos))

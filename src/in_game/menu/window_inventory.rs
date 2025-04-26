@@ -25,17 +25,17 @@ use bevy::prelude::*;
 ///
 #[derive(Component)]
 #[require(
-    Name(|| Name::new("InventoryWindow")),
-    Node(|| Node {
+    Name::new("InventoryWindow"),
+    Node {
         position_type: PositionType::Absolute,
         flex_direction: FlexDirection::Column,
         right: Val::Px(0.),
         bottom: Val::Px(50.),
         border: UiRect::all(Val::Px(1.)),
         ..Default::default()
-    }),
-    BorderColor(|| BorderColor(Color::BLACK)),
-    BackgroundColor(|| BackgroundColor(Color::srgb(0.5, 0.5, 0.5)))
+    },
+    BorderColor(Color::BLACK),
+    BackgroundColor(Color::srgb(0.5, 0.5, 0.5))
 )]
 pub struct InventoryWindow;
 
@@ -44,14 +44,14 @@ pub struct InventoryWindow;
 ///
 #[derive(Component)]
 #[require(
-    Name(|| Name::new("InventoryPanel")),
-    Node(|| Node {
+    Name::new("InventoryPanel"),
+    Node {
         display: Display::Grid,
         grid_template_columns: RepeatedGridTrack::flex(Inventory::N_COLS, 1.),
         grid_template_rows: RepeatedGridTrack::flex(Inventory::N_ROWS, 1.),
         ..Default::default()
-    }),
-    BackgroundColor(|| BackgroundColor(Srgba::rgb(0.16, 0.16, 0.16).into()))
+    },
+    BackgroundColor(Srgba::rgb(0.16, 0.16, 0.16).into())
 )]
 pub struct InventoryPanel;
 
@@ -134,7 +134,7 @@ fn create_panel(trigger: Trigger<OnAdd, InventoryPanel>, mut commands: Commands)
         .with_observers(ItemLocationDragObservers::observers())
         .with_observers(<ShowBorderOnDrag>::observers());
 
-    commands.entity(trigger.entity()).with_children(|cmd| {
+    commands.entity(trigger.target()).with_children(|cmd| {
         for idx in 0..Inventory::len() {
             let entity = cmd
                 .spawn((
@@ -173,7 +173,7 @@ fn on_drop_on_location(
     orbs: Query<(), With<Orb>>,
     inventory: Single<&Inventory>,
 ) {
-    let location_item = trigger.entity();
+    let location_item = trigger.target();
     let Some(drop_item) = ***cursor else {
         warn!("on_drop_on_location({location_item}) without item on cursor",);
         return;

@@ -21,16 +21,16 @@ struct CursorState {
 
 #[derive(Component, Reflect)]
 #[require(
-    Name(|| Name::new("DndCursor")),
+    Name::new("DndCursor"),
     DraggedEntity,
-    Node(|| Node {
+    Node {
         display: Display::Block,
         position_type: PositionType::Absolute,
         ..Default::default()
-    }),
+    },
     ImageNode,
-    Transform(|| Transform::from_scale(Vec3::splat(0.8))),
-    ZIndex(|| ZIndex(1))
+    Transform::from_scale(Vec3::splat(0.8)),
+    ZIndex(1)
 )]
 pub struct DndCursor;
 
@@ -47,10 +47,10 @@ fn cursor_state(
     cameras: Query<&Transform, With<Camera>>,
     mut events: EventReader<CursorMoved>,
 ) {
-    let Ok(window) = windows.get_single() else {
+    let Ok(window) = windows.single() else {
         return;
     };
-    let Ok(camera_transform) = cameras.get_single() else {
+    let Ok(camera_transform) = cameras.single() else {
         return;
     };
     for event in events.read() {

@@ -61,12 +61,7 @@ pub enum ButtonKind {
 /// Component to spawn a button with text
 ///
 #[derive(Component, Clone)]
-#[require(
-    Button,
-    ButtonColors,
-    Node,
-    BorderColor(|| BorderColor(Color::BLACK))
-)]
+#[require(Button, ButtonColors, Node, BorderColor(Color::BLACK))]
 pub struct TextButton {
     pub text: String,
     pub kind: ButtonKind,
@@ -148,7 +143,7 @@ fn create_text_button(
     mut buttons: Query<(&TextButton, &mut Node, &mut BackgroundColor, &ButtonColors)>,
 ) {
     let (button, mut node, mut bgcolor, colors) =
-        buttons.get_mut(trigger.entity()).expect("Added TextButton");
+        buttons.get_mut(trigger.target()).expect("Added TextButton");
 
     *bgcolor = colors.normal.into();
 
@@ -161,7 +156,7 @@ fn create_text_button(
         ButtonKind::Big => BIG_BUTTON_FONT_SIZE,
         ButtonKind::Small => SMALL_BUTTON_FONT_SIZE,
     };
-    commands.entity(trigger.entity()).with_child((
+    commands.entity(trigger.target()).with_child((
         Text(button.text.clone()),
         TextColor(BUTTON_TEXT_COLOR),
         TextFont::from_font_size(font_size),
@@ -174,7 +169,7 @@ fn init_color(
     trigger: Trigger<OnAdd, ButtonColors>,
     mut buttons: Query<(&mut BackgroundColor, &ButtonColors)>,
 ) {
-    if let Ok((mut bgcolor, colors)) = buttons.get_mut(trigger.entity()) {
+    if let Ok((mut bgcolor, colors)) = buttons.get_mut(trigger.target()) {
         *bgcolor = colors.normal.into();
     }
 }

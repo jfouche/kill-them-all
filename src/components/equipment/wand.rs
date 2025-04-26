@@ -15,10 +15,10 @@ use rand::rngs::ThreadRng;
 /// A [Wand]
 #[derive(Component)]
 #[require(
-    Name(|| Name::new("Wand")),
+    Name::new("Wand"),
     Weapon,
-    BaseHitDamageRange(|| BaseHitDamageRange::new(1., 2.)),
-    BaseAttackSpeed(|| BaseAttackSpeed(1.2)),
+    BaseHitDamageRange::new(1., 2.),
+    BaseAttackSpeed(1.2),
     MoreDamage,
     IncreaseDamage,
     PierceChance,

@@ -50,7 +50,7 @@ fn invulnerability_finished(
     time: Res<Time>,
     mut query: Query<(Entity, &mut CollisionGroups, &mut Invulnerable)>,
 ) {
-    if let Ok((entity, mut collision_groups, mut invulnerable)) = query.get_single_mut() {
+    if let Ok((entity, mut collision_groups, mut invulnerable)) = query.single_mut() {
         if !invulnerable.pause {
             invulnerable.timer.tick(time.delta());
             if invulnerable.timer.just_finished() {

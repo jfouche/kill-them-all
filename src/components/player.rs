@@ -12,19 +12,19 @@ use std::time::Duration;
 
 #[derive(Component)]
 #[require(
-    Name(|| Name::new("Player")),
+    Name::new("Player"),
     Character,
     PlayerSkills,
-    Target(|| Target::Monster),
-    BaseLife(|| BaseLife(10.)),
-    BaseMovementSpeed(|| BaseMovementSpeed(100.)),
+    Target::Monster,
+    BaseLife(10.),
+    BaseMovementSpeed(100.),
     Experience,
     Sprite,
-    Transform(|| Transform::from_xyz(0., 0., 10.)),
+    Transform::from_xyz(0., 0., 10.),
     AnimationTimer,
-    Collider(|| Collider::cuboid(PLAYER_SIZE.x / 2., PLAYER_SIZE.y / 2.)),
-    CollisionGroups(|| CollisionGroups::new(GROUP_PLAYER, GROUP_ALL)),
-    ActiveEvents(|| ActiveEvents::COLLISION_EVENTS)
+    Collider::cuboid(PLAYER_SIZE.x / 2., PLAYER_SIZE.y / 2.),
+    CollisionGroups::new(GROUP_PLAYER, GROUP_ALL),
+    ActiveEvents::COLLISION_EVENTS
 )]
 pub struct Player;
 
@@ -120,7 +120,7 @@ impl Command for EquipSkillGemCommand {
 
         let Ok((player_entity, mut skills)) = world
             .query_filtered::<(Entity, &mut PlayerSkills), With<Player>>()
-            .get_single_mut(world)
+            .single_mut(world)
         else {
             error!("Player doesn't have a PlayerSkills");
             return;
@@ -166,7 +166,7 @@ impl Command for RemoveSkillGemCommand {
 
         let Ok(mut skills) = world
             .query_filtered::<&mut PlayerSkills, With<Player>>()
-            .get_single_mut(world)
+            .single_mut(world)
         else {
             error!("Player doesn't have a PlayerSkills");
             return;
@@ -281,11 +281,11 @@ pub struct Score(pub u16);
 ///
 #[derive(Component)]
 #[require(
-    Name(|| Name::new("NextPositionIndicator")),
+    Name::new("NextPositionIndicator"),
     Mesh2d,
     MeshMaterial2d<ColorMaterial>,
     Transform,
-    DespawnAfter(|| DespawnAfter::new(Duration::from_millis(300)))
+    DespawnAfter::new(Duration::from_millis(300))
 )]
 pub struct NextPositionIndicator;
 

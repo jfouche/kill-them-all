@@ -13,8 +13,8 @@ use rand::rngs::ThreadRng;
 
 #[derive(Component)]
 #[require(
-    Name(|| Name::new("Boots")),
-    Equipment(|| Equipment::Boots),
+    Name::new("Boots"),
+    Equipment::Boots,
     Armour,
     MoreLife,
     IncreaseMovementSpeed

@@ -18,8 +18,8 @@ impl Plugin for ExperienceBarPlugin {
 #[derive(Component)]
 #[require(
     Hud,
-    Name(|| Name::new("HUD - ExperienceBar")),
-    Node(|| Node {
+    Name::new("HUD - ExperienceBar"),
+    Node {
         position_type: PositionType::Absolute,
         right: Val::Px(50.),
         top: Val::Px(20.),
@@ -27,11 +27,11 @@ impl Plugin for ExperienceBarPlugin {
         height: Val::Px(20.),
         border: UiRect::all(Val::Px(2.)),
         ..Default::default()
-    }),
-    BackgroundColor(|| BackgroundColor(Color::BLACK)),
-    BorderColor(|| BorderColor(Color::BLACK)),
+    },
+    BackgroundColor(Color::BLACK),
+    BorderColor(Color::BLACK),
     ProgressBar,
-    ProgressBarColor(|| ProgressBarColor(GOLD.into()))
+    ProgressBarColor(GOLD.into())
 )]
 struct ExperienceBar;
 
@@ -43,8 +43,8 @@ fn update_xp_bar(
     q_player: Query<&Experience, With<Player>>,
     mut q_bar: Query<&mut ProgressBar, With<ExperienceBar>>,
 ) {
-    if let Ok(mut progressbar) = q_bar.get_single_mut() {
-        if let Ok(xp) = q_player.get_single() {
+    if let Ok(mut progressbar) = q_bar.single_mut() {
+        if let Ok(xp) = q_player.single() {
             let (min, max) = xp.get_current_level_min_max_exp();
             progressbar.min = min as f32;
             progressbar.max = max as f32;

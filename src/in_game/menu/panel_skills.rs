@@ -15,14 +15,14 @@ use bevy::prelude::*;
 
 #[derive(Component)]
 #[require(
-    Name(|| Name::new("SkillsPanel")),
-    Node(|| Node {
+    Name::new("SkillsPanel"),
+    Node {
         flex_direction: FlexDirection::Row,
         justify_content: JustifyContent::Center,
         align_items: AlignItems::Center,
         padding: UiRect::all(Val::Px(5.)),
         ..Default::default()
-    })
+    }
 )]
 pub struct SkillsPanel;
 
@@ -40,7 +40,7 @@ fn create_panel(trigger: Trigger<OnAdd, SkillsPanel>, mut commands: Commands) {
         .with_observers(ShowBorderOnDrag::<With<SkillGem>>::observers())
         .with_observers(ItemLocationDragObservers::observers());
 
-    commands.entity(trigger.entity()).with_children(|panel| {
+    commands.entity(trigger.target()).with_children(|panel| {
         panel.spawn(Text::new("A:"));
         let entity = panel.spawn((PlayerAction::Skill1, SkillGemLocation)).id();
         observers.watch_entity(entity);
@@ -72,7 +72,7 @@ fn on_drop_item(
 ) {
     if let Some(item_entity) = ***cursor {
         if skill_gems.get(item_entity).is_ok() {
-            if let Ok(action) = locations.get(trigger.entity()) {
+            if let Ok(action) = locations.get(trigger.target()) {
                 // The item dropped is a skill gem
                 commands.queue(EquipSkillGemCommand(item_entity, *action));
             }

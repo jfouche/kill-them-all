@@ -29,13 +29,13 @@ impl Plugin for ShurikenPlugin {
 fn launch_shuriken(
     trigger: Trigger<ActivateSkill>,
     mut commands: Commands,
-    skills: Query<(&HitDamageRange, &Parent), With<ShurikenLauncher>>,
+    skills: Query<(&HitDamageRange, &ChildOf), With<ShurikenLauncher>>,
     characters: Query<(&Transform, &PierceChance, &Target), With<Character>>,
     asset: Res<ShurikenAssets>,
 ) {
     let (skill_entity, target_pos) = (trigger.0, trigger.1);
-    if let Ok((damage_range, parent)) = skills.get(skill_entity) {
-        if let Ok((origin, pierce_chance, target)) = characters.get(**parent) {
+    if let Ok((damage_range, child_of)) = skills.get(skill_entity) {
+        if let Ok((origin, pierce_chance, target)) = characters.get(child_of.parent()) {
             let origin = origin.translation.xy();
             let velocity = (target_pos - origin).normalize() * SHURIKEN_SPEED;
             commands.spawn((

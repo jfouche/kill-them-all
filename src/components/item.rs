@@ -66,10 +66,7 @@ pub struct Item;
 ///
 /// It reference the [Item] entity
 #[derive(Component, Copy, Clone, Deref, Reflect)]
-#[require(
-    Name(|| Name::new("DroppedItem")),
-    Sprite,
-)]
+#[require(Name::new("DroppedItem"), Sprite)]
 pub struct DroppedItem(pub Entity);
 
 #[derive(Component, Clone, Copy, Default, Deref, Reflect)]
@@ -82,8 +79,8 @@ pub struct ItemEntity(pub Option<Entity>);
 
 #[derive(Component, Default)]
 #[require(
-    Node(ItemLocation::default_node),
-    BackgroundColor(|| BackgroundColor(Srgba::NONE.into())),
+    Node = ItemLocation::default_node(),
+    BackgroundColor,
     ItemEntity
 )]
 pub struct ItemLocation;
@@ -100,7 +97,7 @@ impl ItemLocation {
 #[derive(Component)]
 #[require(
     ImageNode,
-    BackgroundColor(|| BackgroundColor(Srgba::rgb(0.25, 0.25, 0.25).into())),
+    BackgroundColor(Srgba::rgb(0.25, 0.25, 0.25).into()),
 )]
 pub struct ItemImage;
 
@@ -231,19 +228,22 @@ pub struct EquipEquipmentCommand(pub Entity);
 
 impl Command for EquipEquipmentCommand {
     fn apply(self, world: &mut World) {
-        let mut equipments = world.query::<(Entity, &Equipment, &Parent)>();
+        let mut equipments = world.query::<(Entity, &Equipment, &ChildOf)>();
         let Ok(equipment_to_equip) = equipments.get(world, self.0).map(|(_, eqp, _)| *eqp) else {
             warn!("Can't equip {} as it's not an Equipment", self.0);
             return;
         };
 
         // Check it the player already have an item of same type
-        let player = world.query_filtered::<Entity, With<Player>>().single(world);
+        let player = world
+            .query_filtered::<Entity, With<Player>>()
+            .single(world)
+            .expect("Player");
         let old_equipment = equipments
             .iter(world)
             // same parent, same type, but different entity
-            .filter(|(entity, eqp, parent)| {
-                player == ***parent && **eqp == equipment_to_equip && *entity != self.0
+            .filter(|(entity, eqp, child_of)| {
+                player == child_of.parent() && **eqp == equipment_to_equip && *entity != self.0
             })
             .map(|(e, _eqp, _p)| e)
             // There should be at most 1 equipment
@@ -266,10 +266,14 @@ pub struct DropItemCommand(pub Entity);
 
 impl Command for DropItemCommand {
     fn apply(self, world: &mut World) {
-        let player = world.query_filtered::<Entity, With<Player>>().single(world);
+        let player = world
+            .query_filtered::<Entity, With<Player>>()
+            .single(world)
+            .expect("Player");
         let inventory = world
             .query_filtered::<Entity, With<Inventory>>()
-            .single(world);
+            .single(world)
+            .expect("Inventory");
 
         enum Change {
             None,
@@ -279,15 +283,16 @@ impl Command for DropItemCommand {
         }
 
         let change = world
-            .query::<&Parent>()
+            .query::<&ChildOf>()
             .get(world, self.0)
-            .map(|p| {
-                if **p == player {
+            .map(|child_of| {
+                let parent = child_of.parent();
+                if parent == player {
                     Change::Player
-                } else if **p == inventory {
+                } else if parent == inventory {
                     Change::Inventory
                 } else {
-                    Change::Other(**p)
+                    Change::Other(parent)
                 }
             })
             .unwrap_or(Change::None);

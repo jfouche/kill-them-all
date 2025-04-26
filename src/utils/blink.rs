@@ -1,5 +1,5 @@
 use bevy::{
-    ecs::component::{ComponentHooks, StorageType},
+    ecs::component::{ComponentHooks, Mutable, StorageType},
     prelude::*,
 };
 use std::time::Duration;
@@ -19,10 +19,11 @@ pub struct Blink {
 
 impl Component for Blink {
     const STORAGE_TYPE: StorageType = StorageType::SparseSet;
+    type Mutability = Mutable;
 
     fn register_component_hooks(hooks: &mut ComponentHooks) {
-        hooks.on_remove(|mut world, entity, _component_id| {
-            if let Some(mut visibility) = world.get_mut::<Visibility>(entity) {
+        hooks.on_remove(|mut world, context| {
+            if let Some(mut visibility) = world.get_mut::<Visibility>(context.entity) {
                 *visibility = Visibility::Inherited;
             }
         });

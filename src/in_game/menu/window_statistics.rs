@@ -10,24 +10,24 @@ use crate::{
     },
     schedule::{GameRunningSet, GameState},
 };
-use bevy::prelude::*;
+use bevy::{ecs::relationship::RelatedSpawnerCommands, prelude::*};
 
 ///
 /// A window that shows the players statistics
 ///
 #[derive(Component)]
 #[require(
-    Name(|| Name::new("StatisticsWindow")),
-    Node(|| Node {
+    Name::new("StatisticsWindow"),
+    Node {
         position_type: PositionType::Absolute,
         left: Val::Px(0.),
         bottom: Val::Px(0.),
         min_width: Val::Px(200.),
         border: UiRect::all(Val::Px(1.)),
         ..Default::default()
-    }),
-    BorderColor(|| BorderColor(Color::BLACK)),
-    BackgroundColor(|| BackgroundColor(BACKGROUND_COLOR))
+    },
+    BorderColor(Color::BLACK),
+    BackgroundColor(BACKGROUND_COLOR)
 )]
 pub struct StatisticsWindow;
 
@@ -36,12 +36,12 @@ pub struct StatisticsWindow;
 ///
 #[derive(Component)]
 #[require(
-    Name(|| Name::new("StatisticsPanel")),
-    Node(|| Node {
+    Name::new("StatisticsPanel"),
+    Node {
         display: Display::Grid,
         grid_template_columns: RepeatedGridTrack::flex(2, 1.0),
         ..Default::default()
-    }),
+    },
 )]
 pub struct StatisticsPanel;
 
@@ -51,9 +51,9 @@ pub struct StatisticsPanel;
 #[derive(Component)]
 #[require(
     Text,
-    TextFont(|| TextFont::from_font_size(FONT_SIZE)),
-    TextColor(|| TextColor(FONT_COLOR)),
-    TextLayout(|| TextLayout::new_with_justify(JustifyText::Right)),
+    TextFont = TextFont::from_font_size(FONT_SIZE),
+    TextColor(FONT_COLOR),
+    TextLayout = TextLayout::new_with_justify(JustifyText::Right),
 )]
 struct StatLabel;
 
@@ -63,8 +63,8 @@ struct StatLabel;
 #[derive(Component)]
 #[require(
     Text,
-    TextFont(|| TextFont::from_font_size(FONT_SIZE)),
-    TextColor(|| TextColor(FONT_COLOR)),
+    TextFont = TextFont::from_font_size(FONT_SIZE),
+    TextColor(FONT_COLOR),
 )]
 struct StatValue;
 
@@ -105,15 +105,15 @@ fn spawn_or_despawn_window(
         return;
     }
 
-    if let Ok(entity) = windows.get_single() {
-        commands.entity(entity).despawn_recursive();
+    if let Ok(entity) = windows.single() {
+        commands.entity(entity).despawn();
     } else {
         commands.spawn(StatisticsWindow).with_child(StatisticsPanel);
     }
 }
 
 fn create_panel(trigger: Trigger<OnAdd, StatisticsPanel>, mut commands: Commands) {
-    commands.entity(trigger.entity()).with_children(|panel| {
+    commands.entity(trigger.target()).with_children(|panel| {
         spawn_stat::<Armour>(panel, "Armour :");
         spawn_stat::<MaxLife>(panel, "Maximum life :");
         spawn_stat::<LifeRegen>(panel, "Life regeneration :");
@@ -126,7 +126,7 @@ fn create_panel(trigger: Trigger<OnAdd, StatisticsPanel>, mut commands: Commands
 }
 
 fn spawn_stat<T: std::fmt::Display + Component + Default>(
-    commands: &mut ChildBuilder,
+    commands: &mut RelatedSpawnerCommands<'_, ChildOf>,
     label: &str,
 ) {
     commands.spawn((StatLabel, Text(label.into())));

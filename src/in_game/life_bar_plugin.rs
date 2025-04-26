@@ -15,19 +15,19 @@ const BAR_HEIGHT: f32 = 8.;
 
 #[derive(Component)]
 #[require(
-    Name(|| Name::new("LifeBar")),
-    Node(|| Node {
+    Name::new("LifeBar"),
+    Node {
         position_type: PositionType::Absolute,
         width: Val::Px(BAR_WIDTH),
         height: Val::Px(BAR_HEIGHT),
         border: UiRect::all(Val::Px(1.)),
         ..Default::default()
-    }),
-    ZIndex(|| ZIndex(-1)),
-    BackgroundColor(|| BackgroundColor(Color::BLACK)),
-    BorderColor(|| BorderColor(Color::BLACK)),
+    },
+    ZIndex(-1),
+    BackgroundColor(Color::BLACK),
+    BorderColor(Color::BLACK),
     ProgressBar,
-    ProgressBarColor(|| ProgressBarColor(Color::srgb(1., 0., 0.)))
+    ProgressBarColor(Color::srgb(1., 0., 0.))
 )]
 pub struct LifeBar;
 
@@ -56,10 +56,10 @@ fn spawn_life_bar(
     mut life_bar_map: ResMut<LifeBarMap>,
 ) {
     let life_bar = commands.spawn(LifeBar).id();
-    life_bar_map.insert(trigger.entity(), life_bar);
+    life_bar_map.insert(trigger.target(), life_bar);
 
     commands
-        .entity(trigger.entity())
+        .entity(trigger.target())
         .observe(remove_life_bar_on_monster_dying);
 }
 
@@ -68,14 +68,14 @@ fn remove_life_bar_on_monster_dying(
     mut commands: Commands,
     mut life_bar_map: ResMut<LifeBarMap>,
 ) {
-    if let Some(bar) = life_bar_map.remove(&trigger.entity()) {
-        commands.entity(bar).despawn_recursive();
+    if let Some(bar) = life_bar_map.remove(&trigger.target()) {
+        commands.entity(bar).despawn();
     }
 }
 
 fn clear_life_bars(mut commands: Commands, mut life_bar_map: ResMut<LifeBarMap>) {
     for life_bar in life_bar_map.values() {
-        commands.entity(*life_bar).despawn_recursive();
+        commands.entity(*life_bar).despawn();
     }
     life_bar_map.clear();
 }
@@ -86,7 +86,7 @@ fn update_life_bar(
     mut life_bars: Query<(&mut Node, &mut ProgressBar), With<LifeBar>>,
     life_bar_map: Res<LifeBarMap>,
 ) {
-    let (camera, camera_transform) = cameras.get_single().expect("Single MainCamera");
+    let (camera, camera_transform) = cameras.single().expect("Single MainCamera");
     for (entity, transform, life, max_life) in &monsters {
         if let Some(life_bar_entity) = life_bar_map.get(&entity) {
             if let Ok((mut node, mut progress)) = life_bars.get_mut(*life_bar_entity) {

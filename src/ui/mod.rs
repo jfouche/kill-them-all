@@ -15,20 +15,20 @@ mod plugin {
     /// Horizontal sizer
     #[derive(Component, Default)]
     #[require(
-    Node(|| Node {
+    Node {
             flex_direction: FlexDirection::Row,
             ..Default::default()
-        })
+        }
     )]
     pub struct HSizer;
 
     /// Vertical sizer
     #[derive(Component, Default)]
     #[require(
-    Node(|| Node {
+    Node {
         flex_direction: FlexDirection::Column,
         ..Default::default()
-    })
+    }
 )]
     pub struct VSizer;
 

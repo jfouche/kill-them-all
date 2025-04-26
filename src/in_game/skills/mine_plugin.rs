@@ -33,13 +33,13 @@ impl Plugin for MinePlugin {
 fn drop_mine(
     trigger: Trigger<ActivateSkill>,
     mut commands: Commands,
-    mut mine_droppers: Query<(&HitDamageRange, &Parent), With<MineDropper>>,
+    mut mine_droppers: Query<(&HitDamageRange, &ChildOf), With<MineDropper>>,
     characters: Query<(&Transform, &Target), With<Character>>,
     assets: Res<MineAssets>,
 ) {
     let skill_entity = trigger.0;
-    if let Ok((damage_range, parent)) = mine_droppers.get_mut(skill_entity) {
-        if let Ok((Transform { translation, .. }, target)) = characters.get(**parent) {
+    if let Ok((damage_range, child_of)) = mine_droppers.get_mut(skill_entity) {
+        if let Ok((Transform { translation, .. }, target)) = characters.get(child_of.parent()) {
             let image = assets.mine_texture.clone();
             let atlas = assets.mine_atlas_layout.clone().into();
             commands.spawn((
@@ -70,7 +70,7 @@ fn mine_explosion(
     for (entity, mut timer, &damage_range, &transform, &collision_groups) in &mut mines {
         timer.tick(time.delta());
         if timer.just_finished() {
-            commands.entity(entity).despawn_recursive();
+            commands.entity(entity).despawn();
 
             // Spawn explosion
             let image = assets.explosion_texture.clone();

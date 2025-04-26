@@ -24,22 +24,22 @@ fn init_render(
     mut commands: Commands,
     assets: Res<DeathAuraAssets>,
 ) {
-    commands.entity(trigger.entity()).insert((
+    commands.entity(trigger.target()).insert((
         Mesh2d(assets.mesh.clone()),
         MeshMaterial2d(assets.material.clone()),
     ));
 }
 
 fn init_target(
-    trigger: Trigger<OnAdd, Parent>,
+    trigger: Trigger<OnAdd, ChildOf>,
     mut commands: Commands,
-    death_auras: Query<&Parent, With<DeathAura>>,
+    death_auras: Query<&ChildOf, With<DeathAura>>,
     targets: Query<&Target>,
 ) {
-    if let Ok(parent) = death_auras.get(trigger.entity()) {
-        if let Ok(&target) = targets.get(**parent) {
+    if let Ok(child_of) = death_auras.get(trigger.target()) {
+        if let Ok(&target) = targets.get(child_of.parent()) {
             commands
-                .entity(trigger.entity())
+                .entity(trigger.target())
                 .insert(Damager::collision_groups(target));
         }
     }

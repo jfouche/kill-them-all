@@ -1,34 +1,33 @@
-use bevy::prelude::*;
-
 use crate::{components::despawn_all, schedule::GameState};
+use bevy::prelude::*;
 
 #[derive(Component)]
 #[require(
-    Text(|| Text("Kill'em all".into())),
-    TextFont(|| TextFont::from_font_size(80.)),
-    TextColor(|| TextColor(Color::WHITE))
+    Text("Kill'em all".into()),
+    TextFont::from_font_size(80.),
+    TextColor(Color::WHITE)
 )]
 struct SplashScreenTitle;
 
 #[derive(Component)]
 #[require(
-    Text(|| Text("Press any key to continue".into())),
-    TextFont(|| TextFont::from_font_size(16.)),
-    TextColor(|| TextColor(Color::BLACK))
+    Text("Press any key to continue".into()),
+    TextFont::from_font_size(16.),
+    TextColor(Color::BLACK)
 )]
 struct SplashScreenMessage;
 
 #[derive(Component)]
 #[require(
-    Name(|| Name::new("SplashScreen")),
-    Node(|| Node {
+    Name::new("SplashScreen"),
+    Node {
         align_items: AlignItems::Center,
         justify_content: JustifyContent::Center,
         flex_direction: FlexDirection::Column,
         width: Val::Percent(100.0),
         height: Val::Percent(100.0),
         ..default()
-    })
+    }
 )]
 struct SplashScreen;
 

@@ -33,7 +33,7 @@ fn despawn_entity(
         if !despawn_after.pause {
             despawn_after.timer.tick(time.delta());
             if despawn_after.timer.just_finished() {
-                commands.entity(entity).despawn_recursive();
+                commands.entity(entity).despawn();
             }
         }
     }

@@ -10,13 +10,13 @@ pub fn camera_plugin(app: &mut App) {
 
 #[derive(Component)]
 #[require(
-    Name(|| Name::new("MainCamera")),
+    Name::new("MainCamera"),
     Camera2d,
-    Camera(|| Camera {
+    Camera {
         hdr: true,
         ..Default::default()
-    }),
-    OrthographicProjection(|| OrthographicProjection {
+    },
+    Projection::custom(OrthographicProjection{
         scale: 0.5,
         ..OrthographicProjection::default_2d()
     }),
@@ -31,10 +31,10 @@ fn camera_follow_player(
     mut camera: Query<&mut Transform, (With<MainCamera>, Without<Player>)>,
     player: Query<&Transform, (With<Player>, Without<MainCamera>)>,
 ) {
-    let Ok(mut camera) = camera.get_single_mut() else {
+    let Ok(mut camera) = camera.single_mut() else {
         return;
     };
-    if let Ok(player) = player.get_single() {
+    if let Ok(player) = player.single() {
         camera.translation = player.translation;
     }
 }

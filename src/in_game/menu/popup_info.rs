@@ -6,12 +6,7 @@ use bevy::prelude::*;
 
 /// The popup itself
 #[derive(Component)]
-#[require(
-    Name(|| Name::new("InfoPopup")),
-    Popup,
-    Node,
-    ZIndex(|| ZIndex(1))
-)]
+#[require(Name::new("InfoPopup"), Popup, Node, ZIndex(1))]
 struct InfoPopup;
 
 impl InfoPopup {
@@ -52,7 +47,7 @@ fn spawn_popup_info_on_over_item(
     items: Query<&ItemInfo>,
     assets: Res<ItemAssets>,
 ) {
-    if let Ok(ItemEntity(Some(item_entity))) = item_entities.get_mut(trigger.entity()) {
+    if let Ok(ItemEntity(Some(item_entity))) = item_entities.get_mut(trigger.target()) {
         // info!("spawn_popup_info_on_over_item({})", trigger.entity());
         if let Ok(info) = items.get(*item_entity) {
             commands
@@ -77,7 +72,7 @@ fn despawn_popup_info_on_out_item(
 ) {
     for entity in &popups {
         // info!("despawn_popup_info_on_out_item({})", trigger.entity());
-        commands.entity(entity).despawn_recursive();
+        commands.entity(entity).despawn();
     }
     trigger.propagate(false);
 }

@@ -111,21 +111,21 @@ mod plugin {
     }
 
     fn init_physics(mut conf: Query<&mut RapierConfiguration>) {
-        if let Ok(mut conf) = conf.get_single_mut() {
+        if let Ok(mut conf) = conf.single_mut() {
             info!("init_physics");
             conf.gravity = Vect::ZERO;
         }
     }
 
     fn start_physics(mut physics: Query<&mut RapierConfiguration>) {
-        if let Ok(mut physics) = physics.get_single_mut() {
+        if let Ok(mut physics) = physics.single_mut() {
             physics.physics_pipeline_active = true;
             physics.query_pipeline_active = true;
         }
     }
 
     fn stop_physics(mut physics: Query<&mut RapierConfiguration>) {
-        if let Ok(mut physics) = physics.get_single_mut() {
+        if let Ok(mut physics) = physics.single_mut() {
             physics.physics_pipeline_active = false;
             physics.query_pipeline_active = false;
         }
@@ -150,7 +150,7 @@ mod plugin {
     ) {
         for (entity, mut lifetime) in &mut query {
             if lifetime.tick(time.delta()).finished() {
-                commands.entity(entity).despawn_recursive();
+                commands.entity(entity).despawn();
             }
         }
     }

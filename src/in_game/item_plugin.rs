@@ -72,7 +72,7 @@ fn item_picking_backend(
         }
         if !picks.is_empty() {
             // warn!("pointer: {pointer_world_pos} on {:?}", picks);
-            output.send(PointerHits::new(*pointer_id, picks, order));
+            output.write(PointerHits::new(*pointer_id, picks, order));
         }
     }
 }
@@ -103,6 +103,6 @@ fn take_dropped_item(
     mut trigger: Trigger<Pointer<Click>>,
     mut player: Single<&mut CharacterAction, With<Player>>,
 ) {
-    player.take_item(trigger.entity());
+    player.take_item(trigger.target());
     trigger.propagate(false);
 }

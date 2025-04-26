@@ -23,27 +23,27 @@ impl Plugin for HudSkillsPlugin {
 #[derive(Component)]
 #[require(
     Hud,
-    Name(|| Name::new("HUD - Skills")),
-    Node(|| Node {
+    Name::new("HUD - Skills"),
+    Node {
         position_type: PositionType::Absolute,
         align_items: AlignItems::Center,
         right: Val::Px(50.),
         bottom: Val::Px(15.),
         height: Val::Px(48.),
         ..Default::default()
-    })
+    }
 )]
 struct HudSkillsPanel;
 
 #[derive(Component)]
 #[require(
     Button,
-    ButtonColors(|| ButtonColors {
+    ButtonColors {
         normal: Color::srgb_u8(223, 15, 15),
         hovered: Color::srgb_u8(160, 12, 12),
         pressed: Color::srgb_u8(214, 90, 90)
-    }),
-    Node(|| Node {
+    },
+    Node {
         width: Val::Px(50.0),
         height: Val::Percent(100.),
         margin: UiRect::all(Val::Px(5.0)),
@@ -51,8 +51,8 @@ struct HudSkillsPanel;
         align_items: AlignItems::Center,
         border: UiRect::all(Val::Px(1.0)),
         ..default()
-    }),
-    BorderColor(|| BorderColor(Srgba::BLACK.into()))
+    },
+    BorderColor(Srgba::BLACK.into())
 )]
 struct InventoryButton;
 

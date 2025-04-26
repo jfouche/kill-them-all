@@ -6,7 +6,7 @@ use crate::components::{
     item::ItemRarity,
     orb::{ActivateOrbEvent, Orb, OrbAction},
 };
-use bevy::prelude::*;
+use bevy::{ecs::component::Mutable, prelude::*};
 
 pub struct OrbPlugin;
 
@@ -162,7 +162,7 @@ fn on_transmute<T>(
     orbs: Query<&Orb>,
     mut items: Query<(&mut T, &mut ItemRarity)>,
 ) where
-    T: Component + OrbAction,
+    T: Component<Mutability = Mutable> + OrbAction,
 {
     let Ok(&Orb::Transmutation) = orbs.get(trigger.orb) else {
         error!("on_transmute: Orb is not Orb::Transmutation");
@@ -201,7 +201,7 @@ fn on_regal<T>(
     orbs: Query<&Orb>,
     mut items: Query<(&mut T, &mut ItemRarity)>,
 ) where
-    T: Component + OrbAction,
+    T: Component<Mutability = Mutable> + OrbAction,
 {
     let Ok(&Orb::Regal) = orbs.get(trigger.orb) else {
         error!("on_regal: Orb is not Orb::Regal");
@@ -239,7 +239,7 @@ fn on_chaos<T>(
     orbs: Query<&Orb>,
     mut items: Query<(&mut T, &ItemRarity)>,
 ) where
-    T: Component + OrbAction,
+    T: Component<Mutability = Mutable> + OrbAction,
 {
     let Ok(&Orb::Chaos) = orbs.get(trigger.orb) else {
         error!("on_chaos: Orb is not Orb::Chaos");

@@ -22,8 +22,8 @@ impl Plugin for LifeBarPlugin {
 #[derive(Component)]
 #[require(
     Hud,
-    Name(|| Name::new("HUD - LifeBar")),
-    Node(|| Node {
+    Name::new("HUD - LifeBar"),
+    Node {
         position_type: PositionType::Absolute,
         left: Val::Px(50.),
         top: Val::Px(20.),
@@ -31,11 +31,11 @@ impl Plugin for LifeBarPlugin {
         height: Val::Px(20.),
         border: UiRect::all(Val::Px(2.)),
         ..Default::default()
-    }),
-    BackgroundColor(|| BackgroundColor(Color::BLACK)),
-    BorderColor(|| BorderColor(Color::BLACK)),
+    },
+    BackgroundColor(Color::BLACK),
+    BorderColor(Color::BLACK),
     ProgressBar,
-    ProgressBarColor(|| ProgressBarColor(RED.into()))
+    ProgressBarColor(RED.into())
 )]
 struct LifeBar;
 
@@ -47,8 +47,8 @@ fn update_life_bar(
     q_player: Query<(&Life, &MaxLife), With<Player>>,
     mut q_bar: Query<&mut ProgressBar, With<LifeBar>>,
 ) {
-    if let Ok(mut progressbar) = q_bar.get_single_mut() {
-        if let Ok((life, max_life)) = q_player.get_single() {
+    if let Ok(mut progressbar) = q_bar.single_mut() {
+        if let Ok((life, max_life)) = q_player.single() {
             progressbar.max = **max_life;
             progressbar.value = **life;
         }
@@ -59,7 +59,7 @@ fn update_life_bar_on_death(
     _trigger: Trigger<PlayerDeathEvent>,
     mut q_bar: Query<&mut ProgressBar, With<LifeBar>>,
 ) {
-    if let Ok(mut progressbar) = q_bar.get_single_mut() {
+    if let Ok(mut progressbar) = q_bar.single_mut() {
         progressbar.value = 0.0;
     }
 }

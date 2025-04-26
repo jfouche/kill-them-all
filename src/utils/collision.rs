@@ -1,5 +1,5 @@
 use bevy::{
-    ecs::query::{QueryData, QueryFilter, WorldQuery},
+    ecs::query::{QueryData, QueryFilter},
     prelude::*,
 };
 use bevy_rapier2d::prelude::*;
@@ -23,11 +23,7 @@ where
     D: QueryData<ReadOnly = D>,
 {
     /// get either `e1` or `e2`, returning a `([QueryData], [Entity from query], [other Entity])`
-    fn get_either(
-        &'w self,
-        e1: Entity,
-        e2: Entity,
-    ) -> Option<(<D as WorldQuery>::Item<'w>, Entity, Entity)>;
+    fn get_either(&'w self, e1: Entity, e2: Entity) -> Option<(D::Item<'w>, Entity, Entity)>;
 }
 
 impl<'w, D, F> QueryEither<'w, D> for Query<'w, '_, D, F>
@@ -35,11 +31,7 @@ where
     D: QueryData<ReadOnly = D>,
     F: QueryFilter,
 {
-    fn get_either(
-        &'w self,
-        e1: Entity,
-        e2: Entity,
-    ) -> Option<(<D as WorldQuery>::Item<'w>, Entity, Entity)> {
+    fn get_either(&'w self, e1: Entity, e2: Entity) -> Option<(D::Item<'w>, Entity, Entity)> {
         self.get(e1)
             .map(|data| (data, e1, e2))
             .or(self.get(e2).map(|data| (data, e2, e1)))

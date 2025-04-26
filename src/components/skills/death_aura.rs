@@ -13,14 +13,14 @@ use skills::{AffectedByAreaOfEffect, SkillGem, SkillUI};
 ///
 #[derive(Component, Default)]
 #[require(
-    Name(|| Name::new("DeathAura")),
+    Name::new("DeathAura"),
     SkillGem,
     AffectedByAreaOfEffect,
     Damager,
-    BaseDamageOverTime(|| BaseDamageOverTime(3.)),
+    BaseDamageOverTime(3.),
     Transform,
     Visibility,
-    Collider(|| Collider::ball(32.))
+    Collider::ball(32.)
 )]
 pub struct DeathAura;
 

@@ -78,7 +78,7 @@ fn init_life(
     trigger: Trigger<OnAdd, (BaseLife, Life, MaxLife)>,
     mut lifes: Query<(&mut Life, &mut MaxLife, &BaseLife)>,
 ) {
-    if let Ok((mut life, mut max_life, base_life)) = lifes.get_mut(trigger.entity()) {
+    if let Ok((mut life, mut max_life, base_life)) = lifes.get_mut(trigger.target()) {
         **life = **base_life;
         **max_life = **base_life;
     }
@@ -86,7 +86,7 @@ fn init_life(
 
 fn add_life_observers(trigger: Trigger<OnAdd, Character>, mut commands: Commands) {
     commands
-        .entity(trigger.entity())
+        .entity(trigger.target())
         .observe(mitigate_damage_on_hit)
         .observe(loose_life);
 }
@@ -96,11 +96,11 @@ fn mitigate_damage_on_hit(
     mut commands: Commands,
     characters: Query<&Armour, With<Character>>,
 ) {
-    if let Ok(armour) = characters.get(trigger.entity()) {
+    if let Ok(armour) = characters.get(trigger.target()) {
         let damage = armour.mitigate(trigger.damage);
         info!("trigger_take_hit: damage: {:.1}", *damage);
         if *damage > 0. {
-            commands.trigger_targets(LooseLifeEvent(damage), trigger.entity());
+            commands.trigger_targets(LooseLifeEvent(damage), trigger.target());
         }
     }
 }
@@ -110,17 +110,17 @@ fn loose_life(
     mut commands: Commands,
     mut characters: Query<&mut Life, With<Character>>,
 ) {
-    if let Ok(mut life) = characters.get_mut(trigger.entity()) {
+    if let Ok(mut life) = characters.get_mut(trigger.target()) {
         life.damage(**trigger.event());
         if life.is_dead() {
-            commands.trigger_targets(CharacterDyingEvent, trigger.entity());
+            commands.trigger_targets(CharacterDyingEvent, trigger.target());
         }
     }
 }
 
 fn despawn_character_on_death(mut events: EventReader<CharacterDiedEvent>, mut commands: Commands) {
     for event in events.read() {
-        commands.entity(**event).despawn_recursive();
+        commands.entity(**event).despawn();
     }
 }
 

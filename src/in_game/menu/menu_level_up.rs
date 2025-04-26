@@ -17,8 +17,8 @@ use bevy::prelude::*;
 
 #[derive(Component)]
 #[require(
-    Popup(|| Popup::default().with_title("Level up!")),
-    Name(|| Name::new("LevelUpMenu"))
+    Popup = Popup::default().with_title("Level up!"),
+    Name::new("LevelUpMenu")
 )]
 struct LevelUpMenu;
 
@@ -114,7 +114,7 @@ fn spawn_level_up_menu(mut commands: Commands) {
 /// Despawn all remaining upgrades
 fn despawn_remaining_upgrades(mut commands: Commands, upgrade_list: Res<UpgradeList>) {
     for &entity in upgrade_list.iter() {
-        commands.entity(entity).despawn_recursive();
+        commands.entity(entity).despawn();
     }
     commands.remove_resource::<UpgradeList>();
 }
@@ -129,7 +129,7 @@ fn upgrade_skill(
     mut upgrade_list: ResMut<UpgradeList>,
     mut state: ResMut<NextState<InGameState>>,
 ) {
-    if let Ok(player) = players.get_single() {
+    if let Ok(player) = players.single() {
         for (interaction, upgrade_entity) in &interactions {
             if *interaction == Interaction::Pressed {
                 if let Some(i) = upgrade_list.iter().position(|&e| e == **upgrade_entity) {

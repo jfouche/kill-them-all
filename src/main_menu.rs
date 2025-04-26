@@ -22,23 +22,17 @@ pub fn main_menu_plugin(app: &mut App) {
 
 #[derive(Component)]
 #[require(
-    Popup(|| Popup::default().with_title("Kill'em all")),
-    Name(|| Name::new("MainMenu"))
+    Popup = Popup::default().with_title("Kill'em all"),
+    Name::new("MainMenu")
 )]
 struct MainMenu;
 
 #[derive(Component)]
-#[require(
-    TextButton(|| TextButton::big("New game")),
-    MenuButtonAction(|| MenuButtonAction::PlayGame),
-)]
+#[require(TextButton::big("New game"), MenuButtonAction::PlayGame)]
 pub struct ButtonNewGame;
 
 #[derive(Component)]
-#[require(
-    TextButton(|| TextButton::big("Exit")),
-    MenuButtonAction(|| MenuButtonAction::ExitApplication),
-)]
+#[require(TextButton::big("Exit"), MenuButtonAction::ExitApplication)]
 pub struct ButtonExit;
 
 // All actions that can be triggered from a button click
@@ -85,7 +79,7 @@ fn menu_action(
         if *interaction == Interaction::Pressed {
             match menu_button_action {
                 MenuButtonAction::ExitApplication => {
-                    app_exit_events.send(AppExit::Success);
+                    app_exit_events.write(AppExit::Success);
                 }
                 MenuButtonAction::PlayGame => {
                     next_game_state.set(GameState::InGame);

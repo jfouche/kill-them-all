@@ -122,9 +122,9 @@ impl std::ops::Sub<f32> for Damage {
     Transform,
     RigidBody,
     Collider,
-    CollisionGroups(|| Damager::collision_groups(Target::Monster)),
+    CollisionGroups = Damager::collision_groups(Target::Monster),
     Sensor,
-    ActiveEvents(|| ActiveEvents::COLLISION_EVENTS)
+    ActiveEvents::COLLISION_EVENTS
 )]
 pub struct Damager;
 
@@ -147,12 +147,7 @@ pub struct DamagerParams {
 
 /// A [Projectile] is an [Damager] which is sent, and can pierce
 #[derive(Component, Default)]
-#[require(
-    Damager,
-    LifeTime(|| LifeTime::new(5.)),
-    PierceChance,
-    Velocity
-)]
+#[require(Damager, LifeTime::new(5.), PierceChance, Velocity)]
 pub struct Projectile;
 
 /// Helper to spawn required [Projectile] dynamic components

@@ -48,7 +48,7 @@ mod plugin {
     }
 
     fn update_character_observers(trigger: Trigger<OnAdd, Character>, mut commands: Commands) {
-        commands.entity(trigger.entity()).observe(try_pierce);
+        commands.entity(trigger.target()).observe(try_pierce);
     }
 
     fn try_pierce(
@@ -68,11 +68,11 @@ mod plugin {
     }
 
     fn update_skills_affected_by_aoe(
-        mut skills: Query<(&mut Transform, &Parent), (With<Skill>, With<AffectedByAreaOfEffect>)>,
+        mut skills: Query<(&mut Transform, &ChildOf), (With<Skill>, With<AffectedByAreaOfEffect>)>,
         characters: Query<&IncreaseAreaOfEffect, With<Character>>,
     ) {
-        for (mut transform, parent) in &mut skills {
-            if let Ok(incr) = characters.get(**parent) {
+        for (mut transform, child_of) in &mut skills {
+            if let Ok(incr) = characters.get(child_of.parent()) {
                 let scale = 1. + **incr / 100.;
                 transform.scale = Vec3::splat(scale);
             }

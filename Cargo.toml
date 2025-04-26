@@ -17,11 +17,13 @@ opt-level = 3
 [features]
 default = []
 # Enables debug infos and rendering
-dev = ["dep:bevy-inspector-egui", "bevy/bevy_dev_tools"]
+dev = ["dep:bevy-inspector-egui", "bevy/bevy_dev_tools", "bevy/bevy_ui_debug"]
 
 [dependencies]
 rand = "0.9"
-bevy = { version = "0.15", default-features = false, features = [
+bevy = { version = "0.16", default-features = false, features = [
+    "std", 
+    "async_executor",
     "bevy_asset",
     "bevy_color",
     "bevy_core_pipeline",
@@ -37,18 +39,18 @@ bevy = { version = "0.15", default-features = false, features = [
     "default_font",
     "png"
 ] }
-bevy_rapier2d = "0.29"
-bevy_ecs_tilemap = "0.15"
-noise = "0.9.0"
+bevy_rapier2d = { git="https://github.com/dimforge/bevy_rapier", rev="refs/pull/642/head"}
+bevy_ecs_tilemap = {git="https://github.com/StarArawn/bevy_ecs_tilemap", rev="refs/pull/610/head"}
+noise = "0.9"
 
 # feature: dev
-bevy-inspector-egui = { version = "0.30", default-features = false, features = [
+bevy-inspector-egui = { version="0.31", default-features = false, features = [
     "bevy_render",
 ], optional = true }
 
 # WASM
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-bevy = { version = "0.15", default-features = false, features = ["webgpu"] }
+bevy = { version = "0.16", default-features = false, features = ["webgpu"] }
 getrandom = { version = "0.3", features = ["wasm_js"] }
 
 [profile.wasm-release]

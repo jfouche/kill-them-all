@@ -7,9 +7,7 @@ use std::time::Duration;
 /// A [Weapon] should be a child of a [crate::components::character::Character]
 ///
 #[derive(Component, Default)]
-#[require(
-    Equipment(|| Equipment::Weapon)
-)]
+#[require(Equipment::Weapon)]
 pub struct Weapon;
 
 ///
