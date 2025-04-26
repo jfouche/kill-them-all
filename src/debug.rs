@@ -44,11 +44,7 @@ impl Plugin for DebugPlugin {
             bevy_rapier2d::render::RapierDebugRenderPlugin::default(),
             WorldInspectorPlugin::new().run_if(debug_is_active),
         ))
-        .insert_resource(UiDebugOptions {
-            enabled: true,
-            // `UiDebugOptions` has a few new options, but for now we'll leave the defaults.
-            ..default()
-        })
+        .init_resource::<UiDebugOptions>()
         .insert_resource(DebugMode(true))
         .add_systems(EguiContextPass, inspector_ui.run_if(debug_is_active))
         .add_systems(

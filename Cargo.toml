@@ -37,7 +37,8 @@ bevy = { version = "0.16", default-features = false, features = [
     "bevy_winit",
     "multi_threaded",
     "default_font",
-    "png"
+    "png",
+    "bevy_ui_picking_backend"
 ] }
 bevy_rapier2d = { git="https://github.com/dimforge/bevy_rapier", rev="refs/pull/642/head"}
 bevy_ecs_tilemap = {git="https://github.com/StarArawn/bevy_ecs_tilemap", rev="refs/pull/610/head"}
