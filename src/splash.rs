@@ -31,6 +31,15 @@ struct SplashScreenMessage;
 )]
 struct SplashScreen;
 
+impl SplashScreen {
+    pub fn bundle() -> impl Bundle {
+        (
+            SplashScreen,
+            children![SplashScreenTitle, SplashScreenMessage],
+        )
+    }
+}
+
 const BACKGROUND_COLOR: Color = Color::srgb(0.4, 0.4, 0.4);
 
 pub fn splash_plugin(app: &mut App) {
@@ -41,10 +50,7 @@ pub fn splash_plugin(app: &mut App) {
 
 fn spawn_splash_screen(mut commands: Commands) {
     commands.insert_resource(ClearColor(BACKGROUND_COLOR));
-    commands.spawn(SplashScreen).with_children(|parent| {
-        parent.spawn(SplashScreenTitle);
-        parent.spawn(SplashScreenMessage);
-    });
+    commands.spawn(SplashScreen::bundle());
 }
 
 // fn display_continue(mut messages: Query<&mut Text, With<SplashScreenMessage>>) {

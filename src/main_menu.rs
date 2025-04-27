@@ -2,38 +2,20 @@ use crate::{
     components::despawn_all,
     schedule::GameState,
     ui::{
-        button::{button_keyboard_nav, SelectedOption, TextButton},
-        popup::Popup,
+        button::TextButton,
+        popup::{Popup, PopupTitle},
     },
 };
 use bevy::{app::AppExit, color::palettes::css::GRAY, prelude::*};
 
 pub fn main_menu_plugin(app: &mut App) {
-    app.init_resource::<MainMenuButtonNav>()
-        .add_systems(OnEnter(GameState::Menu), (set_background, spawn_menu))
+    app.add_systems(OnEnter(GameState::Menu), (set_background, spawn_menu))
         .add_systems(OnExit(GameState::Menu), despawn_all::<MainMenu>)
-        .add_systems(
-            Update,
-            (button_keyboard_nav::<MainMenuButtonNav>, menu_action)
-                .chain()
-                .run_if(in_state(GameState::Menu)),
-        );
+        .add_systems(Update, menu_action.run_if(in_state(GameState::Menu)));
 }
 
 #[derive(Component)]
-#[require(
-    Popup = Popup::default().with_title("Kill'em all"),
-    Name::new("MainMenu")
-)]
 struct MainMenu;
-
-#[derive(Component)]
-#[require(TextButton::big("New game"), MenuButtonAction::PlayGame)]
-pub struct ButtonNewGame;
-
-#[derive(Component)]
-#[require(TextButton::big("Exit"), MenuButtonAction::ExitApplication)]
-pub struct ButtonExit;
 
 // All actions that can be triggered from a button click
 #[derive(Component, Clone, Copy, PartialEq)]
@@ -42,29 +24,21 @@ enum MenuButtonAction {
     ExitApplication,
 }
 
-#[derive(Resource, Default)]
-struct MainMenuButtonNav(Vec<Entity>);
-
-impl std::ops::Deref for MainMenuButtonNav {
-    type Target = [Entity];
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
 fn set_background(mut commands: Commands) {
     commands.insert_resource(ClearColor(GRAY.into()));
 }
 
 fn spawn_menu(mut commands: Commands) {
-    let new_game_btn = commands.spawn((ButtonNewGame, SelectedOption)).id();
-    let exit_btn = commands.spawn(ButtonExit).id();
-
-    let menu_nav = MainMenuButtonNav(vec![new_game_btn, exit_btn]);
-
-    commands.spawn(MainMenu).add_children(&menu_nav);
-
-    commands.insert_resource(menu_nav);
+    commands.spawn((
+        MainMenu,
+        Name::new("MainMenu"),
+        Popup,
+        children![
+            PopupTitle::bundle("Kill'em all"),
+            (TextButton::big("New game"), MenuButtonAction::PlayGame),
+            (TextButton::big("Exit"), MenuButtonAction::ExitApplication)
+        ],
+    ));
 }
 
 fn menu_action(

@@ -8,29 +8,15 @@ use crate::{
     in_game::back_to_game,
     schedule::{GameRunningSet, InGameState},
     ui::{
-        button::{button_keyboard_nav, SelectedOption, TextButton},
-        popup::Popup,
+        button::TextButton,
+        popup::{Popup, PopupTitle},
         HSizer, VSizer,
     },
 };
 use bevy::prelude::*;
 
 #[derive(Component)]
-#[require(
-    Popup = Popup::default().with_title("Level up!"),
-    Name::new("LevelUpMenu")
-)]
 struct LevelUpMenu;
-
-#[derive(Resource, Default)]
-struct LevelUpMenuNav(Vec<Entity>);
-
-impl std::ops::Deref for LevelUpMenuNav {
-    type Target = [Entity];
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
 
 #[derive(Resource, Default, Deref, DerefMut)]
 struct UpgradeList(Vec<Entity>);
@@ -42,8 +28,7 @@ pub struct LevelUpMenuPlugin;
 
 impl Plugin for LevelUpMenuPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<LevelUpMenuNav>()
-            .add_event::<LevelUpEvent>()
+        app.add_event::<LevelUpEvent>()
             .add_systems(
                 Update,
                 enter_level_up_state.in_set(GameRunningSet::EntityUpdate),
@@ -55,12 +40,7 @@ impl Plugin for LevelUpMenuPlugin {
             )
             .add_systems(
                 Update,
-                (
-                    button_keyboard_nav::<LevelUpMenuNav>,
-                    (back_to_game, upgrade_skill),
-                )
-                    .chain()
-                    .run_if(in_state(InGameState::LevelUp)),
+                (back_to_game, upgrade_skill).run_if(in_state(InGameState::LevelUp)),
             );
     }
 }
@@ -76,11 +56,10 @@ fn enter_level_up_state(
 
 fn spawn_level_up_menu(mut commands: Commands) {
     let mut upgrade_list = UpgradeList::default();
-
-    let mut level_up_nav = LevelUpMenuNav::default();
     let mut upgrade_provider = UpgradeProvider::new();
-    let mut rng = rand::rng();
 
+    let mut upgrade_entities = Vec::new();
+    let mut rng = rand::rng();
     for _ in 0..3 {
         if let Some(upgrade) = upgrade_provider.gen(&mut rng) {
             let upgrade_view = upgrade.generate(&mut commands, &mut rng);
@@ -90,24 +69,25 @@ fn spawn_level_up_menu(mut commands: Commands) {
                     UpgradeEntity(upgrade_view.entity),
                 ))
                 .id();
-            level_up_nav.0.push(btn_entity);
+            upgrade_entities.push(btn_entity);
             upgrade_list.push(upgrade_view.entity);
         }
     }
 
-    // Select the first upgrade
-    if let Some(entity) = &level_up_nav.first() {
-        commands.entity(**entity).insert(SelectedOption);
-    }
-
-    commands.spawn(LevelUpMenu).with_children(|menu| {
-        menu.spawn(HSizer).with_children(|sizer| {
-            sizer.spawn(VSizer).add_children(&level_up_nav);
-            sizer.spawn(EquipmentsPanel);
+    commands
+        .spawn((
+            LevelUpMenu,
+            Name::new("LevelUpMenu"),
+            Popup,
+            children![PopupTitle::bundle("Level up!")],
+        ))
+        .with_children(|menu| {
+            menu.spawn(HSizer).with_children(|sizer| {
+                sizer.spawn(VSizer).add_children(&upgrade_entities);
+                sizer.spawn(EquipmentsPanel);
+            });
         });
-    });
 
-    commands.insert_resource(level_up_nav);
     commands.insert_resource(upgrade_list);
 }
 

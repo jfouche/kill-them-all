@@ -2,7 +2,10 @@ use crate::{
     components::despawn_all,
     in_game::back_to_game,
     schedule::{GameState, InGameState},
-    ui::{button::TextButton, popup::Popup},
+    ui::{
+        button::TextButton,
+        popup::{Popup, PopupTitle},
+    },
 };
 use bevy::prelude::*;
 
@@ -17,10 +20,6 @@ impl Plugin for PausePlugin {
 }
 
 #[derive(Component)]
-#[require(
-    Name::new("PauseMenu"),
-    Popup = Popup::default().with_title("Pause")
-)]
 struct PauseMenu;
 
 #[derive(Component)]
@@ -39,10 +38,17 @@ enum MenuButtonAction {
 }
 
 fn spawn_pause_menu(mut commands: Commands) {
-    commands.spawn(PauseMenu).with_children(|menu| {
-        menu.spawn(ButtonBackToGame).observe(menu_action);
-        menu.spawn(ButtonQuitGame).observe(menu_action);
-    });
+    commands
+        .spawn((
+            PauseMenu,
+            Name::new("PauseMenu"),
+            Popup,
+            children![PopupTitle::bundle("Pause")],
+        ))
+        .with_children(|menu| {
+            menu.spawn(ButtonBackToGame).observe(menu_action);
+            menu.spawn(ButtonQuitGame).observe(menu_action);
+        });
 }
 
 fn menu_action(

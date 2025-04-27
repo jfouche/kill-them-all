@@ -2,8 +2,8 @@ use crate::{
     components::despawn_all,
     schedule::{GameState, InGameState},
     ui::{
-        button::{SelectedOption, TextButton},
-        popup::Popup,
+        button::TextButton,
+        popup::{Popup, PopupTitle},
     },
 };
 use bevy::prelude::*;
@@ -25,20 +25,21 @@ impl Plugin for PlayerDiedMenuPlugin {
 }
 
 #[derive(Component)]
-#[require(
-    Popup = Popup::default().with_title("Player died!"),
-    Name::new("PlayerDiedMenu")
-)]
 struct PlayerDiedMenu;
 
 #[derive(Component)]
-#[require(TextButton::big("Back to menu"), SelectedOption)]
 struct BackToMenu;
 
 fn spawn_player_died_menu(mut commands: Commands) {
-    commands.spawn(PlayerDiedMenu).with_children(|popup| {
-        popup.spawn(BackToMenu);
-    });
+    commands.spawn((
+        PlayerDiedMenu,
+        Name::new("PlayerDiedMenu"),
+        Popup,
+        children![
+            PopupTitle::bundle("Player died!"),
+            (BackToMenu, TextButton::big("Back to menu"))
+        ],
+    ));
 }
 
 fn back_to_menu(
