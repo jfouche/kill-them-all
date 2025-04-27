@@ -84,55 +84,9 @@ impl TextButton {
     }
 }
 
-pub trait ButtonNav<T> {
-    fn up(&self, current: T) -> Option<T>;
-    fn down(&self, current: T) -> Option<T>;
-}
-
-impl<T> ButtonNav<T> for [T]
-where
-    T: PartialEq + Copy,
-{
-    fn up(&self, current: T) -> Option<T> {
-        let i = self.iter().position(|v| *v == current)?;
-        self.get(i.saturating_sub(1)).cloned()
-    }
-
-    fn down(&self, current: T) -> Option<T> {
-        let i = self.iter().position(|v| *v == current)?;
-        self.get(i + 1).cloned()
-    }
-}
-
-impl<S, T, N> ButtonNav<T> for S
-where
-    S: std::ops::Deref<Target = N>,
-    N: ButtonNav<T> + ?Sized,
-{
-    fn up(&self, current: T) -> Option<T> {
-        (**self).up(current)
-    }
-
-    fn down(&self, current: T) -> Option<T> {
-        (**self).down(current)
-    }
-}
-
-/// Tag component used to mark which setting is currently selected
-#[derive(Component, Default)]
-#[component(storage = "SparseSet")]
-pub struct SelectedOption;
-
 pub fn button_plugin(app: &mut App) {
     app.register_type::<ButtonColors>()
-        .add_systems(
-            Update,
-            (
-                color_buttons,
-                color_selected_buttons,
-                color_deselected_buttons,
-            ),
-        )
+        .add_systems(Update, color_buttons)
         .add_observer(create_text_button)
         .add_observer(init_color);
 }
@@ -176,92 +130,13 @@ fn init_color(
 
 // This system handles changing all buttons color based on mouse interaction
 fn color_buttons(
-    mut query: Query<
-        (
-            &Interaction,
-            &mut BackgroundColor,
-            &ButtonColors,
-            Option<&SelectedOption>,
-        ),
-        Changed<Interaction>,
-    >,
+    mut query: Query<(&Interaction, &mut BackgroundColor, &ButtonColors), Changed<Interaction>>,
 ) {
-    for (interaction, mut bgcolor, colors, selected) in &mut query {
-        *bgcolor = match (*interaction, selected) {
-            (Interaction::Pressed, _) | (Interaction::None, Some(_)) => colors.pressed.into(),
-            (Interaction::Hovered, Some(_)) => colors.pressed.into(),
-            (Interaction::Hovered, None) => colors.hovered.into(),
-            (Interaction::None, None) => colors.normal.into(),
+    for (interaction, mut bgcolor, colors) in &mut query {
+        *bgcolor = match *interaction {
+            Interaction::Pressed => colors.pressed.into(),
+            Interaction::Hovered => colors.hovered.into(),
+            Interaction::None => colors.normal.into(),
         }
     }
 }
-
-fn color_selected_buttons(
-    mut query: Query<(&mut BackgroundColor, &ButtonColors), (With<Button>, Added<SelectedOption>)>,
-) {
-    for (mut bgcolor, colors) in &mut query {
-        *bgcolor = colors.pressed.into();
-    }
-}
-
-fn color_deselected_buttons(
-    mut buttons: Query<(&mut BackgroundColor, &ButtonColors), With<Button>>,
-    mut removed: RemovedComponents<SelectedOption>,
-) {
-    for entity in removed.read() {
-        if let Ok((mut bgcolor, colors)) = buttons.get_mut(entity) {
-            *bgcolor = colors.normal.into();
-        }
-    }
-}
-
-/// System to handle keyboard on a menu
-///
-/// This system should be run before the system that handle the action,
-/// because it uses [Interaction::Pressed] to inform the action key is pressed
-pub fn button_keyboard_nav<N>(
-    mut commands: Commands,
-    keys: Res<ButtonInput<KeyCode>>,
-    sel_buttons: Query<Entity, With<SelectedOption>>,
-    nav: Res<N>,
-) where
-    N: ButtonNav<Entity> + Resource,
-{
-    for sel_entity in &sel_buttons {
-        if keys.any_just_pressed([KeyCode::Space, KeyCode::Enter]) {
-            commands.entity(sel_entity).insert(Interaction::Pressed);
-        }
-        if keys.just_pressed(KeyCode::ArrowUp) {
-            if let Some(up) = nav.up(sel_entity) {
-                commands.entity(sel_entity).remove::<SelectedOption>();
-                commands.entity(up).insert(SelectedOption);
-            }
-        }
-        if keys.just_pressed(KeyCode::ArrowDown) {
-            if let Some(down) = nav.down(sel_entity) {
-                commands.entity(sel_entity).remove::<SelectedOption>();
-                commands.entity(down).insert(SelectedOption);
-            }
-        }
-    }
-}
-
-// /// This system updates the settings when a new value for a setting is selected, and marks
-// /// the button as the one currently selected
-// pub fn setting_button<T: Resource + Component + PartialEq + Copy>(
-//     interaction_query: Query<(&Interaction, &T, Entity), (Changed<Interaction>, With<Button>)>,
-//     mut selected_query: Query<(Entity, &mut BackgroundColor), (With<SelectedOption>, With<T>)>,
-//     mut commands: Commands,
-//     mut setting: ResMut<T>,
-// ) {
-//     for (interaction, button_setting, entity) in &interaction_query {
-//         if *interaction == Interaction::Pressed && *setting != *button_setting {
-//             if let Ok((previous_button, mut previous_color)) = selected_query.get_single_mut() {
-//                 *previous_color = NORMAL_BUTTON.into();
-//                 commands.entity(previous_button).remove::<SelectedOption>();
-//             }
-//             commands.entity(entity).insert(SelectedOption);
-//             *setting = *button_setting;
-//         }
-//     }
-// }
