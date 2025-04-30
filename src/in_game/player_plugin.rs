@@ -86,8 +86,7 @@ fn manage_player_movement_with_mouse(trigger: Trigger<OnAdd, WorldMap>, mut comm
              mut player: Single<&mut CharacterAction, With<Player>>,
              cameras: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
              assets: Res<NextPositionIndicatorAssets>| {
-                if let Some(world_pos) =
-                    world_position(cameras, trigger.event().pointer_location.position)
+                if let Some(world_pos) = world_position(cameras, trigger.pointer_location.position)
                 {
                     player.goto(world_pos);
                     commands.spawn((
@@ -103,8 +102,7 @@ fn manage_player_movement_with_mouse(trigger: Trigger<OnAdd, WorldMap>, mut comm
             |trigger: Trigger<Pointer<Drag>>,
              mut player: Single<&mut CharacterAction, With<Player>>,
              cameras: Query<(&Camera, &GlobalTransform), With<MainCamera>>| {
-                if let Some(world_pos) =
-                    world_position(cameras, trigger.event().pointer_location.position)
+                if let Some(world_pos) = world_position(cameras, trigger.pointer_location.position)
                 {
                     player.goto(world_pos);
                 }
@@ -143,7 +141,7 @@ fn move_player(
     trigger: Trigger<WorldMapLoadingFinished>,
     mut player: Single<&mut Transform, With<Player>>,
 ) {
-    player.translation = trigger.event().translation.extend(LAYER_PLAYER);
+    player.translation = trigger.translation.extend(LAYER_PLAYER);
 }
 
 fn pause(mut query: Query<(&mut Invulnerable, &mut Blink), With<Player>>) {

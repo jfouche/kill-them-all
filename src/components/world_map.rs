@@ -51,11 +51,8 @@ pub struct MapLevelConfig {
 }
 
 /// A resource to store the current map level informations
-#[derive(Resource, Default)]
-pub struct CurrentMapLevel {
-    pub name: String,
-    pub monster_level: u16,
-}
+#[derive(Resource, Default, Deref, DerefMut)]
+pub struct CurrentMapLevel(u16);
 
 /// Event triggered when the map loading finished
 #[derive(Event)]
@@ -139,6 +136,7 @@ impl ProceduralWorldMap {
         }
     }
 
+    #[allow(clippy::identity_op)]
     fn neighboors(&mut self, x: i32, y: i32) -> Neighbors {
         Neighbors([
             self.tile_kind(x - 1, y + 1),
@@ -245,7 +243,7 @@ impl ProceduralWorldMap {
 
     pub fn remove_chunk_if_out_of_bound(&mut self, pos: Vec2, distance: f32) -> bool {
         // TODO : retain self.tiles_kind
-        if distance > self.config.despawn_distance {
+        if distance > self.config.despawn_distance() {
             let ratio = (self.config.chunk_size * self.config.tile_size) as f32;
             let x = (pos.x / ratio).floor() as i32;
             let y = (pos.y / ratio).floor() as i32;
@@ -360,7 +358,7 @@ macro_rules! tile_match {
 #[derive(Deref)]
 struct GenericNeighborRules<'a>(&'a Neighbors);
 
-impl<'a> GenericNeighborRules<'a> {
+impl GenericNeighborRules<'_> {
     fn index(&self) -> u32 {
         let offset = match self.c() {
             TileKind::Water => 11,
@@ -432,16 +430,20 @@ pub struct WorldMapConfig {
     pub noise_scale: f64,
     pub chunk_size: u32,
     pub tile_size: u32,
-    pub despawn_distance: f32,
 }
 
 impl Default for WorldMapConfig {
     fn default() -> Self {
         WorldMapConfig {
             noise_scale: 13.5,
-            chunk_size: 3,
+            chunk_size: 20,
             tile_size: 16,
-            despawn_distance: 520.,
         }
+    }
+}
+
+impl WorldMapConfig {
+    pub fn despawn_distance(&self) -> f32 {
+        (self.tile_size * self.chunk_size * 10) as f32
     }
 }

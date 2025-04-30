@@ -56,7 +56,7 @@ fn spawn_popup_info_on_over_item(
     if let Ok(ItemEntity(Some(item_entity))) = item_entities.get_mut(trigger.target()) {
         // info!("spawn_popup_info_on_over_item({})", trigger.entity());
         if let Ok(info) = items.get(*item_entity) {
-            let pos = trigger.event().pointer_location.position;
+            let pos = trigger.pointer_location.position;
             let img = assets.image_node(info.tile_index);
             commands.spawn(InfoPopup::bundle(pos, img, info.text.clone()));
         }

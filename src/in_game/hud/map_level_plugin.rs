@@ -46,10 +46,7 @@ fn update_panel(
     current_map_level: Res<CurrentMapLevel>,
 ) {
     for mut text in &mut texts {
-        let info = format!(
-            "{}\nmonster_level: {}",
-            current_map_level.name, current_map_level.monster_level
-        );
+        let info = format!("monster_level: {}", **current_map_level);
         *text = Text(info);
     }
 }

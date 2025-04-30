@@ -22,10 +22,8 @@ impl Plugin for WorldMapPlugin {
             .register_type::<MapLevelConfig>()
             .init_resource::<WorldMapAssets>()
             .init_resource::<CurrentMapLevel>()
-            .add_systems(
-                OnEnter(GameState::InGame),
-                (spawn_worldmap, spawn_characters).chain(),
-            )
+            .init_resource::<ChangeLevelTimer>()
+            .add_systems(OnEnter(GameState::InGame), (reset_level, spawn_worldmap))
             .add_systems(OnExit(GameState::InGame), despawn_all::<WorldMap>)
             .add_systems(
                 PreUpdate,
@@ -37,10 +35,25 @@ impl Plugin for WorldMapPlugin {
             )
             .add_systems(
                 Update,
-                (spawn_chunks, despawn_out_of_range_chunks).in_set(GameRunningSet::EntityUpdate),
+                (spawn_chunks, despawn_out_of_range_chunks, change_level)
+                    .in_set(GameRunningSet::EntityUpdate),
                 // (spawn_characters, spawn_colliders).in_set(GameRunningSet::EntityUpdate),
             );
     }
+}
+
+#[derive(Resource, Deref, DerefMut)]
+struct ChangeLevelTimer(Timer);
+
+impl Default for ChangeLevelTimer {
+    fn default() -> Self {
+        Self(Timer::from_seconds(20.0, TimerMode::Repeating))
+    }
+}
+
+fn reset_level(mut level: ResMut<CurrentMapLevel>, mut timer: ResMut<ChangeLevelTimer>) {
+    *level = CurrentMapLevel::default();
+    timer.reset();
 }
 
 fn spawn_worldmap(mut commands: Commands) {
@@ -51,11 +64,14 @@ fn spawn_worldmap(mut commands: Commands) {
     commands.spawn(WorldMap);
 }
 
-fn spawn_characters(mut commands: Commands, world_map: Res<ProceduralWorldMap>) {
-    commands.trigger(SpawnMonstersEvent {
-        mlevel: 1,
-        monsters: vec![(world_map.pos_to_world(5, 5), 3)],
-    });
+fn change_level(
+    mut level: ResMut<CurrentMapLevel>,
+    mut timer: ResMut<ChangeLevelTimer>,
+    time: Res<Time>,
+) {
+    if timer.tick(time.delta()).just_finished() {
+        **level += 1;
+    }
 }
 
 fn spawn_chunks(

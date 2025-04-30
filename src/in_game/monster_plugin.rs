@@ -13,12 +13,13 @@ use crate::{
         player::{Player, Score},
         skills::{fireball::FireBallLauncher, ActivateSkill, Skill},
         upgrade::UpgradeProvider,
-        world_map::{SpawnMonstersEvent, LAYER_MONSTER},
+        world_map::{CurrentMapLevel, SpawnMonstersEvent, LAYER_MONSTER},
     },
     schedule::{GameRunningSet, GameState},
 };
 use bevy::{math::vec2, prelude::*};
 use bevy_rapier2d::prelude::*;
+use rand::Rng;
 use std::f32::consts::PI;
 
 pub struct MonsterPlugin;
@@ -26,18 +27,71 @@ pub struct MonsterPlugin;
 impl Plugin for MonsterPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<AllMonsterAssets>()
+            .init_resource::<SpawnMonsterTimer>()
             .register_type::<MonsterLevel>()
             .register_type::<ViewRange>()
             .register_type::<MonsterSpawnParams>()
             .add_event::<MonsterDeathEvent>()
+            .add_systems(OnEnter(GameState::InGame), reset_monster_timer)
             .add_systems(OnExit(GameState::InGame), despawn_all::<Monster>)
             .add_systems(
                 Update,
-                (monsters_moves, animate_sprite, activate_skill)
+                (
+                    monsters_moves,
+                    animate_sprite,
+                    activate_skill,
+                    spawn_monster_timer,
+                )
                     .in_set(GameRunningSet::EntityUpdate),
             )
             .add_observer(spawn_monsters)
             .add_observer(update_monster);
+    }
+}
+
+#[derive(Resource, Deref, DerefMut)]
+struct SpawnMonsterTimer(Timer);
+
+impl Default for SpawnMonsterTimer {
+    fn default() -> Self {
+        Self(Timer::from_seconds(10.0, TimerMode::Repeating))
+    }
+}
+
+fn reset_monster_timer(mut timer: ResMut<SpawnMonsterTimer>) {
+    timer.reset();
+}
+
+fn spawn_monster_timer(
+    mut commands: Commands,
+    players: Query<&Transform, With<Player>>,
+    mut timer: ResMut<SpawnMonsterTimer>,
+    time: Res<Time>,
+    level: Res<CurrentMapLevel>,
+) {
+    if timer.tick(time.delta()).just_finished() {
+        let Ok(player_pos) = players.single().map(|t| t.translation.xy()) else {
+            error!("Single [Player] should be available");
+            return;
+        };
+
+        // Spawn monsters at distance / angle of player
+        let mut rng = rand::rng();
+        let dist = rng.random_range(150..300) as f32;
+        let angle = rng.random_range(0. ..(2. * PI));
+        let pos = Vec2 {
+            x: player_pos.x + dist * angle.cos(),
+            y: player_pos.y + dist * angle.sin(),
+        };
+        let count = rng.random_range(1..=5);
+        info!("spawn_monster_timer: {count} at {dist}, {angle} rad");
+
+        // TODO: multiple group of monster, depending on map level
+        let monsters = vec![(pos, count)];
+        commands.trigger(SpawnMonstersEvent {
+            mlevel: **level,
+            monsters,
+        });
     }
 }
 
@@ -47,8 +101,8 @@ fn spawn_monsters(
     assets: Res<AllMonsterAssets>,
 ) {
     let mut rng = rand::rng();
-    let mlevel = trigger.event().mlevel;
-    for (pos, count) in trigger.event().monsters.iter() {
+    let mlevel = trigger.mlevel;
+    for (pos, count) in trigger.monsters.iter() {
         for i in 0..*count {
             let angle = 2. * PI * f32::from(i) / f32::from(*count);
             let dist = 20.;

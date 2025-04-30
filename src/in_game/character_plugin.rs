@@ -111,7 +111,7 @@ fn loose_life(
     mut characters: Query<&mut Life, With<Character>>,
 ) {
     if let Ok(mut life) = characters.get_mut(trigger.target()) {
-        life.damage(**trigger.event());
+        life.damage(**trigger);
         if life.is_dead() {
             commands.trigger_targets(CharacterDyingEvent, trigger.target());
         }
