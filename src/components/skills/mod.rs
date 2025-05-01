@@ -16,7 +16,7 @@ use shuriken::ShurikenLauncher;
 
 #[derive(Component, Default, Clone, Copy, PartialEq, Eq)]
 #[require(Item, Skill)]
-pub struct SkillGem;
+pub struct SkillBook;
 
 #[derive(Component, Default)]
 pub struct Skill;
@@ -29,7 +29,7 @@ pub trait SkillUI {
 
 #[derive(Component)]
 #[require(ItemLocation)]
-pub struct SkillGemLocation;
+pub struct SkillBookLocation;
 
 /// Tag to indicate that the [Skill] is affected by
 /// [crate::components::affix::IncreaseAreaOfEffect] affixes

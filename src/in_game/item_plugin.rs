@@ -1,6 +1,15 @@
 use crate::{
     camera::MainCamera,
-    components::*,
+    components::{
+        character::CharacterAction,
+        despawn_all,
+        item::{
+            DroppedItem, Item, ItemAssets, ItemInfo, ItemLevel, ItemProvider, ItemRarity, ITEM_SIZE,
+        },
+        monster::MonsterDeathEvent,
+        player::Player,
+        world_map::LAYER_ITEM,
+    },
     schedule::{game_is_running, GameRunningSet, GameState},
     utils::picking::{WorldPosition, ITEM_DEPTH},
 };
@@ -13,11 +22,6 @@ use bevy::{
     },
     prelude::*,
 };
-use character::CharacterAction;
-use item::{DroppedItem, ItemAssets, ItemInfo, ItemLevel, ItemProvider, ItemRarity, ITEM_SIZE};
-use monster::MonsterDeathEvent;
-use player::Player;
-use world_map::LAYER_ITEM;
 
 pub struct ItemPlugin;
 
@@ -27,7 +31,10 @@ impl Plugin for ItemPlugin {
             .register_type::<ItemLevel>()
             .register_type::<DroppedItem>()
             .register_type::<ItemInfo>()
-            .add_systems(OnExit(GameState::InGame), despawn_all::<DroppedItem>)
+            .add_systems(
+                OnExit(GameState::InGame),
+                (despawn_all::<DroppedItem>, despawn_all::<Item>),
+            )
             .add_systems(
                 PreUpdate,
                 item_picking_backend
@@ -99,7 +106,7 @@ fn spawn_dropped_item(
     }
 }
 
-fn take_dropped_item(
+pub fn take_dropped_item(
     mut trigger: Trigger<Pointer<Click>>,
     mut player: Single<&mut CharacterAction, With<Player>>,
 ) {

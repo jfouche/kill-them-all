@@ -6,7 +6,7 @@ use bevy::{
 };
 use bevy_rapier2d::prelude::*;
 use damage::{BaseDamageOverTime, Damager};
-use skills::{AffectedByAreaOfEffect, SkillGem, SkillUI};
+use skills::{AffectedByAreaOfEffect, SkillBook, SkillUI};
 
 ///
 /// Death aura weapon
@@ -14,13 +14,16 @@ use skills::{AffectedByAreaOfEffect, SkillGem, SkillUI};
 #[derive(Component, Default)]
 #[require(
     Name::new("DeathAura"),
-    SkillGem,
+    SkillBook,
     AffectedByAreaOfEffect,
     Damager,
     BaseDamageOverTime(3.),
     Transform,
     Visibility,
-    Collider::ball(32.)
+    Mesh2d,
+    MeshMaterial2d<DeathAuraMaterial>,
+    Collider::ball(32.),
+    CollisionGroups
 )]
 pub struct DeathAura;
 

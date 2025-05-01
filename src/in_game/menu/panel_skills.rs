@@ -6,8 +6,8 @@ use super::{
 use crate::{
     components::{
         inventory::PlayerEquipmentChanged,
-        player::{EquipSkillGemCommand, PlayerAction},
-        skills::{SkillGem, SkillGemLocation},
+        player::{EquipSkillBookCommand, PlayerAction},
+        skills::{SkillBook, SkillBookLocation},
     },
     utils::observers::VecObserversExt,
 };
@@ -37,24 +37,24 @@ impl Plugin for SkillsPanelPlugin {
 fn create_panel(trigger: Trigger<OnAdd, SkillsPanel>, mut commands: Commands) {
     let mut observers = vec![Observer::new(on_drop_item)]
         .with_observers(SpawnInfoPopupObservers::observers())
-        .with_observers(ShowBorderOnDrag::<With<SkillGem>>::observers())
+        .with_observers(ShowBorderOnDrag::<With<SkillBook>>::observers())
         .with_observers(ItemLocationDragObservers::observers());
 
     commands.entity(trigger.target()).with_children(|panel| {
         panel.spawn(Text::new("A:"));
-        let entity = panel.spawn((PlayerAction::Skill1, SkillGemLocation)).id();
+        let entity = panel.spawn((PlayerAction::Skill1, SkillBookLocation)).id();
         observers.watch_entity(entity);
 
         panel.spawn(Text::new("Z:"));
-        let entity = panel.spawn((PlayerAction::Skill2, SkillGemLocation)).id();
+        let entity = panel.spawn((PlayerAction::Skill2, SkillBookLocation)).id();
         observers.watch_entity(entity);
 
         panel.spawn(Text::new("E:"));
-        let entity = panel.spawn((PlayerAction::Skill3, SkillGemLocation)).id();
+        let entity = panel.spawn((PlayerAction::Skill3, SkillBookLocation)).id();
         observers.watch_entity(entity);
 
         panel.spawn(Text::new("R:"));
-        let entity = panel.spawn((PlayerAction::Skill4, SkillGemLocation)).id();
+        let entity = panel.spawn((PlayerAction::Skill4, SkillBookLocation)).id();
         observers.watch_entity(entity);
     });
     commands.spawn_batch(observers);
@@ -66,15 +66,15 @@ fn create_panel(trigger: Trigger<OnAdd, SkillsPanel>, mut commands: Commands) {
 fn on_drop_item(
     trigger: Trigger<Pointer<DragDrop>>,
     mut commands: Commands,
-    locations: Query<&PlayerAction, With<SkillGemLocation>>,
+    locations: Query<&PlayerAction, With<SkillBookLocation>>,
     cursor: Single<&DraggedEntity, With<DndCursor>>,
-    skill_gems: Query<(), With<SkillGem>>,
+    skill_gems: Query<(), With<SkillBook>>,
 ) {
     if let Some(item_entity) = ***cursor {
         if skill_gems.get(item_entity).is_ok() {
             if let Ok(action) = locations.get(trigger.target()) {
                 // The item dropped is a skill gem
-                commands.queue(EquipSkillGemCommand(item_entity, *action));
+                commands.queue(EquipSkillBookCommand(item_entity, *action));
             }
         }
     }

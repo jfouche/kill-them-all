@@ -2,7 +2,7 @@ use super::{
     animation::AnimationTimer,
     character::{BaseLife, BaseMovementSpeed, Character, Target},
     inventory::{AddToInventoryCommand, PlayerEquipmentChanged, RemoveFromInventoryCommand},
-    skills::SkillGem,
+    skills::SkillBook,
     GROUP_ALL, GROUP_PLAYER,
 };
 use crate::utils::despawn_after::DespawnAfter;
@@ -107,14 +107,14 @@ impl PlayerSkills {
     }
 }
 
-pub struct EquipSkillGemCommand(pub Entity, pub PlayerAction);
+pub struct EquipSkillBookCommand(pub Entity, pub PlayerAction);
 
-impl Command for EquipSkillGemCommand {
+impl Command for EquipSkillBookCommand {
     fn apply(self, world: &mut World) {
-        let gem_entity = self.0;
-        let mut skill_gems = world.query::<&SkillGem>();
-        let Ok(_) = skill_gems.get(world, gem_entity) else {
-            warn!("Can't equip {gem_entity} as it's not an SkillGem");
+        let book_entity = self.0;
+        let mut books = world.query::<&SkillBook>();
+        let Ok(_) = books.get(world, book_entity) else {
+            warn!("Can't equip {book_entity} as it's not an SkillBook");
             return;
         };
 
@@ -127,40 +127,40 @@ impl Command for EquipSkillGemCommand {
         };
 
         let action = self.1;
-        let old_gem = match skills.get(action) {
-            Some(gem) => {
-                if gem == gem_entity {
+        let old_skill = match skills.get(action) {
+            Some(skill) => {
+                if skill == book_entity {
                     // same gem: no need to continue
                     return;
                 }
-                skills.remove(gem);
-                Some(gem)
+                skills.remove(skill);
+                Some(skill)
             }
             None => None,
         };
-        skills.remove(gem_entity);
-        skills.set(action, gem_entity);
+        skills.remove(book_entity);
+        skills.set(action, book_entity);
 
         // Manage inventory
-        RemoveFromInventoryCommand(gem_entity).apply(world);
-        if let Some(old_gem) = old_gem {
-            AddToInventoryCommand(old_gem).apply(world);
+        RemoveFromInventoryCommand(book_entity).apply(world);
+        if let Some(old_skill) = old_skill {
+            AddToInventoryCommand(old_skill).apply(world);
         }
 
-        // Add_child will remove the old parent before applying new parenting
-        world.entity_mut(player_entity).add_child(gem_entity);
+        world.entity_mut(book_entity).remove::<ChildOf>();
+        world.entity_mut(player_entity).add_child(book_entity);
         world.trigger(PlayerEquipmentChanged);
     }
 }
 
-pub struct RemoveSkillGemCommand(pub Entity);
+pub struct RemoveSkillBookCommand(pub Entity);
 
-impl Command for RemoveSkillGemCommand {
+impl Command for RemoveSkillBookCommand {
     fn apply(self, world: &mut World) {
-        let gem_entity = self.0;
-        let mut skill_gems = world.query::<&SkillGem>();
-        let Ok(_) = skill_gems.get(world, gem_entity) else {
-            warn!("Can't remove {gem_entity} as it's not an SkillGem");
+        let book_entity = self.0;
+        let mut books = world.query::<&SkillBook>();
+        let Ok(_) = books.get(world, book_entity) else {
+            warn!("Can't remove {book_entity} as it's not an SkillBook");
             return;
         };
 
@@ -172,7 +172,7 @@ impl Command for RemoveSkillGemCommand {
             return;
         };
 
-        if skills.remove(gem_entity) {
+        if skills.remove(book_entity) {
             world.trigger(PlayerEquipmentChanged);
         }
     }

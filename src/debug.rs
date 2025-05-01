@@ -2,11 +2,16 @@
 
 use crate::{
     components::{
+        affix::{IncreaseAreaOfEffect, PierceChance},
+        inventory::TakeDroppedItemCommand,
+        item::{DroppedItem, ItemAssets},
         monster::Monster,
+        orb::OrbProvider,
         player::Player,
-        world_map::{ProceduralWorldMap, WorldMapConfig},
+        skills::{death_aura::DeathAura, spawn_skill},
+        world_map::{ProceduralWorldMap, WorldMapConfig, LAYER_ITEM},
     },
-    in_game::life_bar_plugin::LifeBar,
+    in_game::{item_plugin::take_dropped_item, life_bar_plugin::LifeBar},
     schedule::*,
 };
 use bevy::{
@@ -47,6 +52,7 @@ impl Plugin for DebugPlugin {
         .init_resource::<UiDebugOptions>()
         .insert_resource(DebugMode(true))
         .add_systems(EguiContextPass, inspector_ui.run_if(debug_is_active))
+        .add_systems(OnEnter(GameState::InGame), spawn_death_aura)
         .add_systems(
             Update,
             (
@@ -62,7 +68,8 @@ impl Plugin for DebugPlugin {
                     .run_if(debug_is_active),
                 toggle_debug_ui.run_if(input_just_pressed(KeyCode::Backquote)),
             ),
-        );
+        )
+        .add_observer(init_player);
     }
 }
 
@@ -153,4 +160,26 @@ fn show_map_axes(mut gizmos: Gizmos, world_map: Res<ProceduralWorldMap>) {
     let zero = world_map.pos_to_world(0, 0);
     let one = world_map.pos_to_world(1, 1);
     gizmos.line_2d(zero, zero + one, Color::srgba_u8(20, 172, 121, 255));
+}
+
+fn init_player(trigger: Trigger<OnAdd, Player>, mut commands: Commands) {
+    commands
+        .entity(trigger.target())
+        .insert(children![IncreaseAreaOfEffect(50.), PierceChance(50.)]);
+
+    let mut rng = rand::rng();
+    let orb = OrbProvider::spawn(&mut commands, &mut rng);
+    let drop = commands.spawn(DroppedItem(orb.entity)).id();
+    commands.queue(TakeDroppedItemCommand(drop));
+}
+
+fn spawn_death_aura(mut commands: Commands, assets: Res<ItemAssets>) {
+    let item_info = spawn_skill::<DeathAura>(&mut commands);
+    commands
+        .spawn((
+            DroppedItem(item_info.entity),
+            assets.sprite(item_info.info.tile_index),
+            Transform::from_translation(vec3(300., 300., LAYER_ITEM)).with_scale(Vec3::splat(0.3)),
+        ))
+        .observe(take_dropped_item);
 }

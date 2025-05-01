@@ -254,12 +254,14 @@ impl ProceduralWorldMap {
         }
     }
 
+    #[allow(dead_code)]
     pub fn pos_to_world(&self, x: i32, y: i32) -> Vec2 {
         let pos = IVec2 { x, y };
         let tile_size: IVec2 = IVec2::splat(self.config.tile_size as i32);
         (pos * tile_size).as_vec2()
     }
 
+    #[allow(dead_code)]
     pub fn world_to_pos(&self, translation: Vec2) -> IVec2 {
         (translation / Vec2::splat(self.config.tile_size as f32)).as_ivec2()
     }

@@ -1,4 +1,4 @@
-use super::{SkillGem, SkillUI};
+use super::{SkillBook, SkillUI};
 use crate::components::{
     damage::{BaseHitDamageRange, Projectile},
     equipment::weapon::BaseAttackSpeed,
@@ -24,7 +24,7 @@ impl FromWorld for ShurikenAssets {
 ///
 #[derive(Component, Default)]
 #[require(
-    SkillGem,
+    SkillBook,
     Name::new("ShurikenLauncher"),
     BaseHitDamageRange::new(2., 4.),
     BaseAttackSpeed(0.6)
@@ -41,7 +41,7 @@ impl SkillUI for ShurikenLauncher {
     }
 
     fn tile_index() -> usize {
-        153
+        31
     }
 }
 ///

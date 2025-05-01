@@ -3,7 +3,7 @@ use crate::{
     components::{
         inventory::{PlayerEquipmentChanged, ToggleInventory},
         player::PlayerAction,
-        skills::SkillGemLocation,
+        skills::SkillBookLocation,
     },
     in_game::menu::popup_info::SpawnInfoPopupObservers,
     schedule::GameState,
@@ -67,13 +67,13 @@ fn spawn_hud_skills(mut commands: Commands) {
                 command.trigger(ToggleInventory);
             });
 
-        let entity = p.spawn((PlayerAction::Skill1, SkillGemLocation)).id();
+        let entity = p.spawn((PlayerAction::Skill1, SkillBookLocation)).id();
         observers.watch_entity(entity);
-        let entity = p.spawn((PlayerAction::Skill2, SkillGemLocation)).id();
+        let entity = p.spawn((PlayerAction::Skill2, SkillBookLocation)).id();
         observers.watch_entity(entity);
-        let entity = p.spawn((PlayerAction::Skill3, SkillGemLocation)).id();
+        let entity = p.spawn((PlayerAction::Skill3, SkillBookLocation)).id();
         observers.watch_entity(entity);
-        let entity = p.spawn((PlayerAction::Skill4, SkillGemLocation)).id();
+        let entity = p.spawn((PlayerAction::Skill4, SkillBookLocation)).id();
         observers.watch_entity(entity);
     });
     commands.spawn_batch(observers);

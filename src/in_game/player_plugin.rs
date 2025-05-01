@@ -1,7 +1,6 @@
 use crate::{
     camera::MainCamera,
     components::{
-        affix::{IncreaseAreaOfEffect, PierceChance},
         animation::AnimationTimer,
         character::{
             CharacterAction, CharacterDiedEvent, CharacterDyingEvent, CharacterLevel, Life,
@@ -9,15 +8,10 @@ use crate::{
         },
         despawn_all,
         equipment::weapon::AttackTimer,
-        inventory::{
-            Inventory, InventoryChanged, InventoryPos, PlayerEquipmentChanged,
-            TakeDroppedItemCommand,
-        },
-        item::DroppedItem,
+        inventory::{Inventory, InventoryChanged, InventoryPos, PlayerEquipmentChanged},
         monster::MonsterDeathEvent,
-        orb::OrbProvider,
         player::{
-            EquipSkillGemCommand, Experience, LevelUpEvent, NextPositionIndicator,
+            EquipSkillBookCommand, Experience, LevelUpEvent, NextPositionIndicator,
             NextPositionIndicatorAssets, Player, PlayerAction, PlayerAssets, PlayerDeathEvent,
             PlayerSkills, Score,
         },
@@ -112,29 +106,14 @@ fn manage_player_movement_with_mouse(trigger: Trigger<OnAdd, WorldMap>, mut comm
 
 fn spawn_player(mut commands: Commands, assets: Res<PlayerAssets>) {
     commands.spawn(Inventory::default());
-
-    let player_id = commands
+    commands
         .spawn((Player, Player::sprite(&assets)))
         .observe(set_invulnerable_on_hit)
-        .observe(player_dying)
-        .id();
+        .observe(player_dying);
 
     // Add a skill to the player
     let info = spawn_skill::<crate::components::skills::shuriken::ShurikenLauncher>(&mut commands);
-    commands.queue(EquipSkillGemCommand(info.entity, PlayerAction::Skill1));
-
-    // TEMP
-    {
-        commands.entity(player_id).with_children(|p| {
-            p.spawn(IncreaseAreaOfEffect(50.));
-            p.spawn(PierceChance(50.));
-        });
-
-        let mut rng = rand::rng();
-        let orb = OrbProvider::spawn(&mut commands, &mut rng);
-        let drop = commands.spawn(DroppedItem(orb.entity)).id();
-        commands.queue(TakeDroppedItemCommand(drop));
-    }
+    commands.queue(EquipSkillBookCommand(info.entity, PlayerAction::Skill1));
 }
 
 fn move_player(
