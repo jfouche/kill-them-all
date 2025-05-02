@@ -77,7 +77,7 @@ fn spawn_monster_timer(
 
         // Spawn monsters at distance / angle of player
         let mut rng = rand::rng();
-        let dist = rng.random_range(150..300) as f32;
+        let dist = rng.random_range(240..380) as f32;
         let angle = rng.random_range(0. ..(2. * PI));
         let pos = Vec2 {
             x: player_pos.x + dist * angle.cos(),

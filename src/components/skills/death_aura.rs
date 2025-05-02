@@ -1,33 +1,24 @@
-use crate::components::*;
+use crate::components::{
+    damage::{BaseDamageOverTime, Damager},
+    skills::{AffectedByAreaOfEffect, Skill, SkillBook, SkillBookUI},
+};
 use bevy::{
     prelude::*,
     render::render_resource::{AsBindGroup, ShaderRef},
     sprite::{AlphaMode2d, Material2d},
 };
 use bevy_rapier2d::prelude::*;
-use damage::{BaseDamageOverTime, Damager};
-use skills::{AffectedByAreaOfEffect, SkillBook, SkillUI};
+
+use super::SkillOfBook;
 
 ///
 /// Death aura weapon
 ///
 #[derive(Component, Default)]
-#[require(
-    Name::new("DeathAura"),
-    SkillBook,
-    AffectedByAreaOfEffect,
-    Damager,
-    BaseDamageOverTime(3.),
-    Transform,
-    Visibility,
-    Mesh2d,
-    MeshMaterial2d<DeathAuraMaterial>,
-    Collider::ball(32.),
-    CollisionGroups
-)]
-pub struct DeathAura;
+#[require(Name::new("DeathAuraBook"), SkillBook)]
+pub struct DeathAuraBook;
 
-impl SkillUI for DeathAura {
+impl SkillBookUI for DeathAuraBook {
     fn title() -> String {
         "Death aura".into()
     }
@@ -42,6 +33,29 @@ Affected by AOE affixes"#
         61
     }
 }
+
+impl SkillOfBook for DeathAuraBook {
+    type Skill = DeathAura;
+}
+
+///
+/// Death aura weapon
+///
+#[derive(Component, Default)]
+#[require(
+    Name::new("DeathAura"),
+    Skill,
+    AffectedByAreaOfEffect,
+    Damager,
+    BaseDamageOverTime(3.),
+    Transform,
+    Visibility,
+    Mesh2d,
+    MeshMaterial2d<DeathAuraMaterial>,
+    Collider::ball(32.),
+    CollisionGroups
+)]
+pub struct DeathAura;
 
 ///
 /// Assets for [DeathAura]

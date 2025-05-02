@@ -8,7 +8,10 @@ use crate::{
         monster::Monster,
         orb::OrbProvider,
         player::Player,
-        skills::{death_aura::DeathAura, spawn_skill},
+        skills::{
+            death_aura::{DeathAura, DeathAuraBook},
+            spawn_book,
+        },
         world_map::{ProceduralWorldMap, WorldMapConfig, LAYER_ITEM},
     },
     in_game::{item_plugin::take_dropped_item, life_bar_plugin::LifeBar},
@@ -174,12 +177,12 @@ fn init_player(trigger: Trigger<OnAdd, Player>, mut commands: Commands) {
 }
 
 fn spawn_death_aura(mut commands: Commands, assets: Res<ItemAssets>) {
-    let item_info = spawn_skill::<DeathAura>(&mut commands);
+    let item_info = spawn_book::<DeathAuraBook>(&mut commands);
     commands
         .spawn((
             DroppedItem(item_info.entity),
             assets.sprite(item_info.info.tile_index),
-            Transform::from_translation(vec3(300., 300., LAYER_ITEM)).with_scale(Vec3::splat(0.3)),
+            Transform::from_translation(vec3(100., 100., LAYER_ITEM)).with_scale(Vec3::splat(0.3)),
         ))
         .observe(take_dropped_item);
 }

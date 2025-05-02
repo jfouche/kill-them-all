@@ -4,7 +4,7 @@ use super::{
     orb::OrbProvider,
     player::Player,
     rng_provider::RngKindProvider,
-    skills::{SkillProvider, SkillUI},
+    skills::{SkillBookUI, SkillProvider},
 };
 use crate::components::inventory::Inventory;
 use bevy::prelude::*;
@@ -130,7 +130,7 @@ pub struct ItemInfo {
 
 impl<T> From<T> for ItemInfo
 where
-    T: SkillUI,
+    T: SkillBookUI,
 {
     fn from(_: T) -> Self {
         ItemInfo {

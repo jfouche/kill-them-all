@@ -112,29 +112,25 @@ pub struct EquipSkillBookCommand(pub Entity, pub PlayerAction);
 impl Command for EquipSkillBookCommand {
     fn apply(self, world: &mut World) {
         let book_entity = self.0;
-        let mut books = world.query::<&SkillBook>();
-        let Ok(_) = books.get(world, book_entity) else {
+        if !world.entity(book_entity).contains::<SkillBook>() {
             warn!("Can't equip {book_entity} as it's not an SkillBook");
             return;
         };
 
-        let Ok((player_entity, mut skills)) = world
+        let (player_entity, mut skills) = world
             .query_filtered::<(Entity, &mut PlayerSkills), With<Player>>()
             .single_mut(world)
-        else {
-            error!("Player doesn't have a PlayerSkills");
-            return;
-        };
+            .expect("Player should have a PlayerSkills");
 
         let action = self.1;
         let old_skill = match skills.get(action) {
-            Some(skill) => {
-                if skill == book_entity {
+            Some(old_skill) => {
+                if old_skill == book_entity {
                     // same gem: no need to continue
                     return;
                 }
-                skills.remove(skill);
-                Some(skill)
+                skills.remove(old_skill);
+                Some(old_skill)
             }
             None => None,
         };

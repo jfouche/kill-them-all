@@ -8,23 +8,27 @@ use super::{
     rng_provider::RngKindProvider,
 };
 use bevy::prelude::*;
-use death_aura::DeathAura;
-use fireball::FireBallLauncher;
-use mine::MineDropper;
+use death_aura::DeathAuraBook;
+use fireball::FireBallLauncherBook;
+use mine::MineDropperBook;
 use rand::rngs::ThreadRng;
-use shuriken::ShurikenLauncher;
-
-#[derive(Component, Default, Clone, Copy, PartialEq, Eq)]
-#[require(Item, Skill)]
-pub struct SkillBook;
+use shuriken::ShurikenLauncherBook;
 
 #[derive(Component, Default)]
 pub struct Skill;
 
-pub trait SkillUI {
+#[derive(Component, Default, Clone, Copy, PartialEq, Eq)]
+#[require(Item)]
+pub struct SkillBook;
+
+pub trait SkillBookUI {
     fn title() -> String;
     fn label() -> String;
     fn tile_index() -> usize;
+}
+
+pub trait SkillOfBook {
+    type Skill;
 }
 
 #[derive(Component)]
@@ -47,15 +51,15 @@ pub enum SkillKind {
 impl SkillKind {
     fn spawn(&self, commands: &mut Commands) -> ItemEntityInfo {
         match self {
-            SkillKind::DeathAura => spawn_skill::<DeathAura>(commands),
-            SkillKind::Fireball => spawn_skill::<FireBallLauncher>(commands),
-            SkillKind::MineDropper => spawn_skill::<MineDropper>(commands),
-            SkillKind::Shuriken => spawn_skill::<ShurikenLauncher>(commands),
+            SkillKind::DeathAura => spawn_book::<DeathAuraBook>(commands),
+            SkillKind::Fireball => spawn_book::<FireBallLauncherBook>(commands),
+            SkillKind::MineDropper => spawn_book::<MineDropperBook>(commands),
+            SkillKind::Shuriken => spawn_book::<ShurikenLauncherBook>(commands),
         }
     }
 }
 
-pub fn spawn_skill<T>(commands: &mut Commands) -> ItemEntityInfo
+pub fn spawn_book<T>(commands: &mut Commands) -> ItemEntityInfo
 where
     T: Component + Default + Into<ItemInfo>,
 {

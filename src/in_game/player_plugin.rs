@@ -15,7 +15,7 @@ use crate::{
             NextPositionIndicatorAssets, Player, PlayerAction, PlayerAssets, PlayerDeathEvent,
             PlayerSkills, Score,
         },
-        skills::{spawn_skill, ActivateSkill, Skill},
+        skills::{shuriken::ShurikenLauncherBook, spawn_book, ActivateSkill, Skill},
         world_map::{WorldMap, WorldMapLoadingFinished, LAYER_PLAYER},
         GROUP_ENEMY,
     },
@@ -112,7 +112,7 @@ fn spawn_player(mut commands: Commands, assets: Res<PlayerAssets>) {
         .observe(player_dying);
 
     // Add a skill to the player
-    let info = spawn_skill::<crate::components::skills::shuriken::ShurikenLauncher>(&mut commands);
+    let info = spawn_book::<ShurikenLauncherBook>(&mut commands);
     commands.queue(EquipSkillBookCommand(info.entity, PlayerAction::Skill1));
 }
 
@@ -274,9 +274,13 @@ fn activate_skill(
     }
 
     for action in actions {
+        warn!(" *** ");
         if let Some(skill) = player_skills.get(action) {
+            warn!(" *** *** ");
             if let Ok(mut timer) = skills.get_mut(skill) {
+                warn!(" *** *** *** ");
                 if timer.finished() {
+                    warn!(" *** *** *** ***");
                     commands.trigger(ActivateSkill(skill, pos));
                     timer.reset();
                 }

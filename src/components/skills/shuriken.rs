@@ -1,4 +1,4 @@
-use super::{SkillBook, SkillUI};
+use super::{Skill, SkillBook, SkillBookUI, SkillOfBook};
 use crate::components::{
     damage::{BaseHitDamageRange, Projectile},
     equipment::weapon::BaseAttackSpeed,
@@ -20,18 +20,13 @@ impl FromWorld for ShurikenAssets {
 }
 
 ///
-/// Skill that launch [Shuriken]s
+/// [SkillBook] for [ShurikenLauncher]s
 ///
 #[derive(Component, Default)]
-#[require(
-    SkillBook,
-    Name::new("ShurikenLauncher"),
-    BaseHitDamageRange::new(2., 4.),
-    BaseAttackSpeed(0.6)
-)]
-pub struct ShurikenLauncher;
+#[require(SkillBook, Name::new("ShurikenLauncherBook"))]
+pub struct ShurikenLauncherBook;
 
-impl SkillUI for ShurikenLauncher {
+impl SkillBookUI for ShurikenLauncherBook {
     fn title() -> String {
         "Shuriken launcher".into()
     }
@@ -44,6 +39,23 @@ impl SkillUI for ShurikenLauncher {
         31
     }
 }
+
+impl SkillOfBook for ShurikenLauncherBook {
+    type Skill = ShurikenLauncher;
+}
+
+///
+/// [Skill] that launch [Shuriken]s
+///
+#[derive(Component, Default)]
+#[require(
+    Skill,
+    Name::new("ShurikenLauncher"),
+    BaseHitDamageRange::new(2., 4.),
+    BaseAttackSpeed(0.6)
+)]
+pub struct ShurikenLauncher;
+
 ///
 /// A shuriken projectile
 ///

@@ -1,3 +1,4 @@
+use super::{Skill, SkillBook, SkillBookUI, SkillOfBook};
 use crate::components::{
     animation::{CyclicAnimation, OneShotAnimation},
     damage::{Damager, HitDamageRange},
@@ -6,21 +7,14 @@ use crate::components::{
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
-use super::{SkillBook, SkillUI};
-
 ///
-/// |Skill] that drop a mine regularly
+/// |SkillBook] for [MineDropper]
 ///
 #[derive(Component, Default)]
-#[require(
-    Name::new("MineDropper"),
-    SkillBook,
-    HitDamageRange::new(1., 5.),
-    BaseAttackSpeed(0.6)
-)]
-pub struct MineDropper;
+#[require(Name::new("MineDropperBook"), SkillBook)]
+pub struct MineDropperBook;
 
-impl SkillUI for MineDropper {
+impl SkillBookUI for MineDropperBook {
     fn title() -> String {
         "Mine dropper".into()
     }
@@ -33,6 +27,22 @@ impl SkillUI for MineDropper {
         21
     }
 }
+
+impl SkillOfBook for MineDropperBook {
+    type Skill = MineDropper;
+}
+
+///
+/// |Skill] that drop a mine regularly
+///
+#[derive(Component, Default)]
+#[require(
+    Name::new("MineDropper"),
+    Skill,
+    HitDamageRange::new(1., 5.),
+    BaseAttackSpeed(0.6)
+)]
+pub struct MineDropper;
 
 ///
 /// Mine
