@@ -6,7 +6,7 @@ use super::{
 use crate::{
     components::{
         inventory::PlayerEquipmentChanged,
-        player::{EquipSkillBookCommand, PlayerAction},
+        player::{EquipSkillBookEvent, PlayerAction},
         skills::{SkillBook, SkillBookLocation},
     },
     utils::observers::VecObserversExt,
@@ -74,7 +74,10 @@ fn on_drop_item(
         if skill_gems.get(item_entity).is_ok() {
             if let Ok(action) = locations.get(trigger.target()) {
                 // The item dropped is a skill gem
-                commands.queue(EquipSkillBookCommand(item_entity, *action));
+                commands.trigger(EquipSkillBookEvent {
+                    action: *action,
+                    book_entity: item_entity,
+                });
             }
         }
     }

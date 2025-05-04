@@ -3,7 +3,7 @@
 use crate::{
     components::{
         affix::{IncreaseAreaOfEffect, PierceChance},
-        inventory::TakeDroppedItemCommand,
+        inventory::{AddToInventoryEvent, TakeDroppedItemEvent},
         item::{DroppedItem, ItemAssets},
         monster::Monster,
         orb::OrbProvider,
@@ -27,7 +27,7 @@ use bevy::{
     window::PrimaryWindow,
 };
 use bevy_inspector_egui::{
-    bevy_egui::{EguiContext, EguiContextPass, EguiPlugin},
+    bevy_egui::{EguiContext, EguiContextPass, EguiGlobalSettings, EguiPlugin},
     bevy_inspector::{self, guess_entity_name, hierarchy::SelectedEntities, EntityFilter, Filter},
     egui,
     quick::WorldInspectorPlugin,
@@ -55,6 +55,7 @@ impl Plugin for DebugPlugin {
         .init_resource::<UiDebugOptions>()
         .insert_resource(DebugMode(true))
         .add_systems(EguiContextPass, inspector_ui.run_if(debug_is_active))
+        .add_systems(Startup, configure_egui)
         .add_systems(OnEnter(GameState::InGame), spawn_death_aura)
         .add_systems(
             Update,
@@ -82,6 +83,10 @@ fn debug_is_active(debug: Res<DebugMode>) -> bool {
 
 fn toggle_debug_mode(mut mode: ResMut<DebugMode>) {
     **mode = !**mode;
+}
+
+fn configure_egui(mut settings: ResMut<EguiGlobalSettings>) {
+    settings.enable_absorb_bevy_input_system = true;
 }
 
 fn inspector_ui(world: &mut World) {
@@ -166,14 +171,14 @@ fn show_map_axes(mut gizmos: Gizmos, world_map: Res<ProceduralWorldMap>) {
 }
 
 fn init_player(trigger: Trigger<OnAdd, Player>, mut commands: Commands) {
-    commands
-        .entity(trigger.target())
-        .insert(children![IncreaseAreaOfEffect(50.), PierceChance(50.)]);
+    let player = trigger.target();
+
+    commands.spawn((IncreaseAreaOfEffect(50.), ChildOf(player)));
+    commands.spawn((PierceChance(50.), ChildOf(player)));
 
     let mut rng = rand::rng();
     let orb = OrbProvider::spawn(&mut commands, &mut rng);
-    let drop = commands.spawn(DroppedItem(orb.entity)).id();
-    commands.queue(TakeDroppedItemCommand(drop));
+    commands.trigger(AddToInventoryEvent::new(orb.entity));
 }
 
 fn spawn_death_aura(mut commands: Commands, assets: Res<ItemAssets>) {

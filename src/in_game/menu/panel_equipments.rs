@@ -7,7 +7,7 @@ use crate::{
     components::{
         equipment::{Amulet, BodyArmour, Boots, Helmet, Weapon},
         inventory::PlayerEquipmentChanged,
-        item::{EquipEquipmentCommand, ItemAssets, ItemEntity, ItemLocation},
+        item::{EquipEquipmentEvent, ItemAssets, ItemEntity, ItemLocation},
         player::Player,
     },
     utils::observers::VecObserversExt,
@@ -199,7 +199,7 @@ fn on_drop_equipment<T>(
     if let Some(item_entity) = ***cursor {
         if equipments.get(item_entity).is_ok() {
             // The item drop is the correct one
-            commands.queue(EquipEquipmentCommand(item_entity));
+            commands.trigger(EquipEquipmentEvent(item_entity));
         }
     }
 }

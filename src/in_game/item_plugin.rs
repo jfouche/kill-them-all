@@ -3,8 +3,10 @@ use crate::{
     components::{
         character::CharacterAction,
         despawn_all,
+        inventory::{Inventory, PlayerEquipmentChanged, RemoveFromInventoryEvent},
         item::{
-            DroppedItem, Item, ItemAssets, ItemInfo, ItemLevel, ItemProvider, ItemRarity, ITEM_SIZE,
+            DropItemEvent, DroppedItem, Item, ItemAssets, ItemInfo, ItemLevel, ItemProvider,
+            ItemRarity, ITEM_SIZE,
         },
         monster::MonsterDeathEvent,
         player::Player,
@@ -44,7 +46,8 @@ impl Plugin for ItemPlugin {
             .add_systems(
                 Update,
                 spawn_dropped_item.in_set(GameRunningSet::EntityUpdate),
-            );
+            )
+            .add_observer(drop_item);
     }
 }
 
@@ -103,6 +106,56 @@ fn spawn_dropped_item(
                 ))
                 .observe(take_dropped_item);
         }
+    }
+}
+
+fn drop_item(
+    trigger: Trigger<DropItemEvent>,
+    mut commands: Commands,
+    players: Query<Entity, With<Player>>,
+    inventories: Query<Entity, With<Inventory>>,
+    items: Query<&ChildOf, With<Item>>,
+) {
+    let player = players.single().expect("Player");
+    let inventory = inventories.single().expect("Inventory");
+
+    enum Change {
+        None,
+        Player,
+        Inventory,
+        Other(Entity),
+    }
+
+    let change = items
+        .get(trigger.0)
+        .map(|child_of| {
+            let parent = child_of.parent();
+            if parent == player {
+                Change::Player
+            } else if parent == inventory {
+                Change::Inventory
+            } else {
+                Change::Other(parent)
+            }
+        })
+        .unwrap_or(Change::None);
+
+    match change {
+        Change::Player => {
+            commands.entity(player).remove_children(&[trigger.0]);
+        }
+        Change::Inventory => {
+            commands.trigger(RemoveFromInventoryEvent(trigger.0));
+        }
+        Change::Other(parent) => {
+            commands.entity(parent).remove_children(&[trigger.0]);
+        }
+        Change::None => {}
+    }
+    commands.entity(trigger.0).despawn();
+
+    if let Change::Player = change {
+        commands.trigger(PlayerEquipmentChanged);
     }
 }
 

@@ -54,7 +54,7 @@ struct SpawnMonsterTimer(Timer);
 
 impl Default for SpawnMonsterTimer {
     fn default() -> Self {
-        Self(Timer::from_seconds(10.0, TimerMode::Repeating))
+        Self(Timer::from_seconds(20.0, TimerMode::Repeating))
     }
 }
 
@@ -145,7 +145,8 @@ fn update_monster(
     mut commands: Commands,
     rarities: Query<&MonsterRarity>,
 ) {
-    if let Ok(MonsterRarity::Rare) = rarities.get(trigger.target()) {
+    let monster_entity = trigger.target();
+    if let Ok(MonsterRarity::Rare) = rarities.get(monster_entity) {
         let mut upgrade_provider = UpgradeProvider::new();
         let mut rng = rand::rng();
         let mut entities = Vec::new();
@@ -157,17 +158,16 @@ fn update_monster(
             }
         }
 
-        commands.entity(trigger.target()).add_children(&entities);
+        commands.entity(monster_entity).add_children(&entities);
 
         // Add a weapon and more life
-        commands.entity(trigger.target()).with_children(|c| {
-            c.spawn(Wand::new(1)); // TODO: get ilevel
-            c.spawn(FireBallLauncher);
-            c.spawn(MoreLife(10.));
-        });
+        // TODO: get ilevel to insert equipment
+        commands.spawn((Wand::new(1), ChildOf(monster_entity)));
+        commands.spawn((FireBallLauncher, ChildOf(monster_entity)));
+        commands.spawn((MoreLife(10.), ChildOf(monster_entity)));
     }
     commands
-        .entity(trigger.target())
+        .entity(monster_entity)
         .observe(monster_dying)
         .observe(increment_score);
 }

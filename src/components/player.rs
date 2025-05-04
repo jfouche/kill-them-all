@@ -1,7 +1,7 @@
 use super::{
     animation::AnimationTimer,
     character::{BaseLife, BaseMovementSpeed, Character, Target},
-    inventory::{AddToInventoryCommand, PlayerEquipmentChanged, RemoveFromInventoryCommand},
+    inventory::PlayerEquipmentChanged,
     skills::SkillBook,
     GROUP_ALL, GROUP_PLAYER,
 };
@@ -14,7 +14,7 @@ use std::time::Duration;
 #[require(
     Name::new("Player"),
     Character,
-    PlayerSkills,
+    PlayerBooks,
     Target::Monster,
     BaseLife(10.),
     BaseMovementSpeed(100.),
@@ -39,7 +39,7 @@ impl Player {
     }
 }
 
-#[derive(Component, Clone, Copy)]
+#[derive(Component, Clone, Copy, Debug)]
 pub enum PlayerAction {
     Skill1,
     Skill2,
@@ -71,9 +71,9 @@ impl From<usize> for PlayerAction {
 }
 
 #[derive(Component, Default, Reflect)]
-pub struct PlayerSkills([Option<Entity>; 4]);
+pub struct PlayerBooks([Option<Entity>; 4]);
 
-impl PlayerSkills {
+impl PlayerBooks {
     // fn contains(&self, skill: Entity) -> Option<PlayerAction> {
     //     self.0
     //         .iter()
@@ -85,68 +85,32 @@ impl PlayerSkills {
         *self.0.get(action.index())?
     }
 
-    fn set(&mut self, action: PlayerAction, skill: Entity) -> bool {
+    pub fn set_book(&mut self, action: PlayerAction, book: Entity) -> bool {
         let index = action.index();
         match self.0[index] {
             Some(_) => {
-                warn!("Can't set skills[{index}] as it's not empty");
+                warn!("Can't set book[{index}] as it's not empty");
                 false
             }
             None => {
-                self.0[index] = Some(skill);
+                self.0[index] = Some(book);
                 true
             }
         }
     }
 
-    pub fn remove(&mut self, skill: Entity) -> bool {
-        let Some(index) = self.0.iter().position(|&o| o == Some(skill)) else {
+    pub fn remove(&mut self, book: Entity) -> bool {
+        let Some(index) = self.0.iter().position(|&o| o == Some(book)) else {
             return false;
         };
         self.0.get_mut(index).map(|o| *o = None).is_some()
     }
 }
 
-pub struct EquipSkillBookCommand(pub Entity, pub PlayerAction);
-
-impl Command for EquipSkillBookCommand {
-    fn apply(self, world: &mut World) {
-        let book_entity = self.0;
-        if !world.entity(book_entity).contains::<SkillBook>() {
-            warn!("Can't equip {book_entity} as it's not an SkillBook");
-            return;
-        };
-
-        let (player_entity, mut skills) = world
-            .query_filtered::<(Entity, &mut PlayerSkills), With<Player>>()
-            .single_mut(world)
-            .expect("Player should have a PlayerSkills");
-
-        let action = self.1;
-        let old_skill = match skills.get(action) {
-            Some(old_skill) => {
-                if old_skill == book_entity {
-                    // same gem: no need to continue
-                    return;
-                }
-                skills.remove(old_skill);
-                Some(old_skill)
-            }
-            None => None,
-        };
-        skills.remove(book_entity);
-        skills.set(action, book_entity);
-
-        // Manage inventory
-        RemoveFromInventoryCommand(book_entity).apply(world);
-        if let Some(old_skill) = old_skill {
-            AddToInventoryCommand(old_skill).apply(world);
-        }
-
-        world.entity_mut(book_entity).remove::<ChildOf>();
-        world.entity_mut(player_entity).add_child(book_entity);
-        world.trigger(PlayerEquipmentChanged);
-    }
+#[derive(Event)]
+pub struct EquipSkillBookEvent {
+    pub book_entity: Entity,
+    pub action: PlayerAction,
 }
 
 pub struct RemoveSkillBookCommand(pub Entity);
@@ -161,7 +125,7 @@ impl Command for RemoveSkillBookCommand {
         };
 
         let Ok(mut skills) = world
-            .query_filtered::<&mut PlayerSkills, With<Player>>()
+            .query_filtered::<&mut PlayerBooks, With<Player>>()
             .single_mut(world)
         else {
             error!("Player doesn't have a PlayerSkills");

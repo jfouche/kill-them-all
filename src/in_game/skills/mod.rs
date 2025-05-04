@@ -15,7 +15,7 @@ mod plugin {
             equipment::weapon::AttackTimer,
             skills::{
                 death_aura::DeathAuraBook, fireball::FireBallLauncherBook, mine::MineDropperBook,
-                shuriken::ShurikenLauncherBook, AffectedByAreaOfEffect, Skill, SkillOfBook,
+                shuriken::ShurikenLauncherBook, AffectedByAreaOfEffect, OfBook, Skill, SkillOfBook,
             },
         },
         schedule::{GameRunningSet, GameState},
@@ -32,6 +32,7 @@ mod plugin {
                 mine_plugin::MinePlugin,
                 death_aura_plugin::DeathAuraPlugin,
             ))
+            .register_type::<OfBook>()
             .add_systems(
                 PreUpdate,
                 tick_attack_timer.run_if(in_state(GameState::InGame)),
@@ -41,14 +42,14 @@ mod plugin {
                 update_skills_affected_by_aoe.in_set(GameRunningSet::EntityUpdate),
             )
             .add_observer(update_character_observers)
-            .add_observer(equip_skill_book::<DeathAuraBook>)
-            .add_observer(unequip_skill_book::<DeathAuraBook>)
-            .add_observer(equip_skill_book::<FireBallLauncherBook>)
-            .add_observer(unequip_skill_book::<FireBallLauncherBook>)
-            .add_observer(equip_skill_book::<MineDropperBook>)
-            .add_observer(unequip_skill_book::<MineDropperBook>)
-            .add_observer(equip_skill_book::<ShurikenLauncherBook>)
-            .add_observer(unequip_skill_book::<ShurikenLauncherBook>);
+            .add_observer(enable_skill::<DeathAuraBook>)
+            .add_observer(disable_skill::<DeathAuraBook>)
+            .add_observer(enable_skill::<FireBallLauncherBook>)
+            .add_observer(disable_skill::<FireBallLauncherBook>)
+            .add_observer(enable_skill::<MineDropperBook>)
+            .add_observer(disable_skill::<MineDropperBook>)
+            .add_observer(enable_skill::<ShurikenLauncherBook>)
+            .add_observer(disable_skill::<ShurikenLauncherBook>);
         }
     }
 
@@ -62,8 +63,8 @@ mod plugin {
         commands.entity(trigger.target()).observe(try_pierce);
     }
 
-    fn equip_skill_book<B>(
-        trigger: Trigger<OnAdd, ChildOf>,
+    fn enable_skill<B>(
+        trigger: Trigger<OnInsert, ChildOf>,
         mut commands: Commands,
         books: Query<&ChildOf, With<B>>,
         characters: Query<(), With<Character>>,
@@ -71,17 +72,19 @@ mod plugin {
         B: Component + SkillOfBook,
         <B as SkillOfBook>::Skill: Component + Default,
     {
-        if let Ok(child_of) = books.get(trigger.target()) {
-            if characters.get(child_of.parent()).is_ok() {
-                info!("Equip {} - ", std::any::type_name::<B>());
-                commands
-                    .entity(child_of.parent())
-                    .insert(children![B::Skill::default()]);
+        let book_entity = trigger.target();
+        if let Ok(&ChildOf(character_entity)) = books.get(book_entity) {
+            if characters.contains(character_entity) {
+                commands.spawn((
+                    B::Skill::default(),
+                    ChildOf(character_entity),
+                    OfBook(book_entity),
+                ));
             }
         }
     }
 
-    fn unequip_skill_book<B>(
+    fn disable_skill<B>(
         trigger: Trigger<OnRemove, ChildOf>,
         mut commands: Commands,
         books: Query<&ChildOf, With<B>>,
@@ -93,12 +96,10 @@ mod plugin {
     {
         if let Ok(child_of) = books.get(trigger.target()) {
             if characters.get(child_of.parent()).is_ok() {
-                if let Some(skill_entity) = skills
+                for skill_entity in skills
                     .iter()
                     .filter_map(|(e, co)| (co.parent() == child_of.parent()).then_some(e))
-                    .next()
                 {
-                    info!("Unequip {} - ", std::any::type_name::<B>());
                     commands.entity(skill_entity).despawn();
                 }
             }

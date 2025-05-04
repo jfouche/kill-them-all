@@ -1,7 +1,7 @@
 use crate::components::{
     inventory::PlayerEquipmentChanged,
     item::ItemEntity,
-    player::{Player, PlayerAction, PlayerSkills},
+    player::{Player, PlayerAction, PlayerBooks},
     skills::SkillBookLocation,
 };
 use bevy::prelude::*;
@@ -16,7 +16,7 @@ impl Plugin for ItemLocationPlugin {
 
 fn update_skills_location(
     _trigger: Trigger<PlayerEquipmentChanged>,
-    skills: Query<&PlayerSkills, With<Player>>,
+    skills: Query<&PlayerBooks, With<Player>>,
     mut locations: Query<(&mut ItemEntity, &PlayerAction), With<SkillBookLocation>>,
 ) {
     if let Ok(skills) = skills.single() {

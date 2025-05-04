@@ -16,7 +16,7 @@ use crate::{
             weapon::{AttackSpeed, AttackTimer, BaseAttackSpeed},
             Equipment,
         },
-        inventory::TakeDroppedItemCommand,
+        inventory::TakeDroppedItemEvent,
         item::DroppedItem,
     },
     schedule::GameRunningSet,
@@ -185,7 +185,7 @@ fn do_character_action(
                 Ok((entity, transform)) => {
                     if move_to(transform.translation().xy()) {
                         action.stop();
-                        commands.queue(TakeDroppedItemCommand(entity));
+                        commands.trigger(TakeDroppedItemEvent(entity));
                     }
                 }
                 _ => action.stop(),

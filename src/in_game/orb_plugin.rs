@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use crate::components::{
     equipment::{Amulet, BodyArmour, Boots, Equipment, Helmet, Wand},
-    inventory::{InventoryChanged, PlayerEquipmentChanged, RemoveFromInventoryCommand},
+    inventory::{InventoryChanged, PlayerEquipmentChanged, RemoveFromInventoryEvent},
     item::ItemRarity,
     orb::{ActivateOrbEvent, Orb, OrbAction},
 };
@@ -188,7 +188,7 @@ fn on_transmute<T>(
     item.affix_gen(&mut item_cmds, rarity.n_affix(), *rarity, &mut rng);
 
     // Despawn orb
-    commands.queue(RemoveFromInventoryCommand(trigger.orb));
+    commands.trigger(RemoveFromInventoryEvent(trigger.orb));
     commands.entity(trigger.orb).despawn();
 
     commands.trigger(InventoryChanged);
@@ -226,7 +226,7 @@ fn on_regal<T>(
     item.affix_gen(&mut item_cmds, 1, *rarity, &mut rng);
 
     // Despawn orb
-    commands.queue(RemoveFromInventoryCommand(trigger.orb));
+    commands.trigger(RemoveFromInventoryEvent(trigger.orb));
     commands.entity(trigger.orb).despawn();
 
     commands.trigger(InventoryChanged);
@@ -269,7 +269,7 @@ fn on_chaos<T>(
     );
 
     // Despawn orb
-    commands.queue(RemoveFromInventoryCommand(trigger.orb));
+    commands.trigger(RemoveFromInventoryEvent(trigger.orb));
     commands.entity(trigger.orb).despawn();
 
     commands.trigger(InventoryChanged);

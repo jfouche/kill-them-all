@@ -1,4 +1,3 @@
-use super::{item::DroppedItem, player::PlayerSkills};
 use bevy::prelude::*;
 
 ///
@@ -16,7 +15,7 @@ impl Inventory {
         (Inventory::N_COLS * Inventory::N_ROWS) as usize
     }
 
-    fn add(&mut self, item: Entity) -> bool {
+    pub fn add(&mut self, item: Entity) -> bool {
         if self.0.iter().any(|o| *o == Some(item)) {
             warn!("Item {item} already in inventory");
             return false;
@@ -28,7 +27,7 @@ impl Inventory {
         self.add_at(item, index)
     }
 
-    fn add_at(&mut self, item: Entity, index: usize) -> bool {
+    pub fn add_at(&mut self, item: Entity, index: usize) -> bool {
         assert!(index < Self::len());
         if self.0[index].is_some() {
             warn!("Can't add item to a non empty location");
@@ -39,7 +38,7 @@ impl Inventory {
         true
     }
 
-    fn remove(&mut self, item: Entity) -> bool {
+    pub fn remove(&mut self, item: Entity) -> bool {
         match self.0.iter().position(|o| *o == Some(item)) {
             Some(index) => {
                 self.0[index] = None;
@@ -81,118 +80,29 @@ pub struct InventoryChanged;
 pub struct PlayerEquipmentChanged;
 
 /// Try to add an item to the [Inventory].
-///
-/// If it succeed, it will trigger an [InventoryChanged] event.
-pub struct AddToInventoryCommand(pub Entity);
-
-impl Command for AddToInventoryCommand {
-    fn apply(self, world: &mut World) {
-        let Ok((inventory_entity, mut inventory)) =
-            world.query::<(Entity, &mut Inventory)>().single_mut(world)
-        else {
-            error!("Inventory doesn't exist!");
-            return;
-        };
-
-        if inventory.add(self.0) {
-            world.entity_mut(inventory_entity).add_child(self.0);
-            // remove from skill if it was a skill
-            world
-                .query::<&mut PlayerSkills>()
-                .single_mut(world)
-                .expect("PlayerSkills")
-                .remove(self.0);
-
-            world.trigger(InventoryChanged);
-        }
-    }
-}
-
-/// Try to add an item to the [Inventory] at a given index.
-///
-/// If it succeed, it will trigger an [InventoryChanged] event.
-pub struct AddToInventoryAtIndexCommand {
+#[derive(Event)]
+pub struct AddToInventoryEvent {
     pub item: Entity,
-    pub index: usize,
+    pub pos: Option<usize>,
 }
 
-impl Command for AddToInventoryAtIndexCommand {
-    fn apply(self, world: &mut World) {
-        let Ok((inventory_entity, mut inventory)) =
-            world.query::<(Entity, &mut Inventory)>().single_mut(world)
-        else {
-            error!("Inventory doesn't exist!");
-            return;
-        };
+impl AddToInventoryEvent {
+    pub fn new(item: Entity) -> Self {
+        AddToInventoryEvent { item, pos: None }
+    }
 
-        // Allow to move an item
-        inventory.remove(self.item);
-        if inventory.add_at(self.item, self.index) {
-            world.entity_mut(inventory_entity).add_child(self.item);
-
-            // remove from skill if it was a skill
-            world
-                .query::<&mut PlayerSkills>()
-                .single_mut(world)
-                .expect("PlayerSkills")
-                .remove(self.item);
-
-            world.trigger(InventoryChanged);
+    pub fn new_at(item: Entity, pos: usize) -> Self {
+        AddToInventoryEvent {
+            item,
+            pos: Some(pos),
         }
     }
 }
 
 /// Try to remove an item to the [Inventory].
-///
-/// If it succed, it will trigger an [InventoryChanged] event.
-pub struct RemoveFromInventoryCommand(pub Entity);
+#[derive(Event)]
+pub struct RemoveFromInventoryEvent(pub Entity);
 
-impl Command for RemoveFromInventoryCommand {
-    fn apply(self, world: &mut World) {
-        let Ok((inventory_entity, mut inventory)) =
-            world.query::<(Entity, &mut Inventory)>().single_mut(world)
-        else {
-            error!("Inventory doesn't exist!");
-            return;
-        };
-
-        if inventory.remove(self.0) {
-            world
-                .entity_mut(inventory_entity)
-                .remove::<InventoryPos>()
-                .remove_children(&[self.0]);
-            world.trigger(InventoryChanged);
-        }
-    }
-}
-
-/// Try to add a [DroppedItem] item to the [crate::components::inventory::Inventory].
-///
-/// If it succed, it will trigger an [InventoryChanged] event.
-pub struct TakeDroppedItemCommand(pub Entity);
-
-impl Command for TakeDroppedItemCommand {
-    fn apply(self, world: &mut World) {
-        let item_entity = self.0;
-        let Ok(item) = world
-            .query::<&DroppedItem>()
-            .get(world, item_entity)
-            .cloned()
-        else {
-            warn!("Can't take item from {item_entity} as it's not a [DroppedItem]");
-            return;
-        };
-        let Ok((inventory_entity, mut inventory)) =
-            world.query::<(Entity, &mut Inventory)>().single_mut(world)
-        else {
-            error!("Inventory doesn't exist!");
-            return;
-        };
-
-        if inventory.add(*item) {
-            world.entity_mut(inventory_entity).add_child(*item);
-            world.entity_mut(item_entity).despawn();
-            world.trigger(InventoryChanged);
-        }
-    }
-}
+/// Try to add a [DroppedItem] item to the [Inventory].
+#[derive(Event)]
+pub struct TakeDroppedItemEvent(pub Entity);

@@ -14,7 +14,7 @@ use mine::MineDropperBook;
 use rand::rngs::ThreadRng;
 use shuriken::ShurikenLauncherBook;
 
-#[derive(Component, Default)]
+#[derive(Component, Copy, Clone, Default)]
 pub struct Skill;
 
 #[derive(Component, Default, Clone, Copy, PartialEq, Eq)]
@@ -30,6 +30,9 @@ pub trait SkillBookUI {
 pub trait SkillOfBook {
     type Skill;
 }
+
+#[derive(Component, Copy, Clone, Deref, Reflect)]
+pub struct OfBook(pub Entity);
 
 #[derive(Component)]
 #[require(ItemLocation)]

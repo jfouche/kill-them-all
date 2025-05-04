@@ -7,15 +7,21 @@ use crate::{
             LooseLifeEvent, MaxLife,
         },
         despawn_all,
-        equipment::weapon::AttackTimer,
-        inventory::{Inventory, InventoryChanged, InventoryPos, PlayerEquipmentChanged},
+        equipment::{weapon::AttackTimer, Equipment},
+        inventory::{
+            AddToInventoryEvent, Inventory, InventoryChanged, InventoryPos, PlayerEquipmentChanged,
+            RemoveFromInventoryEvent, TakeDroppedItemEvent,
+        },
+        item::{DroppedItem, EquipEquipmentEvent, Item},
         monster::MonsterDeathEvent,
         player::{
-            EquipSkillBookCommand, Experience, LevelUpEvent, NextPositionIndicator,
-            NextPositionIndicatorAssets, Player, PlayerAction, PlayerAssets, PlayerDeathEvent,
-            PlayerSkills, Score,
+            EquipSkillBookEvent, Experience, LevelUpEvent, NextPositionIndicator,
+            NextPositionIndicatorAssets, Player, PlayerAction, PlayerAssets, PlayerBooks,
+            PlayerDeathEvent, Score,
         },
-        skills::{shuriken::ShurikenLauncherBook, spawn_book, ActivateSkill, Skill},
+        skills::{
+            shuriken::ShurikenLauncherBook, spawn_book, ActivateSkill, OfBook, Skill, SkillBook,
+        },
         world_map::{WorldMap, WorldMapLoadingFinished, LAYER_PLAYER},
         GROUP_ENEMY,
     },
@@ -39,7 +45,7 @@ impl Plugin for PlayerPlugin {
             .register_type::<Experience>()
             .register_type::<Inventory>()
             .register_type::<InventoryPos>()
-            .register_type::<PlayerSkills>()
+            .register_type::<PlayerBooks>()
             .add_systems(OnEnter(GameState::InGame), (spawn_player, unpause))
             .add_systems(
                 OnExit(GameState::InGame),
@@ -57,7 +63,12 @@ impl Plugin for PlayerPlugin {
                     .in_set(GameRunningSet::EntityUpdate),
             )
             .add_observer(move_player)
-            .add_observer(manage_player_movement_with_mouse);
+            .add_observer(manage_player_movement_with_mouse)
+            .add_observer(equip_equipment)
+            .add_observer(equip_skill_book)
+            .add_observer(take_dropped_item)
+            .add_observer(add_to_inventory)
+            .add_observer(remove_from_inventory);
     }
 }
 
@@ -113,7 +124,10 @@ fn spawn_player(mut commands: Commands, assets: Res<PlayerAssets>) {
 
     // Add a skill to the player
     let info = spawn_book::<ShurikenLauncherBook>(&mut commands);
-    commands.queue(EquipSkillBookCommand(info.entity, PlayerAction::Skill1));
+    commands.trigger(EquipSkillBookEvent {
+        book_entity: info.entity,
+        action: PlayerAction::Skill1,
+    });
 }
 
 fn move_player(
@@ -240,13 +254,13 @@ fn refill_life_on_level_up(
 
 fn activate_skill(
     mut commands: Commands,
-    players: Query<&PlayerSkills, With<Player>>,
-    mut skills: Query<&mut AttackTimer, With<Skill>>,
+    players: Query<&PlayerBooks, With<Player>>,
+    mut skills: Query<(Entity, &mut AttackTimer, &OfBook), With<Skill>>,
     windows: Query<&Window, With<PrimaryWindow>>,
     cameras: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
     buttons: Res<ButtonInput<KeyCode>>,
 ) {
-    let Ok(player_skills) = players.single() else {
+    let Ok(player_books) = players.single() else {
         return;
     };
 
@@ -274,17 +288,185 @@ fn activate_skill(
     }
 
     for action in actions {
-        warn!(" *** ");
-        if let Some(skill) = player_skills.get(action) {
-            warn!(" *** *** ");
-            if let Ok(mut timer) = skills.get_mut(skill) {
-                warn!(" *** *** *** ");
+        if let Some(book) = player_books.get(action) {
+            for (skill_entity, mut timer) in skills
+                .iter_mut()
+                .filter(|(_e, _timer, &OfBook(b))| b == book)
+                .map(|(e, timer, _)| (e, timer))
+            {
                 if timer.finished() {
-                    warn!(" *** *** *** ***");
-                    commands.trigger(ActivateSkill(skill, pos));
+                    commands.trigger(ActivateSkill(skill_entity, pos));
                     timer.reset();
                 }
             }
         }
+    }
+}
+
+fn equip_equipment(
+    trigger: Trigger<EquipEquipmentEvent>,
+    mut commands: Commands,
+    players: Query<Entity, With<Player>>,
+    equipments: Query<(Entity, &Equipment, &ChildOf)>,
+) {
+    let Ok(equipment_to_equip) = equipments.get(trigger.0).map(|(_, eqp, _)| *eqp) else {
+        warn!("Can't equip {} as it's not an Equipment", trigger.0);
+        return;
+    };
+
+    // Check it the player already have an item of same type
+    let player = players.single().expect("Player");
+    let old_equipment = equipments
+        .iter()
+        // same parent, same type, but different entity
+        .filter(|(entity, eqp, child_of)| {
+            player == child_of.parent() && **eqp == equipment_to_equip && *entity != trigger.0
+        })
+        .map(|(e, _eqp, _p)| e)
+        // There should be at most 1 equipment
+        .next();
+
+    // Manage inventory
+    commands.trigger(RemoveFromInventoryEvent(trigger.0));
+    if let Some(old_equipment) = old_equipment {
+        commands.trigger(AddToInventoryEvent::new(old_equipment));
+    }
+
+    info!("Equip equipment {}", trigger.0);
+
+    commands.entity(player).add_child(trigger.0);
+    commands.trigger(PlayerEquipmentChanged);
+}
+
+fn equip_skill_book(
+    trigger: Trigger<EquipSkillBookEvent>,
+    mut commands: Commands,
+    books: Query<(), With<SkillBook>>,
+    mut players: Query<(Entity, &mut PlayerBooks), With<Player>>,
+) {
+    if !books.contains(trigger.book_entity) {
+        warn!(
+            "Can't equip {} as it's not an SkillBook",
+            trigger.book_entity
+        );
+        return;
+    };
+
+    let (player_entity, mut player_books) = players
+        .single_mut()
+        .expect("Player should have a PlayerBooks");
+
+    let old_book = match player_books.get(trigger.action) {
+        Some(old_book) => {
+            if old_book == trigger.book_entity {
+                // same gem: no need to continue
+                return;
+            }
+            player_books.remove(old_book);
+            Some(old_book)
+        }
+        None => None,
+    };
+    player_books.remove(trigger.book_entity);
+    player_books.set_book(trigger.action, trigger.book_entity);
+
+    // Manage inventory
+    commands.trigger(RemoveFromInventoryEvent(trigger.book_entity));
+    if let Some(old_book) = old_book {
+        commands.trigger(AddToInventoryEvent::new(old_book));
+    }
+
+    info!(
+        "Equip skill book {} to {:?}",
+        trigger.book_entity, trigger.action
+    );
+
+    commands
+        .entity(player_entity)
+        .add_child(trigger.book_entity);
+    commands.trigger(PlayerEquipmentChanged);
+}
+
+fn take_dropped_item(
+    trigger: Trigger<TakeDroppedItemEvent>,
+    mut commands: Commands,
+    dropped_items: Query<&DroppedItem>,
+    mut inventories: Query<(Entity, &mut Inventory)>,
+) {
+    let dropped_item_entity = trigger.0;
+    let Ok(dropped_item) = dropped_items.get(dropped_item_entity).cloned() else {
+        warn!("Can't take item from {dropped_item_entity} as it's not a [DroppedItem]");
+        return;
+    };
+    let Ok((inventory_entity, mut inventory)) = inventories.single_mut() else {
+        error!("Inventory doesn't exist!");
+        return;
+    };
+
+    let item_entity = *dropped_item;
+    if inventory.add(item_entity) {
+        info!("Take dropped item {dropped_item_entity} => {item_entity}");
+        commands.entity(inventory_entity).add_child(item_entity);
+        commands.entity(dropped_item_entity).despawn();
+        commands.trigger(InventoryChanged);
+    }
+}
+
+fn add_to_inventory(
+    trigger: Trigger<AddToInventoryEvent>,
+    mut commands: Commands,
+    mut inventories: Query<(Entity, &mut Inventory)>,
+    mut player_skills: Query<&mut PlayerBooks>,
+) {
+    let Ok((inventory_entity, mut inventory)) = inventories.single_mut() else {
+        error!("Inventory doesn't exist!");
+        return;
+    };
+
+    // Allow to move an item
+    inventory.remove(trigger.item);
+    let added = match trigger.pos {
+        Some(pos) => inventory.add_at(trigger.item, pos),
+        None => inventory.add(trigger.item),
+    };
+
+    if added {
+        info!("Add item {} to inventory", trigger.item);
+        commands
+            .entity(trigger.item)
+            .insert(ChildOf(inventory_entity));
+
+        // remove from skill if it was a skill
+        // TODO: probably WRONG!
+        player_skills
+            .single_mut()
+            .expect("PlayerSkills")
+            .remove(trigger.item);
+
+        commands.trigger(InventoryChanged);
+    }
+}
+
+fn remove_from_inventory(
+    trigger: Trigger<RemoveFromInventoryEvent>,
+    mut commands: Commands,
+    mut inventories: Query<(Entity, &mut Inventory)>,
+    items: Query<&ChildOf, With<Item>>,
+) {
+    let Ok((inventory_entity, mut inventory)) = inventories.single_mut() else {
+        error!("Inventory doesn't exist!");
+        return;
+    };
+    let item = trigger.0;
+    if inventory.remove(item) {
+        info!("Remove item {item} from inventory");
+        commands.entity(inventory_entity).remove::<InventoryPos>();
+        if let Ok(&ChildOf(parent)) = items.get(item) {
+            if inventory_entity == parent {
+                warn!("Remove item {item} from inventory : removing ChildOf");
+                commands.entity(item).remove::<ChildOf>();
+            }
+        }
+        commands.trigger(InventoryChanged);
     }
 }

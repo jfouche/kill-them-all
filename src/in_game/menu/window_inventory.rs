@@ -9,7 +9,7 @@ use crate::{
     components::{
         despawn_all,
         inventory::{
-            AddToInventoryAtIndexCommand, Inventory, InventoryChanged, PlayerEquipmentChanged,
+            AddToInventoryEvent, Inventory, InventoryChanged, PlayerEquipmentChanged,
             ToggleInventory,
         },
         item::{ItemEntity, ItemLocation},
@@ -186,13 +186,8 @@ fn on_drop_on_location(
         None => {
             // There is no item at the index in the inventory
             info!("on_drop_on_location({location_item}) drop item {drop_item}");
-            commands.queue(AddToInventoryAtIndexCommand {
-                item: drop_item,
-                index: index.0,
-            });
-            commands.queue(|world: &mut World| {
-                world.trigger(PlayerEquipmentChanged);
-            });
+            commands.trigger(AddToInventoryEvent::new_at(drop_item, index.0));
+            commands.trigger(PlayerEquipmentChanged);
         }
         Some(target_item) => {
             info!("on_drop_on_location({location_item}) drop item {drop_item} on {target_item}");
