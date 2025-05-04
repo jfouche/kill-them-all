@@ -15,7 +15,8 @@ mod plugin {
             equipment::weapon::AttackTimer,
             skills::{
                 death_aura::DeathAuraBook, fireball::FireBallLauncherBook, mine::MineDropperBook,
-                shuriken::ShurikenLauncherBook, AffectedByAreaOfEffect, OfBook, Skill, SkillOfBook,
+                shuriken::ShurikenLauncherBook, AffectedByAreaOfEffect, AssociatedSkill, Skill,
+                SkillOfBook,
             },
         },
         schedule::{GameRunningSet, GameState},
@@ -32,7 +33,7 @@ mod plugin {
                 mine_plugin::MinePlugin,
                 death_aura_plugin::DeathAuraPlugin,
             ))
-            .register_type::<OfBook>()
+            .register_type::<AssociatedSkill>()
             .add_systems(
                 PreUpdate,
                 tick_attack_timer.run_if(in_state(GameState::InGame)),
@@ -75,11 +76,10 @@ mod plugin {
         let book_entity = trigger.target();
         if let Ok(&ChildOf(character_entity)) = books.get(book_entity) {
             if characters.contains(character_entity) {
-                commands.spawn((
-                    B::Skill::default(),
-                    ChildOf(character_entity),
-                    OfBook(book_entity),
-                ));
+                let skill = commands
+                    .spawn((B::Skill::default(), ChildOf(character_entity)))
+                    .id();
+                commands.entity(book_entity).insert(AssociatedSkill(skill));
             }
         }
     }
@@ -87,21 +87,15 @@ mod plugin {
     fn disable_skill<B>(
         trigger: Trigger<OnRemove, ChildOf>,
         mut commands: Commands,
-        books: Query<&ChildOf, With<B>>,
+        books: Query<(&ChildOf, &AssociatedSkill), With<B>>,
         characters: Query<&Children, With<Character>>,
-        skills: Query<(Entity, &ChildOf), With<<B as SkillOfBook>::Skill>>,
     ) where
         B: Component + SkillOfBook,
         <B as SkillOfBook>::Skill: Component,
     {
-        if let Ok(child_of) = books.get(trigger.target()) {
-            if characters.get(child_of.parent()).is_ok() {
-                for skill_entity in skills
-                    .iter()
-                    .filter_map(|(e, co)| (co.parent() == child_of.parent()).then_some(e))
-                {
-                    commands.entity(skill_entity).despawn();
-                }
+        if let Ok((child_of, &AssociatedSkill(skill))) = books.get(trigger.target()) {
+            if characters.contains(child_of.parent()) {
+                commands.entity(skill).despawn();
             }
         }
     }

@@ -20,7 +20,8 @@ use crate::{
             PlayerDeathEvent, Score,
         },
         skills::{
-            shuriken::ShurikenLauncherBook, spawn_book, ActivateSkill, OfBook, Skill, SkillBook,
+            shuriken::ShurikenLauncherBook, spawn_book, ActivateSkill, AssociatedSkill, Skill,
+            SkillBook,
         },
         world_map::{WorldMap, WorldMapLoadingFinished, LAYER_PLAYER},
         GROUP_ENEMY,
@@ -255,7 +256,8 @@ fn refill_life_on_level_up(
 fn activate_skill(
     mut commands: Commands,
     players: Query<&PlayerBooks, With<Player>>,
-    mut skills: Query<(Entity, &mut AttackTimer, &OfBook), With<Skill>>,
+    books: Query<&AssociatedSkill, With<SkillBook>>,
+    mut skills: Query<&mut AttackTimer, With<Skill>>,
     windows: Query<&Window, With<PrimaryWindow>>,
     cameras: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
     buttons: Res<ButtonInput<KeyCode>>,
@@ -289,14 +291,12 @@ fn activate_skill(
 
     for action in actions {
         if let Some(book) = player_books.get(action) {
-            for (skill_entity, mut timer) in skills
-                .iter_mut()
-                .filter(|(_e, _timer, &OfBook(b))| b == book)
-                .map(|(e, timer, _)| (e, timer))
-            {
-                if timer.finished() {
-                    commands.trigger(ActivateSkill(skill_entity, pos));
-                    timer.reset();
+            if let Ok(&AssociatedSkill(skill)) = books.get(book) {
+                if let Ok(mut timer) = skills.get_mut(skill) {
+                    if timer.finished() {
+                        commands.trigger(ActivateSkill(skill, pos));
+                        timer.reset();
+                    }
                 }
             }
         }

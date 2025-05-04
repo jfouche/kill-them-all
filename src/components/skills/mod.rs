@@ -32,7 +32,7 @@ pub trait SkillOfBook {
 }
 
 #[derive(Component, Copy, Clone, Deref, Reflect)]
-pub struct OfBook(pub Entity);
+pub struct AssociatedSkill(pub Entity);
 
 #[derive(Component)]
 #[require(ItemLocation)]
