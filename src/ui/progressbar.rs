@@ -1,7 +1,4 @@
-use bevy::{
-    ecs::{component::HookContext, world::DeferredWorld},
-    prelude::*,
-};
+use bevy::prelude::*;
 
 ///
 /// Define the [ProgressBar] color
@@ -21,7 +18,6 @@ impl Default for ProgressBarColor {
 /// the foreground color is defined with the [ProgressBarColor] component.
 #[derive(Component, Default, Debug, Clone, Reflect)]
 #[require(Node, ProgressBarColor)]
-#[component(on_add = create_progress_bar)]
 pub struct ProgressBar {
     pub min: f32,
     pub max: f32,
@@ -31,22 +27,6 @@ pub struct ProgressBar {
 impl ProgressBar {
     fn percent(&self) -> f32 {
         (self.value - self.min) / (self.max - self.min)
-    }
-}
-
-fn create_progress_bar(mut world: DeferredWorld, context: HookContext) {
-    world
-        .commands()
-        .queue(CreateProgressBarCommand(context.entity));
-}
-
-struct CreateProgressBarCommand(Entity);
-
-impl Command for CreateProgressBarCommand {
-    fn apply(self, world: &mut World) {
-        world.entity_mut(self.0).with_children(|parent| {
-            parent.spawn(ProgressBarForeground);
-        });
     }
 }
 
@@ -68,8 +48,15 @@ impl Plugin for ProgressBarPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<ProgressBarColor>()
             .register_type::<ProgressBar>()
-            .add_systems(Update, update_progress_bars);
+            .add_systems(Update, update_progress_bars)
+            .add_observer(create_progress_bar);
     }
+}
+
+fn create_progress_bar(trigger: Trigger<OnAdd, ProgressBar>, mut commands: Commands) {
+    commands
+        .entity(trigger.target())
+        .insert(children![ProgressBarForeground]);
 }
 
 fn update_progress_bars(
