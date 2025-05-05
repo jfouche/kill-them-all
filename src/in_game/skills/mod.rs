@@ -76,6 +76,7 @@ mod plugin {
         let book_entity = trigger.target();
         if let Ok(&ChildOf(character_entity)) = books.get(book_entity) {
             if characters.contains(character_entity) {
+                info!("enable_skill({})", std::any::type_name::<B::Skill>());
                 let skill = commands
                     .spawn((B::Skill::default(), ChildOf(character_entity)))
                     .id();
@@ -84,6 +85,7 @@ mod plugin {
         }
     }
 
+    // TODO: Usefull ?
     fn disable_skill<B>(
         trigger: Trigger<OnRemove, ChildOf>,
         mut commands: Commands,
@@ -95,6 +97,7 @@ mod plugin {
     {
         if let Ok((child_of, &AssociatedSkill(skill))) = books.get(trigger.target()) {
             if characters.contains(child_of.parent()) {
+                info!("disable_skill({})", std::any::type_name::<B::Skill>());
                 commands.entity(skill).despawn();
             }
         }

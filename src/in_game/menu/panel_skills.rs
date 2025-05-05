@@ -68,12 +68,13 @@ fn on_drop_item(
     mut commands: Commands,
     locations: Query<&PlayerAction, With<SkillBookLocation>>,
     cursor: Single<&DraggedEntity, With<DndCursor>>,
-    skill_gems: Query<(), With<SkillBook>>,
+    books: Query<(), With<SkillBook>>,
 ) {
     if let Some(item_entity) = ***cursor {
-        if skill_gems.get(item_entity).is_ok() {
+        if books.get(item_entity).is_ok() {
             if let Ok(action) = locations.get(trigger.target()) {
                 // The item dropped is a skill gem
+                // TODO: Obviously wrong!
                 commands.trigger(EquipSkillBookEvent {
                     action: *action,
                     book_entity: item_entity,

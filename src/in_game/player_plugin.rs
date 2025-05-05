@@ -416,7 +416,8 @@ fn add_to_inventory(
     trigger: Trigger<AddToInventoryEvent>,
     mut commands: Commands,
     mut inventories: Query<(Entity, &mut Inventory)>,
-    mut player_skills: Query<&mut PlayerBooks>,
+    mut players: Query<&mut PlayerBooks>,
+    books: Query<&AssociatedSkill, With<SkillBook>>,
 ) {
     let Ok((inventory_entity, mut inventory)) = inventories.single_mut() else {
         error!("Inventory doesn't exist!");
@@ -436,13 +437,16 @@ fn add_to_inventory(
             .entity(trigger.item)
             .insert(ChildOf(inventory_entity));
 
-        // remove from skill if it was a skill
-        // TODO: probably WRONG!
-        player_skills
-            .single_mut()
-            .expect("PlayerSkills")
-            .remove(trigger.item);
-
+        // remove from Skill if it was a SkillBook
+        if let Ok(&AssociatedSkill(skill)) = books.get(trigger.item) {
+            if players
+                .single_mut()
+                .expect("PlayerSkills")
+                .remove(trigger.item)
+            {
+                commands.entity(skill).despawn();
+            }
+        }
         commands.trigger(InventoryChanged);
     }
 }
@@ -463,7 +467,6 @@ fn remove_from_inventory(
         commands.entity(inventory_entity).remove::<InventoryPos>();
         if let Ok(&ChildOf(parent)) = items.get(item) {
             if inventory_entity == parent {
-                warn!("Remove item {item} from inventory : removing ChildOf");
                 commands.entity(item).remove::<ChildOf>();
             }
         }

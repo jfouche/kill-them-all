@@ -34,11 +34,8 @@ fn launch_shuriken(
     asset: Res<ShurikenAssets>,
 ) {
     let (skill_entity, target_pos) = (trigger.0, trigger.1);
-    warn!("launch_shuriken({skill_entity}, {target_pos})");
     if let Ok((damage_range, child_of)) = skills.get(skill_entity) {
-        warn!("launch_shuriken - 1");
         if let Ok((origin, pierce_chance, target)) = characters.get(child_of.parent()) {
-            warn!("launch_shuriken - 2");
             let origin = origin.translation.xy();
             let velocity = (target_pos - origin).normalize() * SHURIKEN_SPEED;
             commands.spawn((
