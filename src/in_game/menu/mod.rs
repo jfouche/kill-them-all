@@ -13,7 +13,7 @@ pub use plugin::InGameMenuPlugin;
 
 mod plugin {
     use super::{
-        dnd::DndPlugin, item_location::ItemImagePlugin, menu_level_up::LevelUpMenuPlugin,
+        dnd::DndPlugin, item_location::ItemLocationPlugin, menu_level_up::LevelUpMenuPlugin,
         menu_pause::PausePlugin, menu_player_died::PlayerDiedMenuPlugin,
         panel_equipments::EquipmentPanelPlugin, panel_skills::SkillsPanelPlugin,
         popup_info::PopupInfoPlugin, window_inventory::InventoryPanelPlugin,
@@ -28,7 +28,7 @@ mod plugin {
     impl Plugin for InGameMenuPlugin {
         fn build(&self, app: &mut App) {
             app.add_plugins((
-                ItemImagePlugin,
+                ItemLocationPlugin,
                 PausePlugin,
                 LevelUpMenuPlugin,
                 PlayerDiedMenuPlugin,

@@ -6,9 +6,9 @@ use crate::{
 use bevy::{color::palettes::css, ecs::query::QueryFilter, prelude::*};
 use std::marker::PhantomData;
 
-pub struct ItemImagePlugin;
+pub struct ItemLocationPlugin;
 
-impl Plugin for ItemImagePlugin {
+impl Plugin for ItemLocationPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<ItemEntity>()
             .add_systems(Update, update_image.in_set(GameRunningSet::EntityUpdate))

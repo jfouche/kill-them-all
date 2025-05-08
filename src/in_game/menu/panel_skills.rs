@@ -1,57 +1,47 @@
 use super::dnd::{DndCursor, DraggedEntity};
-use crate::{
-    components::{
-        inventory::PlayerEquipmentChanged,
-        player::{EquipSkillBookEvent, PlayerAction},
-        skills::{SkillBook, SkillBookLocation},
-    },
-    utils::observers::VecObserversExt,
+use crate::components::{
+    inventory::PlayerEquipmentChanged,
+    player::{EquipSkillBookEvent, PlayerAction},
+    skills::{SkillBook, SkillBookLocation},
 };
 use bevy::prelude::*;
-
-#[derive(Component)]
-#[require(
-    Name::new("SkillsPanel"),
-    Node {
-        flex_direction: FlexDirection::Row,
-        justify_content: JustifyContent::Center,
-        align_items: AlignItems::Center,
-        padding: UiRect::all(Val::Px(5.)),
-        ..Default::default()
-    }
-)]
-pub struct SkillsPanel;
 
 pub struct SkillsPanelPlugin;
 
 impl Plugin for SkillsPanelPlugin {
     fn build(&self, app: &mut App) {
-        app.add_observer(create_panel);
+        app.add_observer(create_panel).add_observer(on_drop_item);
     }
 }
 
-fn create_panel(trigger: Trigger<OnAdd, SkillsPanel>, mut commands: Commands) {
-    let mut observers = vec![Observer::new(on_drop_item)];
+#[derive(Component)]
+struct SkillsPanel;
 
-    commands.entity(trigger.target()).with_children(|panel| {
-        panel.spawn(Text::new("A:"));
-        let entity = panel.spawn((PlayerAction::Skill1, SkillBookLocation)).id();
-        observers.watch_entity(entity);
+pub fn skills_panel() -> impl Bundle {
+    (
+        SkillsPanel,
+        Name::new("SkillsPanel"),
+        Node {
+            flex_direction: FlexDirection::Row,
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Center,
+            padding: UiRect::all(Val::Px(5.)),
+            ..Default::default()
+        },
+        children![
+            Text::new("A:"),
+            (PlayerAction::Skill1, SkillBookLocation),
+            Text::new("Z:"),
+            (PlayerAction::Skill2, SkillBookLocation),
+            Text::new("E:"),
+            (PlayerAction::Skill3, SkillBookLocation),
+            Text::new("R:"),
+            (PlayerAction::Skill4, SkillBookLocation)
+        ],
+    )
+}
 
-        panel.spawn(Text::new("Z:"));
-        let entity = panel.spawn((PlayerAction::Skill2, SkillBookLocation)).id();
-        observers.watch_entity(entity);
-
-        panel.spawn(Text::new("E:"));
-        let entity = panel.spawn((PlayerAction::Skill3, SkillBookLocation)).id();
-        observers.watch_entity(entity);
-
-        panel.spawn(Text::new("R:"));
-        let entity = panel.spawn((PlayerAction::Skill4, SkillBookLocation)).id();
-        observers.watch_entity(entity);
-    });
-    commands.spawn_batch(observers);
-
+fn create_panel(_trigger: Trigger<OnAdd, SkillsPanel>, mut commands: Commands) {
     // to force to init the update
     commands.trigger(PlayerEquipmentChanged);
 }
@@ -64,7 +54,7 @@ fn on_drop_item(
     books: Query<(), With<SkillBook>>,
 ) {
     if let Some(item_entity) = ***cursor {
-        if books.get(item_entity).is_ok() {
+        if books.contains(item_entity) {
             if let Ok(action) = locations.get(trigger.target()) {
                 // The item dropped is a skill gem
                 // TODO: Obviously wrong!

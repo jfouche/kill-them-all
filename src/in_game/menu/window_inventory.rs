@@ -2,7 +2,7 @@ use super::{
     dnd::{DndCursor, DraggedEntity},
     item_location::ShowBorderOnDrag,
     panel_equipments::EquipmentsPanel,
-    panel_skills::SkillsPanel,
+    panel_skills::skills_panel,
 };
 use crate::{
     components::{
@@ -120,7 +120,7 @@ fn toggle_window(
             // spawn window as it doesn't exist
             commands.spawn((
                 InventoryWindow,
-                children![EquipmentsPanel, SkillsPanel, InventoryPanel],
+                children![EquipmentsPanel, skills_panel(), InventoryPanel],
             ));
         }
     }
