@@ -3,7 +3,6 @@ use super::{
     item_location::{ItemLocationDragObservers, ShowBorderOnDrag},
     panel_equipments::EquipmentsPanel,
     panel_skills::SkillsPanel,
-    popup_info::SpawnInfoPopupObservers,
 };
 use crate::{
     components::{
@@ -119,18 +118,16 @@ fn toggle_window(
         }
         None => {
             // spawn window as it doesn't exist
-            commands.spawn(InventoryWindow).with_children(|wnd| {
-                wnd.spawn(EquipmentsPanel);
-                wnd.spawn(SkillsPanel);
-                wnd.spawn(InventoryPanel);
-            });
+            commands.spawn((
+                InventoryWindow,
+                children![EquipmentsPanel, SkillsPanel, InventoryPanel],
+            ));
         }
     }
 }
 
 fn create_panel(trigger: Trigger<OnAdd, InventoryPanel>, mut commands: Commands) {
     let mut observers = vec![Observer::new(on_drop_on_location)]
-        .with_observers(SpawnInfoPopupObservers::observers())
         .with_observers(ItemLocationDragObservers::observers())
         .with_observers(<ShowBorderOnDrag>::observers());
 

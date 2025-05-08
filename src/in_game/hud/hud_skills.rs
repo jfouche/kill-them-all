@@ -5,10 +5,8 @@ use crate::{
         player::PlayerAction,
         skills::SkillBookLocation,
     },
-    in_game::menu::popup_info::SpawnInfoPopupObservers,
     schedule::GameState,
     ui::button::ButtonColors,
-    utils::observers::VecObserversExt,
 };
 use bevy::prelude::*;
 
@@ -57,7 +55,6 @@ struct HudSkillsPanel;
 struct InventoryButton;
 
 fn spawn_hud_skills(mut commands: Commands) {
-    let mut observers = vec![].with_observers(SpawnInfoPopupObservers::observers());
     commands.spawn(HudSkillsPanel).with_children(|p| {
         p.spawn(InventoryButton)
             .with_children(|b| {
@@ -68,15 +65,10 @@ fn spawn_hud_skills(mut commands: Commands) {
             });
 
         let entity = p.spawn((PlayerAction::Skill1, SkillBookLocation)).id();
-        observers.watch_entity(entity);
         let entity = p.spawn((PlayerAction::Skill2, SkillBookLocation)).id();
-        observers.watch_entity(entity);
         let entity = p.spawn((PlayerAction::Skill3, SkillBookLocation)).id();
-        observers.watch_entity(entity);
         let entity = p.spawn((PlayerAction::Skill4, SkillBookLocation)).id();
-        observers.watch_entity(entity);
     });
-    commands.spawn_batch(observers);
 
     // to force to update skills
     commands.trigger(PlayerEquipmentChanged);

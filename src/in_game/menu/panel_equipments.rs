@@ -1,7 +1,6 @@
 use super::{
     dnd::{DndCursor, DraggedEntity},
     item_location::{ItemLocationDragObservers, ShowBorderOnDrag},
-    popup_info::SpawnInfoPopupObservers,
 };
 use crate::{
     components::{
@@ -124,9 +123,7 @@ fn spawn_panel_content(
     mut commands: Commands,
     assets: Res<ItemAssets>,
 ) {
-    let mut observers = Vec::new()
-        .with_observers(SpawnInfoPopupObservers::observers())
-        .with_observers(ItemLocationDragObservers::observers());
+    let mut observers = Vec::new().with_observers(ItemLocationDragObservers::observers());
 
     let mut helmet_border_observers = ShowBorderOnDrag::<With<Helmet>>::default();
     let mut body_armour_border_observers = ShowBorderOnDrag::<With<BodyArmour>>::default();

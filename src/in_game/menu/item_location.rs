@@ -148,7 +148,7 @@ fn on_drag_start_item(
             *cursor_image = assets.image_node(info.tile_index);
         }
     }
-    trigger.propagate(false);
+    // trigger.propagate(false);
 }
 
 fn on_drag_end_item(

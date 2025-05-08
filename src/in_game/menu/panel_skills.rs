@@ -1,7 +1,6 @@
 use super::{
     dnd::{DndCursor, DraggedEntity},
     item_location::{ItemLocationDragObservers, ShowBorderOnDrag},
-    popup_info::SpawnInfoPopupObservers,
 };
 use crate::{
     components::{
@@ -36,7 +35,6 @@ impl Plugin for SkillsPanelPlugin {
 
 fn create_panel(trigger: Trigger<OnAdd, SkillsPanel>, mut commands: Commands) {
     let mut observers = vec![Observer::new(on_drop_item)]
-        .with_observers(SpawnInfoPopupObservers::observers())
         .with_observers(ShowBorderOnDrag::<With<SkillBook>>::observers())
         .with_observers(ItemLocationDragObservers::observers());
 

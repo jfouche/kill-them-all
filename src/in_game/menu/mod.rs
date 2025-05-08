@@ -16,7 +16,8 @@ mod plugin {
         dnd::DndPlugin, item_location::ItemImagePlugin, menu_level_up::LevelUpMenuPlugin,
         menu_pause::PausePlugin, menu_player_died::PlayerDiedMenuPlugin,
         panel_equipments::EquipmentPanelPlugin, panel_skills::SkillsPanelPlugin,
-        window_inventory::InventoryPanelPlugin, window_statistics::StatsWindowPlugin,
+        popup_info::PopupInfoPlugin, window_inventory::InventoryPanelPlugin,
+        window_statistics::StatsWindowPlugin,
     };
     use crate::in_game::{pause, unpause};
     use crate::{components::item::ItemAssets, schedule::InGameState};
@@ -36,6 +37,7 @@ mod plugin {
                 StatsWindowPlugin,
                 EquipmentPanelPlugin,
                 DndPlugin,
+                PopupInfoPlugin,
             ))
             .init_resource::<ItemAssets>()
             .add_systems(OnEnter(InGameState::Pause), pause)

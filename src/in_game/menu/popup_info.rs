@@ -4,6 +4,15 @@ use crate::{
 };
 use bevy::prelude::*;
 
+pub struct PopupInfoPlugin;
+
+impl Plugin for PopupInfoPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_observer(spawn_popup_info_on_over_item)
+            .add_observer(despawn_popup_info_on_out_item);
+    }
+}
+
 /// The popup itself
 #[derive(Component)]
 struct InfoPopup;
@@ -28,51 +37,28 @@ impl InfoPopup {
     }
 }
 
-/// Observers that shows an info popup when overing an Item.
-pub struct SpawnInfoPopupObservers(/* pub Vec<Observer> */);
-
-// impl Default for SpawnInfoPopupObservers {
-//     fn default() -> Self {
-//         Self(Self::observers())
-//     }
-// }
-
-impl SpawnInfoPopupObservers {
-    pub fn observers() -> Vec<Observer> {
-        vec![
-            Observer::new(spawn_popup_info_on_over_item),
-            Observer::new(despawn_popup_info_on_out_item),
-        ]
-    }
-}
-
 fn spawn_popup_info_on_over_item(
-    mut trigger: Trigger<Pointer<Over>>,
+    trigger: Trigger<Pointer<Over>>,
     mut commands: Commands,
     mut item_entities: Query<&ItemEntity>,
     items: Query<&ItemInfo>,
     assets: Res<ItemAssets>,
 ) {
     if let Ok(ItemEntity(Some(item_entity))) = item_entities.get_mut(trigger.target()) {
-        // info!("spawn_popup_info_on_over_item({})", trigger.entity());
         if let Ok(info) = items.get(*item_entity) {
             let pos = trigger.pointer_location.position;
             let img = assets.image_node(info.tile_index);
             commands.spawn(InfoPopup::bundle(pos, img, info.text.clone()));
         }
-        // TODO: https://github.com/bevyengine/bevy/blob/release-0.15.3/crates/bevy_picking/src/events.rs#L353
-        trigger.propagate(false);
     }
 }
 
 fn despawn_popup_info_on_out_item(
-    mut trigger: Trigger<Pointer<Out>>,
+    _trigger: Trigger<Pointer<Out>>,
     mut commands: Commands,
     popups: Query<Entity, With<InfoPopup>>,
 ) {
     for entity in &popups {
-        // info!("despawn_popup_info_on_out_item({})", trigger.entity());
         commands.entity(entity).despawn();
     }
-    trigger.propagate(false);
 }
