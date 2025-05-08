@@ -319,10 +319,10 @@ fn equip_equipment(
     let old_equipment = equipments
         .iter()
         // same parent, same type, but different entity
-        .filter(|(entity, eqp, child_of)| {
-            player == child_of.parent() && **eqp == equipment_to_equip && *entity != trigger.0
+        .filter(|(entity, eqp, &ChildOf(parent))| {
+            player == parent && **eqp == equipment_to_equip && *entity != trigger.0
         })
-        .map(|(e, _eqp, _p)| e)
+        .map(|(e, _eqp, _co)| e)
         // There should be at most 1 equipment
         .next();
 

@@ -7,10 +7,10 @@ use crate::{
         item::{DroppedItem, ItemAssets},
         monster::Monster,
         orb::OrbProvider,
-        player::Player,
+        player::{Player, PlayerBooks},
         skills::{
             death_aura::{DeathAura, DeathAuraBook},
-            spawn_book,
+            spawn_book, AssociatedSkill, SkillBook,
         },
         world_map::{ProceduralWorldMap, WorldMapConfig, LAYER_ITEM},
     },
@@ -56,7 +56,7 @@ impl Plugin for DebugPlugin {
         .insert_resource(DebugMode(true))
         .add_systems(EguiContextPass, inspector_ui.run_if(debug_is_active))
         .add_systems(Startup, configure_egui)
-        .add_systems(OnEnter(GameState::InGame), spawn_death_aura)
+        .add_systems(OnEnter(GameState::InGame), spawn_death_aura_book)
         .add_systems(
             Update,
             (
@@ -73,6 +73,7 @@ impl Plugin for DebugPlugin {
                 toggle_debug_ui.run_if(input_just_pressed(KeyCode::Backquote)),
             ),
         )
+        // .add_systems(Last, debug_death_aura_post)
         .add_observer(init_player);
     }
 }
@@ -181,13 +182,47 @@ fn init_player(trigger: Trigger<OnAdd, Player>, mut commands: Commands) {
     commands.trigger(AddToInventoryEvent::new(orb.entity));
 }
 
-fn spawn_death_aura(mut commands: Commands, assets: Res<ItemAssets>) {
+fn spawn_death_aura_book(mut commands: Commands, assets: Res<ItemAssets>) {
     let item_info = spawn_book::<DeathAuraBook>(&mut commands);
     commands
         .spawn((
             DroppedItem(item_info.entity),
             assets.sprite(item_info.info.tile_index),
-            Transform::from_translation(vec3(100., 100., LAYER_ITEM)).with_scale(Vec3::splat(0.3)),
+            Transform::from_translation(vec3(50., 50., LAYER_ITEM)).with_scale(Vec3::splat(0.3)),
         ))
         .observe(take_dropped_item);
+}
+
+fn debug_death_aura(q: Query<&Transform, With<DeathAura>>, mut save: Local<Vec2>) {
+    for &transform in &q {
+        let pos = transform.translation.xy();
+        if *save != pos {
+            warn!("DeathAura transform: {}", transform.translation.xy());
+            *save = pos;
+        }
+    }
+}
+
+fn debug_death_aura_post(q: Query<&Transform, With<DeathAura>>, mut save: Local<Vec2>) {
+    for &transform in &q {
+        let pos = transform.translation.xy();
+        if *save != pos {
+            warn!(
+                "DeathAura transform PostUpdate: {}",
+                transform.translation.xy()
+            );
+            *save = pos;
+        }
+    }
+}
+
+fn equip_death_aura(mut commands: Commands, players: Query<Entity, With<Player>>) {
+    let player = players.single().unwrap();
+    let book = commands
+        .spawn((Name::new("TEST BOOK"), SkillBook, ChildOf(player)))
+        .id();
+    let skill = commands
+        .spawn((Name::new("TEST DEATH AURA"), DeathAura, ChildOf(player)))
+        .id();
+    commands.entity(book).insert(AssociatedSkill(skill));
 }

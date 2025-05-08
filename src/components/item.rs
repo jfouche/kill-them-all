@@ -216,7 +216,7 @@ impl<const N: usize> AffixConfigGenerator for [(u16, (u16, u16), usize); N] {
     }
 }
 
-/// Event to add an [Equipment] to the [Player].
+/// Event to add an [crate::components::equipment::Equipment] to the [crate::components::player::Player].
 #[derive(Event)]
 pub struct EquipEquipmentEvent(pub Entity);
 

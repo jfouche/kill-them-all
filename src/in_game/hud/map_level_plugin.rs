@@ -38,7 +38,7 @@ struct MapLevelPanel;
 struct MapLevelText;
 
 fn spawn_panel(mut commands: Commands) {
-    commands.spawn(MapLevelPanel).with_child(MapLevelText);
+    commands.spawn((MapLevelPanel, children![MapLevelText]));
 }
 
 fn update_panel(

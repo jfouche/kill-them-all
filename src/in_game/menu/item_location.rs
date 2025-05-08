@@ -32,9 +32,7 @@ fn create_image_location(
                 .unwrap_or(assets.empty_image_node()),
             None => assets.empty_image_node(),
         };
-        commands
-            .entity(trigger.target())
-            .with_child((ItemImage, image_node));
+        commands.spawn((ItemImage, image_node, ChildOf(trigger.target())));
     }
 }
 

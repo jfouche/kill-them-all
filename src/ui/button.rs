@@ -110,11 +110,12 @@ fn create_text_button(
         ButtonKind::Big => BIG_BUTTON_FONT_SIZE,
         ButtonKind::Small => SMALL_BUTTON_FONT_SIZE,
     };
-    commands.entity(trigger.target()).with_child((
+    commands.spawn((
         Text(button.text.clone()),
         TextColor(BUTTON_TEXT_COLOR),
         TextFont::from_font_size(font_size),
         TextLayout::new_with_justify(JustifyText::Center),
+        ChildOf(trigger.target()),
     ));
     // TODO: add observers to change color ?
 }

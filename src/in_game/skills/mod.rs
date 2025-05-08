@@ -36,7 +36,7 @@ mod plugin {
             .register_type::<AssociatedSkill>()
             .add_systems(
                 PreUpdate,
-                tick_attack_timer.run_if(in_state(GameState::InGame)),
+                (fix_skill_tranform, tick_attack_timer).run_if(in_state(GameState::InGame)),
             )
             .add_systems(
                 Update,
@@ -128,6 +128,14 @@ mod plugin {
                 let scale = 1. + **incr / 100.;
                 transform.scale = Vec3::splat(scale);
             }
+        }
+    }
+
+    // TODO: understand why I need this, and fix the source of the problem
+    fn fix_skill_tranform(mut skills: Query<&mut Transform, With<Skill>>) {
+        for mut transform in &mut skills {
+            transform.translation.x = 0.0;
+            transform.translation.y = 0.0;
         }
     }
 }

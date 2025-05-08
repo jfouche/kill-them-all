@@ -3,6 +3,7 @@ use super::{
     character::{BaseLife, BaseMovementSpeed, Character, Target},
     inventory::PlayerEquipmentChanged,
     skills::SkillBook,
+    world_map::LAYER_PLAYER,
     GROUP_ALL, GROUP_PLAYER,
 };
 use crate::utils::despawn_after::DespawnAfter;
@@ -20,7 +21,7 @@ use std::time::Duration;
     BaseMovementSpeed(100.),
     Experience,
     Sprite,
-    Transform::from_xyz(0., 0., 10.),
+    Transform::from_xyz(10., 10., LAYER_PLAYER),
     AnimationTimer,
     Collider::cuboid(PLAYER_SIZE.x / 2., PLAYER_SIZE.y / 2.),
     CollisionGroups::new(GROUP_PLAYER, GROUP_ALL),

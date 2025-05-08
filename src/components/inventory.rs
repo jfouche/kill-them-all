@@ -103,6 +103,6 @@ impl AddToInventoryEvent {
 #[derive(Event)]
 pub struct RemoveFromInventoryEvent(pub Entity);
 
-/// Try to add a [DroppedItem] item to the [Inventory].
+/// Try to add a [crate::components::item::DroppedItem] item to the [Inventory].
 #[derive(Event)]
 pub struct TakeDroppedItemEvent(pub Entity);

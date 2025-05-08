@@ -108,7 +108,7 @@ fn spawn_or_despawn_window(
     if let Ok(entity) = windows.single() {
         commands.entity(entity).despawn();
     } else {
-        commands.spawn(StatisticsWindow).with_child(StatisticsPanel);
+        commands.spawn((StatisticsWindow, children![StatisticsPanel]));
     }
 }
 

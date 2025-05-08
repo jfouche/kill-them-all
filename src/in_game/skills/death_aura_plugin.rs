@@ -2,6 +2,7 @@ use crate::components::{
     character::{Character, Target},
     damage::Damager,
     skills::death_aura::{DeathAura, DeathAuraAssets, DeathAuraMaterial},
+    world_map::LAYER_DAMAGER,
 };
 use bevy::{prelude::*, sprite::Material2dPlugin};
 use bevy_rapier2d::prelude::CollisionGroups;
@@ -21,7 +22,7 @@ impl Plugin for DeathAuraPlugin {
 }
 
 fn on_equip(
-    trigger: Trigger<OnAdd, ChildOf>,
+    trigger: Trigger<OnAdd, DeathAura>,
     mut death_auras: Query<
         (
             &mut Transform,
@@ -35,14 +36,14 @@ fn on_equip(
     targets: Query<&Target, With<Character>>,
     assets: Res<DeathAuraAssets>,
 ) {
-    if let Ok((mut transform, mut mesh, mut material, mut collision_groups, child_of)) =
+    if let Ok((mut transform, mut mesh, mut material, mut collision_groups, &ChildOf(parent))) =
         death_auras.get_mut(trigger.target())
     {
-        if let Ok(&target) = targets.get(child_of.parent()) {
+        if let Ok(&target) = targets.get(parent) {
             info!("Equip DeathAura");
-            transform.translation = Vec3::ZERO;
-            *mesh = Mesh2d(assets.mesh.clone());
-            *material = MeshMaterial2d(assets.material.clone());
+            transform.translation = vec3(0., 0., LAYER_DAMAGER);
+            mesh.0 = assets.mesh.clone();
+            material.0 = assets.material.clone();
             *collision_groups = Damager::collision_groups(target);
         }
     }
