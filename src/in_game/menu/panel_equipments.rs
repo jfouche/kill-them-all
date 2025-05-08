@@ -1,6 +1,6 @@
 use super::{
     dnd::{DndCursor, DraggedEntity},
-    item_location::{ItemLocationDragObservers, ShowBorderOnDrag},
+    item_location::ShowBorderOnDrag,
 };
 use crate::{
     components::{
@@ -123,8 +123,6 @@ fn spawn_panel_content(
     mut commands: Commands,
     assets: Res<ItemAssets>,
 ) {
-    let mut observers = Vec::new().with_observers(ItemLocationDragObservers::observers());
-
     let mut helmet_border_observers = ShowBorderOnDrag::<With<Helmet>>::default();
     let mut body_armour_border_observers = ShowBorderOnDrag::<With<BodyArmour>>::default();
     let mut boots_border_observers = ShowBorderOnDrag::<With<Boots>>::default();
@@ -136,39 +134,33 @@ fn spawn_panel_content(
             .spawn(HelmetLocation::bundle(&assets))
             .observe(on_drop_equipment::<Helmet>)
             .id();
-        observers.watch_entity(entity);
         helmet_border_observers.watch_entity(entity);
 
         let entity = panel
             .spawn(BodyArmourLocation::bundle(&assets))
             .observe(on_drop_equipment::<BodyArmour>)
             .id();
-        observers.watch_entity(entity);
         body_armour_border_observers.watch_entity(entity);
 
         let entity = panel
             .spawn(BootsLocation::bundle(&assets))
             .observe(on_drop_equipment::<Boots>)
             .id();
-        observers.watch_entity(entity);
         boots_border_observers.watch_entity(entity);
 
         let entity = panel
             .spawn(AmuletLocation::bundle(&assets))
             .observe(on_drop_equipment::<Amulet>)
             .id();
-        observers.watch_entity(entity);
         amulet_border_observers.watch_entity(entity);
 
         let entity = panel
             .spawn(WeaponLocation::bundle(&assets))
             .observe(on_drop_equipment::<Weapon>)
             .id();
-        observers.watch_entity(entity);
         weapon_border_observers.watch_entity(entity);
     });
 
-    commands.spawn_batch(observers);
     commands.spawn_batch(helmet_border_observers.0);
     commands.spawn_batch(body_armour_border_observers.0);
     commands.spawn_batch(boots_border_observers.0);

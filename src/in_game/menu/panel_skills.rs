@@ -1,7 +1,4 @@
-use super::{
-    dnd::{DndCursor, DraggedEntity},
-    item_location::{ItemLocationDragObservers, ShowBorderOnDrag},
-};
+use super::dnd::{DndCursor, DraggedEntity};
 use crate::{
     components::{
         inventory::PlayerEquipmentChanged,
@@ -34,9 +31,7 @@ impl Plugin for SkillsPanelPlugin {
 }
 
 fn create_panel(trigger: Trigger<OnAdd, SkillsPanel>, mut commands: Commands) {
-    let mut observers = vec![Observer::new(on_drop_item)]
-        .with_observers(ShowBorderOnDrag::<With<SkillBook>>::observers())
-        .with_observers(ItemLocationDragObservers::observers());
+    let mut observers = vec![Observer::new(on_drop_item)];
 
     commands.entity(trigger.target()).with_children(|panel| {
         panel.spawn(Text::new("A:"));

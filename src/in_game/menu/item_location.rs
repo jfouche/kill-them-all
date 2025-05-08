@@ -12,7 +12,9 @@ impl Plugin for ItemImagePlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<ItemEntity>()
             .add_systems(Update, update_image.in_set(GameRunningSet::EntityUpdate))
-            .add_observer(create_image_location);
+            .add_observer(create_image_location)
+            .add_observer(on_drag_start_item)
+            .add_observer(on_drag_end_item);
     }
 }
 
@@ -50,8 +52,8 @@ fn update_image(
                     .get(entity)
                     .ok()
                     .map(|info| assets.image_node(info.tile_index))
-                    .unwrap_or_else(|| assets.empty_image_node())
             })
+            .flatten()
             .unwrap_or_else(|| assets.empty_image_node());
 
         for child in children.iter() {
@@ -116,26 +118,8 @@ fn hide_borders_on_drag_leave_item(
     trigger.propagate(false);
 }
 
-#[derive(Deref, DerefMut)]
-pub struct ItemLocationDragObservers(Vec<Observer>);
-
-impl Default for ItemLocationDragObservers {
-    fn default() -> Self {
-        Self(Self::observers())
-    }
-}
-
-impl ItemLocationDragObservers {
-    pub fn observers() -> Vec<Observer> {
-        vec![
-            Observer::new(on_drag_start_item),
-            Observer::new(on_drag_end_item),
-        ]
-    }
-}
-
 fn on_drag_start_item(
-    mut trigger: Trigger<Pointer<DragStart>>,
+    trigger: Trigger<Pointer<DragStart>>,
     locations: Query<&ItemEntity, With<ItemLocation>>,
     infos: Query<&ItemInfo>,
     cursor: Single<(&mut DraggedEntity, &mut ImageNode), With<DndCursor>>,
@@ -148,16 +132,13 @@ fn on_drag_start_item(
             *cursor_image = assets.image_node(info.tile_index);
         }
     }
-    // trigger.propagate(false);
 }
 
 fn on_drag_end_item(
-    mut trigger: Trigger<Pointer<DragEnd>>,
+    _trigger: Trigger<Pointer<DragEnd>>,
     cursor: Single<(&mut DraggedEntity, &mut ImageNode), With<DndCursor>>,
 ) {
-    // info!("on_drag_end_item({})", trigger.entity());
     let (mut dragged_entity, mut cursor_image) = cursor.into_inner();
     **dragged_entity = None;
     *cursor_image = ImageNode::default();
-    trigger.propagate(false);
 }

@@ -1,6 +1,6 @@
 use super::{
     dnd::{DndCursor, DraggedEntity},
-    item_location::{ItemLocationDragObservers, ShowBorderOnDrag},
+    item_location::ShowBorderOnDrag,
     panel_equipments::EquipmentsPanel,
     panel_skills::SkillsPanel,
 };
@@ -127,23 +127,22 @@ fn toggle_window(
 }
 
 fn create_panel(trigger: Trigger<OnAdd, InventoryPanel>, mut commands: Commands) {
-    let mut observers = vec![Observer::new(on_drop_on_location)]
-        .with_observers(ItemLocationDragObservers::observers())
-        .with_observers(<ShowBorderOnDrag>::observers());
+    let mut observers =
+        vec![Observer::new(on_drop_on_location)].with_observers(<ShowBorderOnDrag>::observers());
 
-    commands.entity(trigger.target()).with_children(|cmd| {
-        for idx in 0..Inventory::len() {
-            let entity = cmd
-                .spawn((
-                    InventoryLocation,
-                    Name::new(format!("InventoryLocation({idx})")),
-                    InventoryLocation::node(idx),
-                    InventoryIndex(idx),
-                ))
-                .id();
-            observers.watch_entity(entity);
-        }
-    });
+    let panel = trigger.target();
+    for idx in 0..Inventory::len() {
+        let entity = commands
+            .spawn((
+                InventoryLocation,
+                Name::new(format!("InventoryLocation({idx})")),
+                InventoryLocation::node(idx),
+                InventoryIndex(idx),
+                ChildOf(panel),
+            ))
+            .id();
+        observers.watch_entity(entity);
+    }
 
     commands.spawn_batch(observers);
 
