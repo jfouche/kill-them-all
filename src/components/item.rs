@@ -6,6 +6,7 @@ use super::{
 };
 use bevy::prelude::*;
 use rand::{rngs::ThreadRng, Rng};
+use std::marker::PhantomData;
 
 pub const ITEM_SIZE: UVec2 = UVec2::new(48, 48);
 
@@ -90,6 +91,18 @@ impl ItemLocation {
         }
     }
 }
+
+#[derive(Component)]
+pub struct ItemLocationAccept<T>(PhantomData<T>);
+
+impl<T> ItemLocationAccept<T> {
+    pub fn new() -> Self {
+        ItemLocationAccept(PhantomData)
+    }
+}
+
+#[derive(Component)]
+pub struct ItemLocationAcceptAll;
 
 #[derive(Component)]
 #[require(

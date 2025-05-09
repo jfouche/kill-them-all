@@ -1,10 +1,16 @@
 use super::dnd::{DndCursor, DraggedEntity};
 use crate::{
-    components::item::{Item, ItemAssets, ItemEntity, ItemImage, ItemInfo, ItemLocation},
+    components::{
+        equipment::{Amulet, BodyArmour, Boots, Helmet, Weapon},
+        item::{
+            Item, ItemAssets, ItemEntity, ItemImage, ItemInfo, ItemLocation, ItemLocationAccept,
+            ItemLocationAcceptAll,
+        },
+        skills::SkillBook,
+    },
     schedule::GameRunningSet,
 };
-use bevy::{color::palettes::css, ecs::query::QueryFilter, prelude::*};
-use std::marker::PhantomData;
+use bevy::{color::palettes::css, prelude::*};
 
 pub struct ItemLocationPlugin;
 
@@ -14,9 +20,19 @@ impl Plugin for ItemLocationPlugin {
             .add_systems(Update, update_image.in_set(GameRunningSet::EntityUpdate))
             .add_observer(create_image_location)
             .add_observer(on_drag_start_item)
-            .add_observer(on_drag_end_item);
+            .add_observer(on_drag_end_item)
+            .add_observer(show_location_borders)
+            .add_observer(show_location_borders_filtered::<Helmet>)
+            .add_observer(show_location_borders_filtered::<BodyArmour>)
+            .add_observer(show_location_borders_filtered::<Boots>)
+            .add_observer(show_location_borders_filtered::<Weapon>)
+            .add_observer(show_location_borders_filtered::<Amulet>)
+            .add_observer(show_location_borders_filtered::<SkillBook>)
+            .add_observer(hide_location_borders);
     }
 }
+
+const BORDER_COLOR: Color = Color::Srgba(css::DARK_ORANGE);
 
 fn create_image_location(
     trigger: Trigger<OnAdd, ItemLocation>,
@@ -64,58 +80,46 @@ fn update_image(
     }
 }
 
-#[derive(Deref, DerefMut)]
-pub struct ShowBorderOnDrag<F = With<Item>>(#[deref] pub Vec<Observer>, PhantomData<F>);
-
-impl<F> Default for ShowBorderOnDrag<F>
-where
-    F: QueryFilter + 'static,
-{
-    fn default() -> Self {
-        Self(Self::observers(), PhantomData)
-    }
-}
-
-impl<F> ShowBorderOnDrag<F>
-where
-    F: QueryFilter + 'static,
-{
-    pub fn observers() -> Vec<Observer> {
-        vec![
-            Observer::new(show_borders_on_drag_enter_item::<F>),
-            Observer::new(hide_borders_on_drag_leave_item),
-        ]
-    }
-}
-
-fn show_borders_on_drag_enter_item<F>(
-    mut trigger: Trigger<Pointer<DragEnter>>,
-    mut colors: Query<&mut BackgroundColor, With<ItemLocation>>,
-    items: Query<(), F>,
+fn show_location_borders(
+    trigger: Trigger<Pointer<DragEnter>>,
+    mut colors: Query<&mut BackgroundColor, (With<ItemLocation>, With<ItemLocationAcceptAll>)>,
+    items: Query<(), With<Item>>,
     cursor: Single<&DraggedEntity, With<DndCursor>>,
-) where
-    F: QueryFilter,
-{
+) {
     if let Some(item_entity) = ***cursor {
-        // info!("show_borders_on_drag_enter_item({})", trigger.entity());
         if items.get(item_entity).is_ok() {
             if let Ok(mut color) = colors.get_mut(trigger.target()) {
-                color.0 = css::DARK_ORANGE.into();
+                color.0 = BORDER_COLOR.into();
             }
         }
     }
-    trigger.propagate(false);
 }
 
-fn hide_borders_on_drag_leave_item(
-    mut trigger: Trigger<Pointer<DragLeave>>,
+fn show_location_borders_filtered<T>(
+    trigger: Trigger<Pointer<DragEnter>>,
+    mut colors: Query<&mut BackgroundColor, (With<ItemLocation>, With<ItemLocationAccept<T>>)>,
+    items: Query<(), (With<Item>, With<T>)>,
+    cursor: Single<&DraggedEntity, With<DndCursor>>,
+) where
+    T: Component,
+{
+    if let Some(item_entity) = ***cursor {
+        if items.get(item_entity).is_ok() {
+            if let Ok(mut color) = colors.get_mut(trigger.target()) {
+                color.0 = BORDER_COLOR.into();
+            }
+        }
+    }
+}
+
+fn hide_location_borders(
+    trigger: Trigger<Pointer<DragLeave>>,
     mut colors: Query<&mut BackgroundColor, With<ItemLocation>>,
 ) {
     if let Ok(mut color) = colors.get_mut(trigger.target()) {
-        // info!("hide_borders_on_drag_leave_item({})", trigger.entity());
+        info!("hide_borders_on_drag_leave_item({})", trigger.target());
         color.0 = Srgba::NONE.into();
     }
-    trigger.propagate(false);
 }
 
 fn on_drag_start_item(

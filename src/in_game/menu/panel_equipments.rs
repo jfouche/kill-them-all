@@ -1,15 +1,9 @@
-use super::{
-    dnd::{DndCursor, DraggedEntity},
-    item_location::ShowBorderOnDrag,
-};
-use crate::{
-    components::{
-        equipment::{Amulet, BodyArmour, Boots, Helmet, Weapon},
-        inventory::PlayerEquipmentChanged,
-        item::{EquipEquipmentEvent, ItemAssets, ItemEntity, ItemLocation},
-        player::Player,
-    },
-    utils::observers::VecObserversExt,
+use super::dnd::{DndCursor, DraggedEntity};
+use crate::components::{
+    equipment::{Amulet, BodyArmour, Boots, Helmet, Weapon},
+    inventory::PlayerEquipmentChanged,
+    item::{EquipEquipmentEvent, ItemAssets, ItemEntity, ItemLocation, ItemLocationAccept},
+    player::Player,
 };
 use bevy::prelude::*;
 
@@ -29,13 +23,6 @@ use bevy::prelude::*;
     BackgroundColor(Srgba::rgb_u8(40, 40, 40).into())
 )]
 pub struct EquipmentsPanel;
-
-///
-///  A box that shows an equipment
-///
-#[derive(Component, Default)]
-#[require(Name::new("EquipmentBox"), ItemLocation)]
-struct EquipmentBox;
 
 #[inline]
 fn default_box_node() -> Node {
@@ -57,65 +44,68 @@ fn box_node(x: f32, y: f32) -> Node {
 }
 
 #[derive(Component)]
-#[require(EquipmentBox)]
 struct HelmetLocation;
 
-impl HelmetLocation {
-    fn bundle(assets: &ItemAssets) -> impl Bundle {
-        (HelmetLocation, box_node(74., 7.), assets.empty_image_node())
-    }
+fn helmet_location(assets: &ItemAssets) -> impl Bundle {
+    (
+        HelmetLocation,
+        ItemLocation,
+        ItemLocationAccept::<Helmet>::new(),
+        box_node(74., 7.),
+        assets.empty_image_node(),
+    )
 }
 
 #[derive(Component)]
-#[require(EquipmentBox)]
 struct BodyArmourLocation;
 
-impl BodyArmourLocation {
-    fn bundle(assets: &ItemAssets) -> impl Bundle {
-        (
-            BodyArmourLocation,
-            box_node(74., 74.),
-            assets.empty_image_node(),
-        )
-    }
+fn body_armour_location(assets: &ItemAssets) -> impl Bundle {
+    (
+        BodyArmourLocation,
+        ItemLocation,
+        ItemLocationAccept::<BodyArmour>::new(),
+        box_node(74., 74.),
+        assets.empty_image_node(),
+    )
 }
 
 #[derive(Component)]
-#[require(EquipmentBox)]
 struct BootsLocation;
 
-impl BootsLocation {
-    fn bundle(assets: &ItemAssets) -> impl Bundle {
-        (
-            BootsLocation,
-            box_node(74., 142.),
-            assets.empty_image_node(),
-        )
-    }
+fn boots_location(assets: &ItemAssets) -> impl Bundle {
+    (
+        BootsLocation,
+        ItemLocation,
+        ItemLocationAccept::<Boots>::new(),
+        box_node(74., 142.),
+        assets.empty_image_node(),
+    )
 }
 
 #[derive(Component)]
-#[require(EquipmentBox)]
 struct AmuletLocation;
 
-impl AmuletLocation {
-    fn bundle(assets: &ItemAssets) -> impl Bundle {
-        (
-            AmuletLocation,
-            box_node(142., 7.),
-            assets.empty_image_node(),
-        )
-    }
+fn amulet_location(assets: &ItemAssets) -> impl Bundle {
+    (
+        AmuletLocation,
+        ItemLocation,
+        ItemLocationAccept::<Amulet>::new(),
+        box_node(142., 7.),
+        assets.empty_image_node(),
+    )
 }
 
 #[derive(Component)]
-#[require(EquipmentBox)]
 struct WeaponLocation;
 
-impl WeaponLocation {
-    fn bundle(assets: &ItemAssets) -> impl Bundle {
-        (WeaponLocation, box_node(7., 74.), assets.empty_image_node())
-    }
+fn weapon_location(assets: &ItemAssets) -> impl Bundle {
+    (
+        WeaponLocation,
+        ItemLocation,
+        ItemLocationAccept::<Weapon>::new(),
+        box_node(7., 74.),
+        assets.empty_image_node(),
+    )
 }
 
 fn spawn_panel_content(
@@ -123,53 +113,28 @@ fn spawn_panel_content(
     mut commands: Commands,
     assets: Res<ItemAssets>,
 ) {
-    let mut helmet_border_observers = ShowBorderOnDrag::<With<Helmet>>::default();
-    let mut body_armour_border_observers = ShowBorderOnDrag::<With<BodyArmour>>::default();
-    let mut boots_border_observers = ShowBorderOnDrag::<With<Boots>>::default();
-    let mut amulet_border_observers = ShowBorderOnDrag::<With<Amulet>>::default();
-    let mut weapon_border_observers = ShowBorderOnDrag::<With<Weapon>>::default();
+    let panel = trigger.target();
+    commands
+        .spawn((helmet_location(&assets), ChildOf(panel)))
+        .observe(on_drop_equipment::<Helmet>);
 
-    commands.entity(trigger.target()).with_children(|panel| {
-        let entity = panel
-            .spawn(HelmetLocation::bundle(&assets))
-            .observe(on_drop_equipment::<Helmet>)
-            .id();
-        helmet_border_observers.watch_entity(entity);
+    commands
+        .spawn((body_armour_location(&assets), ChildOf(panel)))
+        .observe(on_drop_equipment::<BodyArmour>);
 
-        let entity = panel
-            .spawn(BodyArmourLocation::bundle(&assets))
-            .observe(on_drop_equipment::<BodyArmour>)
-            .id();
-        body_armour_border_observers.watch_entity(entity);
+    commands
+        .spawn((boots_location(&assets), ChildOf(panel)))
+        .observe(on_drop_equipment::<Boots>);
 
-        let entity = panel
-            .spawn(BootsLocation::bundle(&assets))
-            .observe(on_drop_equipment::<Boots>)
-            .id();
-        boots_border_observers.watch_entity(entity);
+    commands
+        .spawn((amulet_location(&assets), ChildOf(panel)))
+        .observe(on_drop_equipment::<Amulet>);
 
-        let entity = panel
-            .spawn(AmuletLocation::bundle(&assets))
-            .observe(on_drop_equipment::<Amulet>)
-            .id();
-        amulet_border_observers.watch_entity(entity);
+    commands
+        .spawn((weapon_location(&assets), ChildOf(panel)))
+        .observe(on_drop_equipment::<Weapon>);
 
-        let entity = panel
-            .spawn(WeaponLocation::bundle(&assets))
-            .observe(on_drop_equipment::<Weapon>)
-            .id();
-        weapon_border_observers.watch_entity(entity);
-    });
-
-    commands.spawn_batch(helmet_border_observers.0);
-    commands.spawn_batch(body_armour_border_observers.0);
-    commands.spawn_batch(boots_border_observers.0);
-    commands.spawn_batch(amulet_border_observers.0);
-    commands.spawn_batch(weapon_border_observers.0);
-
-    commands.queue(|world: &mut World| {
-        world.trigger(PlayerEquipmentChanged);
-    });
+    commands.trigger(PlayerEquipmentChanged);
 }
 
 fn on_drop_equipment<T>(

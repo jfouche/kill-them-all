@@ -1,6 +1,7 @@
 use super::dnd::{DndCursor, DraggedEntity};
 use crate::components::{
     inventory::PlayerEquipmentChanged,
+    item::ItemLocationAccept,
     player::{EquipSkillBookEvent, PlayerAction},
     skills::{SkillBook, SkillBookLocation},
 };
@@ -30,13 +31,29 @@ pub fn skills_panel() -> impl Bundle {
         },
         children![
             Text::new("A:"),
-            (PlayerAction::Skill1, SkillBookLocation),
+            (
+                PlayerAction::Skill1,
+                SkillBookLocation,
+                ItemLocationAccept::<SkillBook>::new()
+            ),
             Text::new("Z:"),
-            (PlayerAction::Skill2, SkillBookLocation),
+            (
+                PlayerAction::Skill2,
+                SkillBookLocation,
+                ItemLocationAccept::<SkillBook>::new()
+            ),
             Text::new("E:"),
-            (PlayerAction::Skill3, SkillBookLocation),
+            (
+                PlayerAction::Skill3,
+                SkillBookLocation,
+                ItemLocationAccept::<SkillBook>::new()
+            ),
             Text::new("R:"),
-            (PlayerAction::Skill4, SkillBookLocation)
+            (
+                PlayerAction::Skill4,
+                SkillBookLocation,
+                ItemLocationAccept::<SkillBook>::new()
+            )
         ],
     )
 }
