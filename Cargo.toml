@@ -17,7 +17,7 @@ opt-level = 3
 [features]
 default = []
 # Enables debug infos and rendering
-dev = ["dep:bevy-inspector-egui", "bevy/bevy_dev_tools", "bevy/bevy_ui_debug"]
+dev = ["dep:bevy-inspector-egui", "bevy/bevy_dev_tools", "bevy/bevy_ui_debug", "bevy/track_location"]
 
 [dependencies]
 rand = "0.9"
@@ -46,7 +46,7 @@ noise = "0.9"
 
 # feature: dev
 bevy-inspector-egui = { version="0.31", default-features = false, features = [
-    "bevy_render",
+    "bevy_render", "documentation"
 ], optional = true }
 
 # WASM
