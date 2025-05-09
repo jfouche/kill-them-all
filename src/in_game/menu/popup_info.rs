@@ -59,6 +59,7 @@ fn despawn_popup_info_on_out_item(
     popups: Query<Entity, With<InfoPopup>>,
 ) {
     for entity in &popups {
-        commands.entity(entity).despawn();
+        // TODO: Why entity might be already despaned ?
+        commands.entity(entity).try_despawn();
     }
 }
