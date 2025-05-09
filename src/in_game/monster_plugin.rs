@@ -144,6 +144,7 @@ fn update_monster(
     trigger: Trigger<OnAdd, Monster>,
     mut commands: Commands,
     rarities: Query<&MonsterRarity>,
+    level: Res<CurrentMapLevel>,
 ) {
     let monster_entity = trigger.target();
     if let Ok(MonsterRarity::Rare) = rarities.get(monster_entity) {
@@ -161,8 +162,8 @@ fn update_monster(
         commands.entity(monster_entity).add_children(&entities);
 
         // Add a weapon and more life
-        // TODO: get ilevel to insert equipment
-        commands.spawn((Wand::new(1), ChildOf(monster_entity)));
+        let ilevel = **level;
+        commands.spawn((Wand::new(ilevel), ChildOf(monster_entity)));
         commands.spawn((FireBallLauncher, ChildOf(monster_entity)));
         commands.spawn((MoreLife(10.), ChildOf(monster_entity)));
     }
