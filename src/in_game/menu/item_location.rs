@@ -87,7 +87,7 @@ fn show_location_borders(
     cursor: Single<&DraggedEntity, With<DndCursor>>,
 ) {
     if let Some(item_entity) = ***cursor {
-        if items.get(item_entity).is_ok() {
+        if items.contains(item_entity) {
             if let Ok(mut color) = colors.get_mut(trigger.target()) {
                 color.0 = BORDER_COLOR.into();
             }
@@ -104,7 +104,7 @@ fn show_location_borders_filtered<T>(
     T: Component,
 {
     if let Some(item_entity) = ***cursor {
-        if items.get(item_entity).is_ok() {
+        if items.contains(item_entity) {
             if let Ok(mut color) = colors.get_mut(trigger.target()) {
                 color.0 = BORDER_COLOR.into();
             }
@@ -117,7 +117,6 @@ fn hide_location_borders(
     mut colors: Query<&mut BackgroundColor, With<ItemLocation>>,
 ) {
     if let Ok(mut color) = colors.get_mut(trigger.target()) {
-        info!("hide_borders_on_drag_leave_item({})", trigger.target());
         color.0 = Srgba::NONE.into();
     }
 }

@@ -15,7 +15,7 @@ use crate::{
     },
     schedule::{GameRunningSet, GameState},
 };
-use bevy::prelude::*;
+use bevy::{ecs::query::QuerySingleError, prelude::*};
 
 ///
 /// A window that shows the content of the [Inventory]
@@ -85,7 +85,8 @@ impl Plugin for InventoryPanelPlugin {
             )
             .add_observer(create_panel)
             .add_observer(update_inventory)
-            .add_observer(toggle_window);
+            .add_observer(toggle_window)
+            .add_observer(on_drop_on_location);
     }
 }
 
@@ -106,48 +107,38 @@ fn toggle_window(
     mut commands: Commands,
     mut windows: Query<&mut Visibility, With<InventoryWindow>>,
 ) {
-    match windows.iter_mut().next() {
-        Some(mut visiblity) => {
+    match windows.single_mut() {
+        Ok(mut visiblity) => {
             *visiblity = match *visiblity {
                 Visibility::Hidden => Visibility::Inherited,
                 _ => Visibility::Hidden,
             };
-            commands.trigger(PlayerEquipmentChanged);
         }
-        None => {
+        Err(QuerySingleError::NoEntities(_)) => {
             // spawn window as it doesn't exist
             commands.spawn((
                 InventoryWindow,
                 children![EquipmentsPanel, skills_panel(), InventoryPanel],
             ));
         }
+        _ => unreachable!(),
     }
+    commands.trigger(PlayerEquipmentChanged);
 }
 
 fn create_panel(trigger: Trigger<OnAdd, InventoryPanel>, mut commands: Commands) {
-    // TODO: move to global Observer
-    let mut observer = Observer::new(on_drop_on_location);
-
     let panel = trigger.target();
     for idx in 0..Inventory::len() {
-        let entity = commands
-            .spawn((
-                InventoryLocation,
-                ItemLocationAcceptAll,
-                Name::new(format!("InventoryLocation({idx})")),
-                InventoryLocation::node(idx),
-                InventoryIndex(idx),
-                ChildOf(panel),
-            ))
-            .id();
-        observer.watch_entity(entity);
+        commands.spawn((
+            InventoryLocation,
+            ItemLocationAcceptAll,
+            Name::new(format!("InventoryLocation({idx})")),
+            InventoryLocation::node(idx),
+            InventoryIndex(idx),
+            ChildOf(panel),
+        ));
     }
-
-    commands.spawn(observer);
-
-    commands.queue(|world: &mut World| {
-        world.trigger(InventoryChanged);
-    });
+    commands.trigger(InventoryChanged);
 }
 
 fn update_inventory(

@@ -1,6 +1,5 @@
 use super::dnd::{DndCursor, DraggedEntity};
 use crate::components::{
-    inventory::PlayerEquipmentChanged,
     item::ItemLocationAccept,
     player::{EquipSkillBookEvent, PlayerAction},
     skills::{SkillBook, SkillBookLocation},
@@ -11,7 +10,7 @@ pub struct SkillsPanelPlugin;
 
 impl Plugin for SkillsPanelPlugin {
     fn build(&self, app: &mut App) {
-        app.add_observer(create_panel).add_observer(on_drop_item);
+        app.add_observer(on_drop_item);
     }
 }
 
@@ -56,11 +55,6 @@ pub fn skills_panel() -> impl Bundle {
             )
         ],
     )
-}
-
-fn create_panel(_trigger: Trigger<OnAdd, SkillsPanel>, mut commands: Commands) {
-    // to force to init the update
-    commands.trigger(PlayerEquipmentChanged);
 }
 
 fn on_drop_item(
