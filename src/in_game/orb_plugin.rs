@@ -17,7 +17,12 @@ impl Plugin for OrbPlugin {
             .add_observer(on_transmute::<Boots>)
             .add_observer(on_transmute::<Helmet>)
             .add_observer(on_transmute::<BodyArmour>)
-            .add_observer(on_transmute::<Wand>)
+            .add_observer(on_alteration::<Wand>)
+            .add_observer(on_alteration::<Amulet>)
+            .add_observer(on_alteration::<Boots>)
+            .add_observer(on_alteration::<Helmet>)
+            .add_observer(on_alteration::<BodyArmour>)
+            .add_observer(on_alteration::<Wand>)
             .add_observer(on_regal::<Amulet>)
             .add_observer(on_regal::<Boots>)
             .add_observer(on_regal::<Helmet>)
@@ -47,6 +52,24 @@ impl<T> TransmuteEvent<T> {
         }
     }
 }
+
+#[derive(Event)]
+struct AlterationEvent<T> {
+    orb: Entity,
+    item: Entity,
+    _phantom: PhantomData<T>,
+}
+
+impl<T> AlterationEvent<T> {
+    fn new(orb: Entity, item: Entity) -> Self {
+        AlterationEvent {
+            orb,
+            item,
+            _phantom: PhantomData,
+        }
+    }
+}
+
 #[derive(Event)]
 struct RegalEvent<T> {
     orb: Entity,
@@ -117,6 +140,24 @@ fn on_activate_orb(
                 commands.trigger(TransmuteEvent::<Wand>::new(orb_entity, item_entity));
             }
         },
+        Orb::Alteration => match equipment {
+            Equipment::Amulet => {
+                commands.trigger(AlterationEvent::<Amulet>::new(orb_entity, item_entity));
+            }
+            Equipment::BodyArmour => {
+                commands.trigger(AlterationEvent::<BodyArmour>::new(orb_entity, item_entity));
+            }
+            Equipment::Boots => {
+                commands.trigger(AlterationEvent::<Boots>::new(orb_entity, item_entity));
+            }
+            Equipment::Helmet => {
+                commands.trigger(AlterationEvent::<Helmet>::new(orb_entity, item_entity));
+            }
+            Equipment::Weapon => {
+                // TODO: use Weapon
+                commands.trigger(AlterationEvent::<Wand>::new(orb_entity, item_entity));
+            }
+        },
         Orb::Regal => match equipment {
             Equipment::Amulet => {
                 commands.trigger(RegalEvent::<Amulet>::new(orb_entity, item_entity));
@@ -185,6 +226,44 @@ fn on_transmute<T>(
     let mut item_cmds = commands.entity(trigger.item);
     item.affix_reset(&mut item_cmds);
     *rarity = ItemRarity::Magic;
+    item.affix_gen(&mut item_cmds, rarity.n_affix(), *rarity, &mut rng);
+
+    // Despawn orb
+    commands.trigger(RemoveFromInventoryEvent(trigger.orb));
+    commands.entity(trigger.orb).despawn();
+
+    commands.trigger(InventoryChanged);
+    commands.trigger(PlayerEquipmentChanged);
+}
+
+fn on_alteration<T>(
+    trigger: Trigger<AlterationEvent<T>>,
+    mut commands: Commands,
+    orbs: Query<&Orb>,
+    mut items: Query<(&mut T, &ItemRarity)>,
+) where
+    T: Component<Mutability = Mutable> + OrbAction,
+{
+    let Ok(&Orb::Alteration) = orbs.get(trigger.orb) else {
+        error!("on_alteration: Orb is not Orb::Alteration");
+        return;
+    };
+
+    let Ok((mut item, rarity)) = items.get_mut(trigger.item) else {
+        error!("on_alteration: Can't transmute a NON Item");
+        return;
+    };
+
+    if *rarity != ItemRarity::Magic {
+        error!("on_transmute: Item is not ItemRarity::Magic");
+        return;
+    }
+
+    info!("Applying Alteration on {}", trigger.item);
+
+    let mut rng = rand::rng();
+    let mut item_cmds = commands.entity(trigger.item);
+    item.affix_reset(&mut item_cmds);
     item.affix_gen(&mut item_cmds, rarity.n_affix(), *rarity, &mut rng);
 
     // Despawn orb

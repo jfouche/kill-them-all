@@ -11,6 +11,8 @@ use rand::rngs::ThreadRng;
 pub enum Orb {
     /// Transform a normal item to a magic one
     Transmutation,
+    /// Transform a magic item to a new magic one
+    Alteration,
     /// Transform a magic item to a rare one
     Regal,
     /// Transform a rare item to a new rare one, keeping the same base
@@ -21,8 +23,12 @@ impl From<Orb> for ItemInfo {
     fn from(orb: Orb) -> Self {
         match orb {
             Orb::Transmutation => ItemInfo {
-                tile_index: 151,
+                tile_index: 153,
                 text: "Transform a normal item to a magic one".into(),
+            },
+            Orb::Alteration => ItemInfo {
+                tile_index: 151,
+                text: "Transform a magic item to a new magic one".into(),
             },
             Orb::Regal => ItemInfo {
                 tile_index: 155,
@@ -43,6 +49,7 @@ impl OrbProvider {
     pub fn spawn(commands: &mut Commands, rng: &mut ThreadRng) -> ItemEntityInfo {
         let mut provider = RngKindProvider::default();
         provider.add(Orb::Transmutation, 40);
+        provider.add(Orb::Alteration, 40);
         provider.add(Orb::Regal, 40);
         provider.add(Orb::Chaos, 40);
 
