@@ -61,7 +61,11 @@ fn spawn_worldmap(mut commands: Commands) {
     let config = WorldMapConfig::default();
     let map = ProceduralWorldMap::new(config, &mut rng);
     commands.insert_resource(map);
-    commands.spawn(WorldMap);
+    commands
+        .spawn(WorldMap)
+        .observe(|t: Trigger<Pointer<DragDrop>>| {
+            warn!("Drop item {} on world map", t.target());
+        });
 }
 
 fn change_level(

@@ -17,24 +17,22 @@ impl Plugin for PopupInfoPlugin {
 #[derive(Component)]
 struct InfoPopup;
 
-impl InfoPopup {
-    fn bundle(pos: Vec2, img_node: ImageNode, text: String) -> impl Bundle {
-        (
-            InfoPopup,
-            Name::new("InfoPopup"),
-            Popup,
-            Node {
-                max_width: Val::Px(180.),
-                margin: UiRect::all(Val::Px(0.)),
-                padding: UiRect::all(Val::Px(5.)),
-                left: Val::Px(pos.x - 60.),
-                top: Val::Px(pos.y - 130.),
-                ..Popup::default_node()
-            },
-            ZIndex(1),
-            children![img_node, (Text(text), TextFont::from_font_size(12.))],
-        )
-    }
+fn info_popup(pos: Vec2, img_node: ImageNode, text: String) -> impl Bundle {
+    (
+        InfoPopup,
+        Name::new("InfoPopup"),
+        Popup,
+        Node {
+            max_width: Val::Px(180.),
+            margin: UiRect::all(Val::Px(0.)),
+            padding: UiRect::all(Val::Px(5.)),
+            left: Val::Px(pos.x - 60.),
+            top: Val::Px(pos.y - 130.),
+            ..Popup::default_node()
+        },
+        ZIndex(1),
+        children![img_node, (Text(text), TextFont::from_font_size(12.))],
+    )
 }
 
 fn spawn_popup_info_on_over_item(
@@ -48,7 +46,7 @@ fn spawn_popup_info_on_over_item(
         if let Ok(info) = items.get(*item_entity) {
             let pos = trigger.pointer_location.position;
             let img = assets.image_node(info.tile_index);
-            commands.spawn(InfoPopup::bundle(pos, img, info.text.clone()));
+            commands.spawn(info_popup(pos, img, info.text.clone()));
         }
     }
 }
