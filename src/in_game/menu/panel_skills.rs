@@ -1,8 +1,10 @@
-use super::dnd::{DndCursor, DraggedEntity};
-use crate::components::{
-    item::ItemLocationAccept,
-    player::{EquipSkillBookEvent, PlayerAction},
-    skills::{SkillBook, SkillBookLocation},
+use crate::{
+    components::{
+        item::ItemLocationAccept,
+        player::{EquipSkillBookEvent, PlayerAction},
+        skills::{SkillBook, SkillBookLocation},
+    },
+    in_game::dnd::{DndCursor, DraggedEntity},
 };
 use bevy::prelude::*;
 

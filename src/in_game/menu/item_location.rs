@@ -1,4 +1,3 @@
-use super::dnd::{DndCursor, DraggedEntity};
 use crate::{
     components::{
         equipment::{Amulet, BodyArmour, Boots, Helmet, Weapon},
@@ -8,6 +7,7 @@ use crate::{
         },
         skills::SkillBook,
     },
+    in_game::dnd::{DndCursor, DraggedEntity},
     schedule::GameRunningSet,
 };
 use bevy::{color::palettes::css, prelude::*};

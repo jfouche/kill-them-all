@@ -1,8 +1,4 @@
-use super::{
-    dnd::{DndCursor, DraggedEntity},
-    panel_equipments::EquipmentsPanel,
-    panel_skills::skills_panel,
-};
+use super::{panel_equipments::EquipmentsPanel, panel_skills::skills_panel};
 use crate::{
     components::{
         despawn_all,
@@ -13,6 +9,7 @@ use crate::{
         item::{ItemEntity, ItemLocation, ItemLocationAcceptAll},
         orb::{ActivateOrbEvent, Orb},
     },
+    in_game::dnd::{DndCursor, DraggedEntity},
     schedule::{GameRunningSet, GameState},
 };
 use bevy::{ecs::query::QuerySingleError, prelude::*};

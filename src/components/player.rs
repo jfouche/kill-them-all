@@ -1,8 +1,6 @@
 use super::{
     animation::AnimationTimer,
     character::{BaseLife, BaseMovementSpeed, Character, Target},
-    inventory::PlayerEquipmentChanged,
-    skills::SkillBook,
     world_map::LAYER_PLAYER,
     GROUP_ALL, GROUP_PLAYER,
 };
@@ -114,29 +112,9 @@ pub struct EquipSkillBookEvent {
     pub action: PlayerAction,
 }
 
-pub struct RemoveSkillBookCommand(pub Entity);
-
-impl Command for RemoveSkillBookCommand {
-    fn apply(self, world: &mut World) {
-        let book_entity = self.0;
-        let mut books = world.query::<&SkillBook>();
-        let Ok(_) = books.get(world, book_entity) else {
-            warn!("Can't remove {book_entity} as it's not an SkillBook");
-            return;
-        };
-
-        let Ok(mut skills) = world
-            .query_filtered::<&mut PlayerBooks, With<Player>>()
-            .single_mut(world)
-        else {
-            error!("Player doesn't have a PlayerSkills");
-            return;
-        };
-
-        if skills.remove(book_entity) {
-            world.trigger(PlayerEquipmentChanged);
-        }
-    }
+#[derive(Event)]
+pub struct RemoveSkillBookEvent {
+    pub book_entity: Entity,
 }
 
 pub const PLAYER_SIZE: Vec2 = Vec2::new(16.0, 16.0);

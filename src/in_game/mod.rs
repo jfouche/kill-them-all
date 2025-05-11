@@ -2,6 +2,7 @@ pub mod affix_updates_plugin;
 pub mod animation_plugin;
 pub mod character_plugin;
 pub mod collisions_plugin;
+pub mod dnd;
 pub mod hud;
 pub mod item_plugin;
 pub mod life_bar_plugin;
@@ -43,6 +44,7 @@ mod plugin {
                 .add(life_bar_plugin::LifeBarPlugin)
                 .add(animation_plugin::AnimationPlugin)
                 .add(skills::SkillsPlugin)
+                .add(dnd::DndPlugin)
                 .add(menu::InGameMenuPlugin)
                 .add(in_game_schedule_plugin)
         }

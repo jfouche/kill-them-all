@@ -17,7 +17,7 @@ use crate::{
         player::{
             EquipSkillBookEvent, Experience, LevelUpEvent, NextPositionIndicator,
             NextPositionIndicatorAssets, Player, PlayerAction, PlayerAssets, PlayerBooks,
-            PlayerDeathEvent, Score,
+            PlayerDeathEvent, RemoveSkillBookEvent, Score,
         },
         skills::{
             shuriken::ShurikenLauncherBook, spawn_book, ActivateSkill, AssociatedSkill, Skill,
@@ -67,6 +67,7 @@ impl Plugin for PlayerPlugin {
             .add_observer(manage_player_movement_with_mouse)
             .add_observer(equip_equipment)
             .add_observer(equip_skill_book)
+            .add_observer(remove_skill_book)
             .add_observer(take_dropped_item)
             .add_observer(add_to_inventory)
             .add_observer(remove_from_inventory);
@@ -385,6 +386,28 @@ fn equip_skill_book(
         .entity(player_entity)
         .add_child(trigger.book_entity);
     commands.trigger(PlayerEquipmentChanged);
+}
+
+fn remove_skill_book(
+    trigger: Trigger<RemoveSkillBookEvent>,
+    mut commands: Commands,
+    books: Query<(), With<SkillBook>>,
+    mut players: Query<&mut PlayerBooks, With<Player>>,
+) {
+    let book_entity = trigger.book_entity;
+    if !books.contains(book_entity) {
+        warn!("Can't remove {book_entity} as it's not an SkillBook");
+        return;
+    };
+
+    let Ok(mut player_books) = players.single_mut() else {
+        error!("Player doesn't have a PlayerSkills");
+        return;
+    };
+
+    if player_books.remove(book_entity) {
+        commands.trigger(PlayerEquipmentChanged);
+    }
 }
 
 fn take_dropped_item(

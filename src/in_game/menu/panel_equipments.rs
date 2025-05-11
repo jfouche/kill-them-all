@@ -1,9 +1,11 @@
-use super::dnd::{DndCursor, DraggedEntity};
-use crate::components::{
-    equipment::{Amulet, BodyArmour, Boots, Helmet, Weapon},
-    inventory::PlayerEquipmentChanged,
-    item::{EquipEquipmentEvent, ItemAssets, ItemEntity, ItemLocation, ItemLocationAccept},
-    player::Player,
+use crate::{
+    components::{
+        equipment::{Amulet, BodyArmour, Boots, Helmet, Weapon},
+        inventory::PlayerEquipmentChanged,
+        item::{EquipEquipmentEvent, ItemAssets, ItemEntity, ItemLocation, ItemLocationAccept},
+        player::Player,
+    },
+    in_game::dnd::{DndCursor, DraggedEntity},
 };
 use bevy::prelude::*;
 

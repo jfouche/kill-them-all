@@ -1,4 +1,3 @@
-mod dnd;
 mod item_location;
 mod menu_level_up;
 mod menu_pause;
@@ -12,13 +11,7 @@ mod window_statistics;
 pub use plugin::InGameMenuPlugin;
 
 mod plugin {
-    use super::{
-        dnd::DndPlugin, item_location::ItemLocationPlugin, menu_level_up::LevelUpMenuPlugin,
-        menu_pause::PausePlugin, menu_player_died::PlayerDiedMenuPlugin,
-        panel_equipments::EquipmentPanelPlugin, panel_skills::SkillsPanelPlugin,
-        popup_info::PopupInfoPlugin, window_inventory::InventoryPanelPlugin,
-        window_statistics::StatsWindowPlugin,
-    };
+    use super::*;
     use crate::in_game::{pause, unpause};
     use crate::{components::item::ItemAssets, schedule::InGameState};
     use bevy::prelude::{App, OnEnter, OnExit, Plugin};
@@ -28,16 +21,15 @@ mod plugin {
     impl Plugin for InGameMenuPlugin {
         fn build(&self, app: &mut App) {
             app.add_plugins((
-                ItemLocationPlugin,
-                PausePlugin,
-                LevelUpMenuPlugin,
-                PlayerDiedMenuPlugin,
-                InventoryPanelPlugin,
-                SkillsPanelPlugin,
-                StatsWindowPlugin,
-                EquipmentPanelPlugin,
-                DndPlugin,
-                PopupInfoPlugin,
+                item_location::ItemLocationPlugin,
+                menu_pause::PausePlugin,
+                menu_level_up::LevelUpMenuPlugin,
+                menu_player_died::PlayerDiedMenuPlugin,
+                window_inventory::InventoryPanelPlugin,
+                panel_skills::SkillsPanelPlugin,
+                window_statistics::StatsWindowPlugin,
+                panel_equipments::EquipmentPanelPlugin,
+                popup_info::PopupInfoPlugin,
             ))
             .init_resource::<ItemAssets>()
             .add_systems(OnEnter(InGameState::Pause), pause)
