@@ -3,11 +3,13 @@
 use crate::{
     components::{
         affix::{IncreaseAreaOfEffect, PierceChance},
-        inventory::{AddToInventoryEvent, TakeDroppedItemEvent},
+        inventory::{
+            AddToInventoryEvent, InventoryChanged, PlayerEquipmentChanged, TakeDroppedItemEvent,
+        },
         item::{DroppedItem, ItemAssets},
         monster::Monster,
         orb::OrbProvider,
-        player::{Player, PlayerBooks},
+        player::{EquipSkillBookEvent, Player, PlayerBooks, RemoveSkillBookEvent},
         skills::{
             death_aura::{DeathAura, DeathAuraBook},
             spawn_book, AssociatedSkill, SkillBook,
@@ -74,7 +76,11 @@ impl Plugin for DebugPlugin {
             ),
         )
         // .add_systems(Last, debug_death_aura_post)
-        .add_observer(init_player);
+        .add_observer(init_player)
+        .add_observer(|_: Trigger<InventoryChanged>| warn!("InventoryChanged"))
+        .add_observer(|_: Trigger<PlayerEquipmentChanged>| warn!("PlayerEquipmentChanged"))
+        .add_observer(|_: Trigger<EquipSkillBookEvent>| warn!("EquipSkillBookEvent"))
+        .add_observer(|_: Trigger<RemoveSkillBookEvent>| warn!("RemoveSkillBookEvent"));
     }
 }
 
