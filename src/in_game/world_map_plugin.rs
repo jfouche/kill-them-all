@@ -70,7 +70,7 @@ fn change_level(
     time: Res<Time>,
 ) {
     if timer.tick(time.delta()).just_finished() {
-        **level += 1;
+        level.next();
     }
 }
 
