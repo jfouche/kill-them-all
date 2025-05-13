@@ -6,7 +6,7 @@ use crate::{
         upgrade::UpgradeProvider,
     },
     in_game::back_to_game,
-    schedule::{GameRunningSet, InGameState},
+    schedule::InGameState,
     ui::{
         button::TextButton,
         popup::{Popup, PopupTitle},
@@ -28,12 +28,7 @@ pub struct LevelUpMenuPlugin;
 
 impl Plugin for LevelUpMenuPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<LevelUpEvent>()
-            .add_systems(
-                Update,
-                enter_level_up_state.in_set(GameRunningSet::EntityUpdate),
-            )
-            .add_systems(OnEnter(InGameState::LevelUp), spawn_level_up_menu)
+        app.add_systems(OnEnter(InGameState::LevelUp), spawn_level_up_menu)
             .add_systems(
                 OnExit(InGameState::LevelUp),
                 (despawn_all::<LevelUpMenu>, despawn_remaining_upgrades),
@@ -41,17 +36,16 @@ impl Plugin for LevelUpMenuPlugin {
             .add_systems(
                 Update,
                 (back_to_game, upgrade_skill).run_if(in_state(InGameState::LevelUp)),
-            );
+            )
+            .add_observer(enter_level_up_state);
     }
 }
 
 fn enter_level_up_state(
-    mut level_up_rcv: EventReader<LevelUpEvent>,
+    _trigger: Trigger<LevelUpEvent>,
     mut next_state: ResMut<NextState<InGameState>>,
 ) {
-    if level_up_rcv.read().next().is_some() {
-        next_state.set(InGameState::LevelUp);
-    }
+    next_state.set(InGameState::LevelUp);
 }
 
 fn spawn_level_up_menu(mut commands: Commands) {

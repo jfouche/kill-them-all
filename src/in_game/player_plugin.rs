@@ -58,13 +58,13 @@ impl Plugin for PlayerPlugin {
                     animate_player_sprite,
                     player_invulnerability_finished,
                     increment_player_experience,
-                    refill_life_on_level_up,
                     activate_skill,
                 )
                     .in_set(GameRunningSet::EntityUpdate),
             )
             .add_observer(move_player)
             .add_observer(manage_player_movement_with_mouse)
+            .add_observer(refill_life_on_level_up)
             .add_observer(equip_equipment)
             .add_observer(equip_skill_book)
             .add_observer(remove_skill_book)
@@ -213,7 +213,7 @@ fn player_invulnerability_finished(
     mut entities: RemovedComponents<Invulnerable>,
 ) {
     for entity in entities.read() {
-        if q_player.get(entity).is_ok() {
+        if q_player.contains(entity) {
             info!("player_invulnerability_finished");
             commands.entity(entity).remove::<Blink>();
         }
@@ -224,9 +224,9 @@ fn player_invulnerability_finished(
 /// Update player XP when monster died
 ///
 fn increment_player_experience(
+    mut commands: Commands,
     mut monster_death_reader: EventReader<MonsterDeathEvent>,
     mut q_player: Query<(&mut Experience, &mut CharacterLevel), With<Player>>,
-    mut level_up_sender: EventWriter<LevelUpEvent>,
 ) {
     if let Ok((mut experience, mut level)) = q_player.single_mut() {
         for monster_death_ev in monster_death_reader.read() {
@@ -236,21 +236,19 @@ fn increment_player_experience(
                 // LEVEL UP !
                 **level = current_level;
                 info!("Level up : {current_level}");
-                level_up_sender.write(LevelUpEvent);
+                commands.trigger(LevelUpEvent);
             }
         }
     }
 }
 
 fn refill_life_on_level_up(
+    _trigger: Trigger<LevelUpEvent>,
     mut q_player: Query<(&mut Life, &MaxLife), With<Player>>,
-    mut level_up_rcv: EventReader<LevelUpEvent>,
 ) {
     if let Ok((mut life, max_life)) = q_player.single_mut() {
-        for _ in level_up_rcv.read() {
-            // Regen life
-            life.regenerate(**max_life);
-        }
+        // Regen life
+        life.regenerate(**max_life);
     }
 }
 
@@ -415,16 +413,10 @@ fn take_dropped_item(
     mut commands: Commands,
     dropped_items: Query<&DroppedItem>,
     mut inventories: Query<(Entity, &mut Inventory)>,
-) {
+) -> Result {
     let dropped_item_entity = trigger.0;
-    let Ok(dropped_item) = dropped_items.get(dropped_item_entity).cloned() else {
-        warn!("Can't take item from {dropped_item_entity} as it's not a [DroppedItem]");
-        return;
-    };
-    let Ok((inventory_entity, mut inventory)) = inventories.single_mut() else {
-        error!("Inventory doesn't exist!");
-        return;
-    };
+    let dropped_item = dropped_items.get(dropped_item_entity).cloned()?;
+    let (inventory_entity, mut inventory) = inventories.single_mut()?;
 
     let item_entity = *dropped_item;
     if inventory.add(item_entity) {
@@ -433,6 +425,7 @@ fn take_dropped_item(
         commands.entity(dropped_item_entity).despawn();
         commands.trigger(InventoryChanged);
     }
+    Ok(())
 }
 
 fn add_to_inventory(
@@ -441,11 +434,8 @@ fn add_to_inventory(
     mut inventories: Query<(Entity, &mut Inventory)>,
     mut players: Query<&mut PlayerBooks>,
     books: Query<&AssociatedSkill, With<SkillBook>>,
-) {
-    let Ok((inventory_entity, mut inventory)) = inventories.single_mut() else {
-        error!("Inventory doesn't exist!");
-        return;
-    };
+) -> Result {
+    let (inventory_entity, mut inventory) = inventories.single_mut()?;
 
     // Allow to move an item
     inventory.remove(trigger.item);
@@ -472,6 +462,7 @@ fn add_to_inventory(
         }
         commands.trigger(InventoryChanged);
     }
+    Ok(())
 }
 
 fn remove_from_inventory(
