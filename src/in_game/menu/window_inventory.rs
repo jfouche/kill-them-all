@@ -157,12 +157,12 @@ fn on_drop_on_location(
     inventory: Single<&Inventory>,
 ) {
     let location_item = trigger.target();
-    let Some(drop_item) = ***cursor else {
-        warn!("on_drop_on_location({location_item}) without item on cursor",);
+    let Ok(index) = indexes.get(location_item) else {
         return;
     };
-    let Ok(index) = indexes.get(location_item) else {
-        warn!("on_drop_on_location({location_item}) without InventoryLocation",);
+
+    let Some(drop_item) = ***cursor else {
+        warn!("on_drop_on_location({location_item}) without item on cursor",);
         return;
     };
     match inventory.at(index.0) {
