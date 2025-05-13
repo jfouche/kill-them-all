@@ -3,9 +3,9 @@ use crate::components::damage::{DamageOverTime, Damager, HitDamageRange};
 use crate::components::monster::Monster;
 use crate::components::player::Player;
 use crate::schedule::GameRunningSet;
-use crate::utils::collision::{start_event_filter, QueryEither};
+use crate::utils::collision::QueryEither;
+use avian2d::prelude::*;
 use bevy::prelude::*;
-use bevy_rapier2d::prelude::*;
 
 pub struct CollisionsPlugin;
 
@@ -29,7 +29,7 @@ impl Plugin for CollisionsPlugin {
 ///
 fn check_if_character_is_hit(
     mut commands: Commands,
-    mut collisions: EventReader<CollisionEvent>,
+    mut collisions: EventReader<CollisionStarted>,
     characters: Query<(), With<Character>>,
     damagers: Query<&HitDamageRange, With<Damager>>,
 ) {
@@ -38,8 +38,7 @@ fn check_if_character_is_hit(
     // apply damage
     collisions
         .read()
-        .filter_map(start_event_filter)
-        .filter_map(|(&e1, &e2)| {
+        .filter_map(|&CollisionStarted(e1, e2)| {
             let (_, character, other) = characters.get_either(e1, e2)?;
             damagers
                 .get(other)
@@ -60,7 +59,8 @@ fn check_if_character_is_hit(
 /// [DamageOverTime] should be a child of the [Character] to allow multiple effects
 fn check_if_character_is_in_damage_over_time_zone(
     mut commands: Commands,
-    mut collisions: EventReader<CollisionEvent>,
+    mut started_collisions: EventReader<CollisionStarted>,
+    mut ended_collisions: EventReader<CollisionEnded>,
     characters: Query<(), With<Character>>,
     damagers: Query<&DamageOverTime, With<Damager>>,
 ) {
@@ -71,18 +71,14 @@ fn check_if_character_is_in_damage_over_time_zone(
             .map(|dot| (e1, dot))
     };
 
-    for &event in collisions.read() {
-        match event {
-            CollisionEvent::Started(e1, e2, _) => {
-                if let Ok((entity, &dot)) = get_dot(e1, e2).or(get_dot(e2, e1)) {
-                    commands.entity(entity).insert(dot);
-                }
-            }
-            CollisionEvent::Stopped(e1, e2, _) => {
-                if let Ok((entity, _)) = get_dot(e1, e2).or(get_dot(e2, e1)) {
-                    commands.entity(entity).remove::<DamageOverTime>();
-                }
-            }
+    for &CollisionStarted(e1, e2) in started_collisions.read() {
+        if let Ok((entity, &dot)) = get_dot(e1, e2).or(get_dot(e2, e1)) {
+            commands.entity(entity).insert(dot);
+        }
+    }
+    for &CollisionEnded(e1, e2) in ended_collisions.read() {
+        if let Ok((entity, _)) = get_dot(e1, e2).or(get_dot(e2, e1)) {
+            commands.entity(entity).remove::<DamageOverTime>();
         }
     }
 }
@@ -92,15 +88,14 @@ fn check_if_character_is_in_damage_over_time_zone(
 ///
 fn player_touched_by_monster(
     mut commands: Commands,
-    mut collisions: EventReader<CollisionEvent>,
+    mut collisions: EventReader<CollisionStarted>,
     q_monsters: Query<&HitDamageRange, With<Monster>>,
     q_player: Query<(), With<Player>>,
 ) {
     let mut rng = rand::rng();
     collisions
         .read()
-        .filter_map(start_event_filter)
-        .filter_map(|(&e1, &e2)| {
+        .filter_map(|&CollisionStarted(e1, e2)| {
             let (_, player, other) = q_player.get_either(e1, e2)?;
             q_monsters
                 .get(other)
@@ -122,14 +117,14 @@ fn player_touched_by_monster(
 
 fn stop_move_on_collision(
     mut characters: Query<(Entity, &mut CharacterAction), With<Character>>,
-    mut collisions: EventReader<CollisionEvent>,
+    mut collisions: EventReader<CollisionStarted>,
 ) {
     for (character, mut action) in &mut characters {
         if collisions
             .read()
-            .filter_map(start_event_filter)
-            .any(|(e1, e2)| character == *e1 || character == *e2)
+            .any(|&CollisionStarted(e1, e2)| character == e1 || character == e2)
         {
+            collisions.clear();
             action.stop();
         }
     }

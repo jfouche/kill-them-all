@@ -4,8 +4,8 @@ use crate::components::{
     damage::{Damager, HitDamageRange},
     equipment::weapon::BaseAttackSpeed,
 };
+use avian2d::prelude::*;
 use bevy::prelude::*;
-use bevy_rapier2d::prelude::*;
 
 ///
 /// |SkillBook] for [MineDropper]
@@ -51,7 +51,7 @@ pub struct MineDropper;
 #[require(
     Name::new("Mine"),
     Damager,
-    Collider::ball(8.),
+    Collider::circle(8.),
     MineExplodeTimer,
     Sprite,
     CyclicAnimation::new(0..2)
@@ -70,7 +70,7 @@ impl Default for MineExplodeTimer {
 #[derive(Component)]
 #[require(
     Damager,
-    Collider::ball(16.),
+    Collider::circle(16.),
     Sprite,
     OneShotAnimation::new(0..8)
 )]

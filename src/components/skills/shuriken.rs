@@ -3,8 +3,8 @@ use crate::components::{
     damage::{BaseHitDamageRange, Projectile},
     equipment::weapon::BaseAttackSpeed,
 };
+use avian2d::prelude::*;
 use bevy::prelude::*;
-use bevy_rapier2d::prelude::*;
 
 #[derive(Resource)]
 pub struct ShurikenAssets {
@@ -60,5 +60,5 @@ pub struct ShurikenLauncher;
 /// A shuriken projectile
 ///
 #[derive(Component)]
-#[require(Name::new("Shuriken"), Projectile, Sprite, Collider::ball(8.))]
+#[require(Name::new("Shuriken"), Projectile, Sprite, Collider::circle(8.))]
 pub struct Shuriken;

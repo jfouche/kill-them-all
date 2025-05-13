@@ -2,11 +2,11 @@ use super::{
     animation::AnimationTimer,
     character::{BaseLife, BaseMovementSpeed, Character, Target},
     world_map::LAYER_PLAYER,
-    GROUP_ALL, GROUP_PLAYER,
+    GameLayer,
 };
 use crate::utils::despawn_after::DespawnAfter;
+use avian2d::prelude::*;
 use bevy::prelude::*;
-use bevy_rapier2d::prelude::*;
 use std::time::Duration;
 
 #[derive(Component)]
@@ -21,9 +21,9 @@ use std::time::Duration;
     Sprite,
     Transform::from_xyz(10., 10., LAYER_PLAYER),
     AnimationTimer,
-    Collider::cuboid(PLAYER_SIZE.x / 2., PLAYER_SIZE.y / 2.),
-    CollisionGroups::new(GROUP_PLAYER, GROUP_ALL),
-    ActiveEvents::COLLISION_EVENTS
+    Collider::rectangle(PLAYER_SIZE.x , PLAYER_SIZE.y ),
+    CollisionLayers::new(GameLayer::Player, GameLayer::all_bits()),
+    CollisionEventsEnabled
 )]
 pub struct Player;
 

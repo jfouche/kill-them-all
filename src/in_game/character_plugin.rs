@@ -21,8 +21,8 @@ use crate::{
     },
     schedule::GameRunningSet,
 };
+use avian2d::prelude::*;
 use bevy::prelude::*;
-use bevy_rapier2d::prelude::Velocity;
 
 pub struct CharacterPlugin;
 
@@ -152,7 +152,7 @@ fn do_character_action(
             &mut Transform,
             &MovementSpeed,
             &mut CharacterAction,
-            &mut Velocity,
+            &mut LinearVelocity,
         ),
         With<Character>,
     >,
@@ -164,13 +164,13 @@ fn do_character_action(
             let direction = target - transform.translation.xy();
             let linvel = direction.normalize_or_zero() * **movement_speed;
             if direction.length() > linvel.length() * time.delta_secs() {
-                velocity.linvel = linvel;
+                **velocity = linvel;
                 false
             } else {
                 // Player is next to target, position it at the target and stop moving
                 transform.translation.x = target.x;
                 transform.translation.y = target.y;
-                velocity.linvel = Vec2::ZERO;
+                **velocity = Vec2::ZERO;
                 true
             }
         };
@@ -190,7 +190,7 @@ fn do_character_action(
                 }
                 _ => action.stop(),
             },
-            CharacterAction::Stop => velocity.linvel = Vec2::ZERO,
+            CharacterAction::Stop => **velocity = Vec2::ZERO,
         };
     }
 }

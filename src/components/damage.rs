@@ -1,10 +1,10 @@
 use super::{
     affix::{IncreaseDamage, MoreDamage, PierceChance},
     character::Target,
-    LifeTime, GROUP_ALL, GROUP_DAMAGER, GROUP_ENEMY, GROUP_ITEM, GROUP_PLAYER,
+    GameLayer, LifeTime,
 };
+use avian2d::prelude::*;
 use bevy::prelude::*;
-use bevy_rapier2d::prelude::*;
 use rand::{rngs::ThreadRng, Rng};
 
 ///
@@ -116,25 +116,25 @@ impl std::ops::Sub<f32> for Damage {
 /// It requires:
 /// - At least one of [HitDamageRange] or [DamageOverTime]
 /// - A [Collider]
-/// - A [CollisionGroups], initialized by [Damager::collision_groups]
+/// - A [CollisionLayers], initialized by [Damager::collision_groups]
 #[derive(Component, Default)]
 #[require(
     Transform,
     RigidBody,
     Collider,
-    CollisionGroups = Damager::collision_groups(Target::Monster),
+    CollisionLayers = Damager::collision_groups(Target::Monster),
     Sensor,
-    ActiveEvents::COLLISION_EVENTS
+    CollisionEventsEnabled
 )]
 pub struct Damager;
 
 impl Damager {
-    pub fn collision_groups(target: Target) -> CollisionGroups {
+    pub fn collision_groups(target: Target) -> CollisionLayers {
         let filter = match target {
-            Target::Player => GROUP_ITEM | GROUP_ENEMY,
-            Target::Monster => GROUP_ITEM | GROUP_PLAYER,
+            Target::Player => GameLayer::Item.to_bits() | GameLayer::Enemy.to_bits(),
+            Target::Monster => GameLayer::Item.to_bits() | GameLayer::Player.to_bits(),
         };
-        CollisionGroups::new(GROUP_DAMAGER, GROUP_ALL & !filter)
+        CollisionLayers::new(GameLayer::Damager, GameLayer::all_bits() & !filter)
     }
 }
 
@@ -142,17 +142,23 @@ impl Damager {
 #[derive(Bundle)]
 pub struct DamagerParams {
     pub transform: Transform,
-    pub collision_groups: CollisionGroups,
+    pub collision_groups: CollisionLayers,
 }
 
 /// A [Projectile] is an [Damager] which is sent, and can pierce
 #[derive(Component, Default)]
-#[require(Damager, LifeTime::new(5.), PierceChance, Velocity)]
+#[require(
+    Damager,
+    LifeTime::new(5.),
+    PierceChance,
+    LinearVelocity,
+    AngularVelocity
+)]
 pub struct Projectile;
 
 /// Helper to spawn required [Projectile] dynamic components
 #[derive(Bundle)]
 pub struct ProjectileParams {
     pub pierce_chance: PierceChance,
-    pub velocity: Velocity,
+    pub velocity: LinearVelocity,
 }

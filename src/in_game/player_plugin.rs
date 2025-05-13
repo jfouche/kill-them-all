@@ -24,13 +24,13 @@ use crate::{
             SkillBook,
         },
         world_map::{WorldMap, WorldMapLoadingFinished, LAYER_PLAYER},
-        GROUP_ENEMY,
+        GameLayer,
     },
     schedule::{GameRunningSet, GameState},
     utils::{blink::Blink, invulnerable::Invulnerable},
 };
+use avian2d::prelude::*;
 use bevy::{prelude::*, window::PrimaryWindow};
-use bevy_rapier2d::prelude::*;
 use std::time::Duration;
 
 pub struct PlayerPlugin;
@@ -156,17 +156,17 @@ fn unpause(mut query: Query<(&mut Invulnerable, &mut Blink), With<Player>>) {
 fn set_invulnerable_on_hit(
     trigger: Trigger<LooseLifeEvent>,
     mut commands: Commands,
-    mut players: Query<&mut CollisionGroups, With<Player>>,
+    mut players: Query<&mut CollisionLayers, With<Player>>,
 ) {
     if let Ok(mut collision_groups) = players.get_mut(trigger.target()) {
         // Set player invulnerable
         commands.entity(trigger.target()).insert((
-            Invulnerable::new(Duration::from_secs_f32(1.0), GROUP_ENEMY),
+            Invulnerable::new(Duration::from_secs_f32(1.0), GameLayer::Enemy.into()),
             Blink::new(Duration::from_secs_f32(0.15)),
         ));
 
         // To allow player to not collide with enemies
-        collision_groups.filters &= !GROUP_ENEMY;
+        collision_groups.filters &= !GameLayer::Enemy.to_bits();
     }
 }
 
@@ -185,13 +185,13 @@ fn player_dying(
 ///
 fn animate_player_sprite(
     time: Res<Time>,
-    mut q_player: Query<(&Velocity, &mut AnimationTimer, &mut Sprite), With<Player>>,
+    mut q_player: Query<(&LinearVelocity, &mut AnimationTimer, &mut Sprite), With<Player>>,
 ) {
     if let Ok((&velocity, mut timer, mut sprite)) = q_player.single_mut() {
         timer.tick(time.delta());
         if timer.just_finished() {
             if let Some(atlas) = &mut sprite.texture_atlas {
-                atlas.index = if velocity == Velocity::zero() {
+                atlas.index = if velocity == LinearVelocity::ZERO {
                     0
                 } else {
                     match atlas.index {

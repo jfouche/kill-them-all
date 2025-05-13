@@ -2,12 +2,12 @@ use crate::components::{
     damage::{BaseDamageOverTime, Damager},
     skills::{AffectedByAreaOfEffect, Skill, SkillBook, SkillBookUI},
 };
+use avian2d::prelude::*;
 use bevy::{
     prelude::*,
     render::render_resource::{AsBindGroup, ShaderRef},
     sprite::{AlphaMode2d, Material2d},
 };
-use bevy_rapier2d::prelude::*;
 
 use super::SkillOfBook;
 
@@ -52,8 +52,8 @@ impl SkillOfBook for DeathAuraBook {
     Visibility,
     Mesh2d,
     MeshMaterial2d<DeathAuraMaterial>,
-    Collider::ball(32.),
-    CollisionGroups
+    Collider::circle(32.),
+    CollisionLayers
 )]
 pub struct DeathAura;
 

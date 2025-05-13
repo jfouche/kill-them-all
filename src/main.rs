@@ -13,8 +13,8 @@ mod test;
 #[cfg(feature = "dev")]
 mod debug;
 
+use avian2d::prelude::*;
 use bevy::{prelude::*, window::*};
-use bevy_rapier2d::prelude::*;
 
 const APP_TITLE: &str = "Kill'em All";
 
@@ -52,7 +52,7 @@ fn main() {
             })
             .set(ImagePlugin::default_nearest()),
     )
-    .add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(16.))
+    .add_plugins(PhysicsPlugins::default().with_length_unit(16.))
     // utils plugins
     .add_plugins((
         ui::UiPlugins,

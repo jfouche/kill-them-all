@@ -338,6 +338,37 @@ dependencies = [
 ]
 
 [[package]]
+name = "avian2d"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "715a2bd9f406078b91e7cc371533c2a61795dd8ad02b93c91b4c9eb2f606336b"
+dependencies = [
+ "arrayvec",
+ "avian_derive",
+ "bevy",
+ "bevy_heavy",
+ "bevy_math",
+ "bevy_transform_interpolation",
+ "bitflags 2.9.0",
+ "derive_more",
+ "itertools 0.13.0",
+ "nalgebra",
+ "parry2d",
+]
+
+[[package]]
+name = "avian_derive"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "12b257f601a1535e0d4a7a7796f535e3a13de62fd422b16dff7c14d27f0d4048"
+dependencies = [
+ "proc-macro-error2",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "avif-serialize"
 version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -720,6 +751,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_heavy"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "34ccc861fea2ff58c67f4df119512e204050bd7631a3a9c65e1a5e9d162cce28"
+dependencies = [
+ "bevy_math",
+ "bevy_reflect",
+]
+
+[[package]]
 name = "bevy_image"
 version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -985,18 +1026,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "86f1275dfb4cfef4ffc90c3fa75408964864facf833acc932413d52aa5364ba4"
 
 [[package]]
-name = "bevy_rapier2d"
-version = "0.29.0"
-source = "git+https://github.com/dimforge/bevy_rapier?rev=refs%2Fpull%2F642%2Fhead#794646bf180293622ea2949d9628d0e50faf347c"
-dependencies = [
- "bevy",
- "bitflags 2.9.0",
- "log",
- "nalgebra",
- "rapier2d",
-]
-
-[[package]]
 name = "bevy_reflect"
 version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1258,6 +1287,15 @@ dependencies = [
  "derive_more",
  "serde",
  "thiserror 2.0.12",
+]
+
+[[package]]
+name = "bevy_transform_interpolation"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "72c7c6c4e6a3d5415b3a29a17bd20c17cd0e2f068b96b24e263316d58d5346ea"
+dependencies = [
+ "bevy",
 ]
 
 [[package]]
@@ -1765,19 +1803,6 @@ name = "critical-section"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "790eea4361631c5e7d22598ecd5723ff611904e3344ce8720784c93e3d83d40b"
-
-[[package]]
-name = "crossbeam"
-version = "0.8.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1137cd7e7fc0fb5d3c5a8678be38ec56e819125d8d7907411fe24ccb943faca8"
-dependencies = [
- "crossbeam-channel",
- "crossbeam-deque",
- "crossbeam-epoch",
- "crossbeam-queue",
- "crossbeam-utils",
-]
 
 [[package]]
 name = "crossbeam-channel"
@@ -2633,10 +2658,10 @@ checksum = "e2db585e1d738fc771bf08a151420d3ed193d9d895a36df7f6f8a9456b911ddc"
 name = "kill-them-all"
 version = "0.1.0"
 dependencies = [
+ "avian2d",
  "bevy",
  "bevy-inspector-egui",
  "bevy_ecs_tilemap",
- "bevy_rapier2d",
  "getrandom 0.3.3",
  "noise",
  "rand 0.9.1",
@@ -3323,15 +3348,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ordered-float"
-version = "5.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e2c1f9f56e534ac6a9b8a4600bdf0f530fb393b5f393e7b4d03489c3cf0c3f01"
-dependencies = [
- "num-traits",
-]
-
-[[package]]
 name = "overload"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3377,26 +3393,27 @@ dependencies = [
 
 [[package]]
 name = "parry2d"
-version = "0.19.0"
+version = "0.17.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e9ce92fd1b7aaf2d7eb1631c566d751e56104152bf6ea95a1f3a7e8daf923d5c"
+checksum = "02da9fbab5b42b6f5cc5550bfc14bfe4564f36d40beef3fa43752ed53fd3c6f1"
 dependencies = [
  "approx",
  "arrayvec",
  "bitflags 2.9.0",
- "downcast-rs 2.0.1",
+ "downcast-rs 1.2.1",
  "either",
  "ena",
- "hashbrown",
  "log",
  "nalgebra",
  "num-derive",
  "num-traits",
- "ordered-float 5.0.0",
+ "ordered-float",
+ "rustc-hash 2.1.1",
  "simba",
  "slab",
+ "smallvec",
  "spade",
- "thiserror 2.0.12",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -3538,6 +3555,28 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "edce586971a4dfaa28950c6f18ed55e0406c1ab88bbce2c6f6293a7aaba73d35"
 dependencies = [
  "toml_edit",
+]
+
+[[package]]
+name = "proc-macro-error-attr2"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "96de42df36bb9bba5542fe9f1a054b8cc87e172759a1868aa05c1f3acc89dfc5"
+dependencies = [
+ "proc-macro2",
+ "quote",
+]
+
+[[package]]
+name = "proc-macro-error2"
+version = "2.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "11ec05c52be0a07b08061f7dd003e7d7092e0472bc731b4af7bb1ef876109802"
+dependencies = [
+ "proc-macro-error-attr2",
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -3702,30 +3741,6 @@ name = "rangemap"
 version = "1.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f60fcc7d6849342eff22c4350c8b9a989ee8ceabc4b481253e8946b9fe83d684"
-
-[[package]]
-name = "rapier2d"
-version = "0.24.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0caf6613d797c5564c304b7579c78addd922fbfe3fd6a22a01130892546d3794"
-dependencies = [
- "approx",
- "arrayvec",
- "bit-vec 0.8.0",
- "bitflags 2.9.0",
- "crossbeam",
- "downcast-rs 2.0.1",
- "log",
- "nalgebra",
- "num-derive",
- "num-traits",
- "ordered-float 5.0.0",
- "parry2d",
- "profiling",
- "rustc-hash 2.1.1",
- "simba",
- "thiserror 2.0.12",
-]
 
 [[package]]
 name = "rav1e"
@@ -4995,7 +5010,7 @@ dependencies = [
  "ndk-sys 0.5.0+25.2.9519653",
  "objc",
  "once_cell",
- "ordered-float 4.6.0",
+ "ordered-float",
  "parking_lot",
  "profiling",
  "range-alloc",

@@ -13,7 +13,7 @@ use crate::{
     schedule::{GameRunningSet, GameState},
 };
 use bevy::prelude::*;
-use bevy_rapier2d::prelude::CollisionGroups;
+use avian2d::prelude::CollisionLayers;
 
 pub struct MinePlugin;
 
@@ -62,7 +62,7 @@ fn mine_explosion(
         &mut MineExplodeTimer,
         &HitDamageRange,
         &Transform,
-        &CollisionGroups,
+        &CollisionLayers,
     )>,
     time: Res<Time>,
     assets: Res<MineAssets>,

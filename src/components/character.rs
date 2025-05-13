@@ -5,8 +5,8 @@ use super::{
     },
     damage::Damage,
 };
+use avian2d::prelude::*;
 use bevy::prelude::*;
-use bevy_rapier2d::prelude::*;
 
 /// Required components for all characters
 #[derive(Component, Default)]
@@ -24,9 +24,9 @@ use bevy_rapier2d::prelude::*;
     Armour,
     Transform,
     RigidBody::Dynamic,
-    Velocity,
+    LinearVelocity,
     Collider,
-    CollisionGroups,
+    CollisionLayers,
     LockedAxes::ROTATION_LOCKED
 )]
 pub struct Character;

@@ -17,7 +17,14 @@ opt-level = 3
 [features]
 default = []
 # Enables debug infos and rendering
-dev = ["dep:bevy-inspector-egui", "bevy/bevy_dev_tools", "bevy/bevy_ui_debug", "bevy/track_location"]
+dev = [
+    "dep:bevy-inspector-egui", 
+    "bevy/bevy_dev_tools", 
+    "bevy/bevy_ui_debug", 
+    "bevy/track_location", 
+    "avian2d/debug-plugin", 
+    "avian2d/diagnostic_ui"
+]
 
 [dependencies]
 rand = "0.9"
@@ -40,7 +47,7 @@ bevy = { version = "0.16", default-features = false, features = [
     "png",
     "bevy_ui_picking_backend"
 ] }
-bevy_rapier2d = { git="https://github.com/dimforge/bevy_rapier", rev="refs/pull/642/head"}
+avian2d = {version = "0.3", default-features = false, features = ["2d", "f32", "default-collider", "parry-f32"]}
 bevy_ecs_tilemap = "0.16"
 noise = "0.9"
 

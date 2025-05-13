@@ -1,12 +1,12 @@
+use avian2d::prelude::*;
 use bevy::prelude::*;
-use bevy_rapier2d::prelude::*;
 use rand::{rngs::ThreadRng, Rng};
 
 use super::{
     animation::AnimationTimer,
     character::{BaseLife, BaseMovementSpeed, Character, Target},
     damage::HitDamageRange,
-    GROUP_ALL, GROUP_ENEMY, GROUP_ITEM,
+    GameLayer,
 };
 
 ///
@@ -98,8 +98,8 @@ pub struct MonsterLevel(pub u16);
     HitDamageRange,
     Sprite,
     AnimationTimer,
-    Collider::cuboid(8., 8.),
-    CollisionGroups::new(GROUP_ENEMY, GROUP_ALL & !GROUP_ITEM)
+    Collider::rectangle(8., 8.),
+    CollisionLayers::new(GameLayer::Enemy, GameLayer::all_bits() & !GameLayer::Item.to_bits())
 )]
 pub struct Monster;
 

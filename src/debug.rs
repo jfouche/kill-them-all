@@ -19,6 +19,7 @@ use crate::{
     in_game::{item_plugin::take_dropped_item, life_bar_plugin::LifeBar},
     schedule::*,
 };
+use avian2d::prelude::*;
 use bevy::{
     dev_tools::{fps_overlay::*, states::log_transitions},
     ecs::entity::Entities,
@@ -35,7 +36,6 @@ use bevy_inspector_egui::{
     quick::WorldInspectorPlugin,
     DefaultInspectorConfigPlugin,
 };
-use bevy_rapier2d::prelude::*;
 use std::time::Duration;
 
 #[derive(Resource, Deref, DerefMut)]
@@ -50,8 +50,10 @@ impl Plugin for DebugPlugin {
                 enable_multipass_for_primary_context: true,
             },
             FpsOverlayPlugin::default(),
+            PhysicsDebugPlugin::default(),
+            PhysicsDiagnosticsPlugin,
+            PhysicsDiagnosticsUiPlugin,
             DefaultInspectorConfigPlugin,
-            bevy_rapier2d::render::RapierDebugRenderPlugin::default(),
             WorldInspectorPlugin::new().run_if(debug_is_active),
         ))
         .init_resource::<UiDebugOptions>()
@@ -120,26 +122,19 @@ fn inspector_ui(world: &mut World) {
 }
 
 fn display_collision_events(
-    mut collisions: EventReader<CollisionEvent>,
+    mut started_collisions: EventReader<CollisionStarted>,
+    mut ended_collisions: EventReader<CollisionEnded>,
     names: Query<NameOrEntity>,
     debug: Res<DebugMode>,
 ) {
     if !**debug {
         return;
     }
-    for collision in collisions.read() {
-        match collision {
-            CollisionEvent::Started(e1, e2, flag) => {
-                let n1 = names.get(*e1).unwrap();
-                let n2 = names.get(*e2).unwrap();
-                info!("CollisionEvent::Started({n1}, {n2}, {flag:?})");
-            }
-            CollisionEvent::Stopped(e1, e2, flag) => {
-                let n1 = names.get(*e1).unwrap();
-                let n2 = names.get(*e2).unwrap();
-                info!("CollisionEvent::Stopped({n1}, {n2}, {flag:?})");
-            }
-        }
+    for collision in started_collisions.read() {
+        info!("{collision:?}");
+    }
+    for collision in ended_collisions.read() {
+        info!("{collision:?}");
     }
 }
 

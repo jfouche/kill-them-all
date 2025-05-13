@@ -23,9 +23,9 @@ mod plugin {
     use crate::utils::blink::Blink;
     use crate::utils::despawn_after::DespawnAfter;
     use crate::utils::invulnerable::Invulnerable;
+    use avian2d::prelude::*;
     use bevy::app::PluginGroupBuilder;
     use bevy::prelude::*;
-    use bevy_rapier2d::prelude::*;
 
     pub struct InGamePluginsGroup;
 
@@ -112,30 +112,22 @@ mod plugin {
         }
     }
 
-    fn init_physics(mut conf: Query<&mut RapierConfiguration>) {
-        if let Ok(mut conf) = conf.single_mut() {
-            info!("init_physics");
-            conf.gravity = Vect::ZERO;
-        }
+    fn init_physics(mut gravity: ResMut<Gravity>) {
+        info!("init_physics");
+        *gravity = Gravity(Vec2::ZERO);
     }
 
-    fn start_physics(mut physics: Query<&mut RapierConfiguration>) {
-        if let Ok(mut physics) = physics.single_mut() {
-            physics.physics_pipeline_active = true;
-            physics.query_pipeline_active = true;
-        }
+    fn start_physics(mut time: ResMut<Time<Physics>>) {
+        time.unpause();
     }
 
-    fn stop_physics(mut physics: Query<&mut RapierConfiguration>) {
-        if let Ok(mut physics) = physics.single_mut() {
-            physics.physics_pipeline_active = false;
-            physics.query_pipeline_active = false;
-        }
+    fn stop_physics(mut time: ResMut<Time<Physics>>) {
+        time.pause();
     }
 
-    fn reset_physics(mut commands: Commands) {
-        commands.insert_resource(Events::<CollisionEvent>::default());
-        commands.insert_resource(Events::<ContactForceEvent>::default());
+    fn reset_physics(mut _commands: Commands) {
+        // commands.insert_resource(Events::<CollisionEvent>::default());
+        // commands.insert_resource(Events::<ContactForceEvent>::default());
     }
 
     fn change_state_on_player_death(

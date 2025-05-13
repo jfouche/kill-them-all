@@ -9,8 +9,8 @@ use crate::{
     },
     schedule::GameState,
 };
+use avian2d::prelude::*;
 use bevy::{color::palettes::css::YELLOW, prelude::*};
-use bevy_rapier2d::prelude::*;
 
 const FIREBALL_SPEED: f32 = 300.0;
 const FIREBALL_SIZE: f32 = 5.0;
@@ -20,7 +20,7 @@ const FIREBALL_SIZE: f32 = 5.0;
 #[require(
     Name::new("FireBall"),
     Projectile,
-    Collider::cuboid(FIREBALL_SIZE / 2., FIREBALL_SIZE / 2.),
+    Collider::rectangle(FIREBALL_SIZE, FIREBALL_SIZE),
     Sprite {
         color: YELLOW.into(),
         custom_size: Some(Vec2::new(FIREBALL_SIZE, FIREBALL_SIZE)),
@@ -58,7 +58,7 @@ fn cast_fireball(
                 },
                 ProjectileParams {
                     pierce_chance: *pierce,
-                    velocity: Velocity::linear(velocity),
+                    velocity: LinearVelocity(velocity),
                 },
             ));
         }

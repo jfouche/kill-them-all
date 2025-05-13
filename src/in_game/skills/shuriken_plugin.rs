@@ -7,8 +7,8 @@ use crate::{
     schedule::GameState,
 };
 use affix::PierceChance;
+use avian2d::prelude::*;
 use bevy::prelude::*;
-use bevy_rapier2d::prelude::*;
 use character::{Character, Target};
 use damage::{Damager, DamagerParams, HitDamageRange, ProjectileParams};
 use skills::shuriken::{Shuriken, ShurikenAssets};
@@ -47,11 +47,9 @@ fn launch_shuriken(
                 },
                 ProjectileParams {
                     pierce_chance: *pierce_chance,
-                    velocity: Velocity {
-                        linvel: velocity,
-                        angvel: 2. * PI,
-                    },
+                    velocity: LinearVelocity(velocity),
                 },
+                AngularVelocity(2. * PI),
                 Sprite::from_image(asset.shuriken.clone()),
             ));
         }

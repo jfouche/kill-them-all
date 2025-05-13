@@ -5,7 +5,7 @@ use crate::components::{
     world_map::LAYER_DAMAGER,
 };
 use bevy::{prelude::*, sprite::Material2dPlugin};
-use bevy_rapier2d::prelude::CollisionGroups;
+use avian2d::prelude::CollisionLayers;
 
 ///
 ///  Plugin for the [DeathAura] weapon
@@ -28,7 +28,7 @@ fn on_equip(
             &mut Transform,
             &mut Mesh2d,
             &mut MeshMaterial2d<DeathAuraMaterial>,
-            &mut CollisionGroups,
+            &mut CollisionLayers,
             &ChildOf,
         ),
         With<DeathAura>,
@@ -55,7 +55,7 @@ fn on_unequip(
         (
             &mut Mesh2d,
             &mut MeshMaterial2d<DeathAuraMaterial>,
-            &mut CollisionGroups,
+            &mut CollisionLayers,
         ),
         With<DeathAura>,
     >,
@@ -65,6 +65,6 @@ fn on_unequip(
     {
         *mesh = Mesh2d::default();
         *material = MeshMaterial2d::default();
-        *collision_groups = CollisionGroups::default();
+        *collision_groups = CollisionLayers::default();
     }
 }

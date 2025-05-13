@@ -1,5 +1,5 @@
+use avian2d::prelude::{CollisionLayers, LayerMask};
 use bevy::prelude::*;
-use bevy_rapier2d::prelude::{CollisionGroups, Group};
 use std::time::Duration;
 
 pub struct InvulnerabilityPlugin;
@@ -13,13 +13,13 @@ impl Plugin for InvulnerabilityPlugin {
 #[derive(Component)]
 #[component(storage = "SparseSet")]
 pub struct Invulnerable {
-    pub filters: Group,
+    pub filters: LayerMask,
     timer: Timer,
     pause: bool,
 }
 
 impl Invulnerable {
-    pub fn new(duration: Duration, filters: Group) -> Self {
+    pub fn new(duration: Duration, filters: LayerMask) -> Self {
         Invulnerable {
             timer: Timer::new(duration, TimerMode::Once),
             filters,
@@ -48,7 +48,7 @@ impl Default for InvulnerabilityAnimationTimer {
 fn invulnerability_finished(
     mut commands: Commands,
     time: Res<Time>,
-    mut query: Query<(Entity, &mut CollisionGroups, &mut Invulnerable)>,
+    mut query: Query<(Entity, &mut CollisionLayers, &mut Invulnerable)>,
 ) {
     if let Ok((entity, mut collision_groups, mut invulnerable)) = query.single_mut() {
         if !invulnerable.pause {
