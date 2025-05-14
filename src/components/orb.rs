@@ -24,18 +24,22 @@ impl From<Orb> for ItemInfo {
         match orb {
             Orb::Transmutation => ItemInfo {
                 tile_index: 153,
+                title: "Orb of transmutation".into(),
                 text: "Transform a normal item to a magic one".into(),
             },
             Orb::Alteration => ItemInfo {
                 tile_index: 151,
+                title: "Orb of alteration".into(),
                 text: "Transform a magic item to a new magic one".into(),
             },
             Orb::Regal => ItemInfo {
                 tile_index: 155,
+                title: "Orb of regal".into(),
                 text: "Transform a magic item to a rare one".into(),
             },
             Orb::Chaos => ItemInfo {
                 tile_index: 150,
+                title: "Orb of chaos".into(),
                 text: "Transform a rare item to a new rare one, keeping the same base".into(),
             },
         }
@@ -61,8 +65,6 @@ impl OrbProvider {
 }
 
 pub trait OrbAction {
-    fn affix_text(&self) -> String;
-
     fn affix_reset(&mut self, ecommands: &mut EntityCommands);
 
     fn affix_gen(
@@ -71,7 +73,7 @@ pub trait OrbAction {
         count: u16,
         rarity: ItemRarity,
         rng: &mut ThreadRng,
-    );
+    ) -> ItemInfo;
 }
 
 /// Event to activate an [Orb] on an [Item]

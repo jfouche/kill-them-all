@@ -17,7 +17,7 @@ impl Plugin for PopupInfoPlugin {
 #[derive(Component)]
 struct InfoPopup;
 
-fn info_popup(pos: Vec2, img_node: ImageNode, text: String) -> impl Bundle {
+fn info_popup(pos: Vec2, img_node: ImageNode, title: String, text: String) -> impl Bundle {
     (
         InfoPopup,
         Name::new("InfoPopup"),
@@ -31,7 +31,15 @@ fn info_popup(pos: Vec2, img_node: ImageNode, text: String) -> impl Bundle {
             ..Popup::default_node()
         },
         ZIndex(1),
-        children![img_node, (Text(text), TextFont::from_font_size(12.))],
+        children![
+            (
+                Text(title),
+                TextFont::from_font_size(12.),
+                TextLayout::new_with_justify(JustifyText::Center)
+            ),
+            img_node,
+            (Text(text), TextFont::from_font_size(12.))
+        ],
     )
 }
 
@@ -46,7 +54,7 @@ fn spawn_popup_info_on_over_item(
         if let Ok(info) = items.get(*item_entity) {
             let pos = trigger.pointer_location.position;
             let img = assets.image_node(info.tile_index);
-            commands.spawn(info_popup(pos, img, info.text.clone()));
+            commands.spawn(info_popup(pos, img, info.title.clone(), info.text.clone()));
         }
     }
 }

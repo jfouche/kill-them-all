@@ -135,6 +135,7 @@ pub struct ItemEntityInfo {
 #[derive(Component, Default, Clone, Reflect)]
 pub struct ItemInfo {
     pub tile_index: usize,
+    pub title: String,
     pub text: String,
 }
 
@@ -145,6 +146,7 @@ where
     fn from(_: T) -> Self {
         ItemInfo {
             text: T::label(),
+            title: T::title(),
             tile_index: T::tile_index(),
         }
     }

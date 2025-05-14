@@ -66,11 +66,7 @@ mod common {
             {
                 let mut ecmds = commands.spawn_empty();
                 let entity = ecmds.id();
-                equipment.affix_gen(&mut ecmds, rarity.n_affix(), rarity, rng);
-                let info = ItemInfo {
-                    text: equipment.affix_text(),
-                    tile_index: T::tile_index(rarity),
-                };
+                let info = equipment.affix_gen(&mut ecmds, rarity.n_affix(), rarity, rng);
                 commands.entity(entity).insert((equipment, rarity));
                 ItemEntityInfo { entity, info }
             }
