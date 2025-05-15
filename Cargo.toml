@@ -40,7 +40,7 @@ bevy = { version = "0.16", default-features = false, features = [
     "png",
     "bevy_ui_picking_backend"
 ] }
-bevy_rapier2d = { git="https://github.com/dimforge/bevy_rapier", rev="refs/pull/642/head"}
+bevy_rapier2d = "0.30"
 bevy_ecs_tilemap = "0.16"
 noise = "0.9"
 
