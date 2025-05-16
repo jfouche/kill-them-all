@@ -2,7 +2,7 @@
 name = "kill-them-all"
 version = "0.1.0"
 edition = "2021"
-license = "MIT License"
+license = "MIT"
 license-file = "LICENSE"
 authors = ["Jérémie Fouché"]
 description = "A 'Path Of Exile' super lite 2D game."
