@@ -3,10 +3,10 @@ name = "kill-them-all"
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
-license-file = "LICENSE"
 authors = ["Jérémie Fouché"]
 description = "A 'Path Of Exile' super lite 2D game."
 homepage = "https://github.com/jfouche/kill-them-all"
+keywords = ["gamedev", "bevy", "2D"]
 
 [workspace]
 resolver = "2" # Important! wgpu/Bevy needs this!
