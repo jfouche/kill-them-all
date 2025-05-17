@@ -38,7 +38,7 @@ impl std::fmt::Display for IncreaseMaxLife {
     }
 }
 
-/// Life regenration per second
+/// Life regeneration per second
 #[derive(Component, Default, Clone, Copy, Deref, DerefMut, Debug, Reflect)]
 pub struct LifeRegen(pub f32);
 
@@ -55,6 +55,12 @@ impl LifeRegen {
 impl std::fmt::Display for LifeRegen {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "Regenerate {:.0} lifes per sec", self.0)
+    }
+}
+
+impl From<u16> for LifeRegen {
+    fn from(value: u16) -> Self {
+        LifeRegen(value as f32)
     }
 }
 

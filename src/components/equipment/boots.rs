@@ -57,17 +57,17 @@ impl OrbAction for Boots {
         for _ in 0..count {
             match self.affix_provider.gen(rng) {
                 Some(BootsAffixKind::AddArmour) => {
-                    let value_and_tier = BOOTS_MORE_ARMOUR_RANGES.generate(ilevel, rng);
+                    let value_and_tier = MORE_ARMOUR_RANGES.generate(ilevel, rng);
                     self.affix_provider
                         .set::<Armour, _>(ecommands, value_and_tier);
                 }
                 Some(BootsAffixKind::AddLife) => {
-                    let value_and_tier = BOOTS_MORE_LIFE_RANGES.generate(ilevel, rng);
+                    let value_and_tier = MORE_LIFE_RANGES.generate(ilevel, rng);
                     self.affix_provider
                         .set::<MoreLife, _>(ecommands, value_and_tier);
                 }
                 Some(BootsAffixKind::IncreaseMovementSpeed) => {
-                    let value_and_tier = BOOTS_INCR_MOVEMENT_SPEED_RANGES.generate(ilevel, rng);
+                    let value_and_tier = INCR_MOVEMENT_SPEED_RANGES.generate(ilevel, rng);
                     self.affix_provider
                         .set::<IncreaseMovementSpeed, _>(ecommands, value_and_tier);
                 }
@@ -84,13 +84,13 @@ enum BootsAffixKind {
     IncreaseMovementSpeed,
 }
 
-const BOOTS_MORE_ARMOUR_RANGES: &[(u16, (u16, u16), usize); 3] =
+const MORE_ARMOUR_RANGES: &[(u16, (u16, u16), usize); 3] =
     &[(4, (3, 9), 20), (10, (10, 24), 20), (17, (25, 29), 20)];
 
-const BOOTS_MORE_LIFE_RANGES: &[(u16, (u16, u16), usize); 3] =
+const MORE_LIFE_RANGES: &[(u16, (u16, u16), usize); 3] =
     &[(4, (3, 9), 20), (10, (10, 24), 20), (17, (25, 29), 20)];
 
-const BOOTS_INCR_MOVEMENT_SPEED_RANGES: &[(u16, (u16, u16), usize); 3] =
+const INCR_MOVEMENT_SPEED_RANGES: &[(u16, (u16, u16), usize); 3] =
     &[(4, (3, 9), 20), (10, (10, 24), 20), (17, (25, 29), 20)];
 
 #[derive(Deref, DerefMut)]
@@ -99,17 +99,11 @@ struct BootsAffixProvider(AffixProvider<BootsAffixKind>);
 impl BootsAffixProvider {
     pub fn new(ilevel: u16) -> Self {
         let mut provider = RngKindProvider::default();
-        provider.add(
-            BootsAffixKind::AddArmour,
-            BOOTS_MORE_ARMOUR_RANGES.weight(ilevel),
-        );
-        provider.add(
-            BootsAffixKind::AddLife,
-            BOOTS_MORE_LIFE_RANGES.weight(ilevel),
-        );
+        provider.add(BootsAffixKind::AddArmour, MORE_ARMOUR_RANGES.weight(ilevel));
+        provider.add(BootsAffixKind::AddLife, MORE_LIFE_RANGES.weight(ilevel));
         provider.add(
             BootsAffixKind::IncreaseMovementSpeed,
-            BOOTS_INCR_MOVEMENT_SPEED_RANGES.weight(ilevel),
+            INCR_MOVEMENT_SPEED_RANGES.weight(ilevel),
         );
         BootsAffixProvider(AffixProvider::new::<Boots>(ilevel, provider))
     }

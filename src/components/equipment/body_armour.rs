@@ -1,6 +1,6 @@
 use super::{common::AffixProvider, Equipment};
 use crate::components::{
-    affix::{Armour, MoreLife},
+    affix::{Armour, LifeRegen, MoreLife},
     item::{AffixConfigGenerator, ItemDescriptor, ItemRarity},
     orb::OrbAction,
     rng_provider::RngKindProvider,
@@ -51,14 +51,19 @@ impl OrbAction for BodyArmour {
         for _ in 0..count {
             match self.affix_provider.gen(rng) {
                 Some(BodyArmourAffixKind::AddArmour) => {
-                    let value_and_tier = BODYARMOUR_MORE_ARMOUR_RANGES.generate(ilevel, rng);
+                    let value_and_tier = MORE_ARMOUR_RANGES.generate(ilevel, rng);
                     self.affix_provider
                         .set::<Armour, _>(ecommands, value_and_tier);
                 }
                 Some(BodyArmourAffixKind::AddLife) => {
-                    let value_and_tier = BODYARMOUR_MORE_LIFE_RANGES.generate(ilevel, rng);
+                    let value_and_tier = MORE_LIFE_RANGES.generate(ilevel, rng);
                     self.affix_provider
                         .set::<MoreLife, _>(ecommands, value_and_tier);
+                }
+                Some(BodyArmourAffixKind::LifeRegen) => {
+                    let value_and_tier = LIFE_REGEN_RANGES.generate(ilevel, rng);
+                    self.affix_provider
+                        .set::<LifeRegen, _>(ecommands, value_and_tier);
                 }
                 None => {}
             }
@@ -70,13 +75,17 @@ impl OrbAction for BodyArmour {
 enum BodyArmourAffixKind {
     AddLife,
     AddArmour,
+    LifeRegen,
 }
 
-const BODYARMOUR_MORE_ARMOUR_RANGES: &[(u16, (u16, u16), usize); 3] =
+const MORE_ARMOUR_RANGES: &[(u16, (u16, u16), usize); 3] =
     &[(4, (3, 9), 20), (10, (10, 24), 20), (17, (25, 29), 20)];
 
-const BODYARMOUR_MORE_LIFE_RANGES: &[(u16, (u16, u16), usize); 3] =
+const MORE_LIFE_RANGES: &[(u16, (u16, u16), usize); 3] =
     &[(4, (3, 9), 20), (10, (10, 24), 20), (17, (25, 29), 20)];
+
+const LIFE_REGEN_RANGES: &[(u16, (u16, u16), usize); 3] =
+    &[(1, (1, 2), 20), (7, (2, 8), 20), (19, (8, 16), 20)];
 
 #[derive(Deref, DerefMut)]
 struct BodyArmourAffixProvider(AffixProvider<BodyArmourAffixKind>);
@@ -86,11 +95,15 @@ impl BodyArmourAffixProvider {
         let mut provider = RngKindProvider::default();
         provider.add(
             BodyArmourAffixKind::AddArmour,
-            BODYARMOUR_MORE_ARMOUR_RANGES.weight(ilevel),
+            MORE_ARMOUR_RANGES.weight(ilevel),
         );
         provider.add(
             BodyArmourAffixKind::AddLife,
-            BODYARMOUR_MORE_LIFE_RANGES.weight(ilevel),
+            MORE_LIFE_RANGES.weight(ilevel),
+        );
+        provider.add(
+            BodyArmourAffixKind::LifeRegen,
+            LIFE_REGEN_RANGES.weight(ilevel),
         );
         BodyArmourAffixProvider(AffixProvider::new::<BodyArmour>(ilevel, provider))
     }

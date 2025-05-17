@@ -51,17 +51,17 @@ impl OrbAction for Amulet {
         for _ in 0..count {
             match self.affix_provider.gen(rng) {
                 Some(AmuletAffixKind::AddArmour) => {
-                    let value_and_tier = AMULET_MORE_ARMOUR_RANGES.generate(ilevel, rng);
+                    let value_and_tier = MORE_ARMOUR_RANGES.generate(ilevel, rng);
                     self.affix_provider
                         .set::<Armour, _>(ecommands, value_and_tier);
                 }
                 Some(AmuletAffixKind::MoreLife) => {
-                    let value_and_tier = AMULET_MORE_LIFE_RANGES.generate(ilevel, rng);
+                    let value_and_tier = MORE_LIFE_RANGES.generate(ilevel, rng);
                     self.affix_provider
                         .set::<MoreLife, _>(ecommands, value_and_tier);
                 }
                 Some(AmuletAffixKind::PierceChance) => {
-                    let value_and_tier = AMULET_PIERCE_CHANCE_RANGES.generate(ilevel, rng);
+                    let value_and_tier = PIERCE_CHANCE_RANGES.generate(ilevel, rng);
                     self.affix_provider
                         .set::<PierceChance, _>(ecommands, value_and_tier);
                 }
@@ -79,13 +79,13 @@ enum AmuletAffixKind {
     PierceChance,
 }
 
-const AMULET_MORE_ARMOUR_RANGES: &[(u16, (u16, u16), usize); 3] =
+const MORE_ARMOUR_RANGES: &[(u16, (u16, u16), usize); 3] =
     &[(4, (3, 9), 20), (10, (10, 24), 20), (17, (25, 29), 20)];
 
-const AMULET_MORE_LIFE_RANGES: &[(u16, (u16, u16), usize); 3] =
+const MORE_LIFE_RANGES: &[(u16, (u16, u16), usize); 3] =
     &[(4, (3, 9), 20), (10, (10, 24), 20), (17, (25, 29), 20)];
 
-const AMULET_PIERCE_CHANCE_RANGES: &[(u16, (u16, u16), usize); 3] =
+const PIERCE_CHANCE_RANGES: &[(u16, (u16, u16), usize); 3] =
     &[(4, (3, 9), 10), (10, (10, 24), 10), (17, (25, 29), 10)];
 
 #[derive(Deref, DerefMut)]
@@ -97,15 +97,12 @@ impl AmuletAffixProvider {
 
         provider.add(
             AmuletAffixKind::AddArmour,
-            AMULET_MORE_ARMOUR_RANGES.weight(ilevel),
+            MORE_ARMOUR_RANGES.weight(ilevel),
         );
-        provider.add(
-            AmuletAffixKind::MoreLife,
-            AMULET_MORE_LIFE_RANGES.weight(ilevel),
-        );
+        provider.add(AmuletAffixKind::MoreLife, MORE_LIFE_RANGES.weight(ilevel));
         provider.add(
             AmuletAffixKind::PierceChance,
-            AMULET_PIERCE_CHANCE_RANGES.weight(ilevel),
+            PIERCE_CHANCE_RANGES.weight(ilevel),
         );
 
         AmuletAffixProvider(AffixProvider::new::<Amulet>(ilevel, provider))

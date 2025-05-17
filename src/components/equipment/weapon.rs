@@ -3,9 +3,8 @@ use crate::components::affix::IncreaseAttackSpeed;
 use bevy::prelude::*;
 use std::time::Duration;
 
-///
-/// A [Weapon] should be a child of a [crate::components::character::Character]
-///
+/// A [Weapon] should be a child of a [crate::components::character::Character] in
+/// order to be active
 #[derive(Component, Default)]
 #[require(Equipment::Weapon)]
 pub struct Weapon;

@@ -70,22 +70,22 @@ impl OrbAction for Wand {
         for _ in 0..count {
             match self.affix_provider.gen(rng) {
                 Some(WandAffixKind::MoreDamage) => {
-                    let value_and_tier = WAND_MORE_DAMAGE_RANGES.generate(ilevel, rng);
+                    let value_and_tier = MORE_DAMAGE_RANGES.generate(ilevel, rng);
                     self.affix_provider
                         .set::<MoreDamage, _>(ecommands, value_and_tier);
                 }
                 Some(WandAffixKind::IncreaseDamage) => {
-                    let value_and_tier = WAND_INCR_DAMAGE_RANGES.generate(ilevel, rng);
+                    let value_and_tier = INCR_DAMAGE_RANGES.generate(ilevel, rng);
                     self.affix_provider
                         .set::<IncreaseDamage, _>(ecommands, value_and_tier);
                 }
                 Some(WandAffixKind::PierceChance) => {
-                    let value_and_tier = WAND_PIERCE_CHANCE_RANGES.generate(ilevel, rng);
+                    let value_and_tier = PIERCE_CHANCE_RANGES.generate(ilevel, rng);
                     self.affix_provider
                         .set::<PierceChance, _>(ecommands, value_and_tier);
                 }
                 Some(WandAffixKind::IncreaseAttackSpeed) => {
-                    let value_and_tier = WAND_INCR_ATTACK_SPEED_RANGES.generate(ilevel, rng);
+                    let value_and_tier = INCR_ATTACK_SPEED_RANGES.generate(ilevel, rng);
                     self.affix_provider
                         .set::<IncreaseAttackSpeed, _>(ecommands, value_and_tier);
                 }
@@ -104,16 +104,16 @@ enum WandAffixKind {
     IncreaseAttackSpeed,
 }
 
-const WAND_MORE_DAMAGE_RANGES: &[(u16, (u16, u16), usize); 3] =
+const MORE_DAMAGE_RANGES: &[(u16, (u16, u16), usize); 3] =
     &[(4, (3, 9), 20), (10, (10, 24), 20), (17, (25, 29), 20)];
 
-const WAND_INCR_DAMAGE_RANGES: &[(u16, (u16, u16), usize); 3] =
+const INCR_DAMAGE_RANGES: &[(u16, (u16, u16), usize); 3] =
     &[(4, (3, 9), 20), (10, (10, 24), 20), (17, (25, 29), 20)];
 
-const WAND_PIERCE_CHANCE_RANGES: &[(u16, (u16, u16), usize); 3] =
+const PIERCE_CHANCE_RANGES: &[(u16, (u16, u16), usize); 3] =
     &[(4, (3, 9), 10), (10, (10, 24), 10), (17, (25, 29), 10)];
 
-const WAND_INCR_ATTACK_SPEED_RANGES: &[(u16, (u16, u16), usize); 3] =
+const INCR_ATTACK_SPEED_RANGES: &[(u16, (u16, u16), usize); 3] =
     &[(4, (3, 9), 10), (10, (10, 24), 10), (17, (25, 29), 10)];
 
 #[derive(Deref, DerefMut)]
@@ -122,21 +122,18 @@ struct WandAffixProvider(AffixProvider<WandAffixKind>);
 impl WandAffixProvider {
     pub fn new(ilevel: u16) -> Self {
         let mut provider = RngKindProvider::default();
-        provider.add(
-            WandAffixKind::MoreDamage,
-            WAND_MORE_DAMAGE_RANGES.weight(ilevel),
-        );
+        provider.add(WandAffixKind::MoreDamage, MORE_DAMAGE_RANGES.weight(ilevel));
         provider.add(
             WandAffixKind::IncreaseDamage,
-            WAND_INCR_DAMAGE_RANGES.weight(ilevel),
+            INCR_DAMAGE_RANGES.weight(ilevel),
         );
         provider.add(
             WandAffixKind::PierceChance,
-            WAND_PIERCE_CHANCE_RANGES.weight(ilevel),
+            PIERCE_CHANCE_RANGES.weight(ilevel),
         );
         provider.add(
             WandAffixKind::IncreaseAttackSpeed,
-            WAND_INCR_ATTACK_SPEED_RANGES.weight(ilevel),
+            INCR_ATTACK_SPEED_RANGES.weight(ilevel),
         );
         WandAffixProvider(AffixProvider::new::<Wand>(ilevel, provider))
     }
