@@ -1,7 +1,8 @@
-use super::{Skill, SkillBook, SkillBookUI, SkillOfBook};
+use super::{Skill, SkillBook, SkillOfBook};
 use crate::components::{
     damage::{BaseHitDamageRange, Projectile},
     equipment::weapon::BaseAttackSpeed,
+    item::{ItemDescriptor, ItemRarity},
 };
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
@@ -26,16 +27,16 @@ impl FromWorld for ShurikenAssets {
 #[require(SkillBook, Name::new("ShurikenLauncherBook"))]
 pub struct ShurikenLauncherBook;
 
-impl SkillBookUI for ShurikenLauncherBook {
-    fn title() -> String {
+impl ItemDescriptor for ShurikenLauncherBook {
+    fn title(&self) -> String {
         "Shuriken launcher".into()
     }
 
-    fn label() -> String {
+    fn description(&self) -> String {
         "Launch shurikens".into()
     }
 
-    fn tile_index() -> usize {
+    fn tile_index(&self, _rarity: ItemRarity) -> usize {
         31
     }
 }

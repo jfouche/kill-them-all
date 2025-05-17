@@ -58,7 +58,6 @@ impl Plugin for DebugPlugin {
         .insert_resource(DebugMode(true))
         .add_systems(EguiContextPass, inspector_ui.run_if(debug_is_active))
         .add_systems(Startup, configure_egui)
-        .add_systems(OnEnter(GameState::InGame), spawn_death_aura_book)
         .add_systems(
             Update,
             (
@@ -185,18 +184,7 @@ fn init_player(trigger: Trigger<OnAdd, Player>, mut commands: Commands) {
 
     let mut rng = rand::rng();
     let orb = OrbProvider::spawn(&mut commands, &mut rng);
-    commands.trigger(AddToInventoryEvent::new(orb.entity));
-}
-
-fn spawn_death_aura_book(mut commands: Commands, assets: Res<ItemAssets>) {
-    let item_info = spawn_book::<DeathAuraBook>(&mut commands);
-    commands
-        .spawn((
-            DroppedItem(item_info.entity),
-            assets.sprite(item_info.info.tile_index),
-            Transform::from_translation(vec3(50., 50., LAYER_ITEM)).with_scale(Vec3::splat(0.3)),
-        ))
-        .observe(take_dropped_item);
+    commands.trigger(AddToInventoryEvent::new(orb));
 }
 
 fn debug_death_aura(q: Query<&Transform, With<DeathAura>>, mut save: Local<Vec2>) {

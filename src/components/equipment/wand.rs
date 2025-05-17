@@ -1,11 +1,11 @@
 use super::{
-    common::{AffixProvider, EquipmentUI},
+    common::AffixProvider,
     weapon::{BaseAttackSpeed, Weapon},
 };
 use crate::components::{
     affix::{IncreaseAttackSpeed, IncreaseDamage, MoreDamage, PierceChance},
     damage::BaseHitDamageRange,
-    item::{AffixConfigGenerator, ItemInfo, ItemRarity},
+    item::{AffixConfigGenerator, ItemDescriptor, ItemRarity},
     orb::OrbAction,
     rng_provider::RngKindProvider,
 };
@@ -36,12 +36,16 @@ impl Wand {
     }
 }
 
-impl EquipmentUI for Wand {
-    fn title() -> String {
-        "Wand".into()
+impl ItemDescriptor for Wand {
+    fn title(&self) -> String {
+        format!("Wand (l{})", self.affix_provider.ilevel() + 1)
     }
 
-    fn tile_index(rarity: ItemRarity) -> usize {
+    fn description(&self) -> String {
+        self.affix_provider.item_description()
+    }
+
+    fn tile_index(&self, rarity: ItemRarity) -> usize {
         match rarity {
             ItemRarity::Normal => 318,
             ItemRarity::Magic => 320,
@@ -51,7 +55,7 @@ impl EquipmentUI for Wand {
 }
 
 impl OrbAction for Wand {
-    fn affix_reset(&mut self, ecommands: &mut EntityCommands) {
+    fn reset_affixes(&mut self, ecommands: &mut EntityCommands) {
         self.affix_provider.reset();
         ecommands.insert((
             MoreDamage(0.),
@@ -61,13 +65,7 @@ impl OrbAction for Wand {
         ));
     }
 
-    fn affix_gen(
-        &mut self,
-        ecommands: &mut EntityCommands,
-        count: u16,
-        rarity: ItemRarity,
-        rng: &mut ThreadRng,
-    ) -> ItemInfo {
+    fn add_affixes(&mut self, ecommands: &mut EntityCommands, count: u16, rng: &mut ThreadRng) {
         let ilevel = self.affix_provider.ilevel();
         for _ in 0..count {
             match self.affix_provider.gen(rng) {
@@ -94,13 +92,6 @@ impl OrbAction for Wand {
                 None => {}
             }
         }
-        let item_info = ItemInfo {
-            tile_index: Self::tile_index(rarity),
-            title: "Wand".into(),
-            text: self.affix_provider.item_text(),
-        };
-        ecommands.insert(item_info.clone());
-        item_info
     }
 }
 

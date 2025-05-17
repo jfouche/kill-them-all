@@ -1,12 +1,12 @@
 [package]
 name = "kill-them-all"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 license = "MIT"
 authors = ["Jérémie Fouché"]
 description = "A 'Path Of Exile' super lite 2D game."
 homepage = "https://github.com/jfouche/kill-them-all"
-keywords = ["gamedev", "bevy", "2D"]
+keywords = ["game", "bevy", "2D"]
 
 [workspace]
 resolver = "2" # Important! wgpu/Bevy needs this!
@@ -51,7 +51,7 @@ noise = "0.9"
 
 # feature: dev
 bevy-inspector-egui = { version="0.31", default-features = false, features = [
-    "bevy_render", "documentation"
+    "bevy_render"
 ], optional = true }
 
 # WASM

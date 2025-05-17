@@ -1,8 +1,9 @@
-use super::{Skill, SkillBook, SkillBookUI, SkillOfBook};
+use super::{Skill, SkillBook, SkillOfBook};
 use crate::components::{
     animation::{CyclicAnimation, OneShotAnimation},
     damage::{Damager, HitDamageRange},
     equipment::weapon::BaseAttackSpeed,
+    item::{ItemDescriptor, ItemRarity},
 };
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
@@ -14,16 +15,16 @@ use bevy_rapier2d::prelude::*;
 #[require(Name::new("MineDropperBook"), SkillBook)]
 pub struct MineDropperBook;
 
-impl SkillBookUI for MineDropperBook {
-    fn title() -> String {
+impl ItemDescriptor for MineDropperBook {
+    fn title(&self) -> String {
         "Mine dropper".into()
     }
 
-    fn label() -> String {
+    fn description(&self) -> String {
         "Drop mine which explodes".into()
     }
 
-    fn tile_index() -> usize {
+    fn tile_index(&self, _rarity: ItemRarity) -> usize {
         21
     }
 }

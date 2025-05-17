@@ -6,8 +6,8 @@ use crate::{
         despawn_all,
         inventory::{Inventory, PlayerEquipmentChanged, RemoveFromInventoryEvent},
         item::{
-            DropItemEvent, DroppedItem, Item, ItemAssets, ItemInfo, ItemLevel, ItemProvider,
-            ItemRarity, ITEM_SIZE,
+            DropItemEvent, DroppedItem, Item, ItemAssets, ItemDescription, ItemLevel, ItemProvider,
+            ItemRarity, ItemTileIndex, ItemTitle, ITEM_SIZE,
         },
         monster::MonsterDeathEvent,
         player::{Player, RemoveSkillBookEvent},
@@ -35,7 +35,9 @@ impl Plugin for ItemPlugin {
         app.register_type::<ItemRarity>()
             .register_type::<ItemLevel>()
             .register_type::<DroppedItem>()
-            .register_type::<ItemInfo>()
+            .register_type::<ItemTitle>()
+            .register_type::<ItemDescription>()
+            .register_type::<ItemTileIndex>()
             .add_systems(
                 OnExit(GameState::InGame),
                 (despawn_all::<DroppedItem>, despawn_all::<Item>),
@@ -51,6 +53,7 @@ impl Plugin for ItemPlugin {
                 drop_item_on_monster_death.in_set(GameRunningSet::EntityUpdate),
             )
             .add_observer(update_player_on_drop_item)
+            .add_observer(update_dropped_item_sprite)
             .add_observer(
                 |trigger: Trigger<OnAdd, WorldMap>, mut commands: Commands| {
                     commands.entity(trigger.target()).observe(player_drop_item);
@@ -94,20 +97,30 @@ fn item_picking_backend(
     }
 }
 
+fn update_dropped_item_sprite(
+    trigger: Trigger<OnAdd, DroppedItem>,
+    mut dropped_items: Query<(&DroppedItem, &mut Sprite)>,
+    items: Query<&ItemTileIndex>,
+    assets: Res<ItemAssets>,
+) -> Result {
+    let (&DroppedItem(item), mut sprite) = dropped_items.get_mut(trigger.target())?;
+    let &ItemTileIndex(tile_index) = items.get(item)?;
+    *sprite = assets.sprite(tile_index);
+    Ok(())
+}
+
 fn drop_item_on_monster_death(
     mut commands: Commands,
     mut monster_death_events: EventReader<MonsterDeathEvent>,
-    assets: Res<ItemAssets>,
 ) {
     let mut rng = rand::rng();
     for event in monster_death_events.read() {
         let provider = ItemProvider(event.mlevel);
-        if let Some(item_info) = provider.spawn(&mut commands, &mut rng) {
+        if let Some(item) = provider.spawn(&mut commands, &mut rng) {
             let translation = event.pos.with_z(LAYER_ITEM);
             commands
                 .spawn((
-                    DroppedItem(item_info.entity),
-                    assets.sprite(item_info.info.tile_index),
+                    DroppedItem(item),
                     Transform::from_translation(translation)
                         .with_scale(Vec3::splat(ITEM_WORLD_SCALE)),
                 ))
@@ -176,17 +189,10 @@ fn player_drop_item(
     _trigger: Trigger<Pointer<DragDrop>>,
     mut commands: Commands,
     cursors: Query<&DraggedEntity, With<DndCursor>>,
-    items: Query<&ItemInfo, With<Item>>,
     players: Query<&Transform, With<Player>>,
-    assets: Res<ItemAssets>,
 ) {
     let Ok(&DraggedEntity(Some(item))) = cursors.single() else {
         error!("No entity dragged");
-        return;
-    };
-
-    let Ok(item_info) = items.get(item) else {
-        error!("Item {item} doesn't have ItemInfo");
         return;
     };
     info!("player_drop_item({item})");
@@ -210,7 +216,6 @@ fn player_drop_item(
     commands
         .spawn((
             DroppedItem(item),
-            assets.sprite(item_info.tile_index),
             Transform::from_translation(pos).with_scale(Vec3::splat(ITEM_WORLD_SCALE)),
         ))
         .observe(take_dropped_item);

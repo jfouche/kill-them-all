@@ -1,10 +1,7 @@
-use super::{
-    common::{AffixProvider, EquipmentUI},
-    Equipment,
-};
+use super::{common::AffixProvider, Equipment};
 use crate::components::{
     affix::{Armour, MoreLife},
-    item::{AffixConfigGenerator, ItemInfo, ItemRarity},
+    item::{AffixConfigGenerator, ItemDescriptor, ItemRarity},
     orb::OrbAction,
     rng_provider::RngKindProvider,
 };
@@ -25,11 +22,16 @@ impl BodyArmour {
     }
 }
 
-impl EquipmentUI for BodyArmour {
-    fn title() -> String {
-        "Body armour".into()
+impl ItemDescriptor for BodyArmour {
+    fn title(&self) -> String {
+        format!("Body armour (l{})", self.affix_provider.ilevel() + 1)
     }
-    fn tile_index(rarity: ItemRarity) -> usize {
+
+    fn description(&self) -> String {
+        self.affix_provider.item_description()
+    }
+
+    fn tile_index(&self, rarity: ItemRarity) -> usize {
         match rarity {
             ItemRarity::Normal => 0,
             ItemRarity::Magic => 2,
@@ -39,18 +41,12 @@ impl EquipmentUI for BodyArmour {
 }
 
 impl OrbAction for BodyArmour {
-    fn affix_reset(&mut self, ecommands: &mut EntityCommands) {
+    fn reset_affixes(&mut self, ecommands: &mut EntityCommands) {
         self.affix_provider.reset();
         ecommands.insert((Armour(0.), MoreLife(0.)));
     }
 
-    fn affix_gen(
-        &mut self,
-        ecommands: &mut EntityCommands,
-        count: u16,
-        rarity: ItemRarity,
-        rng: &mut ThreadRng,
-    ) -> ItemInfo {
+    fn add_affixes(&mut self, ecommands: &mut EntityCommands, count: u16, rng: &mut ThreadRng) {
         let ilevel = self.affix_provider.ilevel();
         for _ in 0..count {
             match self.affix_provider.gen(rng) {
@@ -67,13 +63,6 @@ impl OrbAction for BodyArmour {
                 None => {}
             }
         }
-        let item_info = ItemInfo {
-            tile_index: Self::tile_index(rarity),
-            title: "Body armour".into(),
-            text: self.affix_provider.item_text(),
-        };
-        ecommands.insert(item_info.clone());
-        item_info
     }
 }
 

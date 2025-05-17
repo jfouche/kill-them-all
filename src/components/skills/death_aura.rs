@@ -1,6 +1,7 @@
 use crate::components::{
     damage::{BaseDamageOverTime, Damager},
-    skills::{AffectedByAreaOfEffect, Skill, SkillBook, SkillBookUI},
+    item::{ItemDescriptor, ItemRarity},
+    skills::{AffectedByAreaOfEffect, Skill, SkillBook},
 };
 use bevy::{
     prelude::*,
@@ -18,18 +19,18 @@ use super::SkillOfBook;
 #[require(Name::new("DeathAuraBook"), SkillBook)]
 pub struct DeathAuraBook;
 
-impl SkillBookUI for DeathAuraBook {
-    fn title() -> String {
+impl ItemDescriptor for DeathAuraBook {
+    fn title(&self) -> String {
         "Death aura".into()
     }
 
-    fn label() -> String {
+    fn description(&self) -> String {
         r#"Aura that damages over time
 Affected by AOE affixes"#
             .into()
     }
 
-    fn tile_index() -> usize {
+    fn tile_index(&self, _rarity: ItemRarity) -> usize {
         61
     }
 }

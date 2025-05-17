@@ -224,9 +224,9 @@ fn on_transmute<T>(
 
     let mut rng = rand::rng();
     let mut item_cmds = commands.entity(trigger.item);
-    item.affix_reset(&mut item_cmds);
+    item.reset_affixes(&mut item_cmds);
     *rarity = ItemRarity::Magic;
-    item.affix_gen(&mut item_cmds, rarity.n_affix(), *rarity, &mut rng);
+    item.add_affixes(&mut item_cmds, rarity.n_affix(), &mut rng);
 
     // Despawn orb
     commands.trigger(RemoveFromInventoryEvent(trigger.orb));
@@ -263,8 +263,8 @@ fn on_alteration<T>(
 
     let mut rng = rand::rng();
     let mut item_cmds = commands.entity(trigger.item);
-    item.affix_reset(&mut item_cmds);
-    item.affix_gen(&mut item_cmds, rarity.n_affix(), *rarity, &mut rng);
+    item.reset_affixes(&mut item_cmds);
+    item.add_affixes(&mut item_cmds, rarity.n_affix(), &mut rng);
 
     // Despawn orb
     commands.trigger(RemoveFromInventoryEvent(trigger.orb));
@@ -302,7 +302,7 @@ fn on_regal<T>(
     let mut rng = rand::rng();
     let mut item_cmds = commands.entity(trigger.item);
     *rarity = ItemRarity::Rare;
-    item.affix_gen(&mut item_cmds, 1, *rarity, &mut rng);
+    item.add_affixes(&mut item_cmds, 1, &mut rng);
 
     // Despawn orb
     commands.trigger(RemoveFromInventoryEvent(trigger.orb));
@@ -339,13 +339,8 @@ fn on_chaos<T>(
 
     let mut rng = rand::rng();
     let mut item_cmds = commands.entity(trigger.item);
-    item.affix_reset(&mut item_cmds);
-    item.affix_gen(
-        &mut item_cmds,
-        ItemRarity::Rare.n_affix(),
-        *rarity,
-        &mut rng,
-    );
+    item.reset_affixes(&mut item_cmds);
+    item.add_affixes(&mut item_cmds, ItemRarity::Rare.n_affix(), &mut rng);
 
     // Despawn orb
     commands.trigger(RemoveFromInventoryEvent(trigger.orb));

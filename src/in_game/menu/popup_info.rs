@@ -1,5 +1,5 @@
 use crate::{
-    components::item::{ItemAssets, ItemEntity, ItemInfo},
+    components::item::{ItemAssets, ItemDescription, ItemEntity, ItemTileIndex, ItemTitle},
     ui::popup::Popup,
 };
 use bevy::prelude::*;
@@ -17,7 +17,7 @@ impl Plugin for PopupInfoPlugin {
 #[derive(Component)]
 struct InfoPopup;
 
-fn info_popup(pos: Vec2, img_node: ImageNode, title: String, text: String) -> impl Bundle {
+fn info_popup(pos: Vec2, img_node: ImageNode, title: String, description: String) -> impl Bundle {
     (
         InfoPopup,
         Name::new("InfoPopup"),
@@ -38,7 +38,7 @@ fn info_popup(pos: Vec2, img_node: ImageNode, title: String, text: String) -> im
                 TextLayout::new_with_justify(JustifyText::Center)
             ),
             img_node,
-            (Text(text), TextFont::from_font_size(12.))
+            (Text(description), TextFont::from_font_size(12.))
         ],
     )
 }
@@ -47,14 +47,14 @@ fn spawn_popup_info_on_over_item(
     trigger: Trigger<Pointer<Over>>,
     mut commands: Commands,
     mut item_entities: Query<&ItemEntity>,
-    items: Query<&ItemInfo>,
+    items: Query<(&ItemTitle, &ItemDescription, &ItemTileIndex)>,
     assets: Res<ItemAssets>,
 ) {
     if let Ok(ItemEntity(Some(item_entity))) = item_entities.get_mut(trigger.target()) {
-        if let Ok(info) = items.get(*item_entity) {
+        if let Ok((title, description, tile_index)) = items.get(*item_entity) {
             let pos = trigger.pointer_location.position;
-            let img = assets.image_node(info.tile_index);
-            commands.spawn(info_popup(pos, img, info.title.clone(), info.text.clone()));
+            let img = assets.image_node(tile_index.0);
+            commands.spawn(info_popup(pos, img, title.0.clone(), description.0.clone()));
         }
     }
 }

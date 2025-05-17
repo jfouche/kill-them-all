@@ -14,11 +14,13 @@ pub use wand::Wand;
 pub use weapon::Weapon;
 
 mod common {
-
     use super::*;
     use crate::components::{
         common::EntityInserter,
-        item::{ItemEntityInfo, ItemInfo, ItemLevel, ItemRarity, ItemRarityProvider, ValueAndTier},
+        item::{
+            Item, ItemDescription, ItemDescriptor, ItemLevel, ItemRarity, ItemRarityProvider,
+            ItemTileIndex, ItemTitle, ValueAndTier,
+        },
         orb::OrbAction,
         rng_provider::RngKindProvider,
     };
@@ -28,7 +30,7 @@ mod common {
 
     /// Equiment type
     #[derive(Component, Clone, Copy, Debug, PartialEq, Eq, Hash, Reflect)]
-    #[require(ItemInfo, ItemLevel, ItemRarity)]
+    #[require(Item, ItemLevel, ItemRarity)]
     pub enum Equipment {
         Helmet,
         BodyArmour,
@@ -47,36 +49,40 @@ mod common {
     }
 
     impl EquipmentKind {
-        fn spawn(
-            &self,
-            commands: &mut Commands,
-            ilevel: u16,
-            rng: &mut ThreadRng,
-        ) -> ItemEntityInfo {
+        fn spawn(&self, commands: &mut Commands, ilevel: u16, rng: &mut ThreadRng) -> Entity {
             let rarity = ItemRarityProvider::gen(rng);
 
-            fn s<T>(
+            fn spawn<T>(
                 mut equipment: T,
                 commands: &mut Commands,
                 rarity: ItemRarity,
                 rng: &mut ThreadRng,
-            ) -> ItemEntityInfo
+            ) -> Entity
             where
-                T: Component + EquipmentUI + OrbAction,
+                T: Component + ItemDescriptor + OrbAction,
             {
                 let mut ecmds = commands.spawn_empty();
                 let entity = ecmds.id();
-                let info = equipment.affix_gen(&mut ecmds, rarity.n_affix(), rarity, rng);
-                commands.entity(entity).insert((equipment, rarity));
-                ItemEntityInfo { entity, info }
+                equipment.add_affixes(&mut ecmds, rarity.n_affix(), rng);
+                let title = equipment.title();
+                let description = equipment.description();
+                let tile_index = equipment.tile_index(rarity);
+                commands.entity(entity).insert((
+                    equipment,
+                    rarity,
+                    ItemTitle(title),
+                    ItemDescription(description),
+                    ItemTileIndex(tile_index),
+                ));
+                entity
             }
 
             match self {
-                EquipmentKind::Amulet => s(Amulet::new(ilevel), commands, rarity, rng),
-                EquipmentKind::BodyArmour => s(BodyArmour::new(ilevel), commands, rarity, rng),
-                EquipmentKind::Boots => s(Boots::new(ilevel), commands, rarity, rng),
-                EquipmentKind::Helmet => s(Helmet::new(ilevel), commands, rarity, rng),
-                EquipmentKind::Wand => s(Wand::new(ilevel), commands, rarity, rng),
+                EquipmentKind::Amulet => spawn(Amulet::new(ilevel), commands, rarity, rng),
+                EquipmentKind::BodyArmour => spawn(BodyArmour::new(ilevel), commands, rarity, rng),
+                EquipmentKind::Boots => spawn(Boots::new(ilevel), commands, rarity, rng),
+                EquipmentKind::Helmet => spawn(Helmet::new(ilevel), commands, rarity, rng),
+                EquipmentKind::Wand => spawn(Wand::new(ilevel), commands, rarity, rng),
             }
         }
     }
@@ -97,18 +103,9 @@ mod common {
             EquipmentProvider { ilevel, provider }
         }
 
-        pub fn spawn(
-            &mut self,
-            commands: &mut Commands,
-            rng: &mut ThreadRng,
-        ) -> Option<ItemEntityInfo> {
+        pub fn spawn(&mut self, commands: &mut Commands, rng: &mut ThreadRng) -> Option<Entity> {
             Some(self.provider.gen(rng)?.spawn(commands, self.ilevel, rng))
         }
-    }
-
-    pub trait EquipmentUI {
-        fn title() -> String;
-        fn tile_index(rarity: ItemRarity) -> usize;
     }
 
     pub struct AffixProvider<K> {
@@ -123,13 +120,12 @@ mod common {
     {
         pub fn new<T>(ilevel: u16, provider: RngKindProvider<K>) -> Self
         where
-            T: Component + EquipmentUI,
+            T: Component + ItemDescriptor,
         {
-            let title = format!("{} ({})", T::title(), ilevel + 1);
             AffixProvider {
                 ilevel,
                 provider,
-                labels: vec![title],
+                labels: vec![],
             }
         }
 
@@ -152,11 +148,11 @@ mod common {
             E: EntityInserter,
         {
             let affix = A::from(value.0);
-            self.labels.push(format!("{affix} ({})", value.1));
+            self.labels.push(format!("{affix} (t{})", value.1));
             entity.insert(affix);
         }
 
-        pub fn item_text(&self) -> String {
+        pub fn item_description(&self) -> String {
             self.labels.join("\n")
         }
     }

@@ -1,5 +1,5 @@
 use super::{
-    item::{Item, ItemEntityInfo, ItemInfo, ItemRarity},
+    item::{Item, ItemDescription, ItemDescriptor, ItemRarity, ItemTileIndex, ItemTitle},
     rng_provider::RngKindProvider,
 };
 use bevy::prelude::*;
@@ -19,29 +19,31 @@ pub enum Orb {
     Chaos,
 }
 
-impl From<Orb> for ItemInfo {
-    fn from(orb: Orb) -> Self {
-        match orb {
-            Orb::Transmutation => ItemInfo {
-                tile_index: 153,
-                title: "Orb of transmutation".into(),
-                text: "Transform a normal item to a magic one".into(),
-            },
-            Orb::Alteration => ItemInfo {
-                tile_index: 151,
-                title: "Orb of alteration".into(),
-                text: "Transform a magic item to a new magic one".into(),
-            },
-            Orb::Regal => ItemInfo {
-                tile_index: 155,
-                title: "Orb of regal".into(),
-                text: "Transform a magic item to a rare one".into(),
-            },
-            Orb::Chaos => ItemInfo {
-                tile_index: 150,
-                title: "Orb of chaos".into(),
-                text: "Transform a rare item to a new rare one, keeping the same base".into(),
-            },
+impl ItemDescriptor for Orb {
+    fn title(&self) -> String {
+        match self {
+            Orb::Transmutation => "Orb of transmutation".into(),
+            Orb::Alteration => "Orb of alteration".into(),
+            Orb::Regal => "Orb of regal".into(),
+            Orb::Chaos => "Orb of chaos".into(),
+        }
+    }
+
+    fn description(&self) -> String {
+        match self {
+            Orb::Transmutation => "Transform a normal item to a magic one".into(),
+            Orb::Alteration => "Transform a magic item to a new magic one".into(),
+            Orb::Regal => "Transform a magic item to a rare one".into(),
+            Orb::Chaos => "Transform a rare item to a new rare one, keeping the same base".into(),
+        }
+    }
+
+    fn tile_index(&self, _rarity: ItemRarity) -> usize {
+        match self {
+            Orb::Transmutation => 153,
+            Orb::Alteration => 151,
+            Orb::Regal => 155,
+            Orb::Chaos => 150,
         }
     }
 }
@@ -50,7 +52,7 @@ impl From<Orb> for ItemInfo {
 pub struct OrbProvider;
 
 impl OrbProvider {
-    pub fn spawn(commands: &mut Commands, rng: &mut ThreadRng) -> ItemEntityInfo {
+    pub fn spawn(commands: &mut Commands, rng: &mut ThreadRng) -> Entity {
         let mut provider = RngKindProvider::default();
         provider.add(Orb::Transmutation, 40);
         provider.add(Orb::Alteration, 40);
@@ -58,22 +60,25 @@ impl OrbProvider {
         provider.add(Orb::Chaos, 40);
 
         let orb = provider.gen(rng).expect("At least 1 orb");
-        let info: ItemInfo = orb.into();
-        let entity = commands.spawn((orb, info.clone())).id();
-        ItemEntityInfo { entity, info }
+        let title = orb.title();
+        let description = orb.description();
+        let tile_index = orb.tile_index(ItemRarity::Normal);
+        commands
+            .spawn((
+                orb,
+                ItemTitle(title),
+                ItemDescription(description),
+                ItemTileIndex(tile_index),
+            ))
+            .id()
     }
 }
 
 pub trait OrbAction {
-    fn affix_reset(&mut self, ecommands: &mut EntityCommands);
+    fn reset_affixes(&mut self, ecommands: &mut EntityCommands);
 
-    fn affix_gen(
-        &mut self,
-        ecommands: &mut EntityCommands,
-        count: u16,
-        rarity: ItemRarity,
-        rng: &mut ThreadRng,
-    ) -> ItemInfo;
+    /// Add `count` affixes to an [Item]
+    fn add_affixes(&mut self, ecommands: &mut EntityCommands, count: u16, rng: &mut ThreadRng);
 }
 
 /// Event to activate an [Orb] on an [Item]

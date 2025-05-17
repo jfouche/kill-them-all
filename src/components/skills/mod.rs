@@ -4,7 +4,9 @@ pub mod mine;
 pub mod shuriken;
 
 use super::{
-    item::{Item, ItemEntityInfo, ItemInfo, ItemLocation},
+    item::{
+        Item, ItemDescription, ItemDescriptor, ItemLocation, ItemRarity, ItemTileIndex, ItemTitle,
+    },
     rng_provider::RngKindProvider,
 };
 use bevy::prelude::*;
@@ -20,12 +22,6 @@ pub struct Skill;
 #[derive(Component, Default, Clone, Copy, PartialEq, Eq)]
 #[require(Item)]
 pub struct SkillBook;
-
-pub trait SkillBookUI {
-    fn title() -> String;
-    fn label() -> String;
-    fn tile_index() -> usize;
-}
 
 pub trait SkillOfBook {
     type Skill;
@@ -52,7 +48,7 @@ pub enum SkillKind {
 }
 
 impl SkillKind {
-    fn spawn(&self, commands: &mut Commands) -> ItemEntityInfo {
+    fn spawn(&self, commands: &mut Commands) -> Entity {
         match self {
             SkillKind::DeathAura => spawn_book::<DeathAuraBook>(commands),
             SkillKind::Fireball => spawn_book::<FireBallLauncherBook>(commands),
@@ -62,13 +58,22 @@ impl SkillKind {
     }
 }
 
-pub fn spawn_book<T>(commands: &mut Commands) -> ItemEntityInfo
+pub fn spawn_book<T>(commands: &mut Commands) -> Entity
 where
-    T: Component + Default + Into<ItemInfo>,
+    T: Component + Default + ItemDescriptor,
 {
-    let info: ItemInfo = T::default().into();
-    let entity = commands.spawn((T::default(), info.clone())).id();
-    ItemEntityInfo { entity, info }
+    let skill_book = T::default();
+    let title = skill_book.title();
+    let description = skill_book.description();
+    let tile_index = skill_book.tile_index(ItemRarity::Normal);
+    commands
+        .spawn((
+            skill_book,
+            ItemTitle(title),
+            ItemDescription(description),
+            ItemTileIndex(tile_index),
+        ))
+        .id()
 }
 
 pub struct SkillProvider {
@@ -91,11 +96,7 @@ impl SkillProvider {
         SkillProvider { provider }
     }
 
-    pub fn spawn(
-        &mut self,
-        commands: &mut Commands,
-        rng: &mut ThreadRng,
-    ) -> Option<ItemEntityInfo> {
+    pub fn spawn(&mut self, commands: &mut Commands, rng: &mut ThreadRng) -> Option<Entity> {
         Some(self.provider.gen(rng)?.spawn(commands))
     }
 }

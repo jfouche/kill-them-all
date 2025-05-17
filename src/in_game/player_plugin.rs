@@ -125,9 +125,9 @@ fn spawn_player(mut commands: Commands, assets: Res<PlayerAssets>) {
         .observe(player_dying);
 
     // Add a skill to the player
-    let info = spawn_book::<ShurikenLauncherBook>(&mut commands);
+    let book = spawn_book::<ShurikenLauncherBook>(&mut commands);
     commands.trigger(EquipSkillBookEvent {
-        book_entity: info.entity,
+        book_entity: book,
         action: PlayerAction::Skill1,
     });
 }

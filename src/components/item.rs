@@ -1,8 +1,6 @@
 use super::{
-    equipment::EquipmentProvider,
-    orb::OrbProvider,
-    rng_provider::RngKindProvider,
-    skills::{SkillBookUI, SkillProvider},
+    equipment::EquipmentProvider, orb::OrbProvider, rng_provider::RngKindProvider,
+    skills::SkillProvider,
 };
 use bevy::prelude::*;
 use rand::{rngs::ThreadRng, Rng};
@@ -58,7 +56,17 @@ impl ItemAssets {
 }
 
 #[derive(Component, Default)]
+#[require(ItemTitle, ItemDescription, ItemTileIndex)]
 pub struct Item;
+
+#[derive(Component, Default, Reflect)]
+pub struct ItemTitle(pub String);
+
+#[derive(Component, Default, Reflect)]
+pub struct ItemDescription(pub String);
+
+#[derive(Component, Default, Reflect)]
+pub struct ItemTileIndex(pub usize);
 
 /// Item dropped by a monster.
 ///
@@ -75,6 +83,8 @@ pub struct ItemLevel(pub u16);
 #[derive(Component, Default, Reflect)]
 pub struct ItemEntity(pub Option<Entity>);
 
+/// Location of an [Item] in an [Item] container, like the player equipments or the
+/// [crate::components::inventory::Inventory] for examples
 #[derive(Component, Default)]
 #[require(
     Node = ItemLocation::default_node(),
@@ -115,7 +125,7 @@ pub struct ItemImage;
 pub struct ItemProvider(pub u16);
 
 impl ItemProvider {
-    pub fn spawn(&self, commands: &mut Commands, rng: &mut ThreadRng) -> Option<ItemEntityInfo> {
+    pub fn spawn(&self, commands: &mut Commands, rng: &mut ThreadRng) -> Option<Entity> {
         match rng.random_range(0..100) {
             0..30 => EquipmentProvider::new(self.0).spawn(commands, rng),
             30..60 => Some(OrbProvider::spawn(commands, rng)),
@@ -125,37 +135,10 @@ impl ItemProvider {
     }
 }
 
-pub struct ItemEntityInfo {
-    pub entity: Entity,
-    pub info: ItemInfo,
-}
-
-/// Util component to store all equipments informations, e.g. image and affixes
-
-#[derive(Component, Default, Clone, Reflect)]
-pub struct ItemInfo {
-    pub tile_index: usize,
-    pub title: String,
-    pub text: String,
-}
-
-impl<T> From<T> for ItemInfo
-where
-    T: SkillBookUI,
-{
-    fn from(_: T) -> Self {
-        ItemInfo {
-            text: T::label(),
-            title: T::title(),
-            tile_index: T::tile_index(),
-        }
-    }
-}
-
-impl From<&ItemInfo> for Text {
-    fn from(value: &ItemInfo) -> Self {
-        Text(value.text.clone())
-    }
+pub trait ItemDescriptor {
+    fn title(&self) -> String;
+    fn description(&self) -> String;
+    fn tile_index(&self, rarity: ItemRarity) -> usize;
 }
 
 /// Equipment Rarity

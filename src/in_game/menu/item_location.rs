@@ -2,8 +2,8 @@ use crate::{
     components::{
         equipment::{Amulet, BodyArmour, Boots, Helmet, Weapon},
         item::{
-            Item, ItemAssets, ItemEntity, ItemImage, ItemInfo, ItemLocation, ItemLocationAccept,
-            ItemLocationAcceptAll,
+            Item, ItemAssets, ItemEntity, ItemImage, ItemLocation, ItemLocationAccept,
+            ItemLocationAcceptAll, ItemTileIndex,
         },
         skills::SkillBook,
     },
@@ -38,15 +38,15 @@ fn create_image_location(
     trigger: Trigger<OnAdd, ItemLocation>,
     mut commands: Commands,
     item_entities: Query<&ItemEntity, With<ItemLocation>>,
-    item_infos: Query<&ItemInfo, With<Item>>,
+    items: Query<&ItemTileIndex, With<Item>>,
     assets: Res<ItemAssets>,
 ) {
     if let Ok(item_entity) = item_entities.get(trigger.target()) {
         let image_node = match item_entity.0 {
-            Some(entity) => item_infos
+            Some(entity) => items
                 .get(entity)
                 .ok()
-                .map(|info| assets.image_node(info.tile_index))
+                .map(|tile_index| assets.image_node(tile_index.0))
                 .unwrap_or(assets.empty_image_node()),
             None => assets.empty_image_node(),
         };
@@ -56,7 +56,7 @@ fn create_image_location(
 
 fn update_image(
     locations: Query<(&ItemEntity, &Children), Changed<ItemEntity>>,
-    item_infos: Query<&ItemInfo, With<Item>>,
+    items: Query<&ItemTileIndex, With<Item>>,
     mut images: Query<&mut ImageNode, With<ItemImage>>,
     assets: Res<ItemAssets>,
 ) {
@@ -64,10 +64,10 @@ fn update_image(
         let new_image_node = item_entity
             .0
             .map(|entity| {
-                item_infos
+                items
                     .get(entity)
                     .ok()
-                    .map(|info| assets.image_node(info.tile_index))
+                    .map(|tile_index| assets.image_node(tile_index.0))
             })
             .flatten()
             .unwrap_or_else(|| assets.empty_image_node());
@@ -124,15 +124,15 @@ fn hide_location_borders(
 fn on_drag_start_item(
     trigger: Trigger<Pointer<DragStart>>,
     locations: Query<&ItemEntity, With<ItemLocation>>,
-    infos: Query<&ItemInfo>,
+    items: Query<&ItemTileIndex>,
     cursor: Single<(&mut DraggedEntity, &mut ImageNode), With<DndCursor>>,
     assets: Res<ItemAssets>,
 ) {
     if let Ok(ItemEntity(Some(item))) = locations.get(trigger.target()) {
-        if let Ok(info) = infos.get(*item) {
+        if let Ok(tile_index) = items.get(*item) {
             let (mut dragged_entity, mut cursor_image) = cursor.into_inner();
             **dragged_entity = Some(*item);
-            *cursor_image = assets.image_node(info.tile_index);
+            *cursor_image = assets.image_node(tile_index.0);
         }
     }
 }

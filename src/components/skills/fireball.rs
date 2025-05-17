@@ -1,21 +1,25 @@
-use super::{Skill, SkillBook, SkillBookUI, SkillOfBook};
-use crate::components::{damage::BaseHitDamageRange, equipment::weapon::BaseAttackSpeed};
+use super::{Skill, SkillBook, SkillOfBook};
+use crate::components::{
+    damage::BaseHitDamageRange,
+    equipment::weapon::BaseAttackSpeed,
+    item::{ItemDescriptor, ItemRarity},
+};
 use bevy::prelude::*;
 
 #[derive(Component, Default)]
 #[require(SkillBook, Name::new("FireBallLauncherBook"))]
 pub struct FireBallLauncherBook;
 
-impl SkillBookUI for FireBallLauncherBook {
-    fn title() -> String {
+impl ItemDescriptor for FireBallLauncherBook {
+    fn title(&self) -> String {
         "Fire ball launcher".into()
     }
 
-    fn label() -> String {
+    fn description(&self) -> String {
         "Launch fire ball".into()
     }
 
-    fn tile_index() -> usize {
+    fn tile_index(&self, _rarity: ItemRarity) -> usize {
         38
     }
 }
