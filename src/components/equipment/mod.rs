@@ -17,11 +17,7 @@ mod common {
     use super::*;
     use crate::components::{
         common::EntityInserter,
-        item::{
-            Item, ItemDescription, ItemDescriptor, ItemLevel, ItemRarity, ItemRarityProvider,
-            ItemTileIndex, ItemTitle, ValueAndTier,
-        },
-        orb::OrbAction,
+        item::{Item, ItemDescriptor, ItemLevel, ItemRarity, ItemSpawner, ValueAndTier},
         rng_provider::RngKindProvider,
     };
     use bevy::prelude::*;
@@ -50,39 +46,13 @@ mod common {
 
     impl EquipmentKind {
         fn spawn(&self, commands: &mut Commands, ilevel: u16, rng: &mut ThreadRng) -> Entity {
-            let rarity = ItemRarityProvider::gen(rng);
-
-            fn spawn<T>(
-                mut equipment: T,
-                commands: &mut Commands,
-                rarity: ItemRarity,
-                rng: &mut ThreadRng,
-            ) -> Entity
-            where
-                T: Component + ItemDescriptor + OrbAction,
-            {
-                let mut ecmds = commands.spawn_empty();
-                let entity = ecmds.id();
-                equipment.add_affixes(&mut ecmds, rarity.n_affix(), rng);
-                let title = equipment.title();
-                let description = equipment.description();
-                let tile_index = equipment.tile_index(rarity);
-                commands.entity(entity).insert((
-                    equipment,
-                    rarity,
-                    ItemTitle(title),
-                    ItemDescription(description),
-                    ItemTileIndex(tile_index),
-                ));
-                entity
-            }
-
+            let spawner = ItemSpawner::new(ilevel, rng);
             match self {
-                EquipmentKind::Amulet => spawn(Amulet::new(ilevel), commands, rarity, rng),
-                EquipmentKind::BodyArmour => spawn(BodyArmour::new(ilevel), commands, rarity, rng),
-                EquipmentKind::Boots => spawn(Boots::new(ilevel), commands, rarity, rng),
-                EquipmentKind::Helmet => spawn(Helmet::new(ilevel), commands, rarity, rng),
-                EquipmentKind::Wand => spawn(Wand::new(ilevel), commands, rarity, rng),
+                EquipmentKind::Amulet => spawner.spawn::<Amulet>(commands, rng),
+                EquipmentKind::BodyArmour => spawner.spawn::<BodyArmour>(commands, rng),
+                EquipmentKind::Boots => spawner.spawn::<Boots>(commands, rng),
+                EquipmentKind::Helmet => spawner.spawn::<Helmet>(commands, rng),
+                EquipmentKind::Wand => spawner.spawn::<Wand>(commands, rng),
             }
         }
     }

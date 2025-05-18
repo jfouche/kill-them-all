@@ -1,12 +1,12 @@
 use super::{common::AffixProvider, Equipment};
 use crate::components::{
-    affix::{Armour, MoreLife, PierceChance},
-    item::{AffixConfigGenerator, ItemDescriptor, ItemRarity},
+    affix::{Armour, BaseArmour, MoreArmour, MoreLife, PierceChance},
+    item::{AffixConfigGenerator, ItemDescriptor, ItemRarity, ItemSpawnConfig},
     orb::OrbAction,
     rng_provider::RngKindProvider,
 };
 use bevy::prelude::*;
-use rand::rngs::ThreadRng;
+use rand::{rngs::ThreadRng, Rng};
 
 #[derive(Component)]
 #[require(Name::new("Amulet"), Equipment::Amulet, Armour, MoreLife, PierceChance)]
@@ -14,11 +14,17 @@ pub struct Amulet {
     affix_provider: AmuletAffixProvider,
 }
 
-impl Amulet {
-    pub fn new(ilevel: u16) -> Self {
+impl ItemSpawnConfig for Amulet {
+    type Implicit = BaseArmour;
+
+    fn new(ilevel: u16) -> Self {
         Amulet {
             affix_provider: AmuletAffixProvider::new(ilevel),
         }
+    }
+
+    fn implicit(&self, rng: &mut ThreadRng) -> Self::Implicit {
+        BaseArmour(rng.random_range(1..=4) as f32)
     }
 }
 
@@ -53,7 +59,7 @@ impl OrbAction for Amulet {
                 Some(AmuletAffixKind::AddArmour) => {
                     let value_and_tier = MORE_ARMOUR_RANGES.generate(ilevel, rng);
                     self.affix_provider
-                        .set::<Armour, _>(ecommands, value_and_tier);
+                        .set::<MoreArmour, _>(ecommands, value_and_tier);
                 }
                 Some(AmuletAffixKind::MoreLife) => {
                     let value_and_tier = MORE_LIFE_RANGES.generate(ilevel, rng);

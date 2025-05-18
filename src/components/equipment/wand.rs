@@ -5,12 +5,12 @@ use super::{
 use crate::components::{
     affix::{IncreaseAttackSpeed, IncreaseDamage, MoreDamage, PierceChance},
     damage::BaseHitDamageRange,
-    item::{AffixConfigGenerator, ItemDescriptor, ItemRarity},
+    item::{AffixConfigGenerator, ItemDescriptor, ItemRarity, ItemSpawnConfig},
     orb::OrbAction,
     rng_provider::RngKindProvider,
 };
 use bevy::prelude::*;
-use rand::rngs::ThreadRng;
+use rand::{rngs::ThreadRng, Rng};
 
 /// A [Wand]
 #[derive(Component)]
@@ -18,7 +18,7 @@ use rand::rngs::ThreadRng;
     Name::new("Wand"),
     Weapon,
     BaseHitDamageRange::new(1., 2.),
-    BaseAttackSpeed(1.2),
+    BaseAttackSpeed,
     MoreDamage,
     IncreaseDamage,
     PierceChance,
@@ -28,11 +28,17 @@ pub struct Wand {
     affix_provider: WandAffixProvider,
 }
 
-impl Wand {
-    pub fn new(ilevel: u16) -> Self {
+impl ItemSpawnConfig for Wand {
+    type Implicit = BaseAttackSpeed;
+
+    fn new(ilevel: u16) -> Self {
         Wand {
             affix_provider: WandAffixProvider::new(ilevel),
         }
+    }
+
+    fn implicit(&self, rng: &mut ThreadRng) -> Self::Implicit {
+        BaseAttackSpeed(rng.random_range(1.0..1.5))
     }
 }
 

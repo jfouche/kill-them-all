@@ -6,6 +6,7 @@ use crate::{
         damage::HitDamageRange,
         despawn_all,
         equipment::{weapon::AttackTimer, Wand},
+        item::ItemSpawner,
         monster::{
             AllMonsterAssets, Monster, MonsterBuilder, MonsterDeathEvent, MonsterLevel,
             MonsterRarity, MonsterType1, MonsterType2, MonsterType3, SpawnMonstersEvent, ViewRange,
@@ -170,7 +171,9 @@ fn update_monster(
 
         // Add a weapon and more life
         let ilevel = **level;
-        commands.spawn((Wand::new(ilevel), ChildOf(monster_entity)));
+        let spawner = ItemSpawner::new(ilevel, &mut rng);
+        let weapon = spawner.spawn::<Wand>(&mut commands, &mut rng);
+        commands.entity(weapon).insert(ChildOf(monster_entity));
         commands.spawn((FireBallLauncher, ChildOf(monster_entity)));
         commands.spawn((MoreLife(10.), ChildOf(monster_entity)));
     }

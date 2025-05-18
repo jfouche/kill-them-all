@@ -1,4 +1,5 @@
 use crate::assert_approx_eq;
+use crate::components::item::ItemSpawnConfig;
 use crate::components::skills::shuriken::ShurikenLauncher;
 use crate::components::{
     affix::{
@@ -41,6 +42,7 @@ fn test_update_equipment_armour() {
         .id();
 
     app.update();
+    println!("YOUHOU");
 
     let armour = app.world().get::<Armour>(helmet);
     assert_eq!(6., armour.unwrap().0);

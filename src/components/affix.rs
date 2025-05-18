@@ -1,5 +1,5 @@
 use super::damage::Damage;
-use bevy::prelude::*;
+use bevy::{ecs::query::QueryData, prelude::*};
 use rand::{rngs::ThreadRng, Rng};
 
 /// Add life to [crate::components::character::BaseLife]
@@ -108,17 +108,57 @@ impl Armour {
 }
 
 /// Base equipment [Armour]
-#[derive(Component, Default, Deref, Reflect)]
+#[derive(Component, Default, Debug, Deref, Reflect)]
 #[require(Armour)]
 pub struct BaseArmour(pub f32);
+
+impl std::fmt::Display for BaseArmour {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:.0} Base armour", self.0)
+    }
+}
 
 /// Add armour to base [BaseArmour]
 #[derive(Component, Default, Clone, Copy, Deref, DerefMut, Debug, Reflect)]
 pub struct MoreArmour(pub f32);
 
+impl From<u16> for MoreArmour {
+    fn from(value: u16) -> Self {
+        MoreArmour(value as f32)
+    }
+}
+
+impl std::fmt::Display for MoreArmour {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:.0} more armour", self.0)
+    }
+}
+
 /// Increase armour to base [BaseArmour], after applying [MoreArmour]
 #[derive(Component, Default, Clone, Copy, Deref, DerefMut, Debug, Reflect)]
 pub struct IncreaseArmour(pub f32);
+
+/// [Armour] = ([BaseArmour] + [MoreArmour]) * [IncreaseArmour]
+#[derive(QueryData)]
+#[query_data(mutable, derive(Debug))]
+pub struct ArmourUpdateQuery {
+    base: &'static BaseArmour,
+    value: &'static mut Armour,
+    more: Option<&'static MoreArmour>,
+    increase: Option<&'static IncreaseArmour>,
+}
+
+impl ArmourUpdateQueryItem<'_> {
+    pub fn update(&mut self) {
+        self.value.init(self.base);
+        if let Some(more) = self.more {
+            self.value.more(more);
+        }
+        if let Some(increase) = self.increase {
+            self.value.increase(increase);
+        }
+    }
+}
 
 /// Increase [crate::components::character::BaseMovementSpeed]
 #[derive(Component, Default, Clone, Copy, Deref, DerefMut, Debug, Reflect)]

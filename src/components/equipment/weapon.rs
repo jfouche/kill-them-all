@@ -16,6 +16,12 @@ pub struct Weapon;
 #[require(AttackSpeed, AttackTimer)]
 pub struct BaseAttackSpeed(pub f32);
 
+impl std::fmt::Display for BaseAttackSpeed {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Base attack speed: {}", self.0)
+    }
+}
+
 /// Attack per second
 #[derive(Component, Default, Clone, Copy, Deref, DerefMut, Reflect)]
 pub struct AttackSpeed(pub f32);

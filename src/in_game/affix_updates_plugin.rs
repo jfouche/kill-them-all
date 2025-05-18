@@ -1,9 +1,9 @@
 use crate::{
     components::{
         affix::{
-            Armour, BaseArmour, IncreaseAreaOfEffect, IncreaseArmour, IncreaseAttackSpeed,
-            IncreaseDamage, IncreaseMaxLife, IncreaseMovementSpeed, LifeRegen, MoreArmour,
-            MoreDamage, MoreLife, PierceChance,
+            Armour, ArmourUpdateQuery, IncreaseAreaOfEffect, IncreaseAttackSpeed, IncreaseDamage,
+            IncreaseMaxLife, IncreaseMovementSpeed, LifeRegen, MoreArmour, MoreDamage, MoreLife,
+            PierceChance,
         },
         character::{BaseLife, BaseMovementSpeed, Character, Life, MaxLife, MovementSpeed},
         damage::{BaseDamageOverTime, BaseHitDamageRange, DamageOverTime, HitDamageRange},
@@ -91,26 +91,9 @@ fn fix_life(
     }
 }
 
-/// [Armour] = ([BaseArmour] + [MoreArmour]) * [IncreaseArmour]
-fn update_equipment_armour(
-    mut equipments: Query<
-        (
-            &mut Armour,
-            &BaseArmour,
-            Option<&MoreArmour>,
-            Option<&IncreaseArmour>,
-        ),
-        With<Equipment>,
-    >,
-) {
-    for (mut armour, base, more, incr) in &mut equipments {
-        armour.init(base);
-        if let Some(more) = more {
-            armour.more(more);
-        }
-        if let Some(incr) = incr {
-            armour.increase(incr);
-        }
+fn update_equipment_armour(mut equipments: Query<ArmourUpdateQuery, With<Equipment>>) {
+    for mut armour in &mut equipments {
+        armour.update();
     }
 }
 

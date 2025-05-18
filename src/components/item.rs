@@ -1,5 +1,7 @@
 use super::{
-    equipment::EquipmentProvider, orb::OrbProvider, rng_provider::RngKindProvider,
+    equipment::EquipmentProvider,
+    orb::{OrbAction, OrbProvider},
+    rng_provider::RngKindProvider,
     skills::SkillProvider,
 };
 use bevy::prelude::*;
@@ -132,6 +134,48 @@ impl ItemProvider {
             60..90 => SkillProvider::new(self.0).spawn(commands, rng),
             _ => None,
         }
+    }
+}
+
+pub trait ItemSpawnConfig {
+    type Implicit: Component + std::fmt::Display;
+    fn new(ilevel: u16) -> Self;
+    fn implicit(&self, rng: &mut ThreadRng) -> Self::Implicit;
+}
+
+pub struct ItemSpawner {
+    pub ilevel: u16,
+    pub rarity: ItemRarity,
+}
+
+impl ItemSpawner {
+    pub fn new(ilevel: u16, rng: &mut ThreadRng) -> Self {
+        Self {
+            ilevel,
+            rarity: ItemRarityProvider::gen(rng),
+        }
+    }
+
+    pub fn spawn<T>(&self, commands: &mut Commands, rng: &mut ThreadRng) -> Entity
+    where
+        T: Component + ItemSpawnConfig + ItemDescriptor + OrbAction,
+    {
+        let mut item = T::new(self.ilevel);
+        let implicit = item.implicit(rng);
+        let mut item_cmds = commands.spawn_empty();
+        item.add_affixes(&mut item_cmds, self.rarity.n_affix(), rng);
+        let title = format!("{}\n{}", item.title(), implicit);
+        let description = item.description();
+        let tile_index = item.tile_index(self.rarity);
+        item_cmds.insert((
+            item,
+            implicit,
+            self.rarity,
+            ItemTitle(title),
+            ItemDescription(description),
+            ItemTileIndex(tile_index),
+        ));
+        item_cmds.id()
     }
 }
 
