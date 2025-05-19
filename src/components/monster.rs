@@ -3,9 +3,11 @@ use bevy_rapier2d::prelude::*;
 use rand::{rngs::ThreadRng, Rng};
 
 use super::{
+    affix::IncreaseAttackSpeed,
     animation::AnimationTimer,
     character::{BaseLife, BaseMovementSpeed, Character, Target},
     damage::HitDamageRange,
+    world_map::LAYER_MONSTER,
     GROUP_ALL, GROUP_ENEMY, GROUP_ITEM,
 };
 
@@ -172,7 +174,23 @@ impl MonsterBuilder {
         }
     }
 
-    pub fn scale(&self) -> Vec3 {
+    pub fn bundle(&self, pos: Vec2, assets: &AllMonsterAssets) -> impl Bundle {
+        let translation = pos.extend(LAYER_MONSTER);
+        let scale = self.scale();
+        let xp = self.xp_on_death();
+        let damage_range = self.hit_damage_range();
+        (
+            MonsterLevel(self.level),
+            self.rarity,
+            assets.sprite(self.kind),
+            Transform::from_translation(translation).with_scale(scale),
+            XpOnDeath(xp),
+            HitDamageRange::new(damage_range.0, damage_range.1),
+            children![IncreaseAttackSpeed(-100.)],
+        )
+    }
+
+    fn scale(&self) -> Vec3 {
         let scale = match self.rarity {
             MonsterRarity::Normal => 1.,
             MonsterRarity::Rare => 2.,
@@ -180,16 +198,16 @@ impl MonsterBuilder {
         Vec3::new(scale, scale, 1.)
     }
 
-    pub fn xp_on_death(&self) -> XpOnDeath {
+    fn xp_on_death(&self) -> u32 {
         let xp = match self.rarity {
             MonsterRarity::Normal => 1,
             MonsterRarity::Rare => 4,
         };
         let multiplier = u32::from(self.level) + 1;
-        XpOnDeath(xp * multiplier)
+        xp * multiplier
     }
 
-    pub fn hit_damage_range(&self) -> HitDamageRange {
+    pub fn hit_damage_range(&self) -> (f32, f32) {
         let (min, max) = match self.rarity {
             MonsterRarity::Normal => (1., 2.),
             MonsterRarity::Rare => (2., 4.),
@@ -197,19 +215,7 @@ impl MonsterBuilder {
         let multiplier = (self.level + 1) as f32;
         let min = min * multiplier;
         let max = max * multiplier;
-        HitDamageRange::new(min, max)
-    }
-}
-
-impl From<&MonsterBuilder> for XpOnDeath {
-    fn from(value: &MonsterBuilder) -> Self {
-        value.xp_on_death()
-    }
-}
-
-impl From<&MonsterBuilder> for HitDamageRange {
-    fn from(value: &MonsterBuilder) -> Self {
-        value.hit_damage_range()
+        (min, max)
     }
 }
 

@@ -3,7 +3,6 @@ use crate::{
         affix::MoreLife,
         animation::AnimationTimer,
         character::{CharacterAction, CharacterDiedEvent, CharacterDyingEvent},
-        damage::HitDamageRange,
         despawn_all,
         equipment::{weapon::AttackTimer, Wand},
         item::ItemSpawner,
@@ -15,7 +14,7 @@ use crate::{
         player::{Player, Score},
         skills::{fireball::FireBallLauncher, ActivateSkill, Skill},
         upgrade::UpgradeProvider,
-        world_map::{CurrentMapLevel, LAYER_MONSTER},
+        world_map::CurrentMapLevel,
     },
     schedule::{GameRunningSet, GameState},
 };
@@ -113,30 +112,19 @@ fn spawn_monsters(
             for i in 0..*count {
                 let angle = 2. * PI * f32::from(i) / f32::from(*count);
                 let dist = 20.;
-                let translation = pos + dist * vec2(angle.cos(), angle.sin());
-                let translation = translation.extend(LAYER_MONSTER);
+                let pos = pos + dist * vec2(angle.cos(), angle.sin());
 
                 let monster_builder = MonsterBuilder::generate(mlevel, &mut rng);
-                let scale = monster_builder.scale();
-
-                let monster_components = (
-                    MonsterLevel(mlevel),
-                    monster_builder.rarity,
-                    assets.sprite(monster_builder.kind),
-                    Transform::from_translation(translation).with_scale(scale),
-                    XpOnDeath::from(&monster_builder),
-                    HitDamageRange::from(&monster_builder),
-                );
-
+                let monster_bundle = monster_builder.bundle(pos, &assets);
                 match monster_builder.kind {
                     0 => {
-                        commands.spawn((MonsterType1, monster_components));
+                        commands.spawn((MonsterType1, monster_bundle));
                     }
                     1 => {
-                        commands.spawn((MonsterType2, monster_components));
+                        commands.spawn((MonsterType2, monster_bundle));
                     }
                     2 => {
-                        commands.spawn((MonsterType3, monster_components));
+                        commands.spawn((MonsterType3, monster_bundle));
                     }
                     _ => unreachable!(),
                 }
