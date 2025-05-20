@@ -12,7 +12,10 @@ use crate::{
             XpOnDeath,
         },
         player::{Player, Score},
-        skills::{fireball::FireBallLauncher, ActivateSkill, Skill},
+        skills::{
+            death_aura::DeathAura, fireball::FireBallLauncher, shuriken::ShurikenLauncher,
+            ActivateSkill, Skill,
+        },
         upgrade::UpgradeProvider,
         world_map::CurrentMapLevel,
     },
@@ -47,7 +50,10 @@ impl Plugin for MonsterPlugin {
                 )
                     .in_set(GameRunningSet::EntityUpdate),
             )
-            .add_observer(update_monster);
+            .add_observer(update_monster)
+            .add_observer(customize_monster_type_1)
+            .add_observer(customize_monster_type_2)
+            .add_observer(customize_monster_type_3);
     }
 }
 
@@ -107,24 +113,22 @@ fn spawn_monsters(
 ) {
     let mut rng = rand::rng();
     for monsters_to_spawn in monsters_to_spawn_reader.read() {
-        let mlevel = monsters_to_spawn.mlevel;
         for (pos, count) in monsters_to_spawn.monsters.iter() {
             for i in 0..*count {
                 let angle = 2. * PI * f32::from(i) / f32::from(*count);
                 let dist = 20.;
                 let pos = pos + dist * vec2(angle.cos(), angle.sin());
 
-                let monster_builder = MonsterBuilder::generate(mlevel, &mut rng);
-                let monster_bundle = monster_builder.bundle(pos, &assets);
+                let monster_builder = MonsterBuilder::generate(monsters_to_spawn.mlevel, &mut rng);
                 match monster_builder.kind {
                     0 => {
-                        commands.spawn((MonsterType1, monster_bundle));
+                        commands.spawn(MonsterType1::bundle(monster_builder, pos, &assets));
                     }
                     1 => {
-                        commands.spawn((MonsterType2, monster_bundle));
+                        commands.spawn(MonsterType2::bundle(monster_builder, pos, &assets));
                     }
                     2 => {
-                        commands.spawn((MonsterType3, monster_bundle));
+                        commands.spawn(MonsterType3::bundle(monster_builder, pos, &assets));
                     }
                     _ => unreachable!(),
                 }
@@ -139,36 +143,87 @@ fn spawn_monsters(
 fn update_monster(
     trigger: Trigger<OnAdd, Monster>,
     mut commands: Commands,
-    rarities: Query<&MonsterRarity>,
-    level: Res<CurrentMapLevel>,
+    monsters: Query<(&MonsterRarity, &MonsterLevel)>,
 ) {
     let monster_entity = trigger.target();
-    if let Ok(MonsterRarity::Rare) = rarities.get(monster_entity) {
-        let mut upgrade_provider = UpgradeProvider::new();
-        let mut rng = rand::rng();
-        let mut entities = Vec::new();
-
-        for _ in 0..3 {
-            if let Some(upgrade) = upgrade_provider.gen(&mut rng) {
-                let upgrade_view = upgrade.generate(&mut commands, &mut rng);
-                entities.push(upgrade_view.entity);
-            }
-        }
-
-        commands.entity(monster_entity).add_children(&entities);
-
-        // Add a weapon and more life
-        let ilevel = **level;
-        let spawner = ItemSpawner::new(ilevel, &mut rng);
-        let weapon = spawner.spawn::<Wand>(&mut commands, &mut rng);
-        commands.entity(weapon).insert(ChildOf(monster_entity));
-        commands.spawn((FireBallLauncher, ChildOf(monster_entity)));
-        commands.spawn((MoreLife(10.), ChildOf(monster_entity)));
-    }
     commands
         .entity(monster_entity)
         .observe(monster_dying)
         .observe(increment_score);
+
+    // Customize Rare monsters
+    let Ok((MonsterRarity::Rare, &MonsterLevel(mlevel))) = monsters.get(monster_entity) else {
+        return;
+    };
+
+    // All rare monster have more life
+    commands.spawn((MoreLife(10.), ChildOf(monster_entity)));
+
+    // Add upgrades depending on map level
+    let mut upgrade_provider = UpgradeProvider::new();
+    let mut rng = rand::rng();
+    for _ in 0..mlevel.saturating_sub(1) {
+        if let Some(upgrade) = upgrade_provider.gen(&mut rng) {
+            let upgrade_view = upgrade.generate(&mut commands, &mut rng);
+            commands
+                .entity(upgrade_view.entity)
+                .insert(ChildOf(monster_entity));
+        }
+    }
+}
+
+fn customize_monster_type_1(
+    trigger: Trigger<OnAdd, MonsterType1>,
+    mut commands: Commands,
+    monsters: Query<(&MonsterRarity, &MonsterLevel)>,
+) {
+    let monster_entity = trigger.target();
+    let Ok((MonsterRarity::Rare, &MonsterLevel(mlevel))) = monsters.get(monster_entity) else {
+        return;
+    };
+
+    // Add a wand and the fireball skill
+    let mut rng = rand::rng();
+    let spawner = ItemSpawner::new(mlevel, &mut rng);
+    let weapon = spawner.spawn::<Wand>(&mut commands, &mut rng);
+    commands.entity(weapon).insert(ChildOf(monster_entity));
+    commands.spawn((FireBallLauncher, ChildOf(monster_entity)));
+}
+
+fn customize_monster_type_2(
+    trigger: Trigger<OnAdd, MonsterType2>,
+    mut commands: Commands,
+    monsters: Query<(&MonsterRarity, &MonsterLevel)>,
+) {
+    let monster_entity = trigger.target();
+    let Ok((MonsterRarity::Rare, &MonsterLevel(mlevel))) = monsters.get(monster_entity) else {
+        return;
+    };
+
+    // Add a wand and the death aura skill
+    let mut rng = rand::rng();
+    let spawner = ItemSpawner::new(mlevel, &mut rng);
+    let weapon = spawner.spawn::<Wand>(&mut commands, &mut rng);
+    commands.entity(weapon).insert(ChildOf(monster_entity));
+    commands.spawn((DeathAura, ChildOf(monster_entity)));
+}
+
+fn customize_monster_type_3(
+    trigger: Trigger<OnAdd, MonsterType3>,
+    mut commands: Commands,
+    monsters: Query<(&MonsterRarity, &MonsterLevel)>,
+) {
+    let monster_entity = trigger.target();
+    let Ok((MonsterRarity::Rare, &MonsterLevel(mlevel))) = monsters.get(monster_entity) else {
+        return;
+    };
+
+    // Add a wand and the fireball skill
+    let mut rng = rand::rng();
+    let spawner = ItemSpawner::new(mlevel, &mut rng);
+    let weapon = spawner.spawn::<Wand>(&mut commands, &mut rng);
+    commands.entity(weapon).insert(ChildOf(monster_entity));
+    commands.spawn((ShurikenLauncher, ChildOf(monster_entity)));
 }
 
 ///

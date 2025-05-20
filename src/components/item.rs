@@ -143,6 +143,9 @@ pub trait ItemSpawnConfig {
     fn implicit(&self, rng: &mut ThreadRng) -> Self::Implicit;
 }
 
+/// Util to spawn a random [Item] of a given type.
+///
+/// The item can be [ItemRarity::Normal] or [ItemRarity::Rare]
 pub struct ItemSpawner {
     pub ilevel: u16,
     pub rarity: ItemRarity,
@@ -156,6 +159,7 @@ impl ItemSpawner {
         }
     }
 
+    /// Spawn a random item of type `T`.
     pub fn spawn<T>(&self, commands: &mut Commands, rng: &mut ThreadRng) -> Entity
     where
         T: Component + ItemSpawnConfig + ItemDescriptor + OrbAction,
