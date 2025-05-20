@@ -23,10 +23,10 @@ fn info_popup(pos: Vec2, img_node: ImageNode, title: String, description: String
         Name::new("InfoPopup"),
         Popup,
         Node {
-            max_width: Val::Px(180.),
+            max_width: Val::Px(200.),
             margin: UiRect::all(Val::Px(0.)),
             padding: UiRect::all(Val::Px(5.)),
-            left: Val::Px(pos.x - 60.),
+            left: Val::Px(pos.x - 205.),
             top: Val::Px(pos.y - 130.),
             ..Popup::default_node()
         },
