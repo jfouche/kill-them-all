@@ -62,7 +62,7 @@ struct SpawnMonsterTimer(Timer);
 
 impl Default for SpawnMonsterTimer {
     fn default() -> Self {
-        Self(Timer::from_seconds(20.0, TimerMode::Repeating))
+        Self(Timer::from_seconds(12.0, TimerMode::Repeating))
     }
 }
 
@@ -87,20 +87,19 @@ fn spawn_monster_timer(
     let monsters_to_spawn = mlevel.monsters_to_spawn(&mut rng);
 
     for _ in 0..monsters_to_spawn.n_groups {
-        // Spawn monsters at distance / angle of player
+        // Spawn monsters at random distance / angle of player
         let dist = rng.random_range(220..320) as f32;
-        let angle = rng.random_range(0. ..(2. * PI));
+        let angle = rng.random_range(0..100) as f32 * 2.0 * PI / 100.;
         let pos = Vec2 {
             x: player_pos.x + dist * angle.cos(),
             y: player_pos.y + dist * angle.sin(),
         };
         let count = monsters_to_spawn.n_monsters;
-        info!("spawn_monster_timer: {count} at {dist}, {angle} rad");
+        info!("spawn_monster_timer: {count} monsters");
 
-        let monsters = vec![(pos, count)];
         spawn_monsters.write(SpawnMonstersEvent {
             mlevel: **mlevel,
-            monsters,
+            monsters: vec![(pos, count)],
         });
     }
     Ok(())
@@ -307,8 +306,8 @@ fn activate_skill(
     let Ok(player_pos) = players.single().map(|t| t.translation.xy()) else {
         return;
     };
-    for (entity, mut timer, child_of) in &mut skills {
-        if let Ok((pos, view_range)) = monsters.get(child_of.parent()) {
+    for (entity, mut timer, &ChildOf(parent)) in &mut skills {
+        if let Ok((pos, view_range)) = monsters.get(parent) {
             let distance = (player_pos - pos.translation.xy()).length();
             if timer.finished() && distance <= **view_range {
                 commands.trigger(ActivateSkill(entity, player_pos));

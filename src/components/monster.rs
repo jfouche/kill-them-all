@@ -145,7 +145,7 @@ pub enum MonsterRarity {
     Rare,
 }
 
-/// Event (using [EventReader]) when the monsters can be spawn
+/// Event sent (use [EventReader] to read) when the monsters can be spawn
 #[derive(Event, Default)]
 pub struct SpawnMonstersEvent {
     pub mlevel: u16,
@@ -204,7 +204,7 @@ impl MonsterBuilder {
             Transform::from_translation(translation).with_scale(scale),
             XpOnDeath(xp),
             HitDamageRange::new(damage_range.0, damage_range.1),
-            children![IncreaseAttackSpeed(-100.)],
+            children![IncreaseAttackSpeed(-60.)],
         )
     }
 
