@@ -13,7 +13,7 @@ mod test;
 #[cfg(feature = "dev")]
 mod debug;
 
-use bevy::{prelude::*, window::*};
+use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
 const APP_TITLE: &str = "Kill'em All";
@@ -25,7 +25,7 @@ fn main() {
     let window = Window {
         title: APP_TITLE.into(),
         position: WindowPosition::At(IVec2::new(0, 0)),
-        resolution: WindowResolution::new(1400., 600.),
+        resolution: bevy::window::WindowResolution::new(1300., 600.),
         ..Default::default()
     };
 
