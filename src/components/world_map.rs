@@ -51,20 +51,52 @@ pub struct MapLevelConfig {
 }
 
 /// A resource to store the current map level informations
-#[derive(Resource, Default, Deref, DerefMut)]
+#[derive(Resource, Default, Deref)]
 pub struct CurrentMapLevel(u16);
+
+impl CurrentMapLevel {
+    pub fn next(&mut self) {
+        self.0 += 1;
+    }
+
+    pub fn monsters_to_spawn(&self, rng: &mut ThreadRng) -> MonsterToSpawn {
+        let n_groups = match self.0 {
+            0..1 => 1,
+            1..4 => 2,
+            4..8 => 3,
+            8..15 => 4,
+            15..25 => 5,
+            25..45 => 6,
+            45..65 => 7,
+            _ => 8,
+        };
+        let n_monsters = match self.0 {
+            0..1 => 1,
+            1..4 => rng.random_range(1..=4),
+            4..8 => rng.random_range(2..=6),
+            8..15 => rng.random_range(4..=9),
+            15..25 => rng.random_range(6..=15),
+            25..45 => rng.random_range(12..=20),
+            45..65 => rng.random_range(20..=30),
+            _ => rng.random_range(28..=40),
+        };
+
+        MonsterToSpawn {
+            n_groups,
+            n_monsters,
+        }
+    }
+}
+
+pub struct MonsterToSpawn {
+    pub n_groups: u16,
+    pub n_monsters: u16,
+}
 
 /// Event triggered when the map loading finished
 #[derive(Event)]
 pub struct WorldMapLoadingFinished {
     pub translation: Vec2,
-}
-
-/// Event triggered when the monsters can be spawn
-#[derive(Event, Default)]
-pub struct SpawnMonstersEvent {
-    pub mlevel: u16,
-    pub monsters: Vec<(Vec2, u16)>,
 }
 
 pub const LAYER_PLAYER: f32 = 10.;

@@ -57,7 +57,7 @@ impl OrbAction for Boots {
         count: u16,
         rarity: ItemRarity,
         rng: &mut ThreadRng,
-    ) {
+    ) -> ItemInfo {
         let ilevel = self.affix_provider.ilevel();
         for _ in 0..count {
             match self.affix_provider.gen(rng) {
@@ -79,14 +79,13 @@ impl OrbAction for Boots {
                 None => {}
             }
         }
-        ecommands.insert(ItemInfo {
+        let item_info = ItemInfo {
             tile_index: Self::tile_index(rarity),
+            title: "Boots".into(),
             text: self.affix_provider.item_text(),
-        });
-    }
-
-    fn affix_text(&self) -> String {
-        self.affix_provider.item_text()
+        };
+        ecommands.insert(item_info.clone());
+        item_info
     }
 }
 

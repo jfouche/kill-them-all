@@ -125,29 +125,47 @@ pub enum MonsterRarity {
     Rare,
 }
 
+/// Event (using [EventReader]) when the monsters can be spawn
+#[derive(Event, Default)]
+pub struct SpawnMonstersEvent {
+    pub mlevel: u16,
+    pub monsters: Vec<(Vec2, u16)>,
+}
+
 ///
 /// Contains the monster informations to spawn
 ///
 #[derive(Component, Default, Reflect)]
-pub struct MonsterSpawnParams {
+pub struct MonsterBuilder {
     pub rarity: MonsterRarity,
     pub kind: usize,
     pub level: u16,
 }
 
-impl MonsterSpawnParams {
+impl MonsterBuilder {
     pub fn generate(level: u16, rng: &mut ThreadRng) -> Self {
         // Rarity
-        let rarity = match rng.random_range(0..35) {
-            0 => MonsterRarity::Rare,
-            _ => MonsterRarity::Normal,
+        let percent = match level {
+            0..1 => 0,
+            1..4 => 10,
+            4..8 => 20,
+            8..15 => 30,
+            15..25 => 40,
+            25..45 => 50,
+            45..65 => 60,
+            _ => 70,
+        };
+        let rarity = if rng.random_range(0..100) >= percent {
+            MonsterRarity::Normal
+        } else {
+            MonsterRarity::Rare
         };
 
         // Kind
         let kind = rng.random_range(0..MONSTER_KIND_COUNT);
 
         // Create the params
-        MonsterSpawnParams {
+        MonsterBuilder {
             kind,
             rarity,
             level,
@@ -183,14 +201,14 @@ impl MonsterSpawnParams {
     }
 }
 
-impl From<&MonsterSpawnParams> for XpOnDeath {
-    fn from(value: &MonsterSpawnParams) -> Self {
+impl From<&MonsterBuilder> for XpOnDeath {
+    fn from(value: &MonsterBuilder) -> Self {
         value.xp_on_death()
     }
 }
 
-impl From<&MonsterSpawnParams> for HitDamageRange {
-    fn from(value: &MonsterSpawnParams) -> Self {
+impl From<&MonsterBuilder> for HitDamageRange {
+    fn from(value: &MonsterBuilder) -> Self {
         value.hit_damage_range()
     }
 }
@@ -211,7 +229,7 @@ pub struct XpOnDeath(pub u32);
     Transform,
     Mesh2d,
     MeshMaterial2d<ColorMaterial>,
-    MonsterSpawnParams
+    MonsterBuilder
 )]
 pub struct MonsterFuturePos;
 

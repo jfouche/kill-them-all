@@ -7,13 +7,14 @@ use crate::{
         despawn_all,
         equipment::{weapon::AttackTimer, Wand},
         monster::{
-            AllMonsterAssets, Monster, MonsterDeathEvent, MonsterLevel, MonsterRarity,
-            MonsterSpawnParams, MonsterType1, MonsterType2, MonsterType3, ViewRange, XpOnDeath,
+            AllMonsterAssets, Monster, MonsterBuilder, MonsterDeathEvent, MonsterLevel,
+            MonsterRarity, MonsterType1, MonsterType2, MonsterType3, SpawnMonstersEvent, ViewRange,
+            XpOnDeath,
         },
         player::{Player, Score},
         skills::{fireball::FireBallLauncher, ActivateSkill, Skill},
         upgrade::UpgradeProvider,
-        world_map::{CurrentMapLevel, SpawnMonstersEvent, LAYER_MONSTER},
+        world_map::{CurrentMapLevel, LAYER_MONSTER},
     },
     schedule::{GameRunningSet, GameState},
 };
@@ -30,13 +31,15 @@ impl Plugin for MonsterPlugin {
             .init_resource::<SpawnMonsterTimer>()
             .register_type::<MonsterLevel>()
             .register_type::<ViewRange>()
-            .register_type::<MonsterSpawnParams>()
+            .register_type::<MonsterBuilder>()
             .add_event::<MonsterDeathEvent>()
+            .add_event::<SpawnMonstersEvent>()
             .add_systems(OnEnter(GameState::InGame), reset_monster_timer)
             .add_systems(OnExit(GameState::InGame), despawn_all::<Monster>)
             .add_systems(
                 Update,
                 (
+                    spawn_monsters,
                     monsters_moves,
                     animate_sprite,
                     activate_skill,
@@ -44,7 +47,6 @@ impl Plugin for MonsterPlugin {
                 )
                     .in_set(GameRunningSet::EntityUpdate),
             )
-            .add_observer(spawn_monsters)
             .add_observer(update_monster);
     }
 }
@@ -63,75 +65,80 @@ fn reset_monster_timer(mut timer: ResMut<SpawnMonsterTimer>) {
 }
 
 fn spawn_monster_timer(
-    mut commands: Commands,
     players: Query<&Transform, With<Player>>,
     mut timer: ResMut<SpawnMonsterTimer>,
     time: Res<Time>,
-    level: Res<CurrentMapLevel>,
-) {
-    if timer.tick(time.delta()).just_finished() {
-        let Ok(player_pos) = players.single().map(|t| t.translation.xy()) else {
-            error!("Single [Player] should be available");
-            return;
-        };
+    mlevel: Res<CurrentMapLevel>,
+    mut spawn_monsters: EventWriter<SpawnMonstersEvent>,
+) -> Result {
+    if !timer.tick(time.delta()).just_finished() {
+        return Ok(());
+    }
 
+    let player_pos = players.single().map(|t| t.translation.xy())?;
+
+    let mut rng = rand::rng();
+    let monsters_to_spawn = mlevel.monsters_to_spawn(&mut rng);
+
+    for _ in 0..monsters_to_spawn.n_groups {
         // Spawn monsters at distance / angle of player
-        let mut rng = rand::rng();
-        let dist = rng.random_range(240..380) as f32;
+        let dist = rng.random_range(220..320) as f32;
         let angle = rng.random_range(0. ..(2. * PI));
         let pos = Vec2 {
             x: player_pos.x + dist * angle.cos(),
             y: player_pos.y + dist * angle.sin(),
         };
-        let count = rng.random_range(1..=5);
+        let count = monsters_to_spawn.n_monsters;
         info!("spawn_monster_timer: {count} at {dist}, {angle} rad");
 
-        // TODO: multiple group of monster, depending on map level
         let monsters = vec![(pos, count)];
-        commands.trigger(SpawnMonstersEvent {
-            mlevel: **level,
+        spawn_monsters.write(SpawnMonstersEvent {
+            mlevel: **mlevel,
             monsters,
         });
     }
+    Ok(())
 }
 
 fn spawn_monsters(
-    trigger: Trigger<SpawnMonstersEvent>,
     mut commands: Commands,
+    mut monsters_to_spawn_reader: EventReader<SpawnMonstersEvent>,
     assets: Res<AllMonsterAssets>,
 ) {
     let mut rng = rand::rng();
-    let mlevel = trigger.mlevel;
-    for (pos, count) in trigger.monsters.iter() {
-        for i in 0..*count {
-            let angle = 2. * PI * f32::from(i) / f32::from(*count);
-            let dist = 20.;
-            let translation = pos + dist * vec2(angle.cos(), angle.sin());
-            let translation = translation.extend(LAYER_MONSTER);
+    for monsters_to_spawn in monsters_to_spawn_reader.read() {
+        let mlevel = monsters_to_spawn.mlevel;
+        for (pos, count) in monsters_to_spawn.monsters.iter() {
+            for i in 0..*count {
+                let angle = 2. * PI * f32::from(i) / f32::from(*count);
+                let dist = 20.;
+                let translation = pos + dist * vec2(angle.cos(), angle.sin());
+                let translation = translation.extend(LAYER_MONSTER);
 
-            let params = MonsterSpawnParams::generate(mlevel, &mut rng);
-            let scale = params.scale();
+                let monster_builder = MonsterBuilder::generate(mlevel, &mut rng);
+                let scale = monster_builder.scale();
 
-            let monster_components = (
-                MonsterLevel(mlevel),
-                params.rarity,
-                assets.sprite(params.kind),
-                Transform::from_translation(translation).with_scale(scale),
-                XpOnDeath::from(&params),
-                HitDamageRange::from(&params),
-            );
+                let monster_components = (
+                    MonsterLevel(mlevel),
+                    monster_builder.rarity,
+                    assets.sprite(monster_builder.kind),
+                    Transform::from_translation(translation).with_scale(scale),
+                    XpOnDeath::from(&monster_builder),
+                    HitDamageRange::from(&monster_builder),
+                );
 
-            match params.kind {
-                0 => {
-                    commands.spawn((MonsterType1, monster_components));
+                match monster_builder.kind {
+                    0 => {
+                        commands.spawn((MonsterType1, monster_components));
+                    }
+                    1 => {
+                        commands.spawn((MonsterType2, monster_components));
+                    }
+                    2 => {
+                        commands.spawn((MonsterType3, monster_components));
+                    }
+                    _ => unreachable!(),
                 }
-                1 => {
-                    commands.spawn((MonsterType2, monster_components));
-                }
-                2 => {
-                    commands.spawn((MonsterType3, monster_components));
-                }
-                _ => unreachable!(),
             }
         }
     }
