@@ -66,7 +66,7 @@ impl Plugin for DebugPlugin {
                 (
                     log_transitions::<GameState>,
                     log_transitions::<InGameState>,
-                    show_key_pressed,
+                    // show_key_pressed,
                     // display_collision_events.in_set(GameRunningSet::EntityUpdate),
                     // show_map_axes.run_if(resource_exists::<ProceduralWorldMap>),
                 )
@@ -76,10 +76,11 @@ impl Plugin for DebugPlugin {
         )
         // .add_systems(Last, debug_death_aura_post)
         .add_observer(init_player)
-        .add_observer(|_: Trigger<InventoryChanged>| warn!("InventoryChanged"))
-        .add_observer(|_: Trigger<PlayerEquipmentChanged>| warn!("PlayerEquipmentChanged"))
-        .add_observer(|_: Trigger<EquipSkillBookEvent>| warn!("EquipSkillBookEvent"))
-        .add_observer(|_: Trigger<RemoveSkillBookEvent>| warn!("RemoveSkillBookEvent"));
+        // .add_observer(|_: Trigger<InventoryChanged>| warn!("InventoryChanged"))
+        // .add_observer(|_: Trigger<PlayerEquipmentChanged>| warn!("PlayerEquipmentChanged"))
+        // .add_observer(|_: Trigger<EquipSkillBookEvent>| warn!("EquipSkillBookEvent"))
+        // .add_observer(|_: Trigger<RemoveSkillBookEvent>| warn!("RemoveSkillBookEvent"))
+        ;
     }
 }
 

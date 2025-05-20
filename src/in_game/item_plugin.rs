@@ -192,7 +192,6 @@ fn player_drop_item(
     players: Query<&Transform, With<Player>>,
 ) {
     let Ok(&DraggedEntity(Some(item))) = cursors.single() else {
-        error!("No entity dragged");
         return;
     };
     info!("player_drop_item({item})");
