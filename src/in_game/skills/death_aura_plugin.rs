@@ -1,11 +1,14 @@
-use crate::components::{
-    character::{Character, Target},
-    damage::Damager,
-    skills::death_aura::{DeathAura, DeathAuraAssets, DeathAuraMaterial},
-    world_map::LAYER_DAMAGER,
+use crate::{
+    components::{
+        character::{Character, Target},
+        damage::Damager,
+        skills::death_aura::{DeathAura, DeathAuraAssets, DeathAuraMaterial},
+        world_map::LAYER_DAMAGER,
+    },
+    schedule::InGameState,
 };
+use avian2d::prelude::{CollisionLayers, Position};
 use bevy::{prelude::*, sprite::Material2dPlugin};
-use avian2d::prelude::CollisionLayers;
 
 ///
 ///  Plugin for the [DeathAura] weapon
@@ -16,6 +19,12 @@ impl Plugin for DeathAuraPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(Material2dPlugin::<DeathAuraMaterial>::default())
             .init_resource::<DeathAuraAssets>()
+            .add_systems(
+                Update,
+                fix_position
+                    .after(TransformSystem::TransformPropagate)
+                    .run_if(in_state(InGameState::Running)),
+            )
             .add_observer(on_equip)
             .add_observer(on_unequip);
     }
@@ -66,5 +75,16 @@ fn on_unequip(
         *mesh = Mesh2d::default();
         *material = MeshMaterial2d::default();
         *collision_groups = CollisionLayers::default();
+    }
+}
+
+fn fix_position(
+    mut death_auras: Query<(&mut Position, &ChildOf), With<DeathAura>>,
+    characters: Query<&Position, (With<Character>, Without<DeathAura>)>,
+) {
+    for (mut aura_pos, &ChildOf(parent)) in &mut death_auras {
+        if let Ok(&pos) = characters.get(parent) {
+            *aura_pos = pos;
+        }
     }
 }

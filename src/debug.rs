@@ -19,7 +19,7 @@ use crate::{
     in_game::{item_plugin::take_dropped_item, life_bar_plugin::LifeBar},
     schedule::*,
 };
-use avian2d::prelude::*;
+use avian2d::{prelude::*, sync::PreviousGlobalTransform};
 use bevy::{
     dev_tools::{fps_overlay::*, states::log_transitions},
     ecs::entity::Entities,
@@ -72,6 +72,7 @@ impl Plugin for DebugPlugin {
                     show_key_pressed,
                     // display_collision_events.in_set(GameRunningSet::EntityUpdate),
                     // show_map_axes.run_if(resource_exists::<ProceduralWorldMap>),
+                    // death_aura_infos,
                 )
                     .run_if(debug_is_active),
                 toggle_debug_ui.run_if(input_just_pressed(KeyCode::Backquote)),
@@ -79,10 +80,11 @@ impl Plugin for DebugPlugin {
         )
         // .add_systems(Last, debug_death_aura_post)
         .add_observer(init_player)
-        .add_observer(|_: Trigger<InventoryChanged>| warn!("InventoryChanged"))
-        .add_observer(|_: Trigger<PlayerEquipmentChanged>| warn!("PlayerEquipmentChanged"))
-        .add_observer(|_: Trigger<EquipSkillBookEvent>| warn!("EquipSkillBookEvent"))
-        .add_observer(|_: Trigger<RemoveSkillBookEvent>| warn!("RemoveSkillBookEvent"));
+        // .add_observer(|_: Trigger<InventoryChanged>| warn!("InventoryChanged"))
+        // .add_observer(|_: Trigger<PlayerEquipmentChanged>| warn!("PlayerEquipmentChanged"))
+        // .add_observer(|_: Trigger<EquipSkillBookEvent>| warn!("EquipSkillBookEvent"))
+        // .add_observer(|_: Trigger<RemoveSkillBookEvent>| warn!("RemoveSkillBookEvent"))
+        ;
     }
 }
 
@@ -226,4 +228,20 @@ fn equip_death_aura(mut commands: Commands, players: Query<Entity, With<Player>>
         .spawn((Name::new("TEST DEATH AURA"), DeathAura, ChildOf(player)))
         .id();
     commands.entity(book).insert(AssociatedSkill(skill));
+}
+
+fn death_aura_infos(
+    death_auras: Query<(&GlobalTransform, &PreviousGlobalTransform, &Position), With<DeathAura>>,
+    mut save: Local<Option<(Vec3, Vec3, Vec2)>>,
+) {
+    for (gt, prev, pos) in &death_auras {
+        let gt = gt.translation();
+        let prev = prev.translation();
+        let pos = pos.0;
+        let new_save = Some((gt, prev, pos));
+        if *save != new_save {
+            *save = new_save;
+            error!("DEATH_AURA gt: {gt}, prev: {prev}, pos: {pos}");
+        }
+    }
 }
