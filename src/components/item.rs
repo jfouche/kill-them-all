@@ -199,9 +199,9 @@ pub enum ItemRarity {
 impl ItemRarity {
     pub fn n_affix(&self) -> u16 {
         match self {
-            ItemRarity::Normal => 1,
-            ItemRarity::Magic => 2,
-            ItemRarity::Rare => 3,
+            ItemRarity::Normal => 0,
+            ItemRarity::Magic => 1,
+            ItemRarity::Rare => 2,
         }
     }
 }

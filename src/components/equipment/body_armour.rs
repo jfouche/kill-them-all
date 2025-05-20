@@ -1,6 +1,6 @@
 use super::{common::AffixProvider, Equipment};
 use crate::components::{
-    affix::{Armour, BaseArmour, LifeRegen, MoreArmour, MoreLife},
+    affix::{BaseArmour, LifeRegen, MoreArmour, MoreLife},
     item::{AffixConfigGenerator, ItemDescriptor, ItemRarity, ItemSpawnConfig},
     orb::OrbAction,
     rng_provider::RngKindProvider,
@@ -9,7 +9,13 @@ use bevy::prelude::*;
 use rand::{rngs::ThreadRng, Rng};
 
 #[derive(Component)]
-#[require(Name::new("BodyArmour"), Equipment::BodyArmour, Armour, MoreLife)]
+#[require(
+    Name::new("BodyArmour"),
+    Equipment::BodyArmour,
+    MoreArmour,
+    MoreLife,
+    LifeRegen
+)]
 pub struct BodyArmour {
     affix_provider: BodyArmourAffixProvider,
 }
@@ -49,14 +55,14 @@ impl ItemDescriptor for BodyArmour {
 impl OrbAction for BodyArmour {
     fn reset_affixes(&mut self, ecommands: &mut EntityCommands) {
         self.affix_provider.reset();
-        ecommands.insert((Armour(0.), MoreLife(0.)));
+        ecommands.insert((MoreArmour(0.), MoreLife(0.), LifeRegen(0.)));
     }
 
     fn add_affixes(&mut self, ecommands: &mut EntityCommands, count: u16, rng: &mut ThreadRng) {
         let ilevel = self.affix_provider.ilevel();
         for _ in 0..count {
             match self.affix_provider.gen(rng) {
-                Some(BodyArmourAffixKind::AddArmour) => {
+                Some(BodyArmourAffixKind::MoreArmour) => {
                     let value_and_tier = MORE_ARMOUR_RANGES.generate(ilevel, rng);
                     self.affix_provider
                         .set::<MoreArmour, _>(ecommands, value_and_tier);
@@ -80,7 +86,7 @@ impl OrbAction for BodyArmour {
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 enum BodyArmourAffixKind {
     AddLife,
-    AddArmour,
+    MoreArmour,
     LifeRegen,
 }
 
@@ -100,7 +106,7 @@ impl BodyArmourAffixProvider {
     pub fn new(ilevel: u16) -> Self {
         let mut provider = RngKindProvider::default();
         provider.add(
-            BodyArmourAffixKind::AddArmour,
+            BodyArmourAffixKind::MoreArmour,
             MORE_ARMOUR_RANGES.weight(ilevel),
         );
         provider.add(

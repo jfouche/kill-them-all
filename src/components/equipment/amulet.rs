@@ -1,6 +1,6 @@
 use super::{common::AffixProvider, Equipment};
 use crate::components::{
-    affix::{Armour, BaseArmour, MoreArmour, MoreLife, PierceChance},
+    affix::{BaseArmour, MoreArmour, MoreLife, PierceChance},
     item::{AffixConfigGenerator, ItemDescriptor, ItemRarity, ItemSpawnConfig},
     orb::OrbAction,
     rng_provider::RngKindProvider,
@@ -9,7 +9,13 @@ use bevy::prelude::*;
 use rand::{rngs::ThreadRng, Rng};
 
 #[derive(Component)]
-#[require(Name::new("Amulet"), Equipment::Amulet, Armour, MoreLife, PierceChance)]
+#[require(
+    Name::new("Amulet"),
+    Equipment::Amulet,
+    MoreArmour,
+    MoreLife,
+    PierceChance
+)]
 pub struct Amulet {
     affix_provider: AmuletAffixProvider,
 }
@@ -49,14 +55,14 @@ impl ItemDescriptor for Amulet {
 impl OrbAction for Amulet {
     fn reset_affixes(&mut self, ecommands: &mut EntityCommands) {
         self.affix_provider.reset();
-        ecommands.insert((Armour(0.), MoreLife(0.), PierceChance(0.)));
+        ecommands.insert((MoreArmour(0.), MoreLife(0.), PierceChance(0.)));
     }
 
     fn add_affixes(&mut self, ecommands: &mut EntityCommands, count: u16, rng: &mut ThreadRng) {
         let ilevel = self.affix_provider.ilevel();
         for _ in 0..count {
             match self.affix_provider.gen(rng) {
-                Some(AmuletAffixKind::AddArmour) => {
+                Some(AmuletAffixKind::MoreArmour) => {
                     let value_and_tier = MORE_ARMOUR_RANGES.generate(ilevel, rng);
                     self.affix_provider
                         .set::<MoreArmour, _>(ecommands, value_and_tier);
@@ -81,7 +87,7 @@ impl OrbAction for Amulet {
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 enum AmuletAffixKind {
     MoreLife,
-    AddArmour,
+    MoreArmour,
     PierceChance,
 }
 
@@ -102,7 +108,7 @@ impl AmuletAffixProvider {
         let mut provider = RngKindProvider::default();
 
         provider.add(
-            AmuletAffixKind::AddArmour,
+            AmuletAffixKind::MoreArmour,
             MORE_ARMOUR_RANGES.weight(ilevel),
         );
         provider.add(AmuletAffixKind::MoreLife, MORE_LIFE_RANGES.weight(ilevel));

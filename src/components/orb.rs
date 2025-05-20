@@ -75,6 +75,7 @@ impl OrbProvider {
 }
 
 pub trait OrbAction {
+    /// Reset all possible affix of an [Item]
     fn reset_affixes(&mut self, ecommands: &mut EntityCommands);
 
     /// Add `count` affixes to an [Item]

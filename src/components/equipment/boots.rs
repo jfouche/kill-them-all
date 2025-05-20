@@ -1,6 +1,6 @@
 use super::{common::AffixProvider, Equipment};
 use crate::components::{
-    affix::{Armour, BaseArmour, IncreaseMovementSpeed, MoreArmour, MoreLife},
+    affix::{BaseArmour, IncreaseMovementSpeed, MoreArmour, MoreLife},
     item::{AffixConfigGenerator, ItemDescriptor, ItemRarity, ItemSpawnConfig},
     orb::OrbAction,
     rng_provider::RngKindProvider,
@@ -12,7 +12,7 @@ use rand::{rngs::ThreadRng, Rng};
 #[require(
     Name::new("Boots"),
     Equipment::Boots,
-    Armour,
+    MoreArmour,
     MoreLife,
     IncreaseMovementSpeed
 )]
@@ -55,14 +55,14 @@ impl ItemDescriptor for Boots {
 impl OrbAction for Boots {
     fn reset_affixes(&mut self, ecommands: &mut EntityCommands) {
         self.affix_provider.reset();
-        ecommands.insert((Armour(0.), MoreLife(0.), IncreaseMovementSpeed(0.)));
+        ecommands.insert((MoreArmour(0.), MoreLife(0.), IncreaseMovementSpeed(0.)));
     }
 
     fn add_affixes(&mut self, ecommands: &mut EntityCommands, count: u16, rng: &mut ThreadRng) {
         let ilevel = self.affix_provider.ilevel();
         for _ in 0..count {
             match self.affix_provider.gen(rng) {
-                Some(BootsAffixKind::AddArmour) => {
+                Some(BootsAffixKind::MoreArmour) => {
                     let value_and_tier = MORE_ARMOUR_RANGES.generate(ilevel, rng);
                     self.affix_provider
                         .set::<MoreArmour, _>(ecommands, value_and_tier);
@@ -86,7 +86,7 @@ impl OrbAction for Boots {
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 enum BootsAffixKind {
     AddLife,
-    AddArmour,
+    MoreArmour,
     IncreaseMovementSpeed,
 }
 
@@ -105,7 +105,10 @@ struct BootsAffixProvider(AffixProvider<BootsAffixKind>);
 impl BootsAffixProvider {
     pub fn new(ilevel: u16) -> Self {
         let mut provider = RngKindProvider::default();
-        provider.add(BootsAffixKind::AddArmour, MORE_ARMOUR_RANGES.weight(ilevel));
+        provider.add(
+            BootsAffixKind::MoreArmour,
+            MORE_ARMOUR_RANGES.weight(ilevel),
+        );
         provider.add(BootsAffixKind::AddLife, MORE_LIFE_RANGES.weight(ilevel));
         provider.add(
             BootsAffixKind::IncreaseMovementSpeed,

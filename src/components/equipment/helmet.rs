@@ -1,6 +1,6 @@
 use super::{common::AffixProvider, Equipment};
 use crate::components::{
-    affix::{Armour, BaseArmour, LifeRegen, MoreArmour, MoreLife},
+    affix::{BaseArmour, LifeRegen, MoreArmour, MoreLife},
     item::{AffixConfigGenerator, ItemDescriptor, ItemRarity, ItemSpawnConfig},
     orb::OrbAction,
     rng_provider::RngKindProvider,
@@ -9,7 +9,13 @@ use bevy::prelude::*;
 use rand::{rngs::ThreadRng, Rng};
 
 #[derive(Component)]
-#[require(Name::new("Helmet"), Equipment::Helmet, Armour, MoreLife)]
+#[require(
+    Name::new("Helmet"),
+    Equipment::Helmet,
+    MoreArmour,
+    MoreLife,
+    LifeRegen
+)]
 pub struct Helmet {
     affix_provider: HelmetAffixProvider,
 }
@@ -48,14 +54,14 @@ impl ItemDescriptor for Helmet {
 impl OrbAction for Helmet {
     fn reset_affixes(&mut self, ecommands: &mut EntityCommands) {
         self.affix_provider.reset();
-        ecommands.insert((Armour(0.), MoreLife(0.)));
+        ecommands.insert((MoreArmour(0.), MoreLife(0.), LifeRegen(0.)));
     }
 
     fn add_affixes(&mut self, ecommands: &mut EntityCommands, count: u16, rng: &mut ThreadRng) {
         let ilevel = self.affix_provider.ilevel();
         for _ in 0..count {
             match self.affix_provider.gen(rng) {
-                Some(HelmetAffixKind::AddArmour) => {
+                Some(HelmetAffixKind::MoreArmour) => {
                     let value_and_tier = MORE_ARMOUR_RANGES.generate(ilevel, rng);
                     self.affix_provider
                         .set::<MoreArmour, _>(ecommands, value_and_tier);
@@ -79,7 +85,7 @@ impl OrbAction for Helmet {
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 enum HelmetAffixKind {
     MoreLife,
-    AddArmour,
+    MoreArmour,
     LifeRegen,
 }
 
@@ -99,7 +105,7 @@ impl HelmetAffixProvider {
     pub fn new(ilevel: u16) -> Self {
         let mut provider = RngKindProvider::default();
         provider.add(
-            HelmetAffixKind::AddArmour,
+            HelmetAffixKind::MoreArmour,
             MORE_ARMOUR_RANGES.weight(ilevel),
         );
         provider.add(HelmetAffixKind::MoreLife, MORE_LIFE_RANGES.weight(ilevel));
