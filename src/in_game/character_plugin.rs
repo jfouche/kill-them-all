@@ -7,7 +7,7 @@ use crate::{
         },
         animation::AnimationTimer,
         character::{
-            BaseLife, BaseMovementSpeed, Character, CharacterAction, CharacterDiedEvent,
+            BaseLife, BaseMovementSpeed, Character, MovementAction, CharacterDiedEvent,
             CharacterDyingEvent, CharacterLevel, HitEvent, Life, LooseLifeEvent, MaxLife,
             MovementSpeed, Target,
         },
@@ -52,7 +52,7 @@ impl Plugin for CharacterPlugin {
             .register_type::<DamageOverTime>()
             .register_type::<AttackTimer>()
             .register_type::<Target>()
-            .register_type::<CharacterAction>()
+            .register_type::<MovementAction>()
             .register_type::<AnimationTimer>()
             .register_type::<Equipment>()
             .register_type::<BaseArmour>()
@@ -151,7 +151,7 @@ fn do_character_action(
         (
             &mut Transform,
             &MovementSpeed,
-            &mut CharacterAction,
+            &mut MovementAction,
             &mut Velocity,
         ),
         With<Character>,
@@ -176,12 +176,12 @@ fn do_character_action(
         };
 
         match *action {
-            CharacterAction::GoTo(target) => {
+            MovementAction::GoTo(target) => {
                 if move_to(target) {
                     action.stop();
                 }
             }
-            CharacterAction::TakeItem(entity) => match items.get(entity) {
+            MovementAction::TakeItem(entity) => match items.get(entity) {
                 Ok((entity, transform)) => {
                     if move_to(transform.translation().xy()) {
                         action.stop();
@@ -190,7 +190,7 @@ fn do_character_action(
                 }
                 _ => action.stop(),
             },
-            CharacterAction::Stop => velocity.linvel = Vec2::ZERO,
+            MovementAction::Stop => velocity.linvel = Vec2::ZERO,
         };
     }
 }

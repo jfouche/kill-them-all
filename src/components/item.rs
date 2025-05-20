@@ -19,9 +19,7 @@ pub struct ItemAssets {
 impl FromWorld for ItemAssets {
     fn from_world(world: &mut World) -> Self {
         ItemAssets {
-            texture: world.load_asset(
-                "items/Kyrise's 16x16 RPG Icon Pack - V1.3/spritesheet/spritesheet_48x48.png",
-            ),
+            texture: world.load_asset("kte-items.png"),
             atlas_layout: world
                 .add_asset(TextureAtlasLayout::from_grid(ITEM_SIZE, 16, 22, None, None)),
         }

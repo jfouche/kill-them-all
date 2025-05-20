@@ -1,4 +1,4 @@
-use crate::components::character::{Character, CharacterAction, HitEvent};
+use crate::components::character::{Character, HitEvent, MovementAction};
 use crate::components::damage::{DamageOverTime, Damager, HitDamageRange};
 use crate::components::monster::Monster;
 use crate::components::player::Player;
@@ -17,7 +17,7 @@ impl Plugin for CollisionsPlugin {
                 check_if_character_is_hit,
                 check_if_character_is_in_damage_over_time_zone,
                 player_touched_by_monster,
-                stop_move_on_collision,
+                stop_move_on_collision_between_characters,
             )
                 .in_set(GameRunningSet::EntityUpdate),
         );
@@ -120,17 +120,14 @@ fn player_touched_by_monster(
         });
 }
 
-fn stop_move_on_collision(
-    mut characters: Query<(Entity, &mut CharacterAction), With<Character>>,
+fn stop_move_on_collision_between_characters(
+    mut characters: Query<&mut MovementAction, With<Character>>,
     mut collisions: EventReader<CollisionEvent>,
 ) {
-    for (character, mut action) in &mut characters {
-        if collisions
-            .read()
-            .filter_map(start_event_filter)
-            .any(|(e1, e2)| character == *e1 || character == *e2)
-        {
-            action.stop();
+    for (e1, e2) in collisions.read().filter_map(start_event_filter) {
+        if let Ok(mut actions) = characters.get_many_mut([*e1, *e2]) {
+            actions[0].stop();
+            actions[1].stop()
         }
     }
 }

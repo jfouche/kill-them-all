@@ -2,7 +2,7 @@ use crate::{
     components::{
         affix::MoreLife,
         animation::AnimationTimer,
-        character::{CharacterAction, CharacterDiedEvent, CharacterDyingEvent},
+        character::{MovementAction, CharacterDiedEvent, CharacterDyingEvent},
         despawn_all,
         equipment::{weapon::AttackTimer, Wand},
         item::ItemSpawner,
@@ -229,7 +229,7 @@ fn customize_monster_type_3(
 /// Monsters moves in direction of the Player
 ///
 fn monsters_moves(
-    mut monsters: Query<(&mut CharacterAction, &Transform, &ViewRange), With<Monster>>,
+    mut monsters: Query<(&mut MovementAction, &Transform, &ViewRange), With<Monster>>,
     players: Query<&Transform, With<Player>>,
 ) {
     if let Ok(player_pos) = players.single().map(|t| t.translation.xy()) {

@@ -2,7 +2,7 @@ use super::dnd::{DndCursor, DraggedEntity};
 use crate::{
     camera::MainCamera,
     components::{
-        character::CharacterAction,
+        character::MovementAction,
         despawn_all,
         inventory::{Inventory, PlayerEquipmentChanged, RemoveFromInventoryEvent},
         item::{
@@ -179,7 +179,7 @@ fn update_player_on_drop_item(
 
 pub fn take_dropped_item(
     mut trigger: Trigger<Pointer<Click>>,
-    mut player: Single<&mut CharacterAction, With<Player>>,
+    mut player: Single<&mut MovementAction, With<Player>>,
 ) {
     player.take_item(trigger.target());
     trigger.propagate(false);
