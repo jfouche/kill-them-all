@@ -20,8 +20,7 @@ use crate::{
             PlayerDeathEvent, RemoveSkillBookEvent, Score,
         },
         skills::{
-            shuriken::ShurikenLauncherBook, spawn_book, ActivateSkill, AssociatedSkill, Skill,
-            SkillBook,
+            shuriken::ShurikenLauncherBook, ActivateSkill, AssociatedSkill, Skill, SkillBook,
         },
         world_map::{WorldMap, WorldMapLoadingFinished, LAYER_PLAYER},
         GROUP_ENEMY,
@@ -125,7 +124,7 @@ fn spawn_player(mut commands: Commands, assets: Res<PlayerAssets>) {
         .observe(player_dying);
 
     // Add a skill to the player
-    let book = spawn_book::<ShurikenLauncherBook>(&mut commands);
+    let book = commands.spawn(ShurikenLauncherBook).id();
     commands.trigger(EquipSkillBookEvent {
         book_entity: book,
         action: PlayerAction::Skill1,

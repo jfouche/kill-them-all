@@ -18,6 +18,7 @@ use rand::{rngs::ThreadRng, Rng};
 )]
 pub struct Amulet {
     affix_provider: AmuletAffixProvider,
+    implicit: String,
 }
 
 impl ItemSpawnConfig for Amulet {
@@ -26,17 +27,24 @@ impl ItemSpawnConfig for Amulet {
     fn new(ilevel: u16) -> Self {
         Amulet {
             affix_provider: AmuletAffixProvider::new(ilevel),
+            implicit: "".into(),
         }
     }
 
-    fn implicit(&self, rng: &mut ThreadRng) -> Self::Implicit {
-        BaseArmour(rng.random_range(1..=4) as f32)
+    fn implicit(&mut self, rng: &mut ThreadRng) -> Self::Implicit {
+        let implicit = BaseArmour(rng.random_range(1..=4) as f32);
+        self.implicit = implicit.to_string();
+        implicit
     }
 }
 
 impl ItemDescriptor for Amulet {
     fn title(&self) -> String {
-        format!("Amulet (l{})", self.affix_provider.ilevel() + 1)
+        format!(
+            "Amulet ({})\n{}",
+            self.affix_provider.ilevel(),
+            self.implicit
+        )
     }
 
     fn description(&self) -> String {

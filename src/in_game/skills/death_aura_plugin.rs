@@ -1,7 +1,8 @@
 use crate::components::{
     character::{Character, Target},
     damage::Damager,
-    skills::death_aura::{DeathAura, DeathAuraAssets, DeathAuraMaterial},
+    item::update_item_info,
+    skills::death_aura::{DeathAura, DeathAuraAssets, DeathAuraBook, DeathAuraMaterial},
     world_map::LAYER_DAMAGER,
 };
 use bevy::{prelude::*, sprite::Material2dPlugin};
@@ -16,6 +17,7 @@ impl Plugin for DeathAuraPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(Material2dPlugin::<DeathAuraMaterial>::default())
             .init_resource::<DeathAuraAssets>()
+            .add_observer(update_item_info::<DeathAuraBook>())
             .add_observer(on_equip)
             .add_observer(on_unequip);
     }

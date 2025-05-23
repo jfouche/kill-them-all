@@ -4,9 +4,7 @@ pub mod mine;
 pub mod shuriken;
 
 use super::{
-    item::{
-        Item, ItemDescription, ItemDescriptor, ItemLocation, ItemRarity, ItemTileIndex, ItemTitle,
-    },
+    item::{Item, ItemLocation},
     rng_provider::RngKindProvider,
 };
 use bevy::prelude::*;
@@ -50,30 +48,12 @@ pub enum SkillKind {
 impl SkillKind {
     fn spawn(&self, commands: &mut Commands) -> Entity {
         match self {
-            SkillKind::DeathAura => spawn_book::<DeathAuraBook>(commands),
-            SkillKind::Fireball => spawn_book::<FireBallLauncherBook>(commands),
-            SkillKind::MineDropper => spawn_book::<MineDropperBook>(commands),
-            SkillKind::Shuriken => spawn_book::<ShurikenLauncherBook>(commands),
+            SkillKind::DeathAura => commands.spawn(DeathAuraBook).id(),
+            SkillKind::Fireball => commands.spawn(FireBallLauncherBook).id(),
+            SkillKind::MineDropper => commands.spawn(MineDropperBook).id(),
+            SkillKind::Shuriken => commands.spawn(ShurikenLauncherBook).id(),
         }
     }
-}
-
-pub fn spawn_book<T>(commands: &mut Commands) -> Entity
-where
-    T: Component + Default + ItemDescriptor,
-{
-    let skill_book = T::default();
-    let title = skill_book.title();
-    let description = skill_book.description();
-    let tile_index = skill_book.tile_index(ItemRarity::Normal);
-    commands
-        .spawn((
-            skill_book,
-            ItemTitle(title),
-            ItemDescription(description),
-            ItemTileIndex(tile_index),
-        ))
-        .id()
 }
 
 pub struct SkillProvider {

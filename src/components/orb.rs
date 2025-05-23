@@ -1,5 +1,5 @@
 use super::{
-    item::{Item, ItemDescription, ItemDescriptor, ItemRarity, ItemTileIndex, ItemTitle},
+    item::{Item, ItemDescriptor, ItemRarity},
     rng_provider::RngKindProvider,
 };
 use bevy::prelude::*;
@@ -48,7 +48,7 @@ impl ItemDescriptor for Orb {
     }
 }
 
-/// Tool to provide random orb
+/// Tool to provide a random orb
 pub struct OrbProvider;
 
 impl OrbProvider {
@@ -60,17 +60,7 @@ impl OrbProvider {
         provider.add(Orb::Chaos, 40);
 
         let orb = provider.gen(rng).expect("At least 1 orb");
-        let title = orb.title();
-        let description = orb.description();
-        let tile_index = orb.tile_index(ItemRarity::Normal);
-        commands
-            .spawn((
-                orb,
-                ItemTitle(title),
-                ItemDescription(description),
-                ItemTileIndex(tile_index),
-            ))
-            .id()
+        commands.spawn(orb).id()
     }
 }
 

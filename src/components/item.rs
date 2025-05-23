@@ -126,19 +126,20 @@ pub struct ItemProvider(pub u16);
 
 impl ItemProvider {
     pub fn spawn(&self, commands: &mut Commands, rng: &mut ThreadRng) -> Option<Entity> {
-        match rng.random_range(0..100) {
-            0..30 => EquipmentProvider::new(self.0).spawn(commands, rng),
-            30..60 => Some(OrbProvider::spawn(commands, rng)),
-            60..90 => SkillProvider::new(self.0).spawn(commands, rng),
-            _ => None,
-        }
+        let entity = match rng.random_range(0..100) {
+            0..30 => EquipmentProvider::new(self.0).spawn(commands, rng)?,
+            30..60 => OrbProvider::spawn(commands, rng),
+            60..90 => SkillProvider::new(self.0).spawn(commands, rng)?,
+            _ => return None,
+        };
+        Some(entity)
     }
 }
 
 pub trait ItemSpawnConfig {
     type Implicit: Component + std::fmt::Display;
     fn new(ilevel: u16) -> Self;
-    fn implicit(&self, rng: &mut ThreadRng) -> Self::Implicit;
+    fn implicit(&mut self, rng: &mut ThreadRng) -> Self::Implicit;
 }
 
 /// Util to spawn a random [Item] of a given type.
@@ -185,6 +186,51 @@ pub trait ItemDescriptor {
     fn title(&self) -> String;
     fn description(&self) -> String;
     fn tile_index(&self, rarity: ItemRarity) -> usize;
+}
+
+pub struct UpdateItemInfo<T> {
+    item_entity: Entity,
+    _marker: PhantomData<T>,
+}
+
+impl<T> UpdateItemInfo<T> {
+    pub fn new(item_entity: Entity) -> Self {
+        UpdateItemInfo {
+            item_entity,
+            _marker: PhantomData,
+        }
+    }
+}
+
+impl<T> Command<Result> for UpdateItemInfo<T>
+where
+    T: Component + ItemDescriptor,
+{
+    fn apply(self, world: &mut World) -> Result {
+        let (item, rarity, mut title, mut description, mut tile_index) = world
+            .query::<(
+                &T,
+                Option<&ItemRarity>,
+                &mut ItemTitle,
+                &mut ItemDescription,
+                &mut ItemTileIndex,
+            )>()
+            .get_mut(world, self.item_entity)?;
+        let rarity = rarity.copied().unwrap_or(ItemRarity::Normal);
+        title.0 = item.title();
+        description.0 = item.description();
+        tile_index.0 = item.tile_index(rarity);
+        Ok(())
+    }
+}
+
+pub fn update_item_info<T>() -> impl Fn(Trigger<OnAdd, T>, Commands)
+where
+    T: Component + ItemDescriptor,
+{
+    |trigger: Trigger<OnAdd, T>, mut commands: Commands| {
+        commands.queue(UpdateItemInfo::<T>::new(trigger.target()));
+    }
 }
 
 /// Equipment Rarity

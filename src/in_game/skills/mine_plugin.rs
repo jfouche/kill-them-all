@@ -4,8 +4,11 @@ use crate::{
         character::{Character, Target},
         damage::{Damager, DamagerParams, HitDamageRange},
         despawn_all,
+        item::update_item_info,
         skills::{
-            mine::{Mine, MineAssets, MineDropper, MineExplodeTimer, MineExplosion},
+            mine::{
+                Mine, MineAssets, MineDropper, MineDropperBook, MineExplodeTimer, MineExplosion,
+            },
             ActivateSkill,
         },
         world_map::LAYER_DAMAGER,
@@ -20,12 +23,15 @@ pub struct MinePlugin;
 impl Plugin for MinePlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.init_resource::<MineAssets>()
-            .add_systems(OnExit(GameState::InGame), despawn_all::<Mine>)
-            .add_systems(OnExit(GameState::InGame), despawn_all::<MineExplosion>)
+            .add_systems(
+                OnExit(GameState::InGame),
+                (despawn_all::<Mine>, despawn_all::<MineExplosion>),
+            )
             .add_systems(
                 Update,
                 (mine_explosion, despawn_explosion).in_set(GameRunningSet::EntityUpdate),
             )
+            .add_observer(update_item_info::<MineDropperBook>())
             .add_observer(drop_mine);
     }
 }

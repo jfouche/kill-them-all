@@ -7,9 +7,9 @@ use crate::{
         },
         animation::AnimationTimer,
         character::{
-            BaseLife, BaseMovementSpeed, Character, MovementAction, CharacterDiedEvent,
-            CharacterDyingEvent, CharacterLevel, HitEvent, Life, LooseLifeEvent, MaxLife,
-            MovementSpeed, Target,
+            BaseLife, BaseMovementSpeed, Character, CharacterDiedEvent, CharacterDyingEvent,
+            CharacterLevel, HitEvent, Life, LooseLifeEvent, MaxLife, MovementAction, MovementSpeed,
+            Target,
         },
         damage::{BaseDamageOverTime, BaseHitDamageRange, DamageOverTime, HitDamageRange},
         equipment::{

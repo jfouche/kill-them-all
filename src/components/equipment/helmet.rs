@@ -18,6 +18,7 @@ use rand::{rngs::ThreadRng, Rng};
 )]
 pub struct Helmet {
     affix_provider: HelmetAffixProvider,
+    implicit: String,
 }
 
 impl ItemSpawnConfig for Helmet {
@@ -25,17 +26,24 @@ impl ItemSpawnConfig for Helmet {
     fn new(ilevel: u16) -> Self {
         Helmet {
             affix_provider: HelmetAffixProvider::new(ilevel),
+            implicit: "".into(),
         }
     }
 
-    fn implicit(&self, rng: &mut ThreadRng) -> Self::Implicit {
-        BaseArmour(rng.random_range(1..=4) as f32)
+    fn implicit(&mut self, rng: &mut ThreadRng) -> Self::Implicit {
+        let implicit = BaseArmour(rng.random_range(1..=4) as f32);
+        self.implicit = implicit.to_string();
+        implicit
     }
 }
 
 impl ItemDescriptor for Helmet {
     fn title(&self) -> String {
-        format!("Helmet (l{})", self.affix_provider.ilevel() + 1)
+        format!(
+            "Helmet (l{})\n{}",
+            self.affix_provider.ilevel() + 1,
+            self.implicit
+        )
     }
 
     fn description(&self) -> String {

@@ -4,7 +4,11 @@ use crate::{
         character::{Character, Target},
         damage::{Damager, DamagerParams, HitDamageRange, Projectile, ProjectileParams},
         despawn_all,
-        skills::{fireball::FireBallLauncher, ActivateSkill},
+        item::update_item_info,
+        skills::{
+            fireball::{FireBallLauncher, FireBallLauncherBook},
+            ActivateSkill,
+        },
         world_map::LAYER_DAMAGER,
     },
     schedule::GameState,
@@ -34,6 +38,7 @@ pub struct FireballPlugin;
 impl Plugin for FireballPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnExit(GameState::InGame), despawn_all::<FireBall>)
+            .add_observer(update_item_info::<FireBallLauncherBook>())
             .add_observer(cast_fireball);
     }
 }

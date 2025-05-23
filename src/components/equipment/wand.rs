@@ -26,6 +26,7 @@ use rand::{rngs::ThreadRng, Rng};
 )]
 pub struct Wand {
     affix_provider: WandAffixProvider,
+    implicit: String,
 }
 
 impl ItemSpawnConfig for Wand {
@@ -34,17 +35,24 @@ impl ItemSpawnConfig for Wand {
     fn new(ilevel: u16) -> Self {
         Wand {
             affix_provider: WandAffixProvider::new(ilevel),
+            implicit: "".into(),
         }
     }
 
-    fn implicit(&self, rng: &mut ThreadRng) -> Self::Implicit {
-        BaseAttackSpeed(rng.random_range(1.0..1.5))
+    fn implicit(&mut self, rng: &mut ThreadRng) -> Self::Implicit {
+        let implicit = BaseAttackSpeed(rng.random_range(1.0..1.5));
+        self.implicit = implicit.to_string();
+        implicit
     }
 }
 
 impl ItemDescriptor for Wand {
     fn title(&self) -> String {
-        format!("Wand (l{})", self.affix_provider.ilevel() + 1)
+        format!(
+            "Wand (l{})\n{}",
+            self.affix_provider.ilevel() + 1,
+            self.implicit
+        )
     }
 
     fn description(&self) -> String {

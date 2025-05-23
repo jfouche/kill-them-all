@@ -3,16 +3,17 @@
 use crate::{
     components::{
         affix::{IncreaseAreaOfEffect, PierceChance},
+        equipment::Amulet,
         inventory::{
             AddToInventoryEvent, InventoryChanged, PlayerEquipmentChanged, TakeDroppedItemEvent,
         },
-        item::{DroppedItem, ItemAssets},
+        item::{DroppedItem, ItemAssets, ItemDescriptor, ItemRarity, ItemSpawner},
         monster::Monster,
-        orb::OrbProvider,
+        orb::{Orb, OrbProvider},
         player::{EquipSkillBookEvent, Player, PlayerBooks, RemoveSkillBookEvent},
         skills::{
             death_aura::{DeathAura, DeathAuraBook},
-            spawn_book, AssociatedSkill, SkillBook,
+            AssociatedSkill, SkillBook,
         },
         world_map::{ProceduralWorldMap, WorldMapConfig, LAYER_ITEM},
     },
@@ -179,13 +180,23 @@ fn show_map_axes(mut gizmos: Gizmos, world_map: Res<ProceduralWorldMap>) {
 
 fn init_player(trigger: Trigger<OnAdd, Player>, mut commands: Commands) {
     let player = trigger.target();
-
-    commands.spawn((IncreaseAreaOfEffect(50.), ChildOf(player)));
-    commands.spawn((PierceChance(50.), ChildOf(player)));
-
     let mut rng = rand::rng();
-    let orb = OrbProvider::spawn(&mut commands, &mut rng);
+
+    let orb = commands.spawn(Orb::Transmutation).id();
     commands.trigger(AddToInventoryEvent::new(orb));
+
+    let orb = commands.spawn(Orb::Alteration).id();
+    commands.trigger(AddToInventoryEvent::new(orb));
+
+    let orb = commands.spawn(Orb::Regal).id();
+    commands.trigger(AddToInventoryEvent::new(orb));
+
+    let orb = commands.spawn(Orb::Chaos).id();
+    commands.trigger(AddToInventoryEvent::new(orb));
+
+    let spawner = ItemSpawner::new(1, &mut rng);
+    let amulet = spawner.spawn::<Amulet>(&mut commands, &mut rng);
+    commands.trigger(AddToInventoryEvent::new(amulet));
 }
 
 fn debug_death_aura(q: Query<&Transform, With<DeathAura>>, mut save: Local<Vec2>) {

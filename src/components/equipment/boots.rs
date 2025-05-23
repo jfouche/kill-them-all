@@ -18,6 +18,7 @@ use rand::{rngs::ThreadRng, Rng};
 )]
 pub struct Boots {
     affix_provider: BootsAffixProvider,
+    implicit: String,
 }
 
 impl ItemSpawnConfig for Boots {
@@ -26,17 +27,24 @@ impl ItemSpawnConfig for Boots {
     fn new(ilevel: u16) -> Self {
         Boots {
             affix_provider: BootsAffixProvider::new(ilevel),
+            implicit: "".into(),
         }
     }
 
-    fn implicit(&self, rng: &mut ThreadRng) -> Self::Implicit {
-        BaseArmour(rng.random_range(1..=4) as f32)
+    fn implicit(&mut self, rng: &mut ThreadRng) -> Self::Implicit {
+        let implicit = BaseArmour(rng.random_range(1..=4) as f32);
+        self.implicit = implicit.to_string();
+        implicit
     }
 }
 
 impl ItemDescriptor for Boots {
     fn title(&self) -> String {
-        format!("Boots (l{})", self.affix_provider.ilevel() + 1)
+        format!(
+            "Boots (l{})\n{}",
+            self.affix_provider.ilevel() + 1,
+            self.implicit
+        )
     }
 
     fn description(&self) -> String {
