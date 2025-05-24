@@ -5,7 +5,7 @@ use super::{
 use crate::components::{
     affix::{IncreaseAttackSpeed, IncreaseDamage, MoreDamage, PierceChance},
     damage::BaseHitDamageRange,
-    item::{AffixConfigGenerator, ItemDescriptor, ItemRarity, ItemSpawnConfig},
+    item::{AffixConfigGenerator, ItemDescriptor, ItemRarity, ItemSpawnBundle},
     orb::OrbAction,
     rng_provider::RngKindProvider,
 };
@@ -26,23 +26,19 @@ use rand::{rngs::ThreadRng, Rng};
 )]
 pub struct Wand {
     affix_provider: WandAffixProvider,
-    implicit: String,
+    implicit_label: String,
 }
 
-impl ItemSpawnConfig for Wand {
+impl ItemSpawnBundle for Wand {
     type Implicit = BaseAttackSpeed;
 
-    fn new(ilevel: u16) -> Self {
-        Wand {
-            affix_provider: WandAffixProvider::new(ilevel),
-            implicit: "".into(),
-        }
-    }
-
-    fn implicit(&mut self, rng: &mut ThreadRng) -> Self::Implicit {
+    fn new(ilevel: u16, rng: &mut ThreadRng) -> (Self, Self::Implicit) {
         let implicit = BaseAttackSpeed(rng.random_range(1.0..1.5));
-        self.implicit = implicit.to_string();
-        implicit
+        let item = Wand {
+            affix_provider: WandAffixProvider::new(ilevel),
+            implicit_label: implicit.to_string(),
+        };
+        (item, implicit)
     }
 }
 
@@ -51,7 +47,7 @@ impl ItemDescriptor for Wand {
         format!(
             "Wand (l{})\n{}",
             self.affix_provider.ilevel() + 1,
-            self.implicit
+            self.implicit_label
         )
     }
 

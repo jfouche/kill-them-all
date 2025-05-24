@@ -1,7 +1,7 @@
 use super::{common::AffixProvider, Equipment};
 use crate::components::{
     affix::{BaseArmour, LifeRegen, MoreArmour, MoreLife},
-    item::{AffixConfigGenerator, ItemDescriptor, ItemRarity, ItemSpawnConfig},
+    item::{AffixConfigGenerator, ItemDescriptor, ItemRarity, ItemSpawnBundle},
     orb::OrbAction,
     rng_provider::RngKindProvider,
 };
@@ -18,23 +18,19 @@ use rand::{rngs::ThreadRng, Rng};
 )]
 pub struct BodyArmour {
     affix_provider: BodyArmourAffixProvider,
-    implicit: String,
+    implicit_label: String,
 }
 
-impl ItemSpawnConfig for BodyArmour {
+impl ItemSpawnBundle for BodyArmour {
     type Implicit = BaseArmour;
 
-    fn new(ilevel: u16) -> Self {
-        BodyArmour {
-            affix_provider: BodyArmourAffixProvider::new(ilevel),
-            implicit: "".into(),
-        }
-    }
-
-    fn implicit(&mut self, rng: &mut ThreadRng) -> Self::Implicit {
+    fn new(ilevel: u16, rng: &mut ThreadRng) -> (Self, Self::Implicit) {
         let implicit = BaseArmour(rng.random_range(1..=4) as f32);
-        self.implicit = implicit.to_string();
-        implicit
+        let item = BodyArmour {
+            affix_provider: BodyArmourAffixProvider::new(ilevel),
+            implicit_label: implicit.to_string(),
+        };
+        (item, implicit)
     }
 }
 
@@ -43,7 +39,7 @@ impl ItemDescriptor for BodyArmour {
         format!(
             "Body armour ({})\n{}",
             self.affix_provider.ilevel(),
-            self.implicit
+            self.implicit_label
         )
     }
 

@@ -136,10 +136,11 @@ impl ItemProvider {
     }
 }
 
-pub trait ItemSpawnConfig {
+pub trait ItemSpawnBundle {
     type Implicit: Component + std::fmt::Display;
-    fn new(ilevel: u16) -> Self;
-    fn implicit(&mut self, rng: &mut ThreadRng) -> Self::Implicit;
+    fn new(ilevel: u16, rng: &mut ThreadRng) -> (Self, Self::Implicit)
+    where
+        Self: Sized;
 }
 
 /// Util to spawn a random [Item] of a given type.
@@ -161,24 +162,15 @@ impl ItemSpawner {
     /// Spawn a random item of type `T`.
     pub fn spawn<T>(&self, commands: &mut Commands, rng: &mut ThreadRng) -> Entity
     where
-        T: Component + ItemSpawnConfig + ItemDescriptor + OrbAction,
+        T: Component + ItemSpawnBundle + ItemDescriptor + OrbAction,
     {
-        let mut item = T::new(self.ilevel);
-        let implicit = item.implicit(rng);
+        let (mut item, implicit) = T::new(self.ilevel, rng);
         let mut item_cmds = commands.spawn_empty();
+        let item_entity = item_cmds.id();
         item.add_affixes(&mut item_cmds, self.rarity.n_affix(), rng);
-        let title = format!("{}\n{}", item.title(), implicit);
-        let description = item.description();
-        let tile_index = item.tile_index(self.rarity);
-        item_cmds.insert((
-            item,
-            implicit,
-            self.rarity,
-            ItemTitle(title),
-            ItemDescription(description),
-            ItemTileIndex(tile_index),
-        ));
-        item_cmds.id()
+        item_cmds.insert((item, implicit, self.rarity));
+        commands.queue(UpdateItemInfo::<T>::new(item_entity));
+        item_entity
     }
 }
 

@@ -1,7 +1,7 @@
 use super::{common::AffixProvider, Equipment};
 use crate::components::{
     affix::{BaseArmour, LifeRegen, MoreArmour, MoreLife},
-    item::{AffixConfigGenerator, ItemDescriptor, ItemRarity, ItemSpawnConfig},
+    item::{AffixConfigGenerator, ItemDescriptor, ItemRarity, ItemSpawnBundle},
     orb::OrbAction,
     rng_provider::RngKindProvider,
 };
@@ -21,19 +21,15 @@ pub struct Helmet {
     implicit: String,
 }
 
-impl ItemSpawnConfig for Helmet {
+impl ItemSpawnBundle for Helmet {
     type Implicit = BaseArmour;
-    fn new(ilevel: u16) -> Self {
-        Helmet {
-            affix_provider: HelmetAffixProvider::new(ilevel),
-            implicit: "".into(),
-        }
-    }
-
-    fn implicit(&mut self, rng: &mut ThreadRng) -> Self::Implicit {
+    fn new(ilevel: u16, rng: &mut ThreadRng) -> (Self, Self::Implicit) {
         let implicit = BaseArmour(rng.random_range(1..=4) as f32);
-        self.implicit = implicit.to_string();
-        implicit
+        let item = Helmet {
+            affix_provider: HelmetAffixProvider::new(ilevel),
+            implicit: implicit.to_string(),
+        };
+        (item, implicit)
     }
 }
 

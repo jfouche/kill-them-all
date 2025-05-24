@@ -1,7 +1,7 @@
 use super::{common::AffixProvider, Equipment};
 use crate::components::{
     affix::{BaseArmour, MoreArmour, MoreLife, PierceChance},
-    item::{AffixConfigGenerator, ItemDescriptor, ItemRarity, ItemSpawnConfig},
+    item::{AffixConfigGenerator, ItemDescriptor, ItemRarity, ItemSpawnBundle},
     orb::OrbAction,
     rng_provider::RngKindProvider,
 };
@@ -18,23 +18,19 @@ use rand::{rngs::ThreadRng, Rng};
 )]
 pub struct Amulet {
     affix_provider: AmuletAffixProvider,
-    implicit: String,
+    implicit_label: String,
 }
 
-impl ItemSpawnConfig for Amulet {
+impl ItemSpawnBundle for Amulet {
     type Implicit = BaseArmour;
 
-    fn new(ilevel: u16) -> Self {
-        Amulet {
-            affix_provider: AmuletAffixProvider::new(ilevel),
-            implicit: "".into(),
-        }
-    }
-
-    fn implicit(&mut self, rng: &mut ThreadRng) -> Self::Implicit {
+    fn new(ilevel: u16, rng: &mut ThreadRng) -> (Self, Self::Implicit) {
         let implicit = BaseArmour(rng.random_range(1..=4) as f32);
-        self.implicit = implicit.to_string();
-        implicit
+        let item = Amulet {
+            affix_provider: AmuletAffixProvider::new(ilevel),
+            implicit_label: implicit.to_string(),
+        };
+        (item, implicit)
     }
 }
 
@@ -43,7 +39,7 @@ impl ItemDescriptor for Amulet {
         format!(
             "Amulet ({})\n{}",
             self.affix_provider.ilevel(),
-            self.implicit
+            self.implicit_label
         )
     }
 

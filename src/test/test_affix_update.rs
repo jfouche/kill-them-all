@@ -1,5 +1,5 @@
 use crate::assert_approx_eq;
-use crate::components::item::ItemSpawnConfig;
+use crate::components::item::ItemSpawnBundle;
 use crate::components::skills::shuriken::ShurikenLauncher;
 use crate::components::{
     affix::{
@@ -30,11 +30,12 @@ fn create_app() -> App {
 #[test]
 fn test_update_equipment_armour() {
     let mut app = create_app();
+    let mut rng = rand::rng();
 
     let helmet = app
         .world_mut()
         .spawn((
-            Helmet::new(1),
+            Helmet::new(1, &mut rng).0,
             BaseArmour(1.),
             MoreArmour(3.),
             IncreaseArmour(50.),
@@ -42,7 +43,6 @@ fn test_update_equipment_armour() {
         .id();
 
     app.update();
-    println!("YOUHOU");
 
     let armour = app.world().get::<Armour>(helmet);
     assert_eq!(6., armour.unwrap().0);
@@ -51,20 +51,23 @@ fn test_update_equipment_armour() {
 #[test]
 fn test_update_character_armour() {
     let mut app = create_app();
+    let mut rng = rand::rng();
 
     let character = app
         .world_mut()
-        .spawn(Character)
-        .with_children(|parent| {
-            parent.spawn((
-                Helmet::new(1),
-                BaseArmour(1.),
-                MoreArmour(3.),
-                IncreaseArmour(50.),
-            ));
-            parent.spawn(MoreArmour(4.));
-            parent.spawn(MoreArmour(10.));
-        })
+        .spawn((
+            Character,
+            children![
+                (
+                    Helmet::new(1, &mut rng).0,
+                    BaseArmour(1.),
+                    MoreArmour(3.),
+                    IncreaseArmour(50.),
+                ),
+                MoreArmour(4.),
+                MoreArmour(10.)
+            ],
+        ))
         .id();
 
     app.update();
@@ -76,12 +79,13 @@ fn test_update_character_armour() {
 #[test]
 fn test_skill_attack_speed() {
     let mut app = create_app();
+    let mut rng = rand::rng();
 
     let skill_alone = app.world_mut().spawn(FireBallLauncher).id();
     app.world_mut()
         .spawn(Character)
         .with_children(|parent| {
-            parent.spawn(Wand::new(1));
+            parent.spawn(Wand::new(1, &mut rng).0);
         })
         .add_child(skill_alone);
 
@@ -89,7 +93,7 @@ fn test_skill_attack_speed() {
     app.world_mut()
         .spawn(Character)
         .with_children(|parent| {
-            parent.spawn((Wand::new(1), IncreaseAttackSpeed(50.)));
+            parent.spawn((Wand::new(1, &mut rng).0, IncreaseAttackSpeed(50.)));
             parent.spawn(IncreaseAttackSpeed(20.));
         })
         .add_child(skill_with_affixes);
@@ -111,6 +115,7 @@ fn test_skill_attack_speed() {
 #[test]
 fn test_skill_damage_range() {
     let mut app = create_app();
+    let mut rng = rand::rng();
 
     let skill_alone = app.world_mut().spawn(FireBallLauncher).id();
     app.world_mut()
@@ -124,7 +129,11 @@ fn test_skill_damage_range() {
     app.world_mut()
         .spawn(Character)
         .with_children(|parent| {
-            parent.spawn((Wand::new(1), MoreDamage(5.), IncreaseDamage(50.)));
+            parent.spawn((
+                Wand::new(1, &mut rng).0,
+                MoreDamage(5.),
+                IncreaseDamage(50.),
+            ));
             parent.spawn(MoreDamage(2.));
             parent.spawn(IncreaseDamage(10.));
         })
