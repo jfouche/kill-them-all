@@ -15,6 +15,10 @@ impl Inventory {
         (Inventory::N_COLS * Inventory::N_ROWS) as usize
     }
 
+    pub fn contains(&self, entity: Entity) -> bool {
+        self.0.contains(&Some(entity))
+    }
+
     pub fn add(&mut self, item: Entity) -> bool {
         if self.0.iter().any(|o| *o == Some(item)) {
             warn!("Item {item} already in inventory");

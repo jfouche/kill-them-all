@@ -77,11 +77,10 @@ impl Plugin for DebugPlugin {
         )
         // .add_systems(Last, debug_death_aura_post)
         .add_observer(init_player)
-        // .add_observer(|_: Trigger<InventoryChanged>| warn!("InventoryChanged"))
-        // .add_observer(|_: Trigger<PlayerEquipmentChanged>| warn!("PlayerEquipmentChanged"))
-        // .add_observer(|_: Trigger<EquipSkillBookEvent>| warn!("EquipSkillBookEvent"))
-        // .add_observer(|_: Trigger<RemoveSkillBookEvent>| warn!("RemoveSkillBookEvent"))
-        ;
+        .add_observer(|_: Trigger<InventoryChanged>| info!("InventoryChanged"))
+        .add_observer(|_: Trigger<PlayerEquipmentChanged>| info!("PlayerEquipmentChanged"))
+        .add_observer(|_: Trigger<EquipSkillBookEvent>| info!("EquipSkillBookEvent"))
+        .add_observer(|_: Trigger<RemoveSkillBookEvent>| info!("RemoveSkillBookEvent"));
     }
 }
 

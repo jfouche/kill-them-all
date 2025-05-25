@@ -1,6 +1,8 @@
 use super::{
     equipment::EquipmentProvider,
+    inventory::{Inventory, InventoryChanged, PlayerEquipmentChanged},
     orb::{OrbAction, OrbProvider},
+    player::Player,
     rng_provider::RngKindProvider,
     skills::SkillProvider,
 };
@@ -199,19 +201,33 @@ where
     T: Component + ItemDescriptor,
 {
     fn apply(self, world: &mut World) -> Result {
-        let (item, rarity, mut title, mut description, mut tile_index) = world
+        let (item, rarity, mut title, mut description, mut tile_index, child_of) = world
             .query::<(
                 &T,
                 Option<&ItemRarity>,
                 &mut ItemTitle,
                 &mut ItemDescription,
                 &mut ItemTileIndex,
+                Option<&ChildOf>,
             )>()
             .get_mut(world, self.item_entity)?;
         let rarity = rarity.copied().unwrap_or(ItemRarity::Normal);
         title.0 = item.title();
         description.0 = item.description();
         tile_index.0 = item.tile_index(rarity);
+
+        if let Some(&ChildOf(parent)) = child_of {
+            let mut query = world.query_filtered::<&Inventory, With<Player>>();
+            if query.get(world, parent).is_ok() {
+                world.trigger(PlayerEquipmentChanged);
+            } else if let Ok(inventory) = query.single(world) {
+                if inventory.contains(self.item_entity) {
+                    world.trigger(InventoryChanged);
+                }
+            }
+        }
+
+        world.trigger(ItemChanged(self.item_entity));
         Ok(())
     }
 }
@@ -224,6 +240,10 @@ where
         commands.queue(UpdateItemInfo::<T>::new(trigger.target()));
     }
 }
+
+/// Event triggered when an [Item] has been modified (by an [Orb] for example)
+#[derive(Event)]
+pub struct ItemChanged(pub Entity);
 
 /// Equipment Rarity
 #[derive(Component, Default, Clone, Copy, PartialEq, Eq, Hash, Reflect)]

@@ -1,12 +1,11 @@
-use std::marker::PhantomData;
-
 use crate::components::{
     equipment::{Amulet, BodyArmour, Boots, Equipment, Helmet, Wand},
-    inventory::{InventoryChanged, PlayerEquipmentChanged, RemoveFromInventoryEvent},
+    inventory::RemoveFromInventoryEvent,
     item::{update_item_info, ItemDescriptor, ItemRarity, UpdateItemInfo},
     orb::{ActivateOrbEvent, Orb, OrbAction},
 };
 use bevy::{ecs::component::Mutable, prelude::*};
+use std::marker::PhantomData;
 
 pub struct OrbPlugin;
 
@@ -233,10 +232,6 @@ fn on_transmute<T>(
     // Despawn orb
     commands.trigger(RemoveFromInventoryEvent(trigger.orb));
     commands.entity(trigger.orb).despawn();
-
-    // Update UI
-    commands.trigger(InventoryChanged);
-    commands.trigger(PlayerEquipmentChanged);
 }
 
 fn on_alteration<T>(
@@ -273,10 +268,6 @@ fn on_alteration<T>(
     // Despawn orb
     commands.trigger(RemoveFromInventoryEvent(trigger.orb));
     commands.entity(trigger.orb).despawn();
-
-    // Update UI
-    commands.trigger(InventoryChanged);
-    commands.trigger(PlayerEquipmentChanged);
 }
 
 fn on_regal<T>(
@@ -313,10 +304,6 @@ fn on_regal<T>(
     // Despawn orb
     commands.trigger(RemoveFromInventoryEvent(trigger.orb));
     commands.entity(trigger.orb).despawn();
-
-    // Update UI
-    commands.trigger(InventoryChanged);
-    commands.trigger(PlayerEquipmentChanged);
 }
 
 fn on_chaos<T>(
@@ -353,8 +340,4 @@ fn on_chaos<T>(
     // Despawn orb
     commands.trigger(RemoveFromInventoryEvent(trigger.orb));
     commands.entity(trigger.orb).despawn();
-
-    // Update UI
-    commands.trigger(InventoryChanged);
-    commands.trigger(PlayerEquipmentChanged);
 }
