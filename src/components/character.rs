@@ -12,7 +12,7 @@ use bevy_rapier2d::prelude::*;
 #[derive(Component, Default)]
 #[require(
     Target,
-    CharacterAction,
+    MovementAction,
     CharacterLevel,
     BaseLife,
     BaseMovementSpeed,
@@ -41,24 +41,24 @@ pub enum Target {
 
 /// Action the character should do
 #[derive(Component, Default, Clone, Copy, Reflect)]
-pub enum CharacterAction {
+pub enum MovementAction {
     #[default]
     Stop,
     GoTo(Vec2),
     TakeItem(Entity),
 }
 
-impl CharacterAction {
+impl MovementAction {
     pub fn stop(&mut self) {
-        *self = CharacterAction::Stop;
+        *self = MovementAction::Stop;
     }
 
     pub fn goto(&mut self, pos: Vec2) {
-        *self = CharacterAction::GoTo(pos);
+        *self = MovementAction::GoTo(pos);
     }
 
     pub fn take_item(&mut self, entity: Entity) {
-        *self = CharacterAction::TakeItem(entity)
+        *self = MovementAction::TakeItem(entity)
     }
 }
 

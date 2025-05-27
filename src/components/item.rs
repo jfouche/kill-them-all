@@ -1,6 +1,8 @@
 use super::{
     equipment::EquipmentProvider,
+    inventory::{Inventory, InventoryChanged, PlayerEquipmentChanged},
     orb::{OrbAction, OrbProvider},
+    player::Player,
     rng_provider::RngKindProvider,
     skills::SkillProvider,
 };
@@ -126,19 +128,21 @@ pub struct ItemProvider(pub u16);
 
 impl ItemProvider {
     pub fn spawn(&self, commands: &mut Commands, rng: &mut ThreadRng) -> Option<Entity> {
-        match rng.random_range(0..100) {
-            0..30 => EquipmentProvider::new(self.0).spawn(commands, rng),
-            30..60 => Some(OrbProvider::spawn(commands, rng)),
-            60..90 => SkillProvider::new(self.0).spawn(commands, rng),
-            _ => None,
-        }
+        let entity = match rng.random_range(0..100) {
+            0..30 => EquipmentProvider::new(self.0).spawn(commands, rng)?,
+            30..60 => OrbProvider::spawn(commands, rng),
+            60..90 => SkillProvider::new(self.0).spawn(commands, rng)?,
+            _ => return None,
+        };
+        Some(entity)
     }
 }
 
-pub trait ItemSpawnConfig {
+pub trait ItemSpawnBundle {
     type Implicit: Component + std::fmt::Display;
-    fn new(ilevel: u16) -> Self;
-    fn implicit(&self, rng: &mut ThreadRng) -> Self::Implicit;
+    fn new(ilevel: u16, rng: &mut ThreadRng) -> (Self, Self::Implicit)
+    where
+        Self: Sized;
 }
 
 /// Util to spawn a random [Item] of a given type.
@@ -160,24 +164,15 @@ impl ItemSpawner {
     /// Spawn a random item of type `T`.
     pub fn spawn<T>(&self, commands: &mut Commands, rng: &mut ThreadRng) -> Entity
     where
-        T: Component + ItemSpawnConfig + ItemDescriptor + OrbAction,
+        T: Component + ItemSpawnBundle + ItemDescriptor + OrbAction,
     {
-        let mut item = T::new(self.ilevel);
-        let implicit = item.implicit(rng);
+        let (mut item, implicit) = T::new(self.ilevel, rng);
         let mut item_cmds = commands.spawn_empty();
+        let item_entity = item_cmds.id();
         item.add_affixes(&mut item_cmds, self.rarity.n_affix(), rng);
-        let title = format!("{}\n{}", item.title(), implicit);
-        let description = item.description();
-        let tile_index = item.tile_index(self.rarity);
-        item_cmds.insert((
-            item,
-            implicit,
-            self.rarity,
-            ItemTitle(title),
-            ItemDescription(description),
-            ItemTileIndex(tile_index),
-        ));
-        item_cmds.id()
+        item_cmds.insert((item, implicit, self.rarity));
+        commands.queue(UpdateItemInfo::<T>::new(item_entity));
+        item_entity
     }
 }
 
@@ -186,6 +181,69 @@ pub trait ItemDescriptor {
     fn description(&self) -> String;
     fn tile_index(&self, rarity: ItemRarity) -> usize;
 }
+
+pub struct UpdateItemInfo<T> {
+    item_entity: Entity,
+    _marker: PhantomData<T>,
+}
+
+impl<T> UpdateItemInfo<T> {
+    pub fn new(item_entity: Entity) -> Self {
+        UpdateItemInfo {
+            item_entity,
+            _marker: PhantomData,
+        }
+    }
+}
+
+impl<T> Command<Result> for UpdateItemInfo<T>
+where
+    T: Component + ItemDescriptor,
+{
+    fn apply(self, world: &mut World) -> Result {
+        let (item, rarity, mut title, mut description, mut tile_index, child_of) = world
+            .query::<(
+                &T,
+                Option<&ItemRarity>,
+                &mut ItemTitle,
+                &mut ItemDescription,
+                &mut ItemTileIndex,
+                Option<&ChildOf>,
+            )>()
+            .get_mut(world, self.item_entity)?;
+        let rarity = rarity.copied().unwrap_or(ItemRarity::Normal);
+        title.0 = item.title();
+        description.0 = item.description();
+        tile_index.0 = item.tile_index(rarity);
+
+        if let Some(&ChildOf(parent)) = child_of {
+            let mut query = world.query_filtered::<&Inventory, With<Player>>();
+            if query.get(world, parent).is_ok() {
+                world.trigger(PlayerEquipmentChanged);
+            } else if let Ok(inventory) = query.single(world) {
+                if inventory.contains(self.item_entity) {
+                    world.trigger(InventoryChanged);
+                }
+            }
+        }
+
+        world.trigger(ItemChanged(self.item_entity));
+        Ok(())
+    }
+}
+
+pub fn update_item_info<T>() -> impl Fn(Trigger<OnAdd, T>, Commands)
+where
+    T: Component + ItemDescriptor,
+{
+    |trigger: Trigger<OnAdd, T>, mut commands: Commands| {
+        commands.queue(UpdateItemInfo::<T>::new(trigger.target()));
+    }
+}
+
+/// Event triggered when an [Item] has been modified (by an [Orb] for example)
+#[derive(Event)]
+pub struct ItemChanged(pub Entity);
 
 /// Equipment Rarity
 #[derive(Component, Default, Clone, Copy, PartialEq, Eq, Hash, Reflect)]
@@ -199,9 +257,9 @@ pub enum ItemRarity {
 impl ItemRarity {
     pub fn n_affix(&self) -> u16 {
         match self {
-            ItemRarity::Normal => 1,
-            ItemRarity::Magic => 2,
-            ItemRarity::Rare => 3,
+            ItemRarity::Normal => 0,
+            ItemRarity::Magic => 1,
+            ItemRarity::Rare => 2,
         }
     }
 }

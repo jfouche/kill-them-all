@@ -3,8 +3,8 @@ use crate::{
     components::{
         animation::AnimationTimer,
         character::{
-            CharacterAction, CharacterDiedEvent, CharacterDyingEvent, CharacterLevel, Life,
-            LooseLifeEvent, MaxLife,
+            CharacterDiedEvent, CharacterDyingEvent, CharacterLevel, Life, LooseLifeEvent, MaxLife,
+            MovementAction,
         },
         despawn_all,
         equipment::{weapon::AttackTimer, Equipment},
@@ -20,8 +20,7 @@ use crate::{
             PlayerDeathEvent, RemoveSkillBookEvent, Score,
         },
         skills::{
-            shuriken::ShurikenLauncherBook, spawn_book, ActivateSkill, AssociatedSkill, Skill,
-            SkillBook,
+            shuriken::ShurikenLauncherBook, ActivateSkill, AssociatedSkill, Skill, SkillBook,
         },
         world_map::{WorldMap, WorldMapLoadingFinished, LAYER_PLAYER},
         GROUP_ENEMY,
@@ -90,7 +89,7 @@ fn manage_player_movement_with_mouse(trigger: Trigger<OnAdd, WorldMap>, mut comm
         .observe(
             |trigger: Trigger<Pointer<Pressed>>,
              mut commands: Commands,
-             mut player: Single<&mut CharacterAction, With<Player>>,
+             mut player: Single<&mut MovementAction, With<Player>>,
              cameras: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
              assets: Res<NextPositionIndicatorAssets>| {
                 if let Some(world_pos) = world_position(cameras, trigger.pointer_location.position)
@@ -107,7 +106,7 @@ fn manage_player_movement_with_mouse(trigger: Trigger<OnAdd, WorldMap>, mut comm
         )
         .observe(
             |trigger: Trigger<Pointer<Drag>>,
-             mut player: Single<&mut CharacterAction, With<Player>>,
+             mut player: Single<&mut MovementAction, With<Player>>,
              cameras: Query<(&Camera, &GlobalTransform), With<MainCamera>>| {
                 if let Some(world_pos) = world_position(cameras, trigger.pointer_location.position)
                 {
@@ -125,7 +124,7 @@ fn spawn_player(mut commands: Commands, assets: Res<PlayerAssets>) {
         .observe(player_dying);
 
     // Add a skill to the player
-    let book = spawn_book::<ShurikenLauncherBook>(&mut commands);
+    let book = commands.spawn(ShurikenLauncherBook).id();
     commands.trigger(EquipSkillBookEvent {
         book_entity: book,
         action: PlayerAction::Skill1,
@@ -254,14 +253,14 @@ fn refill_life_on_level_up(
 
 fn activate_skill(
     mut commands: Commands,
-    players: Query<&PlayerBooks, With<Player>>,
+    mut players: Query<(&PlayerBooks, &mut MovementAction), With<Player>>,
     books: Query<&AssociatedSkill, With<SkillBook>>,
     mut skills: Query<&mut AttackTimer, With<Skill>>,
     windows: Query<&Window, With<PrimaryWindow>>,
     cameras: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
     buttons: Res<ButtonInput<KeyCode>>,
 ) {
-    let Ok(player_books) = players.single() else {
+    let Ok((player_books, mut movement_action)) = players.single_mut() else {
         return;
     };
 
@@ -293,6 +292,7 @@ fn activate_skill(
             if let Ok(&AssociatedSkill(skill)) = books.get(book) {
                 if let Ok(mut timer) = skills.get_mut(skill) {
                     if timer.finished() {
+                        movement_action.stop();
                         commands.trigger(ActivateSkill(skill, pos));
                         timer.reset();
                     }

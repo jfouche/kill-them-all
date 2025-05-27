@@ -1,17 +1,20 @@
 use crate::{
     components::{
-        skills::{shuriken::ShurikenLauncher, ActivateSkill},
+        affix::PierceChance,
+        character::{Character, Target},
+        damage::{Damager, DamagerParams, HitDamageRange, ProjectileParams},
+        despawn_all,
+        item::update_item_info,
+        skills::{
+            shuriken::{Shuriken, ShurikenAssets, ShurikenLauncher, ShurikenLauncherBook},
+            ActivateSkill,
+        },
         world_map::LAYER_DAMAGER,
-        *,
     },
     schedule::GameState,
 };
-use affix::PierceChance;
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
-use character::{Character, Target};
-use damage::{Damager, DamagerParams, HitDamageRange, ProjectileParams};
-use skills::shuriken::{Shuriken, ShurikenAssets};
 use std::f32::consts::PI;
 
 const SHURIKEN_SPEED: f32 = 100.0;
@@ -22,6 +25,7 @@ impl Plugin for ShurikenPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<ShurikenAssets>()
             .add_systems(OnExit(GameState::InGame), despawn_all::<Shuriken>)
+            .add_observer(update_item_info::<ShurikenLauncherBook>())
             .add_observer(launch_shuriken);
     }
 }

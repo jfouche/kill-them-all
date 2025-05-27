@@ -1,18 +1,18 @@
-use std::marker::PhantomData;
-
 use crate::components::{
     equipment::{Amulet, BodyArmour, Boots, Equipment, Helmet, Wand},
-    inventory::{InventoryChanged, PlayerEquipmentChanged, RemoveFromInventoryEvent},
-    item::ItemRarity,
+    inventory::RemoveFromInventoryEvent,
+    item::{update_item_info, ItemDescriptor, ItemRarity, UpdateItemInfo},
     orb::{ActivateOrbEvent, Orb, OrbAction},
 };
 use bevy::{ecs::component::Mutable, prelude::*};
+use std::marker::PhantomData;
 
 pub struct OrbPlugin;
 
 impl Plugin for OrbPlugin {
     fn build(&self, app: &mut App) {
-        app.add_observer(on_activate_orb)
+        app.add_observer(update_item_info::<Orb>())
+            .add_observer(on_activate_orb)
             .add_observer(on_transmute::<Amulet>)
             .add_observer(on_transmute::<Boots>)
             .add_observer(on_transmute::<Helmet>)
@@ -203,7 +203,7 @@ fn on_transmute<T>(
     orbs: Query<&Orb>,
     mut items: Query<(&mut T, &mut ItemRarity)>,
 ) where
-    T: Component<Mutability = Mutable> + OrbAction,
+    T: Component<Mutability = Mutable> + ItemDescriptor + OrbAction,
 {
     let Ok(&Orb::Transmutation) = orbs.get(trigger.orb) else {
         error!("on_transmute: Orb is not Orb::Transmutation");
@@ -227,13 +227,11 @@ fn on_transmute<T>(
     item.reset_affixes(&mut item_cmds);
     *rarity = ItemRarity::Magic;
     item.add_affixes(&mut item_cmds, rarity.n_affix(), &mut rng);
+    commands.queue(UpdateItemInfo::<T>::new(trigger.item));
 
     // Despawn orb
     commands.trigger(RemoveFromInventoryEvent(trigger.orb));
     commands.entity(trigger.orb).despawn();
-
-    commands.trigger(InventoryChanged);
-    commands.trigger(PlayerEquipmentChanged);
 }
 
 fn on_alteration<T>(
@@ -242,7 +240,7 @@ fn on_alteration<T>(
     orbs: Query<&Orb>,
     mut items: Query<(&mut T, &ItemRarity)>,
 ) where
-    T: Component<Mutability = Mutable> + OrbAction,
+    T: Component<Mutability = Mutable> + ItemDescriptor + OrbAction,
 {
     let Ok(&Orb::Alteration) = orbs.get(trigger.orb) else {
         error!("on_alteration: Orb is not Orb::Alteration");
@@ -265,13 +263,11 @@ fn on_alteration<T>(
     let mut item_cmds = commands.entity(trigger.item);
     item.reset_affixes(&mut item_cmds);
     item.add_affixes(&mut item_cmds, rarity.n_affix(), &mut rng);
+    commands.queue(UpdateItemInfo::<T>::new(trigger.item));
 
     // Despawn orb
     commands.trigger(RemoveFromInventoryEvent(trigger.orb));
     commands.entity(trigger.orb).despawn();
-
-    commands.trigger(InventoryChanged);
-    commands.trigger(PlayerEquipmentChanged);
 }
 
 fn on_regal<T>(
@@ -280,7 +276,7 @@ fn on_regal<T>(
     orbs: Query<&Orb>,
     mut items: Query<(&mut T, &mut ItemRarity)>,
 ) where
-    T: Component<Mutability = Mutable> + OrbAction,
+    T: Component<Mutability = Mutable> + ItemDescriptor + OrbAction,
 {
     let Ok(&Orb::Regal) = orbs.get(trigger.orb) else {
         error!("on_regal: Orb is not Orb::Regal");
@@ -303,13 +299,11 @@ fn on_regal<T>(
     let mut item_cmds = commands.entity(trigger.item);
     *rarity = ItemRarity::Rare;
     item.add_affixes(&mut item_cmds, 1, &mut rng);
+    commands.queue(UpdateItemInfo::<T>::new(trigger.item));
 
     // Despawn orb
     commands.trigger(RemoveFromInventoryEvent(trigger.orb));
     commands.entity(trigger.orb).despawn();
-
-    commands.trigger(InventoryChanged);
-    commands.trigger(PlayerEquipmentChanged);
 }
 
 fn on_chaos<T>(
@@ -318,7 +312,7 @@ fn on_chaos<T>(
     orbs: Query<&Orb>,
     mut items: Query<(&mut T, &ItemRarity)>,
 ) where
-    T: Component<Mutability = Mutable> + OrbAction,
+    T: Component<Mutability = Mutable> + ItemDescriptor + OrbAction,
 {
     let Ok(&Orb::Chaos) = orbs.get(trigger.orb) else {
         error!("on_chaos: Orb is not Orb::Chaos");
@@ -341,11 +335,9 @@ fn on_chaos<T>(
     let mut item_cmds = commands.entity(trigger.item);
     item.reset_affixes(&mut item_cmds);
     item.add_affixes(&mut item_cmds, ItemRarity::Rare.n_affix(), &mut rng);
+    commands.queue(UpdateItemInfo::<T>::new(trigger.item));
 
     // Despawn orb
     commands.trigger(RemoveFromInventoryEvent(trigger.orb));
     commands.entity(trigger.orb).despawn();
-
-    commands.trigger(InventoryChanged);
-    commands.trigger(PlayerEquipmentChanged);
 }

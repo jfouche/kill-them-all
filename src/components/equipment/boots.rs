@@ -1,7 +1,7 @@
 use super::{common::AffixProvider, Equipment};
 use crate::components::{
-    affix::{Armour, BaseArmour, IncreaseMovementSpeed, MoreArmour, MoreLife},
-    item::{AffixConfigGenerator, ItemDescriptor, ItemRarity, ItemSpawnConfig},
+    affix::{BaseArmour, IncreaseMovementSpeed, MoreArmour, MoreLife},
+    item::{AffixConfigGenerator, ItemDescriptor, ItemRarity, ItemSpawnBundle},
     orb::OrbAction,
     rng_provider::RngKindProvider,
 };
@@ -12,31 +12,35 @@ use rand::{rngs::ThreadRng, Rng};
 #[require(
     Name::new("Boots"),
     Equipment::Boots,
-    Armour,
+    MoreArmour,
     MoreLife,
     IncreaseMovementSpeed
 )]
 pub struct Boots {
     affix_provider: BootsAffixProvider,
+    implicit_label: String,
 }
 
-impl ItemSpawnConfig for Boots {
+impl ItemSpawnBundle for Boots {
     type Implicit = BaseArmour;
 
-    fn new(ilevel: u16) -> Self {
-        Boots {
+    fn new(ilevel: u16, rng: &mut ThreadRng) -> (Self, Self::Implicit) {
+        let implicit = BaseArmour(rng.random_range(1..=4) as f32);
+        let item = Boots {
             affix_provider: BootsAffixProvider::new(ilevel),
-        }
-    }
-
-    fn implicit(&self, rng: &mut ThreadRng) -> Self::Implicit {
-        BaseArmour(rng.random_range(1..=4) as f32)
+            implicit_label: implicit.to_string(),
+        };
+        (item, implicit)
     }
 }
 
 impl ItemDescriptor for Boots {
     fn title(&self) -> String {
-        format!("Boots (l{})", self.affix_provider.ilevel() + 1)
+        format!(
+            "Boots (l{})\n{}",
+            self.affix_provider.ilevel() + 1,
+            self.implicit_label
+        )
     }
 
     fn description(&self) -> String {
@@ -55,14 +59,14 @@ impl ItemDescriptor for Boots {
 impl OrbAction for Boots {
     fn reset_affixes(&mut self, ecommands: &mut EntityCommands) {
         self.affix_provider.reset();
-        ecommands.insert((Armour(0.), MoreLife(0.), IncreaseMovementSpeed(0.)));
+        ecommands.insert((MoreArmour(0.), MoreLife(0.), IncreaseMovementSpeed(0.)));
     }
 
     fn add_affixes(&mut self, ecommands: &mut EntityCommands, count: u16, rng: &mut ThreadRng) {
         let ilevel = self.affix_provider.ilevel();
         for _ in 0..count {
             match self.affix_provider.gen(rng) {
-                Some(BootsAffixKind::AddArmour) => {
+                Some(BootsAffixKind::MoreArmour) => {
                     let value_and_tier = MORE_ARMOUR_RANGES.generate(ilevel, rng);
                     self.affix_provider
                         .set::<MoreArmour, _>(ecommands, value_and_tier);
@@ -86,7 +90,7 @@ impl OrbAction for Boots {
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 enum BootsAffixKind {
     AddLife,
-    AddArmour,
+    MoreArmour,
     IncreaseMovementSpeed,
 }
 
@@ -105,7 +109,10 @@ struct BootsAffixProvider(AffixProvider<BootsAffixKind>);
 impl BootsAffixProvider {
     pub fn new(ilevel: u16) -> Self {
         let mut provider = RngKindProvider::default();
-        provider.add(BootsAffixKind::AddArmour, MORE_ARMOUR_RANGES.weight(ilevel));
+        provider.add(
+            BootsAffixKind::MoreArmour,
+            MORE_ARMOUR_RANGES.weight(ilevel),
+        );
         provider.add(BootsAffixKind::AddLife, MORE_LIFE_RANGES.weight(ilevel));
         provider.add(
             BootsAffixKind::IncreaseMovementSpeed,

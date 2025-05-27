@@ -105,7 +105,7 @@ mod common {
 
         pub fn reset(&mut self) {
             self.provider.reset();
-            self.labels.truncate(1);
+            self.labels.clear();
         }
 
         pub fn gen(&mut self, rng: &mut ThreadRng) -> Option<K> {
