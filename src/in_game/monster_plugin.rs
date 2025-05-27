@@ -2,7 +2,7 @@ use crate::{
     components::{
         affix::MoreLife,
         animation::AnimationTimer,
-        character::{MovementAction, CharacterDiedEvent, CharacterDyingEvent},
+        character::{CharacterDiedEvent, CharacterDyingEvent, MovementAction},
         despawn_all,
         equipment::{weapon::AttackTimer, Wand},
         item::ItemSpawner,
@@ -19,12 +19,13 @@ use crate::{
         upgrade::UpgradeProvider,
         world_map::CurrentMapLevel,
     },
+    config::{ConfigLoaded, GameConfig},
     schedule::{GameRunningSet, GameState},
 };
 use bevy::{math::vec2, prelude::*};
 use bevy_rapier2d::prelude::*;
 use rand::Rng;
-use std::f32::consts::PI;
+use std::{f32::consts::PI, time::Duration};
 
 pub struct MonsterPlugin;
 
@@ -50,6 +51,7 @@ impl Plugin for MonsterPlugin {
                 )
                     .in_set(GameRunningSet::EntityUpdate),
             )
+            .add_observer(init_config)
             .add_observer(update_monster)
             .add_observer(customize_monster_type_1)
             .add_observer(customize_monster_type_2)
@@ -62,8 +64,21 @@ struct SpawnMonsterTimer(Timer);
 
 impl Default for SpawnMonsterTimer {
     fn default() -> Self {
-        Self(Timer::from_seconds(12.0, TimerMode::Repeating))
+        Self::from(&GameConfig::default())
     }
+}
+
+impl From<&GameConfig> for SpawnMonsterTimer {
+    fn from(value: &GameConfig) -> Self {
+        Self(Timer::new(
+            Duration::from_secs(value.monster_spawn_delay),
+            TimerMode::Repeating,
+        ))
+    }
+}
+
+fn init_config(_trigger: Trigger<ConfigLoaded>, mut commands: Commands, config: Res<GameConfig>) {
+    commands.insert_resource(SpawnMonsterTimer::from(&*config));
 }
 
 fn reset_monster_timer(mut timer: ResMut<SpawnMonsterTimer>) {

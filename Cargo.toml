@@ -48,6 +48,7 @@ bevy = { version = "0.16", default-features = false, features = [
 bevy_rapier2d = "0.30"
 bevy_ecs_tilemap = "0.16"
 noise = "0.9"
+serde = { version = "1", features = ["derive"] }
 
 # feature: dev
 bevy-inspector-egui = { version="0.31", default-features = false, features = [

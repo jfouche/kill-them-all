@@ -244,32 +244,6 @@ impl MonsterBuilder {
 pub struct XpOnDeath(pub u32);
 
 ///
-/// Component to inform that a monster will spawn
-///
-#[derive(Component)]
-#[require(
-    Name::new("MonsterFuturePos"),
-    MonsterSpawnTimer,
-    Transform,
-    Mesh2d,
-    MeshMaterial2d<ColorMaterial>,
-    MonsterBuilder
-)]
-pub struct MonsterFuturePos;
-
-///
-/// Timer between spawning information and real monster spawn
-///
-#[derive(Component, Deref, DerefMut, Reflect)]
-pub struct MonsterSpawnTimer(pub Timer);
-
-impl Default for MonsterSpawnTimer {
-    fn default() -> Self {
-        MonsterSpawnTimer(Timer::from_seconds(3., TimerMode::Once))
-    }
-}
-
-///
 /// Event to notify a monster died
 ///
 #[derive(Event)]

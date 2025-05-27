@@ -1,5 +1,6 @@
 mod camera;
 mod components;
+mod config;
 mod in_game;
 mod main_menu;
 mod schedule;
@@ -62,6 +63,7 @@ fn main() {
     ))
     // Game plugins
     .add_plugins((
+        config::GameConfigPlugin,
         schedule::schedule_plugin,
         camera::camera_plugin,
         splash::splash_plugin,

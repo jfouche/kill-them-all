@@ -2641,6 +2641,7 @@ dependencies = [
  "getrandom 0.3.3",
  "noise",
  "rand 0.9.1",
+ "serde",
 ]
 
 [[package]]
