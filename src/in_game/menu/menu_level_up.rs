@@ -15,15 +15,6 @@ use crate::{
 };
 use bevy::prelude::*;
 
-#[derive(Component)]
-struct LevelUpMenu;
-
-#[derive(Resource, Default, Deref, DerefMut)]
-struct UpgradeList(Vec<Entity>);
-
-#[derive(Component, Deref)]
-struct UpgradeEntity(Entity);
-
 pub struct LevelUpMenuPlugin;
 
 impl Plugin for LevelUpMenuPlugin {

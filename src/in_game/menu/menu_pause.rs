@@ -7,7 +7,7 @@ use crate::{
         popup::{Popup, PopupTitle},
     },
 };
-use bevy::prelude::*;
+use bevy::{ecs::spawn::SpawnWith, prelude::*};
 
 pub struct PausePlugin;
 
@@ -22,49 +22,29 @@ impl Plugin for PausePlugin {
 #[derive(Component)]
 struct PauseMenu;
 
-#[derive(Component)]
-#[require(TextButton::big("Back to game"), MenuButtonAction::BackToGame)]
-pub struct ButtonBackToGame;
-
-#[derive(Component)]
-#[require(TextButton::big("Quit game"), MenuButtonAction::QuitGame)]
-pub struct ButtonQuitGame;
-
-// All actions that can be triggered from a button click
-#[derive(Component, Clone, Copy, PartialEq)]
-enum MenuButtonAction {
-    BackToGame,
-    QuitGame,
+fn pause_menu() -> impl Bundle {
+    (
+        PauseMenu,
+        Name::new("PauseMenu"),
+        Popup,
+        Children::spawn((
+            Spawn(PopupTitle::bundle("Pause")),
+            SpawnWith(|menu: &mut ChildSpawner| {
+                menu.spawn(TextButton::big("Back to game")).observe(
+                    |_t: Trigger<Pointer<Click>>, mut state: ResMut<NextState<InGameState>>| {
+                        state.set(InGameState::Running);
+                    },
+                );
+                menu.spawn(TextButton::big("Quit game")).observe(
+                    |_t: Trigger<Pointer<Click>>, mut state: ResMut<NextState<GameState>>| {
+                        state.set(GameState::Menu);
+                    },
+                );
+            }),
+        )),
+    )
 }
 
 fn spawn_pause_menu(mut commands: Commands) {
-    commands
-        .spawn((
-            PauseMenu,
-            Name::new("PauseMenu"),
-            Popup,
-            children![PopupTitle::bundle("Pause")],
-        ))
-        .with_children(|menu| {
-            menu.spawn(ButtonBackToGame).observe(menu_action);
-            menu.spawn(ButtonQuitGame).observe(menu_action);
-        });
-}
-
-fn menu_action(
-    trigger: Trigger<Pointer<Click>>,
-    actions: Query<&MenuButtonAction>,
-    mut in_game_state: ResMut<NextState<InGameState>>,
-    mut game_state: ResMut<NextState<GameState>>,
-) {
-    if let Ok(action) = actions.get(trigger.target()) {
-        match action {
-            MenuButtonAction::BackToGame => {
-                in_game_state.set(InGameState::Running);
-            }
-            MenuButtonAction::QuitGame => {
-                game_state.set(GameState::Menu);
-            }
-        }
-    }
+    commands.spawn(pause_menu());
 }

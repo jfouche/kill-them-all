@@ -6,7 +6,7 @@ use crate::{
         popup::{Popup, PopupTitle},
     },
 };
-use bevy::prelude::*;
+use bevy::{ecs::spawn::SpawnWith, prelude::*};
 
 pub struct PlayerDiedMenuPlugin;
 
@@ -27,35 +27,38 @@ impl Plugin for PlayerDiedMenuPlugin {
 #[derive(Component)]
 struct PlayerDiedMenu;
 
-#[derive(Component)]
-struct BackToMenu;
-
-fn spawn_player_died_menu(mut commands: Commands) {
-    commands.spawn((
+fn player_died_menu() -> impl Bundle {
+    (
         PlayerDiedMenu,
         Name::new("PlayerDiedMenu"),
         Popup,
-        children![
-            PopupTitle::bundle("Player died!"),
-            (BackToMenu, TextButton::big("Back to menu"))
-        ],
-    ));
+        Children::spawn((
+            Spawn(PopupTitle::bundle("Player died!")),
+            SpawnWith(|menu: &mut ChildSpawner| {
+                menu.spawn(TextButton::big("Back to menu")).observe(
+                    |_t: Trigger<Pointer<Click>>,
+                     mut game_state: ResMut<NextState<GameState>>,
+                     mut in_game_state: ResMut<NextState<InGameState>>| {
+                        game_state.set(GameState::Menu);
+                        in_game_state.set(InGameState::Disabled);
+                    },
+                );
+            }),
+        )),
+    )
+}
+
+fn spawn_player_died_menu(mut commands: Commands) {
+    commands.spawn(player_died_menu());
 }
 
 fn back_to_menu(
-    mut q_btn: Query<&Interaction, (Changed<Interaction>, With<BackToMenu>)>,
+    keys: Res<ButtonInput<KeyCode>>,
     mut game_state: ResMut<NextState<GameState>>,
     mut in_game_state: ResMut<NextState<InGameState>>,
-    keys: Res<ButtonInput<KeyCode>>,
 ) {
     if keys.just_pressed(KeyCode::Enter) {
         game_state.set(GameState::Menu);
         in_game_state.set(InGameState::Disabled);
-    }
-    for interaction in &mut q_btn {
-        if *interaction == Interaction::Pressed {
-            game_state.set(GameState::Menu);
-            in_game_state.set(InGameState::Disabled);
-        }
     }
 }

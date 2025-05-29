@@ -115,6 +115,7 @@ fn create_text_button(
         TextColor(BUTTON_TEXT_COLOR),
         TextFont::from_font_size(font_size),
         TextLayout::new_with_justify(JustifyText::Center),
+        Pickable::IGNORE,
         ChildOf(trigger.target()),
     ));
     // TODO: add observers to change color ?
