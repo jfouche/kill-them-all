@@ -1,6 +1,7 @@
 mod camera;
 mod components;
 mod config;
+mod dnd;
 mod in_game;
 mod main_menu;
 mod schedule;
@@ -68,6 +69,7 @@ fn main() {
         camera::camera_plugin,
         splash::splash_plugin,
         main_menu::main_menu_plugin,
+        dnd::DndPlugin,
         in_game::InGamePluginsGroup,
     ));
 

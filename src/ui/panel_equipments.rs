@@ -5,7 +5,7 @@ use crate::{
         item::{EquipEquipmentEvent, ItemAssets, ItemEntity, ItemLocation, ItemLocationAccept},
         player::Player,
     },
-    in_game::dnd::{DndCursor, DraggedEntity},
+    dnd::{DndCursor, DraggedEntity},
 };
 use bevy::prelude::*;
 

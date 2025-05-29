@@ -32,6 +32,15 @@ impl Plugin for LevelUpMenuPlugin {
     }
 }
 
+#[derive(Component)]
+struct LevelUpMenu;
+
+#[derive(Resource, Default, Deref, DerefMut)]
+struct UpgradeList(Vec<Entity>);
+
+#[derive(Component, Deref)]
+struct UpgradeEntity(Entity);
+
 fn enter_level_up_state(
     _trigger: Trigger<LevelUpEvent>,
     mut next_state: ResMut<NextState<InGameState>>,

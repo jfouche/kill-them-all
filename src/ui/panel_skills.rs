@@ -4,7 +4,7 @@ use crate::{
         player::{EquipSkillBookEvent, PlayerAction},
         skills::{SkillBook, SkillBookLocation},
     },
-    in_game::dnd::{DndCursor, DraggedEntity},
+    dnd::{DndCursor, DraggedEntity},
 };
 use bevy::prelude::*;
 

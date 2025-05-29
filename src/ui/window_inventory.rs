@@ -9,7 +9,7 @@ use crate::{
         item::{ItemEntity, ItemLocation, ItemLocationAcceptAll},
         orb::{ActivateOrbEvent, Orb},
     },
-    in_game::dnd::{DndCursor, DraggedEntity},
+    dnd::{DndCursor, DraggedEntity},
     schedule::{GameRunningSet, GameState},
 };
 use bevy::{ecs::query::QuerySingleError, prelude::*};

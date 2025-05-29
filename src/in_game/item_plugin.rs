@@ -1,4 +1,3 @@
-use super::dnd::{DndCursor, DraggedEntity};
 use crate::{
     camera::MainCamera,
     components::{
@@ -13,6 +12,7 @@ use crate::{
         player::{Player, RemoveSkillBookEvent},
         world_map::{WorldMap, LAYER_ITEM},
     },
+    dnd::{DndCursor, DraggedEntity},
     schedule::{game_is_running, GameRunningSet, GameState},
     utils::picking::{WorldPosition, ITEM_DEPTH},
 };
@@ -38,6 +38,7 @@ impl Plugin for ItemPlugin {
             .register_type::<ItemTitle>()
             .register_type::<ItemDescription>()
             .register_type::<ItemTileIndex>()
+            .init_resource::<ItemAssets>()
             .add_systems(
                 OnExit(GameState::InGame),
                 (despawn_all::<DroppedItem>, despawn_all::<Item>),

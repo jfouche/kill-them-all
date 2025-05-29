@@ -2,18 +2,16 @@ pub mod affix_updates_plugin;
 pub mod animation_plugin;
 pub mod character_plugin;
 pub mod collisions_plugin;
-pub mod dnd;
 pub mod hud;
 pub mod item_plugin;
 pub mod life_bar_plugin;
-pub mod menu;
 pub mod monster_plugin;
 pub mod orb_plugin;
 pub mod player_plugin;
 pub mod skills;
 pub mod world_map_plugin;
 
-pub use plugin::{back_to_game, pause, unpause, InGamePluginsGroup};
+pub use plugin::{back_to_game, InGamePluginsGroup};
 
 mod plugin {
     use super::*;
@@ -44,8 +42,6 @@ mod plugin {
                 .add(life_bar_plugin::LifeBarPlugin)
                 .add(animation_plugin::AnimationPlugin)
                 .add(skills::SkillsPlugin)
-                .add(dnd::DndPlugin)
-                .add(menu::InGameMenuPlugin)
                 .add(in_game_schedule_plugin)
         }
     }
@@ -56,6 +52,10 @@ mod plugin {
             .add_systems(OnExit(GameState::InGame), reset_physics)
             .add_systems(OnEnter(InGameState::Running), start_physics)
             .add_systems(OnExit(InGameState::Running), stop_physics)
+            .add_systems(OnEnter(InGameState::Pause), pause)
+            .add_systems(OnExit(InGameState::Pause), unpause)
+            .add_systems(OnEnter(InGameState::LevelUp), pause)
+            .add_systems(OnExit(InGameState::LevelUp), unpause)
             .add_systems(Update, switch_to_pause.in_set(GameRunningSet::UserInput))
             .add_systems(
                 Update,

@@ -74,6 +74,7 @@ impl Plugin for CharacterPlugin {
     }
 }
 
+// TODO: move to BaseLife::bundle(life), and make BaseLife(not pub f32)
 fn init_life(
     trigger: Trigger<OnAdd, (BaseLife, Life, MaxLife)>,
     mut lifes: Query<(&mut Life, &mut MaxLife, &BaseLife)>,
