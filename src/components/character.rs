@@ -65,19 +65,19 @@ impl MovementAction {
 /// Represent the initial life of a character
 #[derive(Component, Default, Deref, Clone, Copy, Reflect)]
 #[require(Life, MaxLife, IncreaseMaxLife, LifeRegen)]
-pub struct BaseLife(pub f32);
+pub struct BaseLife(f32);
+
+impl BaseLife {
+    pub fn bundle(life: f32) -> impl Bundle {
+        (BaseLife(life), Life(life), MaxLife(life))
+    }
+}
 
 /// Represent current life of a character
 #[derive(Component, Default, Deref, DerefMut, Clone, Copy, Debug, Reflect)]
 pub struct Life(pub f32);
 
 impl Life {
-    pub fn check(&mut self, max: MaxLife) {
-        if self.0 > *max {
-            self.0 = *max;
-        }
-    }
-
     pub fn damage(&mut self, damage: Damage) {
         if damage.0 > self.0 {
             self.0 = 0.;
@@ -90,8 +90,11 @@ impl Life {
         self.0 <= 0.0
     }
 
-    pub fn regenerate(&mut self, life: f32) {
+    pub fn regenerate(&mut self, life: f32, max_life: MaxLife) {
         self.0 += life;
+        if self.0 > *max_life {
+            self.0 = *max_life;
+        }
     }
 }
 

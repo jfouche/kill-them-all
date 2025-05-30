@@ -104,6 +104,8 @@ impl ItemLocation {
     }
 }
 
+// TODO: use Option like component
+
 #[derive(Component)]
 pub struct ItemLocationAccept<T>(PhantomData<T>);
 

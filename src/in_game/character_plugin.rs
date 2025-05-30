@@ -139,10 +139,9 @@ fn mitigate_damage_over_time(
 
 /// Regenerate [Character]'s [Life]
 fn regen_life(mut query: Query<(&mut Life, &MaxLife, &LifeRegen)>, time: Res<Time>) {
-    for (mut life, max_life, regen) in &mut query {
-        let life_per_sec = **max_life * (**regen / 100.);
-        life.regenerate(life_per_sec * time.delta_secs());
-        life.check(*max_life);
+    for (mut life, &max_life, &regen) in &mut query {
+        let life_per_sec = *max_life * (*regen / 100.);
+        life.regenerate(life_per_sec * time.delta_secs(), max_life);
     }
 }
 

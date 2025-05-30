@@ -76,16 +76,16 @@ impl Plugin for AffixUpdatesPlugin {
 fn fix_life(
     trigger: Trigger<OnAdd, ChildOf>,
     affixes: Query<(&ChildOf, Option<&MoreLife>, Option<&IncreaseMaxLife>)>,
-    mut characters: Query<&mut Life, With<Character>>,
+    mut characters: Query<(&mut Life, &MaxLife), With<Character>>,
 ) {
     if let Ok((child_of, more, increase)) = affixes.get(trigger.target()) {
-        if let Ok(mut life) = characters.get_mut(child_of.parent()) {
+        if let Ok((mut life, &max_life)) = characters.get_mut(child_of.parent()) {
             if let Some(more) = more {
-                life.regenerate(**more);
+                life.regenerate(**more, max_life);
             }
             if let Some(increase) = increase {
                 let more = **life * **increase / 100.;
-                life.regenerate(more);
+                life.regenerate(more, max_life);
             }
         }
     }

@@ -15,8 +15,6 @@ use std::time::Duration;
     Character,
     PlayerBooks,
     Target::Monster,
-    BaseLife(10.),
-    BaseMovementSpeed(100.),
     Experience,
     Sprite,
     Transform::from_xyz(10., 10., LAYER_PLAYER),
@@ -28,13 +26,18 @@ use std::time::Duration;
 pub struct Player;
 
 impl Player {
-    pub fn sprite(assets: &PlayerAssets) -> Sprite {
-        Sprite {
-            image: assets.texture.clone(),
-            texture_atlas: Some(assets.atlas_layout.clone().into()),
-            custom_size: Some(PLAYER_SIZE),
-            ..Default::default()
-        }
+    pub fn bundle(assets: &PlayerAssets) -> impl Bundle {
+        (
+            Player,
+            BaseLife::bundle(10.),
+            BaseMovementSpeed(100.),
+            Sprite {
+                image: assets.texture.clone(),
+                texture_atlas: Some(assets.atlas_layout.clone().into()),
+                custom_size: Some(PLAYER_SIZE),
+                ..Default::default()
+            },
+        )
     }
 }
 

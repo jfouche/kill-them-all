@@ -119,7 +119,7 @@ fn manage_player_movement_with_mouse(trigger: Trigger<OnAdd, WorldMap>, mut comm
 fn spawn_player(mut commands: Commands, assets: Res<PlayerAssets>) {
     commands.spawn(Inventory::default());
     commands
-        .spawn((Player, Player::sprite(&assets)))
+        .spawn(Player::bundle(&assets))
         .observe(set_invulnerable_on_hit)
         .observe(player_dying);
 
@@ -245,9 +245,9 @@ fn refill_life_on_level_up(
     _trigger: Trigger<LevelUpEvent>,
     mut q_player: Query<(&mut Life, &MaxLife), With<Player>>,
 ) {
-    if let Ok((mut life, max_life)) = q_player.single_mut() {
+    if let Ok((mut life, &max_life)) = q_player.single_mut() {
         // Regen life
-        life.regenerate(**max_life);
+        life.regenerate(*max_life, max_life);
     }
 }
 

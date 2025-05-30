@@ -106,32 +106,48 @@ pub struct MonsterLevel(pub u16);
 pub struct Monster;
 
 #[derive(Component)]
-#[require(Name::new("Monster#1"), Monster, BaseLife(2.), BaseMovementSpeed(50.))]
+#[require(Name::new("Monster#1"), Monster)]
 pub struct MonsterType1;
 
 impl MonsterType1 {
     pub fn bundle(builder: MonsterBuilder, pos: Vec2, assets: &AllMonsterAssets) -> impl Bundle {
-        (MonsterType1, builder.bundle(pos, assets))
+        (
+            MonsterType1,
+            BaseLife::bundle(2.),
+            BaseMovementSpeed(50.),
+            builder.bundle(pos, assets),
+        )
     }
 }
 
 #[derive(Component)]
-#[require(Name::new("Monster#2"), Monster, BaseLife(3.), BaseMovementSpeed(40.))]
+#[require(Name::new("Monster#2"), Monster)]
 pub struct MonsterType2;
 
 impl MonsterType2 {
     pub fn bundle(builder: MonsterBuilder, pos: Vec2, assets: &AllMonsterAssets) -> impl Bundle {
-        (MonsterType2, builder.bundle(pos, assets))
+        (
+            MonsterType2,
+            BaseLife::bundle(3.),
+            BaseMovementSpeed(40.),
+            builder.bundle(pos, assets),
+        )
     }
 }
 
 #[derive(Component)]
-#[require(Name::new("Monster#3"), Monster, BaseLife(4.), BaseMovementSpeed(30.))]
+#[require(Name::new("Monster#3"))]
 pub struct MonsterType3;
 
 impl MonsterType3 {
     pub fn bundle(builder: MonsterBuilder, pos: Vec2, assets: &AllMonsterAssets) -> impl Bundle {
-        (MonsterType3, builder.bundle(pos, assets))
+        (
+            MonsterType3,
+            Monster,
+            BaseLife::bundle(4.),
+            BaseMovementSpeed(30.),
+            builder.bundle(pos, assets),
+        )
     }
 }
 
