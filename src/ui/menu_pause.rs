@@ -2,10 +2,8 @@ use crate::{
     components::despawn_all,
     in_game::back_to_game,
     schedule::{GameState, InGameState},
-    ui::{
-        button::TextButton,
-        popup::{Popup, PopupTitle},
-    },
+    theme::widget::button,
+    ui::popup::{Popup, PopupTitle},
 };
 use bevy::{ecs::spawn::SpawnWith, prelude::*};
 
@@ -30,16 +28,8 @@ fn pause_menu() -> impl Bundle {
         Children::spawn((
             Spawn(PopupTitle::bundle("Pause")),
             SpawnWith(|menu: &mut ChildSpawner| {
-                menu.spawn(TextButton::big("Back to game")).observe(
-                    |_t: Trigger<Pointer<Click>>, mut state: ResMut<NextState<InGameState>>| {
-                        state.set(InGameState::Running);
-                    },
-                );
-                menu.spawn(TextButton::big("Quit game")).observe(
-                    |_t: Trigger<Pointer<Click>>, mut state: ResMut<NextState<GameState>>| {
-                        state.set(GameState::Menu);
-                    },
-                );
+                menu.spawn(button("Back to game", on_back_to_game));
+                menu.spawn(button("Quit game", on_quit_game));
             }),
         )),
     )
@@ -47,4 +37,12 @@ fn pause_menu() -> impl Bundle {
 
 fn spawn_pause_menu(mut commands: Commands) {
     commands.spawn(pause_menu());
+}
+
+fn on_back_to_game(_trigger: Trigger<Pointer<Click>>, mut state: ResMut<NextState<InGameState>>) {
+    state.set(InGameState::Running);
+}
+
+fn on_quit_game(_trigger: Trigger<Pointer<Click>>, mut state: ResMut<NextState<GameState>>) {
+    state.set(GameState::Menu);
 }

@@ -43,7 +43,6 @@ mod plugin {
         fn build(&self, app: &mut App) {
             app.add_plugins((
                 progressbar::ProgressBarPlugin,
-                button::button_plugin,
                 item_location::ItemLocationPlugin,
                 menu_pause::PausePlugin,
                 menu_level_up::LevelUpMenuPlugin,
@@ -53,6 +52,7 @@ mod plugin {
                 window_statistics::StatsWindowPlugin,
                 panel_equipments::EquipmentPanelPlugin,
                 popup_info::PopupInfoPlugin,
+                button::button_plugin,
             ));
         }
     }

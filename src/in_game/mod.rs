@@ -6,6 +6,7 @@ pub mod hud;
 pub mod item_plugin;
 pub mod life_bar_plugin;
 pub mod monster_plugin;
+pub mod music_plugin;
 pub mod orb_plugin;
 pub mod player_plugin;
 pub mod skills;
@@ -15,14 +16,12 @@ pub use plugin::{back_to_game, InGamePluginsGroup};
 
 mod plugin {
     use super::*;
-    use crate::components::player::PlayerDeathEvent;
-    use crate::components::LifeTime;
-    use crate::schedule::{GameRunningSet, GameState, InGameState};
-    use crate::utils::blink::Blink;
-    use crate::utils::despawn_after::DespawnAfter;
-    use crate::utils::invulnerable::Invulnerable;
-    use bevy::app::PluginGroupBuilder;
-    use bevy::prelude::*;
+    use crate::{
+        components::{player::PlayerDeathEvent, LifeTime},
+        schedule::{GameRunningSet, GameState, InGameState},
+        utils::{blink::Blink, despawn_after::DespawnAfter, invulnerable::Invulnerable},
+    };
+    use bevy::{app::PluginGroupBuilder, prelude::*};
     use bevy_rapier2d::prelude::*;
 
     pub struct InGamePluginsGroup;
@@ -42,6 +41,7 @@ mod plugin {
                 .add(life_bar_plugin::LifeBarPlugin)
                 .add(animation_plugin::AnimationPlugin)
                 .add(skills::SkillsPlugin)
+                // .add(music_plugin::music_plugin)
                 .add(in_game_schedule_plugin)
         }
     }

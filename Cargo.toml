@@ -40,6 +40,7 @@ bevy = { version = "0.16", default-features = false, features = [
     "bevy_ui",
     "bevy_window",
     "bevy_winit",
+    "bevy_audio",
     "multi_threaded",
     "default_font",
     "png",

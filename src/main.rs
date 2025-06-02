@@ -1,3 +1,5 @@
+mod asset_tracking;
+mod audio;
 mod camera;
 mod components;
 mod config;
@@ -6,6 +8,7 @@ mod in_game;
 mod main_menu;
 mod schedule;
 mod splash;
+mod theme;
 mod ui;
 mod utils;
 
@@ -57,7 +60,10 @@ fn main() {
     .add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(16.))
     // utils plugins
     .add_plugins((
+        asset_tracking::asset_tracking_plugin,
+        // audio::audio_plugin,
         ui::UiPlugins,
+        theme::theme_plugin,
         utils::blink::BlinkPlugin,
         utils::invulnerable::InvulnerabilityPlugin,
         utils::despawn_after::despawn_after_plugin,

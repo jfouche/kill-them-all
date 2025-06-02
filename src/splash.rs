@@ -1,4 +1,4 @@
-use crate::{components::despawn_all, schedule::GameState};
+use crate::{asset_tracking::ResourceHandles, components::despawn_all, schedule::GameState};
 use bevy::prelude::*;
 
 #[derive(Component)]
@@ -63,8 +63,11 @@ fn goto_main_menu(
     mut game_state: ResMut<NextState<GameState>>,
     keys: Res<ButtonInput<KeyCode>>,
     mouse: Res<ButtonInput<MouseButton>>,
+    resources: Res<ResourceHandles>,
 ) {
-    if keys.get_pressed().len() != 0 || mouse.pressed(MouseButton::Left) {
-        game_state.set(GameState::Menu);
+    if resources.is_all_done() {
+        if keys.get_pressed().len() != 0 || mouse.pressed(MouseButton::Left) {
+            game_state.set(GameState::Menu);
+        }
     }
 }
