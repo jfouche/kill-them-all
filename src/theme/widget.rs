@@ -29,6 +29,9 @@ pub fn ui_root(name: impl Into<Cow<'static, str>>) -> impl Bundle {
     )
 }
 
+/// A simple popup
+pub fn popup() -> impl Bundle {}
+
 /// A simple header label. Bigger than [`label`].
 pub fn header(text: impl Into<String>) -> impl Bundle {
     (
@@ -122,7 +125,7 @@ where
                     children![(
                         Name::new("Button Text"),
                         Text(text),
-                        TextFont::from_font_size(40.0),
+                        TextFont::from_font_size(32.0),
                         TextColor(BUTTON_TEXT),
                         // Don't bubble picking events from the text up to the button.
                         Pickable::IGNORE,

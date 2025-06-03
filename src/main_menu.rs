@@ -1,7 +1,6 @@
 use crate::{
-    components::despawn_all,
     schedule::GameState,
-    theme::widget::button,
+    theme::widget,
     ui::popup::{Popup, PopupTitle},
 };
 use bevy::{app::AppExit, color::palettes::css::GRAY, prelude::*};
@@ -17,12 +16,12 @@ struct MainMenu;
 fn main_menu() -> impl Bundle {
     (
         MainMenu,
-        Name::new("MainMenu"),
-        Popup,
+        widget::ui_root("MainMenu"),
+        GlobalZIndex(2),
         children![
-            PopupTitle::bundle("Kill'em all"),
-            button("New game", on_new_game),
-            button("Exit", on_exit),
+            (Text("Kill'em all".into()), TextFont::from_font_size(32.)),
+            widget::button("New game", on_new_game),
+            widget::button("Exit", on_exit),
         ],
     )
 }
