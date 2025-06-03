@@ -1,10 +1,9 @@
 use crate::{
     components::despawn_all,
     schedule::GameState,
-    theme::widget,
-    ui::popup::{Popup, PopupTitle},
+    theme::{palette::MAIN_MENU_BACKGROUND, widget},
 };
-use bevy::{app::AppExit, color::palettes::css::GRAY, prelude::*};
+use bevy::{app::AppExit, prelude::*};
 
 pub fn main_menu_plugin(app: &mut App) {
     app.add_systems(OnEnter(GameState::Menu), (set_background, spawn_menu))
@@ -20,7 +19,7 @@ fn main_menu() -> impl Bundle {
         widget::ui_root("MainMenu"),
         GlobalZIndex(2),
         children![
-            (Text("Kill'em all".into()), TextFont::from_font_size(32.)),
+            widget::header("Kill'em all"),
             widget::button("New game", on_new_game),
             widget::button("Exit", on_exit),
         ],
@@ -28,7 +27,7 @@ fn main_menu() -> impl Bundle {
 }
 
 fn set_background(mut commands: Commands) {
-    commands.insert_resource(ClearColor(GRAY.into()));
+    commands.insert_resource(ClearColor(MAIN_MENU_BACKGROUND));
 }
 
 fn spawn_menu(mut commands: Commands) {

@@ -14,8 +14,7 @@ pub struct HudSkillsPlugin;
 
 impl Plugin for HudSkillsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(GameState::InGame), spawn_hud_skills)
-            .add_observer(toggle_inventory);
+        app.add_systems(OnEnter(GameState::InGame), spawn_hud_skills);
     }
 }
 

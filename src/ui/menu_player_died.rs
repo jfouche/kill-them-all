@@ -1,8 +1,7 @@
 use crate::{
     components::despawn_all,
     schedule::{GameState, InGameState},
-    theme::widget::button,
-    ui::popup::{Popup, PopupTitle},
+    theme::widget,
 };
 use bevy::{input::common_conditions::input_just_pressed, prelude::*};
 
@@ -31,10 +30,10 @@ fn player_died_menu() -> impl Bundle {
     (
         PlayerDiedMenu,
         Name::new("PlayerDiedMenu"),
-        Popup,
+        widget::popup(),
         children![
-            PopupTitle::bundle("Player died!"),
-            button("Back to menu", on_back_to_menu)
+            widget::popup_title("Player died!"),
+            widget::button("Back to menu", on_back_to_menu)
         ],
     )
 }

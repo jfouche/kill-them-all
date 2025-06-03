@@ -1,14 +1,12 @@
 //! Helper functions for creating common widgets.
 
-use std::borrow::Cow;
-
+use crate::theme::{interaction::InteractionPalette, palette::*};
 use bevy::{
     ecs::{spawn::SpawnWith, system::IntoObserverSystem},
     prelude::*,
     ui::Val::*,
 };
-
-use crate::theme::{interaction::InteractionPalette, palette::*};
+use std::borrow::Cow;
 
 /// A root UI node that fills the window and centers its content.
 pub fn ui_root(name: impl Into<Cow<'static, str>>) -> impl Bundle {
@@ -30,14 +28,47 @@ pub fn ui_root(name: impl Into<Cow<'static, str>>) -> impl Bundle {
 }
 
 /// A simple popup
-pub fn popup() -> impl Bundle {}
+pub fn popup() -> impl Bundle {
+    (
+        Node {
+            flex_direction: FlexDirection::Column,
+            align_items: AlignItems::Center,
+            border: UiRect::all(Val::Px(2.0)),
+            width: Val::Percent(40.0),
+            margin: UiRect::all(Val::Auto),
+            padding: UiRect::bottom(Val::Px(7.0)),
+            ..Default::default()
+        },
+        BackgroundColor(POPUP_BACKGROUND),
+        BorderColor(Color::BLACK),
+        Pickable::IGNORE,
+    )
+}
+
+/// The title of a [popup]
+pub fn popup_title(title: impl Into<String>) -> impl Bundle {
+    (
+        Name::new("PopupTitle"),
+        Node {
+            width: Val::Percent(100.0),
+            justify_content: JustifyContent::Center,
+            ..Default::default()
+        },
+        BackgroundColor(Color::srgb(0.1, 0.1, 0.1)),
+        children![
+            Text(title.into()),
+            TextFont::from_font_size(32.),
+            TextColor(Color::srgb(0.72, 0.72, 0.72))
+        ],
+    )
+}
 
 /// A simple header label. Bigger than [`label`].
 pub fn header(text: impl Into<String>) -> impl Bundle {
     (
         Name::new("Header"),
         Text(text.into()),
-        TextFont::from_font_size(40.0),
+        TextFont::from_font_size(48.0),
         TextColor(HEADER_TEXT),
     )
 }
@@ -64,8 +95,8 @@ where
         action,
         (
             Node {
-                width: Px(380.0),
-                height: Px(80.0),
+                width: Px(300.0),
+                height: Px(60.0),
                 align_items: AlignItems::Center,
                 justify_content: JustifyContent::Center,
                 ..default()
@@ -125,7 +156,7 @@ where
                     children![(
                         Name::new("Button Text"),
                         Text(text),
-                        TextFont::from_font_size(32.0),
+                        TextFont::from_font_size(24.0),
                         TextColor(BUTTON_TEXT),
                         // Don't bubble picking events from the text up to the button.
                         Pickable::IGNORE,
