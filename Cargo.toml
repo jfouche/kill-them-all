@@ -22,7 +22,13 @@ opt-level = 3
 [features]
 default = []
 # Enables debug infos and rendering
-dev = ["dep:bevy-inspector-egui", "bevy/bevy_dev_tools", "bevy/bevy_ui_debug", "bevy/track_location"]
+dev = [
+    "dep:bevy-inspector-egui", 
+    "bevy/dynamic_linking",
+    "bevy/bevy_dev_tools", 
+    "bevy/bevy_ui_debug", 
+    "bevy/track_location"
+]
 
 [dependencies]
 rand = "0.9"
