@@ -32,6 +32,28 @@ pub struct UpgradeView {
     pub label: String,
 }
 
+#[derive(Resource, Deref)]
+pub struct UpgradeList(Vec<UpgradeView>);
+
+impl UpgradeList {
+    pub fn new(commands: &mut Commands, rng: &mut ThreadRng) -> Self {
+        let mut upgrade_provider = UpgradeProvider::new();
+        let upgrades = (0..3)
+            .into_iter()
+            .filter_map(|_| {
+                let upgrade = upgrade_provider.gen(rng)?;
+                Some(upgrade.generate(commands, rng))
+            })
+            .collect::<Vec<_>>();
+        Self(upgrades)
+    }
+
+    pub fn upgrade(&mut self, mut character: EntityCommands, index: usize) {
+        let upgrade_view = self.0.swap_remove(index);
+        character.add_child(upgrade_view.entity);
+    }
+}
+
 impl UpgradeKind {
     pub fn generate(&self, commands: &mut Commands, rng: &mut ThreadRng) -> UpgradeView {
         match self {

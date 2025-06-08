@@ -2,7 +2,7 @@ use crate::{
     components::despawn_all,
     in_game::back_to_game,
     schedule::{GameState, InGameState},
-    theme::widget::{self, button},
+    theme::widget,
 };
 use bevy::prelude::*;
 
@@ -26,8 +26,8 @@ fn pause_menu() -> impl Bundle {
         widget::popup(),
         children![
             widget::popup_title("Pause"),
-            button("Back to game", on_back_to_game),
-            button("Quit game", on_quit_game)
+            widget::button("Back to game", on_back_to_game),
+            widget::button("Quit game", on_quit_game)
         ],
     )
 }

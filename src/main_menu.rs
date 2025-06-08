@@ -20,8 +20,8 @@ fn main_menu() -> impl Bundle {
         GlobalZIndex(2),
         children![
             widget::header("Kill'em all"),
-            widget::button("New game", on_new_game),
-            widget::button("Exit", on_exit),
+            widget::menu_button("New game", on_new_game),
+            widget::menu_button("Exit", on_exit),
         ],
     )
 }

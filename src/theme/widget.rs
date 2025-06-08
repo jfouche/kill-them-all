@@ -55,6 +55,7 @@ pub fn popup_title(title: impl Into<String>) -> impl Bundle {
             ..Default::default()
         },
         BackgroundColor(Color::srgb(0.1, 0.1, 0.1)),
+        Pickable::IGNORE,
         children![
             Text(title.into()),
             TextFont::from_font_size(32.),
@@ -84,7 +85,7 @@ pub fn label(text: impl Into<String>) -> impl Bundle {
 }
 
 /// A large rounded button with text and an action defined as an [`Observer`].
-pub fn button<E, B, M, I>(text: impl Into<String>, action: I) -> impl Bundle
+pub fn menu_button<E, B, M, I>(text: impl Into<String>, action: I) -> impl Bundle
 where
     E: Event,
     B: Bundle,
@@ -103,6 +104,28 @@ where
             },
             BorderRadius::MAX,
         ),
+    )
+}
+
+/// An 'in game' button with text and an action defined as an [`Observer`].
+pub fn button<E, B, M, I>(text: impl Into<String>, action: I) -> impl Bundle
+where
+    E: Event,
+    B: Bundle,
+    I: IntoObserverSystem<E, B, M>,
+{
+    button_base(
+        text,
+        action,
+        (Node {
+            width: Px(180.0),
+            height: Px(50.0),
+            align_items: AlignItems::Center,
+            justify_content: JustifyContent::Center,
+            margin: UiRect::all(Val::Px(10.0)),
+            border: UiRect::all(Val::Px(1.0)),
+            ..default()
+        },),
     )
 }
 
@@ -126,7 +149,9 @@ where
     )
 }
 
-/// A simple button with text and an action defined as an [`Observer`]. The button's layout is provided by `button_bundle`.
+/// A simple button with text and an action defined as an [`Observer`].
+///
+/// The button's layout is provided by `button_bundle`.
 pub fn button_base<E, B, M, I>(
     text: impl Into<String>,
     action: I,

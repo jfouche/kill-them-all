@@ -3,17 +3,17 @@ use crate::{
     components::{
         despawn_all,
         player::{LevelUpEvent, Player},
-        upgrade::UpgradeProvider,
+        upgrade::UpgradeList,
     },
     in_game::back_to_game,
     schedule::InGameState,
+    theme::widget,
     ui::{
-        button::TextButton,
         popup::{Popup, PopupTitle},
         HSizer, VSizer,
     },
 };
-use bevy::prelude::*;
+use bevy::{ecs::spawn::SpawnWith, prelude::*};
 
 pub struct LevelUpMenuPlugin;
 
@@ -24,10 +24,7 @@ impl Plugin for LevelUpMenuPlugin {
                 OnExit(InGameState::LevelUp),
                 (despawn_all::<LevelUpMenu>, despawn_remaining_upgrades),
             )
-            .add_systems(
-                Update,
-                (back_to_game, upgrade_skill).run_if(in_state(InGameState::LevelUp)),
-            )
+            .add_systems(Update, back_to_game.run_if(in_state(InGameState::LevelUp)))
             .add_observer(enter_level_up_state);
     }
 }
@@ -35,11 +32,48 @@ impl Plugin for LevelUpMenuPlugin {
 #[derive(Component)]
 struct LevelUpMenu;
 
-#[derive(Resource, Default, Deref, DerefMut)]
-struct UpgradeList(Vec<Entity>);
+fn level_up_menu(upgrade_list: &UpgradeList) -> impl Bundle {
+    let upgrade_labels = upgrade_list
+        .iter()
+        .map(|u| u.label.clone())
+        .collect::<Vec<_>>();
+    (
+        LevelUpMenu,
+        Name::new("LevelUpMenu"),
+        Popup,
+        children![
+            PopupTitle::bundle("Level up!"),
+            (
+                HSizer,
+                children![
+                    (
+                        VSizer,
+                        Children::spawn(SpawnWith(move |parent: &mut ChildSpawner| {
+                            for (i, label) in upgrade_labels.iter().enumerate() {
+                                parent.spawn(button_upgrade(label.clone(), i));
+                            }
+                        })),
+                    ),
+                    EquipmentsPanel
+                ]
+            ),
+        ],
+    )
+}
 
-#[derive(Component, Deref)]
-struct UpgradeEntity(Entity);
+fn button_upgrade(label: impl Into<String>, index: usize) -> impl Bundle {
+    let observer = move |_t: Trigger<Pointer<Click>>,
+                         mut commands: Commands,
+                         players: Query<Entity, With<Player>>,
+                         mut upgrade_list: ResMut<UpgradeList>,
+                         mut state: ResMut<NextState<InGameState>>| {
+        let player = players.single()?;
+        upgrade_list.upgrade(commands.entity(player), index);
+        state.set(InGameState::Running);
+        Ok(())
+    };
+    widget::button(label, observer)
+}
 
 fn enter_level_up_state(
     _trigger: Trigger<LevelUpEvent>,
@@ -49,72 +83,16 @@ fn enter_level_up_state(
 }
 
 fn spawn_level_up_menu(mut commands: Commands) {
-    let mut upgrade_list = UpgradeList::default();
-    let mut upgrade_provider = UpgradeProvider::new();
-
-    let mut upgrade_entities = Vec::new();
     let mut rng = rand::rng();
-    for _ in 0..3 {
-        if let Some(upgrade) = upgrade_provider.gen(&mut rng) {
-            let upgrade_view = upgrade.generate(&mut commands, &mut rng);
-            let btn_entity = commands
-                .spawn((
-                    TextButton::big(upgrade_view.label),
-                    UpgradeEntity(upgrade_view.entity),
-                ))
-                .id();
-            upgrade_entities.push(btn_entity);
-            upgrade_list.push(upgrade_view.entity);
-        }
-    }
-
-    commands
-        .spawn((
-            LevelUpMenu,
-            Name::new("LevelUpMenu"),
-            Popup,
-            children![PopupTitle::bundle("Level up!")],
-        ))
-        .with_children(|menu| {
-            menu.spawn(HSizer).with_children(|sizer| {
-                sizer.spawn(VSizer).add_children(&upgrade_entities);
-                sizer.spawn(EquipmentsPanel);
-            });
-        });
-
+    let upgrade_list = UpgradeList::new(&mut commands, &mut rng);
+    commands.spawn(level_up_menu(&upgrade_list));
     commands.insert_resource(upgrade_list);
 }
 
 /// Despawn all remaining upgrades
 fn despawn_remaining_upgrades(mut commands: Commands, upgrade_list: Res<UpgradeList>) {
-    for &entity in upgrade_list.iter() {
-        commands.entity(entity).despawn();
+    for upgrade_view in upgrade_list.iter() {
+        commands.entity(upgrade_view.entity).despawn();
     }
     commands.remove_resource::<UpgradeList>();
-}
-
-///
-/// Upgrade the player, returning back to game
-///
-fn upgrade_skill(
-    mut commands: Commands,
-    players: Query<Entity, With<Player>>,
-    interactions: Query<(&Interaction, &UpgradeEntity), Changed<Interaction>>,
-    mut upgrade_list: ResMut<UpgradeList>,
-    mut state: ResMut<NextState<InGameState>>,
-) {
-    if let Ok(player) = players.single() {
-        for (interaction, upgrade_entity) in &interactions {
-            if *interaction == Interaction::Pressed {
-                if let Some(i) = upgrade_list.iter().position(|&e| e == **upgrade_entity) {
-                    // move upgrade to player
-                    commands.entity(player).add_child(**upgrade_entity);
-                    // Remove it from the list of entity to despawn
-                    upgrade_list.swap_remove(i);
-                    // leave the menu and go back to game
-                    state.set(InGameState::Running);
-                }
-            }
-        }
-    }
 }
