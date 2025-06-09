@@ -5,7 +5,7 @@ edition = "2021"
 license = "MIT"
 authors = ["Jérémie Fouché"]
 description = "A 'Path Of Exile' super lite 2D game."
-homepage = "https://github.com/jfouche/kill-them-all"
+repository = "https://github.com/jfouche/kill-them-all"
 keywords = ["game", "bevy", "2D"]
 
 [workspace]
